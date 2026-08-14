@@ -67,11 +67,11 @@ export function UpsellPopup({ open, reasonKey, cta, onClose }: UpsellPopupProps)
       ref={dialogRef}
       className="diet-popup"
       data-size="medium"
-      aria-label="Upgrade required"
+      aria-labelledby="bob-upsell-title"
       tabIndex={-1}
     >
       <header className="diet-popup__header">
-        <div className="heading-3">{headline}</div>
+        <h2 className="heading-4" id="bob-upsell-title">{headline}</h2>
       </header>
       <div className="diet-popup__body">
         <div className="body-m">{reasonCopy}</div>

@@ -100,7 +100,7 @@ header, row, cell, border, or overflow presentation locally.
 
 Hash routes are generated from `admin/src/html/**` and route data in
 `admin/src/data/routes.ts`. There is no separate design-system admin app. The
-current generated inventory is 5 Foundation routes, 24 Dieter Component routes,
+current generated inventory is 5 Foundation routes, 23 Dieter Component routes,
 and 2 Policy routes. CSS-only Dieter contracts do not create empty showcase
 routes.
 
@@ -135,11 +135,26 @@ does not call Roma, write account storage, or represent product data.
 These routes retain Dieter's consumer-neutral `data-dieter-json` marker in
 their generated examples. Before hash navigation replaces the reveal,
 DevStudio destroys hydrated Dropdown Actions, Border, Edit, Fill, Shadow,
-Upload, Object Manager, and Repeater roots through the same exported component
+Upload, Object Manager, Repeater, and Slider roots through the same exported component
 lifecycle used by product hosts. Object Manager reveals all three sizes plus
 its exact structural Add/draft/save flow; Repeater reveals all three sizes,
 exact default-item add, and the inline reorder mode. These are the real Dieter
 stencils and hydrators, not DevStudio imitations.
+
+Popup reveals exactly the three structural small, medium, and large frames.
+The large example proves body scrolling inside the viewport-bound frame; the
+page does not invent information, form, confirmation, or dirty-workflow Popup
+types. Every generated title uses the shared `heading-4` treatment.
+
+Segmented, Slider, Tabs, and Toggle are generated from their real Dieter stencils and
+specs. Slider reveals `sm|md|lg` progress values plus disabled state and uses
+the same progress hydrator as product hosts. Tabs reveals native checked and
+disabled radio states with no custom tab/arrow-key controller. Toggle reveals
+checked, unchecked, and disabled native-checkbox states through the component's
+own size and presentation authority. Segmented reveals the real `sm|md|lg`
+icon-and-text ladder plus compact text-only and icon-only selected, unselected,
+and disabled groups; it has no nested Button or state-mirroring hydrator. The retired standalone Popaddlink route is
+absent because link editing is now an internal Dropdown Edit sheet.
 
 ## Pages Functions
 

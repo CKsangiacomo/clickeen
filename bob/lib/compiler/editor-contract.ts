@@ -169,6 +169,7 @@ const DROPDOWN_EDIT_COMPONENT_LABEL_ATTRIBUTES = [
   ['addLink', 'add-link-label'],
   ['bold', 'bold-label'],
   ['clearFormatting', 'clear-formatting-label'],
+  ['closeLink', 'close-link-label'],
   ['italic', 'italic-label'],
   ['link', 'link-label'],
   ['removeLink', 'remove-link-label'],

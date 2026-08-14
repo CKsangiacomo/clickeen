@@ -6,7 +6,7 @@
    - Tab (visual): .diet-tab[for]
    - Text wrapper: .diet-tab__label (inherits control typography)
    Behaviour:
-   - :checked paints a 2px accent underline over the baseline; focus ring forwarded to visual tab.
+   - Native radio selection paints a 2px accent underline over the baseline.
 */
 
 .diet-tabs {
@@ -24,6 +24,21 @@
 /* Row gap overrides per size */
 .diet-tabs[data-size="sm"] { gap: var(--control-inline-gap-lg, 0.5rem); }
 .diet-tabs[data-size="lg"] { gap: var(--control-inline-gap-xl, 0.75rem); }
+
+.diet-tabs[data-size="sm"] .diet-tab__label {
+  font: 500 var(--fs-11, 0.6875rem)/var(--lh-tight, 1rem) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.diet-tabs[data-size="md"] .diet-tab__label {
+  font: 500 var(--fs-13, 0.8125rem)/var(--lh-body-ui, 1.25rem) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.diet-tabs[data-size="lg"] .diet-tab__label {
+  font: 500 var(--fs-14, 0.875rem)/var(--lh-body-ui, 1.25rem) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: -0.02em;
+}
 
 /* Continuous baseline under entire row */
 .diet-tabs::after {
@@ -64,7 +79,6 @@
   padding-block-end: var(--vertspace-4, 0.3rem);
 }
 
-/* Tab label relies on global .label-* typography; only color + behavior here */
 .diet-tab__label {
   color: var(--color-system-black);
   white-space: nowrap;
@@ -88,7 +102,7 @@
 /* Focus visuals removed per design */
 
 /* Hover / active affordances */
-.diet-tab:hover .diet-tab__label { opacity: 0.8; }
+.diet-tab__input:not(:disabled) + .diet-tab:hover .diet-tab__label { opacity: 0.8; }
 .diet-tab__input:active + .diet-tab .diet-tab__label { opacity: 0.6; }
 
 /* Disabled */

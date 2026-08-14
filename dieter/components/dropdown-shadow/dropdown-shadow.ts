@@ -206,7 +206,7 @@ function syncUI(state: DropdownShadowState, commit: boolean): void {
   state.root.style.setProperty('--picker-hue', String(h));
   state.root.style.setProperty('--picker-rgb', `${rgb.r} ${rgb.g} ${rgb.b}`);
   state.hueInput.value = String(h);
-  state.hueInput.style.setProperty('--value', String(h));
+  state.hueInput.dispatchEvent(new CustomEvent('external-sync'));
   state.hexField.value = formatHex(state.hsv).replace(/^#/, '');
   state.svThumb.style.left = `${s * 100}%`;
   state.svThumb.style.top = `${(1 - v) * 100}%`;
@@ -249,7 +249,7 @@ function syncUI(state: DropdownShadowState, commit: boolean): void {
 
 function setRangeValue(input: HTMLInputElement, output: HTMLElement, value: number, unit: 'px' | '%'): void {
   input.value = String(value);
-  input.style.setProperty('--value', String(value));
+  input.dispatchEvent(new CustomEvent('external-sync'));
   output.textContent = `${value}${unit}`;
 }
 

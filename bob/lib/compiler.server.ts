@@ -273,7 +273,11 @@ export async function compileWidgetServer(
         const context = await buildContext(type, attrs, spec, stencilLoader);
         let rendered = renderComponentStencil(stencil, context);
         if (context.path) {
-          rendered = rendered.replace(/data-path="/g, 'data-bob-path="');
+          const path = encodeHtmlEntities(String(context.path));
+          rendered = rendered.replaceAll(
+            `data-path="${path}"`,
+            `data-path="${path}" data-bob-path="${path}"`,
+          );
         }
 
         const showIf = attrs['show-if'] || '';

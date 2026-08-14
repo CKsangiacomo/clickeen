@@ -70,10 +70,6 @@
   margin: 0;
 }
 
-.devstudio-token-editor .diet-popup__header h2 {
-  margin: 0;
-}
-
 .devstudio-token-editor__heading {
   display: grid;
   gap: var(--space-1);

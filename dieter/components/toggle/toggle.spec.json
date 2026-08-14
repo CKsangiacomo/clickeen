@@ -5,7 +5,8 @@
     "type": { "fixed": "toggle" },
     "label": { "required": true },
     "size": { "enum": ["sm", "md", "lg"], "default": "md" },
-    "path": { "required": true }
+    "path": { "required": true },
+    "disabled": { "optional": true }
   },
   "binding": { "path": "instanceData[PATH]", "type": "boolean" },
   "defaults": [
@@ -18,12 +19,36 @@
         "label": "Label",
         "id": "toggle-{{size}}",
         "path": "",
-        "checkedAttr": " checked"
-      },
-      "sizeContext": {
-        "sm": { "labelClass": "label-xs" },
-        "md": { "labelClass": "label-s" },
-        "lg": { "labelClass": "label-m" }
+        "checkedAttr": " checked",
+        "disabled": false
+      }
+    },
+    {
+      "id": "toggle-off",
+      "title": "Off",
+      "sizes": ["md"],
+      "spec": ["diet-toggle", "data-size='md'", "unchecked"],
+      "context": {
+        "size": "md",
+        "label": "Label",
+        "id": "toggle-off",
+        "path": "",
+        "checkedAttr": "",
+        "disabled": false
+      }
+    },
+    {
+      "id": "toggle-disabled",
+      "title": "Disabled",
+      "sizes": ["md"],
+      "spec": ["diet-toggle", "data-size='md'", "disabled"],
+      "context": {
+        "size": "md",
+        "label": "Label",
+        "id": "toggle-disabled",
+        "path": "",
+        "checkedAttr": " checked",
+        "disabled": true
       }
     }
   ]

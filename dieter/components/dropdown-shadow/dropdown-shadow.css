@@ -43,8 +43,6 @@
 
 .diet-dropdown-shadow .diet-dropdown-header-label,
 .diet-dropdown-shadow .diet-popover__header-label,
-.diet-dropdown-shadow .diet-toggle__label,
-.diet-dropdown-shadow .diet-slider__label,
 .diet-dropdown-shadow .diet-textfield__display-label,
 .diet-dropdown-shadow__color-label {
   font: 500 var(--dropdown-shadow-font-size)/var(--dropdown-shadow-line-height) "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;

@@ -10,7 +10,7 @@
               type="text"
               aria-label="{{labelInputLabel}}"
               placeholder="{{labelPlaceholder}}"
-              data-bob-path="{{labelPath}}"
+              data-path="{{labelPath}}"
             />
           </label>
         </div>
@@ -26,23 +26,6 @@
       </div>
     </div>
 
-    {{#if togglePath}}
-      <div class="diet-repeater__toggle-row">
-        <label class="diet-toggle diet-repeater__toggle" data-size="{{size}}">
-          <span class="diet-toggle__label {{labelClass}}">{{toggleLabel}}</span>
-          <input
-            class="diet-toggle__input sr-only"
-            type="checkbox"
-            role="switch"
-            aria-label="{{toggleLabel}}"
-            data-bob-path="{{togglePath}}"
-          />
-          <span class="diet-toggle__switch">
-            <span class="diet-toggle__knob"></span>
-          </span>
-        </label>
-      </div>
-    {{/if}}
   </div>
 
   <div class="diet-repeater__list" data-repeater-list></div>

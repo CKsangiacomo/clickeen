@@ -273,7 +273,7 @@ function collectControlsFromMarkup(markup: string, panelId: PanelId, controls: C
     const attrs = parseTooldrawerAttributes(attrsRaw);
     const type = attrs.type;
     const path = attrs.path;
-    const addDerivedPath = (candidate: string | undefined) => {
+    const addDerivedPath = (candidate: string | undefined, label: string | undefined) => {
       if (!candidate) return;
       const trimmed = candidate.trim();
       if (!trimmed) return;
@@ -282,6 +282,7 @@ function collectControlsFromMarkup(markup: string, panelId: PanelId, controls: C
         panelId,
         type: 'textfield',
         path: trimmed,
+        label: label?.trim() || undefined,
       });
     };
 
@@ -318,8 +319,10 @@ function collectControlsFromMarkup(markup: string, panelId: PanelId, controls: C
         step,
         required,
       });
-      addDerivedPath(attrs.labelPath);
-      addDerivedPath(attrs.reorderLabelPath || attrs['reorder-label-path']);
+      addDerivedPath(
+        attrs.labelPath || attrs['label-path'],
+        attrs.labelInputLabel || attrs['label-input-label'],
+      );
     }
 
     if (attrs.template) {

@@ -195,6 +195,7 @@
           "addLink": "$label:component.dropdown-edit.add-link.label",
           "bold": "$label:component.dropdown-edit.bold.label",
           "clearFormatting": "$label:component.dropdown-edit.clear-formatting.label",
+          "closeLink": "$label:component.dropdown-edit.close-link.label",
           "italic": "$label:component.dropdown-edit.italic.label",
           "link": "$label:component.dropdown-edit.link.label",
           "removeLink": "$label:component.dropdown-edit.remove-link.label",
@@ -373,7 +374,7 @@
                       "remove-label": "$label:content.field.logoshowcase.strips.strip.logos.repeater.attr.remove-label",
                       "move-label": "$label:content.field.logoshowcase.strips.strip.logos.repeater.attr.move-label",
                       "reorder-label": "$label:content.field.logoshowcase.strips.strip.logos.repeater.attr.reorder-label",
-                      "add-open": ".diet-bulk-edit [data-bulk-open]",
+                      "add-open": ".diet-bulk-edit[data-bulk-path=\"logoshowcase.strips\"] [data-bulk-open]",
                       "min": "1",
                       "default-item": {
                         "id": "",

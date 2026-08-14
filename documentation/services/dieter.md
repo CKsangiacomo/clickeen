@@ -107,11 +107,12 @@ giving Dieter ownership of the host's product meaning.
 JSON-valued controls use `data-dieter-json`; Bulk Edit emits `dieter-ops` with
 its existing exact `{ops}` payload. Neither name belongs to Bob or Roma. Hosts
 must call the exported Dropdown Actions, Border, Edit, Fill, Shadow, Upload,
-Object Manager, and Repeater destroy functions before replacing hydrated
-roots. Dropdown Edit destruction detaches the locally bundled Lexical editor
+Object Manager, Repeater, and Slider destroy functions before replacing
+hydrated roots. Dropdown Edit destruction detaches the locally bundled Lexical editor
 from its DOM root; Dropdown Fill and Dropdown Upload cancel pending asset work;
 Object Manager and Repeater destroy hydrated children and release their
-retained collection state and listeners.
+retained collection state and listeners; Slider releases its native input
+listener.
 
 Agent Activity owns a required caller-supplied title, a required array of
 narration rows, its `sm`/`md` structure, and its active presentation. It does
@@ -125,6 +126,36 @@ minimum-height ladder is `4rem/4.5rem/5rem` and its Icon ladder is
 component owns no visible wording. Widget ToolDrawer instances supply the
 group label and every option label from the Widget's adjacent ToolDrawer label
 file.
+
+Toggle is one native checkbox-label primitive. Its required `sm|md|lg` root
+size owns the complete row, caller-label typography, switch geometry, and
+checked, hover, focus, and disabled presentation. The complete visible row
+activates the checkbox. Toggle has no component copy, custom hydrator, product
+meaning, or consumer-local disabled treatment.
+
+Slider is one native range primitive. Its required `sm|md|lg` root size owns
+row and thumb geometry; the caller owns its exact label and numeric binding.
+The exported Slider hydrator synchronizes only the visual progress CSS
+variables on initial render, native input, and the existing `external-sync`
+signal after exact programmatic value projection; its destroy function removes
+those listeners. Slider does not invent units, a trailing value, validation,
+defaults, or product behavior. Compound dropdown editors may compose their own
+exact caller-labelled value rail while reusing the same Slider.
+
+Tabs is one native caller-labelled radio group with no browser hydrator.
+Native checked and disabled state remain the behavior authority; Dieter CSS
+owns the baseline, selected marker, sizes, and presentation. It does not add
+tab roles, roving tabindex, arrow-key navigation, or focus movement. No current
+Widget editor artifact declares Tabs; DevStudio reveals the source primitive.
+
+Segmented is one native caller-labelled radio group with no browser hydrator.
+Its `sm|md|lg` root owns the rail, selected surface, typography, and default
+`12/16/20px` Icon ladder; an explicit numeric Dieter Icon size remains an
+ordinary caller composition. The native input is the sole checked/disabled
+authority. Direct `.diet-segment__content` carries optional label and Icon
+content; there is no nested Button, mirrored `aria-pressed`, or parallel state
+controller. Widget option labels resolve from the adjacent Widget label file;
+Bob application labels remain Bob-owned copy.
 
 Menu Actions owns one compact native action row inside a menu or Popover. It is
 unbound and has no browser hydrator: the caller supplies `type="button"`, the
@@ -140,13 +171,25 @@ Object Manager and Repeater share the collection mental model without merging
 their jobs. Object Manager renders caller-declared top-level object editors and
 only exposes Add/reorder/delete when its exact `allow-structure` input is true;
 reorder/delete are drafted in the existing Popup and committed as one exact
-array value. Repeater edits a nested collection inline, using the caller's
+array value. Repeater edits any declared collection inline, including current
+top-level and Object-Manager-nested uses, using the caller's
 exact item template and exact `default-item`, with one explicit reorder mode.
 Both require exact arrays of objects with stable ids, preserve caller-owned
 state, use one root `sm|md|lg` size, and release their child hydrators on
 destruction. They never derive item shapes, defaults, permissions, Widget
 paths, or copy. Every visible and accessible word is an exact caller input;
 Widget uses resolve it from the adjacent ToolDrawer label file.
+Nested fields use neutral `data-path`. Only the true outer host-bound collection
+field also carries `data-bob-path`; a child collection writes its exact array to
+its parent, and only the parent reaches the host. A caller may declare one exact
+`add-open` selector for a related action; Repeater resolves that selector in the
+current document or shadow root without knowing the consumer or Widget.
+
+Popup is the shared native-dialog frame. It owns backdrop, viewport fit,
+small/medium/large width, header/body/footer layout, body scrolling, and action
+alignment. Every Popup title uses the existing `heading-4` class. Callers own
+the title/body/action strings, accessible naming, workflow, persistence, and
+dismissal policy through the existing dialog lifecycle.
 
 Dropdown Actions owns the compact immediate-choice row and its attached
 Popover composition. The closed row shows caller-supplied label and current
@@ -269,7 +312,12 @@ The link sheet has one contextual action in one stable position. Selected
 unlinked text gets an editable URL field and **Add link**; an existing link
 shows its URL read-only and changes that action to **Remove link**. Changing a
 URL is remove then add. There is no Apply, Update, or second link action. The
-link action is not a per-Widget capability. Toolbar actions use the existing
+link action is not a per-Widget capability. The URL field, contextual action,
+and caller-labelled close action are one internal Dropdown Edit sheet, not a
+second Popover or standalone component. Added href text is applied exactly as
+entered; Dropdown Edit does not trim, prefix, normalize, validate, or silently
+rewrite it. Public Widget rendering keeps its existing URL-safety authority.
+Toolbar actions use the existing
 medium Button geometry with the existing 1.25rem Icon size. The separate
 link-sheet close action keeps the medium Button's default 1rem Icon.
 The Popover header, editor, and toolbar use one `.5rem` vertical rhythm.
@@ -277,10 +325,11 @@ Opening the Popover does not select text. The pinned Lexical dependency is
 bundled with Dieter and runs locally in Bob; it makes no external runtime call.
 Dieter exports the existing compact inline HTML value instead of a Lexical
 document, so Bob's browser-memory and save contracts do not change. Every
-visible field, toolbar, and link-sheet word is caller input resolved from the
-consuming Widget's adjacent ToolDrawer label file. Dieter contains no Widget
-branch, Widget label catalog, locale folder, storage authority, or persistence
-behavior.
+visible toolbar and link-sheet word, including the close action's accessible
+name, is caller input resolved from the consuming Widget's adjacent ToolDrawer
+label file. The declaring control owns its field label and placeholder. Dieter
+contains no Widget branch, Widget label catalog, locale folder, storage
+authority, or persistence behavior.
 
 Popover owns only the floating surface and label/body structure. Its standard
 header contains the caller-supplied label and no decorative Icon. Header and

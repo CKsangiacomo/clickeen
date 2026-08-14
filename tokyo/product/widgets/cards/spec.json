@@ -235,6 +235,7 @@
           "addLink": "$label:component.dropdown-edit.add-link.label",
           "bold": "$label:component.dropdown-edit.bold.label",
           "clearFormatting": "$label:component.dropdown-edit.clear-formatting.label",
+          "closeLink": "$label:component.dropdown-edit.close-link.label",
           "italic": "$label:component.dropdown-edit.italic.label",
           "link": "$label:component.dropdown-edit.link.label",
           "removeLink": "$label:component.dropdown-edit.remove-link.label",

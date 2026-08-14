@@ -79,6 +79,7 @@
     "component.dropdown-edit.add-link.label": "Add link",
     "component.dropdown-edit.bold.label": "Bold",
     "component.dropdown-edit.clear-formatting.label": "Clear formatting",
+    "component.dropdown-edit.close-link.label": "Close link editor",
     "component.dropdown-edit.italic.label": "Italic",
     "component.dropdown-edit.link.label": "Link",
     "component.dropdown-edit.remove-link.label": "Remove link",

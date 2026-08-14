@@ -125,6 +125,8 @@ export function hydrateBulkEdit(scope: Element | DocumentFragment): void {
     const keepEditingBtn = root.querySelector<HTMLButtonElement>('[data-bulk-keep-editing]');
     const discardBtn = root.querySelector<HTMLButtonElement>('[data-bulk-discard-changes]');
     const hidden = root.querySelector<HTMLInputElement>('.diet-bulk-edit__field');
+    const editorTitle = editor?.querySelector<HTMLElement>('.diet-bulk-edit__title');
+    const discardTitle = discard?.querySelector<HTMLElement>('.diet-bulk-edit__title');
 
     if (
       !openBtn ||
@@ -135,7 +137,9 @@ export function hydrateBulkEdit(scope: Element | DocumentFragment): void {
       !discard ||
       !keepEditingBtn ||
       !discardBtn ||
-      !hidden
+      !hidden ||
+      !editorTitle ||
+      !discardTitle
     )
       return;
 
@@ -162,11 +166,13 @@ export function hydrateBulkEdit(scope: Element | DocumentFragment): void {
     const showEditor = () => {
       editor.hidden = false;
       discard.hidden = true;
+      modal.setAttribute('aria-label', editorTitle.textContent!);
     };
 
     const showDiscard = () => {
       editor.hidden = true;
       discard.hidden = false;
+      modal.setAttribute('aria-label', discardTitle.textContent!);
       keepEditingBtn.focus();
     };
 

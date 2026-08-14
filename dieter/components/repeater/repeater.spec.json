@@ -9,8 +9,6 @@
     "labelPlaceholder": { "optional": true },
     "labelInputLabel": { "optional": true },
     "default-item": { "required": true },
-    "toggleLabel": { "optional": true },
-    "togglePath": { "optional": true },
     "add-label": { "required": true },
     "reorder-label": { "required": true },
     "remove-label": { "required": true },
@@ -37,10 +35,8 @@
         "labelPlaceholder": "",
         "labelPath": "",
         "defaultItem": "{&quot;id&quot;:&quot;&quot;,&quot;name&quot;:&quot;New item&quot;}",
-        "toggleLabel": "Show",
-        "togglePath": "",
         "value": "[{&quot;id&quot;:&quot;item-1&quot;,&quot;name&quot;:&quot;First item&quot;},{&quot;id&quot;:&quot;item-2&quot;,&quot;name&quot;:&quot;Second item&quot;}]",
-        "template": "<div class=\"diet-textfield\" data-size=\"md\"><label class=\"diet-textfield__control\"><span class=\"diet-textfield__display-label label-s\">Name</span><input class=\"diet-textfield__field body-s\" type=\"text\" data-bob-path=\"items.__INDEX__.name\" /></label></div>"
+        "template": "<div class=\"diet-textfield\" data-size=\"md\"><label class=\"diet-textfield__control\"><span class=\"diet-textfield__display-label label-s\">Name</span><input class=\"diet-textfield__field body-s\" type=\"text\" data-path=\"items.__INDEX__.name\" /></label></div>"
       },
       "sizeContext": {
         "sm": {

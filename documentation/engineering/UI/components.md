@@ -3,13 +3,13 @@
 **Living, canonical reference — how to use each component.**
 
 - Canonical doctrine: this document.
-- Execution PRD: [`126I__PRD__Components.md`](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126I__PRD__Components.md).
+- Current execution PRD: [`127__PRD__UI_Localization_And_Design_System_Passes.md`](../../../Execution_Pipeline_Docs/02-Executing/127__UI_Localization_And_Design_System_Passes/127__PRD__UI_Localization_And_Design_System_Passes.md).
 - **Source of truth:** `dieter/components/*` (the `.css`, `.html`, `.spec.json`,
   `.ts`, or `.js` files present for each declared contract) and
   `dieter/components/index.ts`.
 - System mechanics (hydration model, spec binding, build): see [`dieter.md`](dieter.md). This doc is the per-component lookup; that doc explains the system once.
 
-## Catalog (27 non-empty source directories including `shared`)
+## Catalog (26 non-empty source directories including `shared`)
 
 Legend: ✅ exported from `index.ts` · Direct host import · ⊘ no custom hydrator.
 
@@ -17,10 +17,10 @@ Legend: ✅ exported from `index.ts` · Direct host import · ⊘ no custom hydr
 | --- | --- | --- | --- |
 | atoms | `button` | Native button/link, spec `string`, `data-size`/`data-type` | ⊘ |
 | atoms | `icon` | — (CSS-only wrapper) | ⊘ |
-| atoms | `tabs` | `hydrateTabs`, `no-binding`, `role=tablist` | ✅ |
-| atoms | `segmented` | `hydrateSegmented`, `no-binding` | ✅ |
-| atoms | `toggle` | native checkbox behavior | ⊘ |
-| atoms | `slider` | — (no `.ts`) | ⊘ |
+| atoms | `tabs` | Native radio-group behavior, caller-owned labels | ⊘ |
+| atoms | `segmented` | Native radio-group behavior, caller-owned labels | ⊘ |
+| atoms | `toggle` | Native checkbox behavior | ⊘ |
+| atoms | `slider` | `hydrateSlider` / `destroySlider`, numeric binding | ✅ |
 | inputs | `textfield` | `hydrateTextfield` | ✅ |
 | inputs | `valuefield` | `hydrateValuefield` | ✅ |
 | inputs | `textedit` | `hydrateTextedit` (largest; 7 `.ts` modules) | ✅ |
@@ -35,7 +35,6 @@ Legend: ✅ exported from `index.ts` · Direct host import · ⊘ no custom hydr
 | dropdowns | `dropdown-upload` | `hydrateDropdownUpload` / `destroyDropdownUpload`, exact asset JSON | ✅ |
 | dropdowns | `dropdown-edit` | `hydrateDropdownEdit` / `destroyDropdownEdit`, exact inline HTML string | ✅ |
 | dropdowns | `menuactions` | native action row, unbound | ⊘ |
-| dropdowns | `popaddlink` | `hydratePopAddLink` | ✅ |
 | composites | `popover` | — (CSS/HTML/spec; container) | ⊘ |
 | structural | `table` | semantic table visual base and overflow shell | ⊘ |
 | structural | `popup` | blocking native-dialog visual structure | ⊘ |
@@ -79,7 +78,7 @@ The governing component product law is:
   and generic multi-path component edits emit `dieter-ops`. Host-owned paths
   remain separate from that component protocol.
 - Hosts destroy hydrated Dropdown Actions, Border, Edit, Fill, Shadow, Upload,
-  Object Manager, and Repeater roots before their rendered DOM is replaced.
+  Object Manager, Repeater, and Slider roots before their rendered DOM is replaced.
   Dropdown Edit destruction detaches its Lexical root; Fill and Upload cancel
   pending media resolution; Object Manager and Repeater release their child
   controls, listeners, dialogs, and active collection state.
@@ -265,6 +264,32 @@ The governing component product law is:
   internal source mechanics.
 - `textrename` is deleted because it had no product consumer.
 - Toggle is a native checkbox HTML/CSS/spec contract with no custom hydrator.
+  Its required `sm|md|lg` size owns the complete row, label typography, switch
+  rail, hover, checked, focus, and disabled presentation. The complete row is
+  the native label and activates the checkbox. A disabled Toggle presents one
+  disabled state on the complete row; consumers do not dim or resize only the
+  switch. Every visible label is exact caller copy.
+- Slider is one native range input with a required `sm|md|lg` size and exact
+  caller label. Its small Dieter hydrator owns only the visual progress CSS
+  variables on initial render, native input, and the existing `external-sync`
+  signal after a host or compound editor projects an exact numeric value.
+  Hosts continue to own the numeric value and binding, and call `destroySlider`
+  before replacing the hydrated control surface. Slider invents no unit,
+  trailing readout, clamp, validation copy, or product meaning; a compound
+  editor may compose its own caller-labelled value rail around the primitive.
+- Tabs is one native caller-labelled radio group. Checked and disabled state
+  come from the native inputs; CSS owns the shared baseline, selected marker,
+  size ladder, and states. Dieter installs no tab roles, roving tabindex,
+  arrow-key handler, or focus-moving controller. There is currently no Widget
+  ToolDrawer Tabs declaration; DevStudio reveals the primitive directly.
+- Segmented is one native radio group with `sm|md|lg` geometry and
+  `txt|ic|ictxt` content shapes. The radio input is the sole checked and
+  disabled authority; Dieter CSS owns the rail, selected surface, typography,
+  Icon ladder, hover, focus, and disabled presentation. Each segment contains
+  direct presentational content rather than a nested Button, and no hydrator
+  mirrors state through `aria-pressed`. Visible labels, icon-only accessible
+  names, and the group name are exact caller inputs. Widget options resolve
+  through the adjacent Widget label file; Bob Chrome remains Bob-owned copy.
 - Object Manager and Repeater are the two collection-editing primitives, with
   deliberately separate jobs. Object Manager renders each top-level object's
   caller-declared editor. `allow-structure="true"` adds one explicit top-level
@@ -274,14 +299,19 @@ The governing component product law is:
   draft, while a dirty draft uses the existing caller-labelled
   keep-editing/discard flow. Object Manager never infers an object shape,
   label, Widget path, minimum, or structural permission.
-- Repeater owns the nested inline collection inside an object. It renders the
+- Repeater owns inline item add/remove/reorder for a declared collection,
+  whether that collection is top-level or nested inside an Object Manager. It renders the
   caller template for every exact item, adds an exact caller-supplied
   `default-item`, removes subject to the declared `min`, and reorders through
   one explicit drag mode. The exact array is its only bound value. Existing
   values and every new default item must carry a stable non-empty `id`; the
   component assigns new ids only into caller-declared empty `id` coordinates.
   It does not derive an item shape from current values or template fields.
-- Both primitives require one `sm|md|lg` root size, use the existing Button,
+- Nested collection fields retain consumer-neutral `data-path` coordinates.
+  Only each actual host-bound outer collection field also receives Bob's
+  `data-bob-path`; child components fold their exact array into the parent
+  before the outer field emits. Both primitives require one `sm|md|lg` root
+  size, use the existing Button,
   Icon, Textfield, Toggle, Popup, Tooltip, and child-hydrator contracts, and
   expose JSON only through `data-dieter-json`. All visible and accessible words
   are caller inputs. Widget ToolDrawer uses receive those exact strings from
@@ -300,7 +330,12 @@ The governing component product law is:
   selection or caret inside an existing link shows its URL read-only with that
   same action position changed to **Remove link**. Changing a URL is the clear
   remove-then-add flow. There is no Apply or Update action and no second link
-  button. Toolbar actions use the existing medium Button geometry with the
+  button. The URL field, contextual action, and caller-labelled close action
+  are one internal Dropdown Edit link sheet, not a nested Popover or separate
+  component. An added href is the exact caller-entered string; Dropdown Edit
+  does not trim, prefix, reserialize, or silently repair it. Public Widget
+  rendering retains its existing URL-safety authority. Toolbar actions use the
+  existing medium Button geometry with the
   existing `1.25rem` Icon size; the separate link-sheet close action keeps the
   medium Button's default `1rem` Icon. Clear formatting affects the selected
   formatting and does not remove links. The component does not preselect text
@@ -310,9 +345,11 @@ The governing component product law is:
   not call an external runtime service and does not introduce a new persisted
   document format: Bob's browser-memory value remains the existing compact
   inline HTML string using `strong`, `em`, `u`, `s`, `a`, and `br`. Empty is
-  exactly `""`. Widget-adjacent ToolDrawer label files supply every visible
-  component action and field word through the existing compiler join; Dieter
-  owns no product copy or Widget-specific behavior.
+  exactly `""`. Widget-adjacent ToolDrawer label files supply the exact ten-key
+  Dropdown Edit component-action/accessibility shape, including the close
+  action, through the existing compiler join. The declaring control remains
+  responsible for its field label and placeholder. Dieter owns no product
+  copy or Widget-specific behavior.
 - Object Manager dialog lifecycle remains owned by the dialog contract.
 
 Bulk Edit and Object Manager follow the exact dismissal contract in
@@ -386,6 +423,8 @@ own the selected column, direction, and row ordering.
 
 Dieter Popup owns the blocking native `<dialog>` appearance and structural
 slots: header, body, footer, and actions, with small, medium, and large sizes.
+Every Popup title uses the existing `heading-4` treatment; the caller supplies
+the exact title and the dialog's truthful accessible name.
 Product owners keep workflow state, copy, validation, persistence, and the
 accepted dismissal behavior. Bulk Edit, Object Manager, DevStudio token
 editing, Roma blocking dialogs, and Bob's plan-limit prompt consume Popup
@@ -414,8 +453,10 @@ create a tooltip framework or move product copy into Dieter.
 
 ## Per-Component Consumption
 
-The composites (`repeater`, `object-manager`, `bulk-edit`, `tabs`, `popaddlink`,
-`menuactions`) are editor controls rendered in Bob's ToolDrawer.
+Current ToolDrawer composites include Repeater, Object Manager, and Bulk Edit;
+Menu Actions is composed inside dropdown menus. Tabs has no current Widget
+consumer. Link editing is internal to Dropdown Edit and is not a separate
+component or compiler field type.
 
 Component color consumption follows [`color.md`](color.md): structural chrome
 uses its role tokens and state formulas; user-authored color controls keep their
@@ -433,5 +474,5 @@ Current inventory detail: Dieter components are source modules consumed
 directly by Bob, Roma, and DevStudio; there is no runtime component manifest.
 `shared/` contains helpers and is not a rendered component.
 `command-activity` and `operational-table` are absent from current tracked
-source. DevStudio generates 24 source-backed component pages. Historical 126
+source. DevStudio generates 23 source-backed component pages. Historical 126
 audits remain point-in-time evidence.

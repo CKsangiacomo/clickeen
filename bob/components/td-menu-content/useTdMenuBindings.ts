@@ -5,7 +5,6 @@ import type { AccountFontLibrary } from '@clickeen/widget-foundation';
 import type { ApplyWidgetOpsResult, WidgetOp } from '../../lib/ops';
 import type { CompiledWidget } from '../../lib/types';
 import { getAt } from '../../lib/utils/paths';
-import { syncSegmentedPressedState } from './dom';
 import {
   expandLinkedOps,
   isFiniteNumber,
@@ -109,7 +108,6 @@ export function useTdMenuBindings(args: {
       const target = event.target;
       if (!target) return;
       if (!(target instanceof HTMLElement)) return;
-      if (target.closest('.diet-popaddlink')) return;
       if (
         !(
           target instanceof HTMLInputElement ||
@@ -243,9 +241,6 @@ export function useTdMenuBindings(args: {
         const nextChecked = value != null && String(value) === field.value;
         if (!isActive && field.checked !== nextChecked) {
           field.checked = nextChecked;
-          syncSegmentedPressedState(field);
-        } else if (!isActive) {
-          syncSegmentedPressedState(field);
         }
         return;
       }
@@ -261,15 +256,14 @@ export function useTdMenuBindings(args: {
 
       if (field instanceof HTMLInputElement && field.type === 'range') {
         if (isActive) return;
-        const fallback = field.min?.trim() || '0';
-        const resolvedNumber = isFiniteNumber(value) ? value : null;
-        const resolvedValue = resolvedNumber == null ? fallback : String(resolvedNumber);
+        if (!isFiniteNumber(value)) {
+          throw new Error(`[TdMenuContent] Slider value for "${path}" is not a finite number`);
+        }
+        const resolvedValue = String(value);
         if (field.value !== resolvedValue) {
           field.value = resolvedValue;
         }
-        field.style.setProperty('--value', resolvedValue);
-        field.style.setProperty('--min', field.min || '0');
-        field.style.setProperty('--max', field.max || '100');
+        field.dispatchEvent(new CustomEvent('external-sync', { detail: { value: resolvedValue } }));
         return;
       }
 

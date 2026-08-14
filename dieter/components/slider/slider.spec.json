@@ -9,7 +9,8 @@
     "label": { "required": true },
     "min": { "optional": true },
     "max": { "optional": true },
-    "value": { "optional": true }
+    "value": { "optional": true },
+    "disabled": { "optional": true }
   },
   "binding": { "path": "instanceData[PATH]", "type": "number" },
   "defaults": [
@@ -25,12 +26,30 @@
         "min": "0",
         "max": "100",
         "value": "50",
+        "disabled": false,
         "path": ""
       },
       "sizeContext": {
-        "sm": { "labelClass": "label-xs" },
-        "md": { "labelClass": "label-s" },
-        "lg": { "labelClass": "label-m" }
+        "sm": { "value": "20" },
+        "md": { "value": "50" },
+        "lg": { "value": "80" }
+      }
+    },
+    {
+      "id": "slider-disabled",
+      "title": "Disabled",
+      "sizes": ["md"],
+      "spec": ["diet-slider", "data-size='md'", "disabled"],
+      "context": {
+        "block": "",
+        "size": "md",
+        "id": "slider-disabled",
+        "label": "Label",
+        "min": "0",
+        "max": "100",
+        "value": "50",
+        "disabled": true,
+        "path": ""
       }
     }
   ]

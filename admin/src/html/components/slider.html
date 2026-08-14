@@ -12,17 +12,16 @@
       </figcaption>
       <div class="dieter-preview">
         <div class="diet-slider" data-size="sm">
-  <label class="diet-slider__label label-xs" for="slider-sm">Label</label>
+  <label class="diet-slider__label" for="slider-sm">Label</label>
   <input
     id="slider-sm"
     class="diet-slider__input"
     type="range"
     min="0"
     max="100"
-    value="50"
+    value="20"
 
-    style="--value: 50; --min: 0; --max: 100;"
-    oninput="this.style.setProperty('--value', this.value)"
+
   />
 </div>
 
@@ -35,7 +34,7 @@
       </figcaption>
       <div class="dieter-preview">
         <div class="diet-slider" data-size="md">
-  <label class="diet-slider__label label-s" for="slider-md">Label</label>
+  <label class="diet-slider__label" for="slider-md">Label</label>
   <input
     id="slider-md"
     class="diet-slider__input"
@@ -44,8 +43,7 @@
     max="100"
     value="50"
 
-    style="--value: 50; --min: 0; --max: 100;"
-    oninput="this.style.setProperty('--value', this.value)"
+
   />
 </div>
 
@@ -58,17 +56,42 @@
       </figcaption>
       <div class="dieter-preview">
         <div class="diet-slider" data-size="lg">
-  <label class="diet-slider__label label-m" for="slider-lg">Label</label>
+  <label class="diet-slider__label" for="slider-lg">Label</label>
   <input
     id="slider-lg"
     class="diet-slider__input"
     type="range"
     min="0"
     max="100"
+    value="80"
+
+
+  />
+</div>
+
+      </div>
+    </figure>
+    </div>
+
+    <div class="dieter-component-row">
+
+    <figure class="dieter-component-preview-280-wrapper">
+      <figcaption class="spec-wrapper dieter-spec-wrapper">
+        <strong class="body-s">Disabled</strong>
+        <span class="spec-line body-xs">diet-slider</span><span class="spec-line body-xs">data-size='md'</span><span class="spec-line body-xs">disabled</span>
+      </figcaption>
+      <div class="dieter-preview">
+        <div class="diet-slider" data-size="md">
+  <label class="diet-slider__label" for="slider-disabled">Label</label>
+  <input
+    id="slider-disabled"
+    class="diet-slider__input"
+    type="range"
+    min="0"
+    max="100"
     value="50"
 
-    style="--value: 50; --min: 0; --max: 100;"
-    oninput="this.style.setProperty('--value', this.value)"
+    disabled
   />
 </div>
 

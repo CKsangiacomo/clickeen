@@ -1,15 +1,12 @@
 {
   "component": "segmented",
-  "description": "Multi-option segmented control built from Dieter Buttons and radio inputs.",
-  "syntax": "<div class='diet-segmented-{{VARIANT}}' role='radiogroup' data-size='{{SIZE}}' aria-label='{{ARIA_LABEL}}'>…</div>",
+  "description": "Native-radio segmented selection with caller-owned labels and Icons.",
+  "syntax": "<div class='diet-segmented diet-segmented-{{VARIANT}}' role='radiogroup' data-size='{{SIZE}}' aria-label='{{ARIA_LABEL}}'>…</div>",
   "attributes": {
     "variant": { "type": "enum", "values": ["ic", "ictxt", "txt"], "default": "ictxt", "required": true },
     "size": { "type": "enum", "values": ["sm", "md", "lg"], "default": "md", "required": false },
     "ariaLabel": { "type": "string", "required": true },
     "groupName": { "type": "string", "required": true },
-    "buttonSize": { "type": "enum", "values": ["small", "medium", "large"], "default": "medium", "required": false },
-    "buttonType": { "type": "enum", "values": ["primary", "secondary", "tertiary", "quaternary"], "default": "quaternary", "required": false },
-    "buttonIconSize": { "type": "enum", "values": ["12", "16", "20", "24", "28", "32", "36", "40"], "default": "16", "required": false },
     "segments": {
       "type": "array",
       "required": true,
@@ -28,73 +25,51 @@
   },
   "defaults": [
     {
-      "id": "segmented",
+      "id": "segmented-size-ladder",
+      "title": "Size ladder",
       "sizes": ["sm", "md", "lg"],
-      "spec": ["diet-segmented", "data-size='{{size}}'"],
+      "spec": ["diet-segmented-ictxt", "data-size='{{size}}'", "native radio state"],
       "context": {
-        "variant": "txt", "size": "md", "ariaLabel": "Selection", "groupName": "selection-{{size}}",
-        "buttonSize": "medium", "buttonType": "quaternary", "buttonIconSize": "16",
-        "segments": [{ "value": "one", "label": "One", "checked": true }, { "value": "two", "label": "Two" }]
-      },
-      "sizeContext": {
-        "sm": { "buttonSize": "small", "buttonIconSize": "12" },
-        "md": { "buttonSize": "medium", "buttonIconSize": "16" },
-        "lg": { "buttonSize": "large", "buttonIconSize": "20" }
-      }
-    },
-    {
-      "id": "segmented-ictxt",
-      "sizes": ["sm", "md", "lg"],
-      "spec": ["diet-segmented-ictxt", "data-size='{{size}}'"],
-      "context": {
-        "variant": "ictxt", "size": "md", "ariaLabel": "Assist mode", "groupName": "assist-mode-{{size}}",
-        "buttonSize": "medium", "buttonType": "quaternary", "buttonIconSize": "16",
+        "variant": "ictxt",
+        "size": "md",
+        "ariaLabel": "Assist mode",
+        "groupName": "assist-mode-{{size}}",
         "segments": [
-          { "value": "manual", "label": "Manual", "icon": "hand.tap", "checked": true },
+          { "value": "manual", "label": "Manual", "icon": "pencil", "checked": true },
           { "value": "copilot", "label": "Copilot", "icon": "sparkles" }
         ]
-      },
-      "sizeContext": {
-        "sm": { "buttonSize": "small", "buttonIconSize": "12" },
-        "md": { "buttonSize": "medium", "buttonIconSize": "16" },
-        "lg": { "buttonSize": "large", "buttonIconSize": "20" }
       }
     },
     {
-      "id": "segmented-ic",
-      "sizes": ["sm", "md", "lg"],
-      "spec": ["diet-segmented-ic", "data-size='{{size}}'"],
+      "id": "segmented-text",
+      "title": "Text",
+      "spec": ["diet-segmented-txt", "data-size='md'", "selected, unselected and disabled"],
       "context": {
-        "variant": "ic", "size": "md", "ariaLabel": "View selection", "groupName": "view-{{size}}",
-        "buttonSize": "medium", "buttonType": "quaternary", "buttonIconSize": "16",
-        "segments": [
-          { "value": "grid", "icon": "circle.grid.2x2", "srLabel": "Grid", "checked": true },
-          { "value": "list", "icon": "line.3.horizontal.decrease.circle", "srLabel": "List" }
-        ]
-      },
-      "sizeContext": {
-        "sm": { "buttonSize": "small", "buttonIconSize": "12" },
-        "md": { "buttonSize": "medium", "buttonIconSize": "16" },
-        "lg": { "buttonSize": "large", "buttonIconSize": "20" }
-      }
-    },
-    {
-      "id": "segmented-txt",
-      "sizes": ["sm", "md", "lg"],
-      "spec": ["diet-segmented-txt", "data-size='{{size}}'"],
-      "context": {
-        "variant": "txt", "size": "md", "ariaLabel": "Alignment", "groupName": "alignment-{{size}}",
-        "buttonSize": "medium", "buttonType": "quaternary", "buttonIconSize": "16",
+        "variant": "txt",
+        "size": "md",
+        "ariaLabel": "Alignment",
+        "groupName": "alignment",
         "segments": [
           { "value": "left", "label": "Left", "checked": true },
           { "value": "center", "label": "Center" },
-          { "value": "right", "label": "Right" }
+          { "value": "right", "label": "Right", "disabled": true }
         ]
-      },
-      "sizeContext": {
-        "sm": { "buttonSize": "small", "buttonIconSize": "12" },
-        "md": { "buttonSize": "medium", "buttonIconSize": "16" },
-        "lg": { "buttonSize": "large", "buttonIconSize": "20" }
+      }
+    },
+    {
+      "id": "segmented-icon",
+      "title": "Icon",
+      "spec": ["diet-segmented-ic", "data-size='md'", "caller-owned accessible names"],
+      "context": {
+        "variant": "ic",
+        "size": "md",
+        "ariaLabel": "View",
+        "groupName": "view",
+        "segments": [
+          { "value": "grid", "icon": "circle.grid.2x2", "srLabel": "Grid", "checked": true },
+          { "value": "list", "icon": "line.3.horizontal.decrease.circle", "srLabel": "List" },
+          { "value": "more", "icon": "ellipsis", "srLabel": "More", "disabled": true }
+        ]
       }
     }
   ]

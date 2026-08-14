@@ -524,25 +524,16 @@ export function Workspace({
               checked={device === 'desktop'}
               onChange={() => setPreview({ device: 'desktop' })}
             />
-            <span className="diet-segment__surface" />
-            <button
-              className="diet-button"
-              data-size="large"
-              data-type="quaternary"
-              tabIndex={-1}
-              type="button"
-              aria-label="Desktop"
-              aria-pressed={device === 'desktop'}
-            >
+            <span className="diet-segment__surface" aria-hidden="true" />
+            <span className="diet-segment__content">
               <span
                 className="diet-icon"
-                data-size="20"
                 data-icon="desktopcomputer"
                 style={dieterIconStyle('desktopcomputer')}
                 aria-hidden="true"
               />
-            </button>
-            <span className="diet-segment__sr">Desktop</span>
+              <span className="diet-segment__sr">Desktop</span>
+            </span>
           </label>
           <label className="diet-segment">
             <input
@@ -553,25 +544,16 @@ export function Workspace({
               checked={device === 'mobile'}
               onChange={() => setPreview({ device: 'mobile' })}
             />
-            <span className="diet-segment__surface" />
-            <button
-              className="diet-button"
-              data-size="large"
-              data-type="quaternary"
-              tabIndex={-1}
-              type="button"
-              aria-label="Mobile"
-              aria-pressed={device === 'mobile'}
-            >
+            <span className="diet-segment__surface" aria-hidden="true" />
+            <span className="diet-segment__content">
               <span
                 className="diet-icon"
-                data-size="20"
                 data-icon="iphone"
                 style={dieterIconStyle('iphone')}
                 aria-hidden="true"
               />
-            </button>
-            <span className="diet-segment__sr">Mobile</span>
+              <span className="diet-segment__sr">Mobile</span>
+            </span>
           </label>
         </div>
       </div>

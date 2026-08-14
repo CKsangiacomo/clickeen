@@ -22,6 +22,7 @@ type RepeaterState = {
   removeListeners: Array<() => void>;
   handleIcon: HTMLElement;
   trashIcon: HTMLElement;
+  buttonSize: 'small' | 'medium' | 'large';
 };
 
 const states = new Map<HTMLElement, RepeaterState>();
@@ -105,7 +106,7 @@ function setExistingAt(value: Record<string, unknown>, path: string, nextValue: 
 }
 
 function labelWithIndex(label: string, index: number): string {
-  return label.replaceAll('{index}', String(index + 1)).replaceAll('{position}', String(index + 1));
+  return label.replaceAll('{index}', String(index + 1));
 }
 
 function registerListener(
@@ -117,6 +118,13 @@ function registerListener(
 ): void {
   target.addEventListener(type, listener, options);
   state.removeListeners.push(() => target.removeEventListener(type, listener, options));
+}
+
+function buttonSizeForControl(size: string | undefined): 'small' | 'medium' | 'large' {
+  if (size === 'sm') return 'small';
+  if (size === 'md') return 'medium';
+  if (size === 'lg') return 'large';
+  throw new Error('[repeater] size must be sm, md, or lg');
 }
 
 function syncLimitControls(state: RepeaterState): void {
@@ -147,10 +155,10 @@ function syncItemFields(
   itemValue: Record<string, unknown>,
   index: number,
 ): void {
-  const arrayPath = state.hidden.dataset.bobPath ?? state.hidden.dataset.path ?? '';
+  const arrayPath = state.hidden.dataset.path!;
   const prefix = `${arrayPath}.${index}.`;
-  body.querySelectorAll<HTMLElement>('[data-bob-path]').forEach((element) => {
-    const path = element.dataset.bobPath!;
+  body.querySelectorAll<HTMLElement>('[data-path]').forEach((element) => {
+    const path = element.dataset.path!;
     if (!path.startsWith(prefix)) return;
     const value = getAt(itemValue, path.slice(prefix.length));
     if (value === undefined) return;
@@ -278,7 +286,7 @@ function render(state: RepeaterState): void {
     const handle = document.createElement('button');
     handle.type = 'button';
     handle.className = 'diet-button diet-tooltip diet-repeater__item-handle';
-    handle.dataset.size = 'small';
+    handle.dataset.size = state.buttonSize;
     handle.dataset.type = 'quaternary';
     const moveLabel = labelWithIndex(state.moveLabel, index);
     handle.setAttribute('aria-label', moveLabel);
@@ -294,7 +302,7 @@ function render(state: RepeaterState): void {
     const remove = document.createElement('button');
     remove.type = 'button';
     remove.className = 'diet-button diet-tooltip diet-repeater__item-remove';
-    remove.dataset.size = 'small';
+    remove.dataset.size = state.buttonSize;
     remove.dataset.type = 'quaternary';
     const removeLabel = labelWithIndex(state.removeLabel, index);
     remove.setAttribute('aria-label', removeLabel);
@@ -362,13 +370,12 @@ export function hydrateRepeater(
       removeListeners: [],
       handleIcon: requiredElement(root, '.diet-repeater__icon-handle'),
       trashIcon: requiredElement(root, '.diet-repeater__icon-trash'),
+      buttonSize: buttonSizeForControl(root.dataset.size),
     };
     states.set(root, state);
     syncReorderControls(state);
 
     const handleNestedChange = (event: Event): void => {
-      const detail = (event as CustomEvent<{ bobIgnore?: boolean }>).detail;
-      if (detail?.bobIgnore) return;
       const target = event.target;
       if (
         target === hidden ||
@@ -377,9 +384,19 @@ export function hydrateRepeater(
           !(target instanceof HTMLSelectElement))
       )
         return;
-      const arrayPath = hidden.dataset.bobPath ?? hidden.dataset.path ?? '';
-      const path = target.dataset.bobPath ?? '';
+      const arrayPath = hidden.dataset.path!;
+      const path = target.dataset.path ?? '';
       if (!path.startsWith(`${arrayPath}.`)) return;
+      const nearestCollection = target.closest<HTMLElement>(
+        '.diet-repeater, .diet-object-manager',
+      );
+      if (nearestCollection && nearestCollection !== root) {
+        const nestedField = nearestCollection.querySelector<HTMLInputElement>(
+          ':scope > .diet-repeater__field, :scope > .diet-object-manager__field',
+        );
+        const nestedPath = nestedField?.dataset.path;
+        if (nestedPath && target !== nestedField && path.startsWith(`${nestedPath}.`)) return;
+      }
       const parts = path.slice(arrayPath.length + 1).split('.');
       const indexToken = parts.shift();
       if (!indexToken || !/^\d+$/.test(indexToken) || !parts.length) return;
@@ -392,10 +409,10 @@ export function hydrateRepeater(
             ? JSON.parse(target.value)
             : target.value;
       setExistingAt(item, parts.join('.'), nextValue);
+      event.stopPropagation();
       write(state);
     };
-    registerListener(state, root, 'input', handleNestedChange, true);
-    registerListener(state, root, 'change', handleNestedChange, true);
+    registerListener(state, root, 'input', handleNestedChange);
 
     registerListener(state, state.addButton, 'click', () => {
       if (state.maxItems != null && state.value.length >= state.maxItems) return;
@@ -407,8 +424,9 @@ export function hydrateRepeater(
       const addTarget = root.dataset.addOpen;
       if (addTarget) {
         requestAnimationFrame(() => {
-          const host = root.closest('.tdmenucontent') ?? root.closest('.tooldrawer') ?? document;
-          const target = host.querySelector<HTMLElement>(addTarget);
+          const target = (root.getRootNode() as Document | ShadowRoot).querySelector<HTMLElement>(
+            addTarget,
+          );
           if (!target) throw new Error(`[repeater] add-open target not found: ${addTarget}`);
           target.click();
         });

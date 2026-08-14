@@ -1,6 +1,6 @@
 {
   "component": "tabs",
-  "syntax": "<div class='diet-tabs{{#if block}} diet-tabs--block{{/if}}' role='tablist' data-size='{{SIZE}}' aria-label='{{ARIA_LABEL}}'>…</div>",
+  "syntax": "<div class='diet-tabs{{#if block}} diet-tabs--block{{/if}}' role='radiogroup' data-size='{{SIZE}}' aria-label='{{ARIA_LABEL}}'>…</div>",
   "attributes": {
     "size": { "enum": ["sm", "md", "lg"], "default": "md" },
     "ariaLabel": { "required": true },
@@ -9,12 +9,15 @@
     "tab1Id": { "required": true },
     "tab1Label": { "required": true },
     "tab1CheckedAttr": { "optional": true },
+    "tab1Disabled": { "optional": true },
     "tab2Id": { "optional": true },
     "tab2Label": { "optional": true },
     "tab2CheckedAttr": { "optional": true },
+    "tab2Disabled": { "optional": true },
     "tab3Id": { "optional": true },
     "tab3Label": { "optional": true },
-    "tab3CheckedAttr": { "optional": true }
+    "tab3CheckedAttr": { "optional": true },
+    "tab3Disabled": { "optional": true }
   },
   "defaults": [
     {
@@ -26,19 +29,40 @@
         "groupName": "tabs-{{size}}",
         "block": "true",
         "tab1Id": "tabs-{{size}}-1",
-        "tab1Label": "Tab 1",
+        "tab1Label": "Overview",
         "tab1CheckedAttr": " checked",
+        "tab1Disabled": false,
         "tab2Id": "tabs-{{size}}-2",
-        "tab2Label": "Tab 2",
+        "tab2Label": "Content",
         "tab2CheckedAttr": "",
+        "tab2Disabled": false,
         "tab3Id": "tabs-{{size}}-3",
-        "tab3Label": "Tab 3",
-        "tab3CheckedAttr": ""
-      },
-      "sizeContext": {
-        "sm": { "labelClass": "label-xs" },
-        "md": { "labelClass": "label-s" },
-        "lg": { "labelClass": "label-m" }
+        "tab3Label": "Settings",
+        "tab3CheckedAttr": "",
+        "tab3Disabled": true
+      }
+    },
+    {
+      "id": "tabs-two-option",
+      "title": "Two options",
+      "sizes": ["md"],
+      "spec": ["diet-tabs", "data-size='md'", "two options"],
+      "context": {
+        "ariaLabel": "View",
+        "groupName": "tabs-two-option",
+        "block": "true",
+        "tab1Id": "tabs-two-option-1",
+        "tab1Label": "Current",
+        "tab1CheckedAttr": "",
+        "tab1Disabled": false,
+        "tab2Id": "tabs-two-option-2",
+        "tab2Label": "Archived",
+        "tab2CheckedAttr": " checked",
+        "tab2Disabled": false,
+        "tab3Id": "",
+        "tab3Label": "",
+        "tab3CheckedAttr": "",
+        "tab3Disabled": false
       }
     }
   ]

@@ -8,6 +8,7 @@ import {
   destroyDropdownUpload,
   destroyObjectManager,
   destroyRepeater,
+  destroySlider,
   hydrateBulkEdit,
   hydrateChoiceTiles,
   hydrateDropdownActions,
@@ -16,9 +17,7 @@ import {
   hydrateDropdownFill,
   hydrateDropdownShadow,
   hydrateDropdownUpload,
-  hydratePopAddLink,
-  hydrateSegmented,
-  hydrateTabs,
+  hydrateSlider,
   hydrateTextedit,
   hydrateTextfield,
   hydrateValuefield,
@@ -51,6 +50,7 @@ export function runHydrators(scope: HTMLElement, deps: DieterHydratorDeps): () =
     scope.querySelectorAll<HTMLElement>('.diet-dropdown-upload').forEach(destroyDropdownUpload);
     scope.querySelectorAll<HTMLElement>('.diet-object-manager').forEach(destroyObjectManager);
     scope.querySelectorAll<HTMLElement>('.diet-repeater').forEach(destroyRepeater);
+    scope.querySelectorAll<HTMLInputElement>('.diet-slider__input').forEach(destroySlider);
   };
   const nestedDeps = {
     ...deps,
@@ -67,11 +67,9 @@ export function runHydrators(scope: HTMLElement, deps: DieterHydratorDeps): () =
     hydrateDropdownFill(scope, deps);
     hydrateDropdownShadow(scope);
     hydrateDropdownUpload(scope, deps);
+    hydrateSlider(scope);
     hydrateObjectManager(scope, nestedDeps);
-    hydratePopAddLink(scope);
     hydrateRepeater(scope, nestedDeps);
-    hydrateSegmented(scope);
-    hydrateTabs(scope);
     hydrateTextedit(scope);
     hydrateTextfield(scope);
     hydrateValuefield(scope);
@@ -82,14 +80,6 @@ export function runHydrators(scope: HTMLElement, deps: DieterHydratorDeps): () =
   }
 
   return destroy;
-}
-
-export function syncSegmentedPressedState(input: HTMLInputElement) {
-  const segment = input.closest('.diet-segment');
-  if (!segment) return;
-  const button = segment.querySelector<HTMLElement>('.diet-button');
-  if (!button) return;
-  button.setAttribute('aria-pressed', input.checked ? 'true' : 'false');
 }
 
 export function applyGroupHeaders(scope: HTMLElement, ownerLabel = '') {

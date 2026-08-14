@@ -16,6 +16,7 @@ import {
   IS_UNDERLINE,
   KEY_ENTER_COMMAND,
   TextNode,
+  type DOMExportOutputMap,
   type LexicalEditor,
   type LexicalNode,
   type RangeSelection,
@@ -26,6 +27,9 @@ import { createDropdownHydrator } from '../shared/dropdownToggle';
 const EXTERNAL_SYNC_TAG = 'clickeen-dropdown-edit-external-sync';
 const SUPPORTED_TEXT_FORMAT = IS_BOLD | IS_ITALIC | IS_UNDERLINE | IS_STRIKETHROUGH;
 const states = new Map<HTMLElement, DropdownEditState>();
+const INLINE_EXPORTERS = new Map() as DOMExportOutputMap;
+INLINE_EXPORTERS.set(LinkNode, exportExactLink);
+INLINE_EXPORTERS.set(TextNode, exportInlineText);
 
 const Command = {
   Bold: 'bold',
@@ -49,7 +53,8 @@ interface DropdownEditState {
   hiddenInput: HTMLInputElement;
   paletteButtons: Map<Command, HTMLButtonElement>;
   linkSheet: HTMLElement;
-  linkPopover: HTMLElement;
+  linkInput: HTMLInputElement;
+  linkCloseButton: HTMLButtonElement;
   linkActionButton: HTMLButtonElement;
   linkMode: 'add' | 'remove';
   savedLinkSelection: RangeSelection | null;
@@ -111,8 +116,11 @@ function createState(root: HTMLElement): DropdownEditState {
   const hiddenInput = root.querySelector<HTMLInputElement>('.diet-dropdown-edit__field')!;
   const palette = root.querySelector<HTMLElement>('.diet-dropdown-edit__palette')!;
   const linkSheet = root.querySelector<HTMLElement>('.diet-dropdown-edit__linksheet')!;
-  const linkPopover = linkSheet.querySelector<HTMLElement>('.diet-popaddlink')!;
-  const linkActionButton = linkPopover.querySelector<HTMLButtonElement>(
+  const linkInput = linkSheet.querySelector<HTMLInputElement>('.diet-dropdown-edit__link-input')!;
+  const linkCloseButton = linkSheet.querySelector<HTMLButtonElement>(
+    '.diet-dropdown-edit__link-close',
+  )!;
+  const linkActionButton = linkSheet.querySelector<HTMLButtonElement>(
     '.diet-dropdown-edit__link-action',
   )!;
   const paletteButtons = new Map<Command, HTMLButtonElement>();
@@ -122,7 +130,7 @@ function createState(root: HTMLElement): DropdownEditState {
 
   const editor = createEditor({
     html: {
-      export: new Map([[TextNode, exportInlineText]]),
+      export: INLINE_EXPORTERS,
     },
     namespace: 'clickeen-dropdown-edit',
     nodes: [LinkNode],
@@ -167,7 +175,8 @@ function createState(root: HTMLElement): DropdownEditState {
     hiddenInput,
     paletteButtons,
     linkSheet,
-    linkPopover,
+    linkInput,
+    linkCloseButton,
     linkActionButton,
     linkMode: 'add',
     savedLinkSelection: null,
@@ -175,23 +184,26 @@ function createState(root: HTMLElement): DropdownEditState {
 }
 
 function installHandlers(state: DropdownEditState): void {
-  const { editor, editorElement, linkPopover, paletteButtons } = state;
+  const { editor, editorElement, linkActionButton, linkCloseButton, linkInput, paletteButtons } = state;
 
   paletteButtons.forEach((button, command) => {
     button.addEventListener('pointerdown', (event) => event.preventDefault());
     button.addEventListener('click', () => handleCommand(state, command));
   });
 
-  linkPopover.addEventListener('popaddlink:submit', (event) => {
+  linkInput.addEventListener('input', (event) => {
+    event.stopPropagation();
+    syncLinkAction(state);
+  });
+  linkActionButton.addEventListener('click', () => {
     if (state.linkMode === 'remove') {
       removeLink(state);
       return;
     }
-    const href = (event as CustomEvent<{ href: string }>).detail.href;
-    applyLink(state, href);
+    if (linkInput.value.length === 0) return;
+    applyLink(state, linkInput.value);
   });
-  linkPopover.addEventListener('popaddlink:cancel', () => closeLinkSheet(state));
-  state.root.addEventListener('diet-dropdown-edit:close-linksheet', () => closeLinkSheet(state));
+  linkCloseButton.addEventListener('click', () => closeLinkSheet(state));
 
   editor.registerUpdateListener(({ dirtyElements, dirtyLeaves, tags }) => {
     updateToolbar(state);
@@ -282,20 +294,23 @@ function openLinkSheet(state: DropdownEditState): void {
   if (!selection) return;
 
   state.savedLinkSelection = selection;
-  const input = state.linkPopover.querySelector<HTMLInputElement>('.diet-popaddlink__input')!;
   const hasLink = href.length > 0;
   state.linkMode = hasLink ? 'remove' : 'add';
   state.linkActionButton.dataset.type = hasLink ? 'secondary' : 'primary';
   state.linkActionButton.querySelector<HTMLElement>('.diet-button__label')!.textContent = hasLink
     ? state.linkActionButton.dataset.removeLabel!
     : state.linkActionButton.dataset.addLabel!;
-  input.value = href;
-  input.readOnly = hasLink;
-  input.dispatchEvent(new Event('input', { bubbles: true }));
+  state.linkInput.value = href;
+  state.linkInput.readOnly = hasLink;
+  syncLinkAction(state);
   state.root.classList.add('has-linksheet');
   state.linkSheet.setAttribute('aria-hidden', 'false');
-  input.focus();
-  input.setSelectionRange(input.value.length, input.value.length);
+  state.linkInput.focus();
+  state.linkInput.setSelectionRange(state.linkInput.value.length, state.linkInput.value.length);
+}
+
+function syncLinkAction(state: DropdownEditState): void {
+  state.linkActionButton.disabled = state.linkMode === 'add' && state.linkInput.value.length === 0;
 }
 
 function applyLink(state: DropdownEditState, href: string): void {
@@ -329,6 +344,7 @@ function removeLink(state: DropdownEditState): void {
 function closeLinkSheet(state: DropdownEditState): void {
   state.root.classList.remove('has-linksheet');
   state.linkSheet.setAttribute('aria-hidden', 'true');
+  state.linkInput.readOnly = false;
   state.savedLinkSelection = null;
 }
 
@@ -400,5 +416,18 @@ function exportInlineText(_editor: LexicalEditor, target: LexicalNode) {
     wrapper.append(element);
     element = wrapper;
   }
+  return { element };
+}
+
+function exportExactLink(_editor: LexicalEditor, target: LexicalNode) {
+  const linkNode = target as LinkNode;
+  const element = document.createElement('a');
+  element.setAttribute('href', linkNode.getURL());
+  const targetValue = linkNode.getTarget();
+  const rel = linkNode.getRel();
+  const title = linkNode.getTitle();
+  if (targetValue) element.setAttribute('target', targetValue);
+  if (rel) element.setAttribute('rel', rel);
+  if (title) element.setAttribute('title', title);
   return { element };
 }

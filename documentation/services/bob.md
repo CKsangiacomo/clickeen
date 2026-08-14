@@ -117,10 +117,11 @@ marked with `data-dieter-json` before running the Dieter hydrator; the empty val
 HTML is only an unbound placeholder, not product truth or a default. Changed-path
 updates apply only while the same panel control surface remains mounted.
 Before Bob replaces or unmounts that surface, it invokes the owning Dropdown
-Actions, Border, Edit, Fill, Shadow, Upload, Object Manager, and Repeater
+Actions, Border, Edit, Fill, Shadow, Upload, Object Manager, Repeater, and Slider
 destroy functions; Edit detaches its Lexical root, Fill and Upload invalidate
 pending asset resolution, and the collection controls release their nested
-hydrators and retained draft state.
+hydrators and retained draft state. Slider releases its native progress
+listener.
 
 ## Dieter Icons
 
@@ -470,9 +471,20 @@ object, stable-id coordinate, limits, structural permission, and every word.
 Bob resolves those `$label` inputs from the adjacent English ToolDrawer file
 and joins them to the global Dieter stencils. Object Manager owns top-level
 object editors and, only when declared, the Add plus drafted reorder/delete
-workflow. Repeater owns nested inline add/remove/reorder. Both emit one exact
-JSON array through the ordinary browser-memory control host; neither Bob nor
+workflow. Repeater owns inline add/remove/reorder for either a top-level or
+nested declared array. Nested fields retain neutral `data-path`; only each true
+outer collection field also carries `data-bob-path`. Child arrays fold into
+their parent before one exact outer JSON array reaches the ordinary
+browser-memory control host; neither Bob nor
 Dieter infers an item shape, default, permission, or Widget-specific action.
+The FAQ section-title derived control retains its adjacent Widget-owned label in
+compiled control metadata. Logo Showcase's declared add-open selector targets
+its exact sibling Bulk Edit without a Widget branch in Dieter.
+
+Segmented controls keep native radio truth. Logo Showcase Widget options,
+Dropdown Fill modes, Bob's Manual/Copilot mode, and Desktop/Mobile preview all
+compose direct Segment content; Bob does not mirror checked state through a
+nested Button or `aria-pressed` helper.
 
 Dropdown Edit is the shared Dieter inline rich-text control. Bob compiles every
 Widget `type="dropdown-edit"` declaration with that Widget's adjacent English
@@ -482,7 +494,11 @@ owns the browser-memory draft, undo, preview, and Save boundary. Every Dropdown
 Edit field supports inline emphasis, links, line breaks, selected-only format
 clearing, and pasted inline formatting. The link sheet presents one contextual
 Widget-labeled action: **Add link** for selected unlinked text or **Remove
-link** for an existing link; it has no Apply/Update or second link action. No
+link** for an existing link; its close action also receives its accessible name
+from the exact Widget-owned component-label shape. The URL input is private
+Dropdown Edit UI, so it does not resolve to or mutate Bob's bound rich-text
+path while the user types. It has no Apply/Update, second link action, nested
+Popover, or standalone link component. No
 per-field link flag, Widget branch, runtime catalog fetch, or Lexical storage
 document exists.
 

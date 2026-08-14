@@ -151,7 +151,7 @@ export function hydrateObjectManager(
       const items = read();
       state.cleanupChildren?.();
       list.replaceChildren();
-      const basePath = hidden.dataset.bobPath ?? hidden.dataset.path ?? '';
+      const basePath = hidden.dataset.path!;
 
       items.forEach((itemData, index) => {
         const container = document.createElement('div');
@@ -159,8 +159,8 @@ export function hydrateObjectManager(
         container.dataset.objectIndex = String(index);
         container.innerHTML = itemTemplate.innerHTML.replaceAll(indexToken, String(index));
 
-        container.querySelectorAll<HTMLElement>('[data-bob-path]').forEach((element) => {
-          const path = element.dataset.bobPath!;
+        container.querySelectorAll<HTMLElement>('[data-path]').forEach((element) => {
+          const path = element.dataset.path!;
           const prefix = `${basePath}.${index}.`;
           if (!path.startsWith(prefix)) return;
           const fieldValue = getAt(itemData, path.slice(prefix.length));
@@ -208,8 +208,6 @@ export function hydrateObjectManager(
     registerListener(state, hidden, 'external-sync', handleExternalSync);
 
     const handleNestedChange = (event: Event): void => {
-      const detail = (event as CustomEvent<{ bobIgnore?: boolean }>).detail;
-      if (detail?.bobIgnore) return;
       const target = event.target;
       if (
         target === hidden ||
@@ -219,9 +217,19 @@ export function hydrateObjectManager(
       )
         return;
 
-      const basePath = hidden.dataset.bobPath ?? hidden.dataset.path ?? '';
-      const path = target.dataset.bobPath ?? '';
+      const basePath = hidden.dataset.path!;
+      const path = target.dataset.path ?? '';
       if (!path.startsWith(`${basePath}.`)) return;
+      const nearestCollection = target.closest<HTMLElement>(
+        '.diet-repeater, .diet-object-manager',
+      );
+      if (nearestCollection && nearestCollection !== root) {
+        const nestedField = nearestCollection.querySelector<HTMLInputElement>(
+          ':scope > .diet-repeater__field, :scope > .diet-object-manager__field',
+        );
+        const nestedPath = nestedField?.dataset.path;
+        if (nestedPath && target !== nestedField && path.startsWith(`${nestedPath}.`)) return;
+      }
       const parts = path.slice(basePath.length + 1).split('.');
       const itemIndex = parts.shift();
       if (!itemIndex || !/^\d+$/.test(itemIndex) || !parts.length) return;
@@ -236,10 +244,10 @@ export function hydrateObjectManager(
             ? JSON.parse(target.value)
             : target.value;
       setExistingAt(item, parts.join('.'), nextValue);
+      event.stopPropagation();
       write(items);
     };
-    registerListener(state, root, 'input', handleNestedChange, true);
-    registerListener(state, root, 'change', handleNestedChange, true);
+    registerListener(state, root, 'input', handleNestedChange);
 
     if (allowStructure) {
       const addButton = requiredElement<HTMLButtonElement>(root, '[data-objects-add]');

@@ -241,24 +241,16 @@ export function ToolDrawer({
               checked={mode === 'manual'}
               onChange={() => requestMode('manual')}
             />
-            <span className="diet-segment__surface" />
-            <button
-              className="diet-button"
-              data-size="large"
-              data-type="quaternary"
-              tabIndex={-1}
-              type="button"
-              aria-pressed={mode === 'manual'}
-            >
+            <span className="diet-segment__surface" aria-hidden="true" />
+            <span className="diet-segment__content">
               <span
                 className="diet-icon"
-                data-size="20"
                 data-icon="pencil"
                 style={dieterIconStyle('pencil')}
                 aria-hidden="true"
               />
-              <span className="diet-button__label">Manual</span>
-            </button>
+              <span className="diet-segment__label">Manual</span>
+            </span>
           </label>
           <label className="diet-segment">
             <input
@@ -269,24 +261,16 @@ export function ToolDrawer({
               checked={mode === 'copilot'}
               onChange={() => requestMode('copilot')}
             />
-            <span className="diet-segment__surface" />
-            <button
-              className="diet-button"
-              data-size="large"
-              data-type="quaternary"
-              tabIndex={-1}
-              type="button"
-              aria-pressed={mode === 'copilot'}
-            >
+            <span className="diet-segment__surface" aria-hidden="true" />
+            <span className="diet-segment__content">
               <span
                 className="diet-icon"
-                data-size="20"
                 data-icon="sparkles"
                 style={dieterIconStyle('sparkles')}
                 aria-hidden="true"
               />
-              <span className="diet-button__label">Copilot</span>
-            </button>
+              <span className="diet-segment__label">Copilot</span>
+            </span>
           </label>
         </div>
         <button

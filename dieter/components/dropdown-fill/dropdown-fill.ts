@@ -459,14 +459,10 @@ function syncColorUI(state: DropdownFillState, opts: { commit: boolean; updateHe
   state.root.style.setProperty('--picker-rgb', `${rgb.r} ${rgb.g} ${rgb.b}`);
 
   state.hueInput.value = h.toString();
-  state.hueInput.style.setProperty('--value', state.hueInput.value);
-  state.hueInput.style.setProperty('--min', '0');
-  state.hueInput.style.setProperty('--max', '360');
+  state.hueInput.dispatchEvent(new CustomEvent('external-sync'));
 
   state.alphaInput.value = alphaPercent.toString();
-  state.alphaInput.style.setProperty('--value', state.alphaInput.value);
-  state.alphaInput.style.setProperty('--min', '0');
-  state.alphaInput.style.setProperty('--max', '100');
+  state.alphaInput.dispatchEvent(new CustomEvent('external-sync'));
   state.alphaValue.value = `${alphaPercent}%`;
 
   state.hexField.value = hex.replace(/^#/, '');
@@ -543,10 +539,8 @@ function setMode(state: DropdownFillState, mode: FillMode) {
     const isAllowed = state.allowedModes.includes(segmentMode);
     segment.hidden = !isAllowed;
     const input = segment.querySelector<HTMLInputElement>('.diet-dropdown-fill__mode-input')!;
-    const button = segment.querySelector<HTMLButtonElement>('.diet-button')!;
     input.disabled = !isAllowed;
     input.checked = isAllowed && segmentMode === mode;
-    button.setAttribute('aria-pressed', input.checked ? 'true' : 'false');
   });
 }
 

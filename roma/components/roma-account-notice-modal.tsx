@@ -100,7 +100,7 @@ export function RomaAccountNoticeModal() {
   return (
     <dialog ref={dialogRef} className="diet-popup" data-size="medium" aria-labelledby="roma-notice-title">
       <header className="diet-popup__header">
-        <h2 className="heading-5" id="roma-notice-title">
+        <h2 className="heading-4" id="roma-notice-title">
           {summary.title}
         </h2>
       </header>

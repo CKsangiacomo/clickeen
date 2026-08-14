@@ -3,7 +3,8 @@ export function resolvePathFromTarget(target: EventTarget | null): string | null
   const direct = target.closest<HTMLElement>('[data-bob-path]');
   if (direct) return direct.getAttribute('data-bob-path');
 
-  const controlRoot = target.closest<HTMLElement>('.diet-dropdown-edit, .diet-textedit');
+  const editor = target.closest<HTMLElement>('.diet-dropdown-edit__editor, .diet-textedit__editor');
+  const controlRoot = editor?.closest<HTMLElement>('.diet-dropdown-edit, .diet-textedit');
   if (controlRoot) {
     const hidden = controlRoot.querySelector<HTMLElement>('[data-bob-path]');
     if (hidden) return hidden.getAttribute('data-bob-path');

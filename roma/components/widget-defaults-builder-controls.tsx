@@ -169,11 +169,15 @@ function syncFieldValue(field: HTMLElement, values: Record<string, unknown>) {
   }
 
   if (field instanceof HTMLInputElement && field.type === 'range') {
-    const nextValue = isFiniteNumber(value) ? String(value) : field.min?.trim() || '0';
+    if (!isFiniteNumber(value)) {
+      throw new Error(`Slider value for "${path}" is not a finite number`);
+    }
+    const nextValue = String(value);
+    const valueChanged = field.value !== nextValue;
     field.value = nextValue;
-    field.style.setProperty('--value', nextValue);
-    field.style.setProperty('--min', field.min || '0');
-    field.style.setProperty('--max', field.max || '100');
+    if (valueChanged) {
+      field.dispatchEvent(new CustomEvent('external-sync', { detail: { value: nextValue } }));
+    }
     return;
   }
 

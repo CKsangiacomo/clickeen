@@ -651,7 +651,7 @@ export function AssetsDomain({
         <dialog ref={bulkUploadDialogRef} className="diet-popup" data-size="medium" aria-labelledby="roma-assets-bulk-title" tabIndex={-1}>
           <header className="diet-popup__header">
             <div className="roma-inline-stack">
-              <h2 id="roma-assets-bulk-title" className="heading-6">
+              <h2 id="roma-assets-bulk-title" className="heading-4">
                 Bulk upload
               </h2>
               <p className="body-m">Upload multiple files in one run. Each file is processed independently and failures do not block other files.</p>

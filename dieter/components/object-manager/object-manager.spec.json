@@ -45,7 +45,7 @@
         "keepEditingLabel": "Keep editing",
         "discardLabel": "Discard",
         "labelPath": "name",
-        "template": "<div class=\"diet-textfield\" data-size=\"md\"><label class=\"diet-textfield__control\"><span class=\"diet-textfield__display-label label-s\">Name</span><input class=\"diet-textfield__field body-s\" type=\"text\" data-bob-path=\"items.__INDEX__.name\" /></label></div>",
+        "template": "<div class=\"diet-textfield\" data-size=\"md\"><label class=\"diet-textfield__control\"><span class=\"diet-textfield__display-label label-s\">Name</span><input class=\"diet-textfield__field body-s\" type=\"text\" data-path=\"items.__INDEX__.name\" /></label></div>",
         "indexToken": "__INDEX__",
         "defaultItem": "{&quot;id&quot;:&quot;&quot;,&quot;name&quot;:&quot;New item&quot;}",
         "value": "[{&quot;id&quot;:&quot;item-1&quot;,&quot;name&quot;:&quot;First item&quot;},{&quot;id&quot;:&quot;item-2&quot;,&quot;name&quot;:&quot;Second item&quot;}]"
@@ -101,7 +101,7 @@
         "keepEditingLabel": "Keep editing",
         "discardLabel": "Discard",
         "labelPath": "name",
-        "template": "<div class=\"diet-textfield\" data-size=\"md\"><label class=\"diet-textfield__control\"><span class=\"diet-textfield__display-label label-s\">Name</span><input class=\"diet-textfield__field body-s\" type=\"text\" data-bob-path=\"items.__INDEX__.name\" /></label></div>",
+        "template": "<div class=\"diet-textfield\" data-size=\"md\"><label class=\"diet-textfield__control\"><span class=\"diet-textfield__display-label label-s\">Name</span><input class=\"diet-textfield__field body-s\" type=\"text\" data-path=\"items.__INDEX__.name\" /></label></div>",
         "indexToken": "__INDEX__",
         "value": "[{&quot;id&quot;:&quot;item-1&quot;,&quot;name&quot;:&quot;First item&quot;},{&quot;id&quot;:&quot;item-2&quot;,&quot;name&quot;:&quot;Second item&quot;}]"
       }

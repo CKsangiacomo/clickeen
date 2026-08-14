@@ -77,9 +77,7 @@ export function syncGradientUI(
   const shouldUpdateHeader = opts.updateHeader !== false;
   if (state.gradientAngleInput) {
     state.gradientAngleInput.value = String(clampNumber(state.gradient.angle, 0, 360));
-    state.gradientAngleInput.style.setProperty('--value', state.gradientAngleInput.value);
-    state.gradientAngleInput.style.setProperty('--min', '0');
-    state.gradientAngleInput.style.setProperty('--max', '360');
+    state.gradientAngleInput.dispatchEvent(new CustomEvent('external-sync'));
   }
   syncGradientStopButtons(state);
   syncActiveGradientStopUI(state);
@@ -204,15 +202,11 @@ function syncActiveGradientStopUI(state: DropdownFillState): void {
 
   if (state.gradientStopHueInput) {
     state.gradientStopHueInput.value = hsv.h.toString();
-    state.gradientStopHueInput.style.setProperty('--value', state.gradientStopHueInput.value);
-    state.gradientStopHueInput.style.setProperty('--min', '0');
-    state.gradientStopHueInput.style.setProperty('--max', '360');
+    state.gradientStopHueInput.dispatchEvent(new CustomEvent('external-sync'));
   }
   if (state.gradientStopAlphaInput) {
     state.gradientStopAlphaInput.value = alphaPercent.toString();
-    state.gradientStopAlphaInput.style.setProperty('--value', state.gradientStopAlphaInput.value);
-    state.gradientStopAlphaInput.style.setProperty('--min', '0');
-    state.gradientStopAlphaInput.style.setProperty('--max', '100');
+    state.gradientStopAlphaInput.dispatchEvent(new CustomEvent('external-sync'));
   }
   if (state.gradientStopAlphaValue) {
     state.gradientStopAlphaValue.value = `${alphaPercent}%`;

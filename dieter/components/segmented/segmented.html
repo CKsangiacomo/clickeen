@@ -2,12 +2,12 @@
   {{#each segments}}
   <label class="diet-segment">
     <input class="diet-segment__input" type="radio" name="{{../groupName}}" value="{{value}}"{{#if ../path}} data-path="{{../path}}"{{/if}}{{#if checked}} checked{{/if}}{{#if disabled}} disabled{{/if}} />
-    <span class="diet-segment__surface"></span>
-    <button class="diet-button" data-size="{{../buttonSize}}" data-type="{{../buttonType}}" tabindex="-1" type="button"{{#if srLabel}} aria-label="{{srLabel}}"{{/if}}>
-      {{#if icon}}<span class="diet-icon" data-size="{{../buttonIconSize}}" data-icon="{{icon}}"></span>{{/if}}
-      {{#if label}}<span class="diet-button__label">{{label}}</span>{{/if}}
-    </button>
-    {{#if srLabel}}<span class="diet-segment__sr">{{srLabel}}</span>{{/if}}
+    <span class="diet-segment__surface" aria-hidden="true"></span>
+    <span class="diet-segment__content">
+      {{#if icon}}<span class="diet-icon" data-icon="{{icon}}" aria-hidden="true"></span>{{/if}}
+      {{#if label}}<span class="diet-segment__label">{{label}}</span>{{/if}}
+      {{#if srLabel}}<span class="diet-segment__sr">{{srLabel}}</span>{{/if}}
+    </span>
   </label>
   {{/each}}
 </div>

@@ -211,9 +211,7 @@ function syncUI(state: DropdownBorderState, commit: boolean) {
   state.root.style.setProperty('--picker-rgb', `${rgb.r} ${rgb.g} ${rgb.b}`);
 
   state.hueInput.value = h.toString();
-  state.hueInput.style.setProperty('--value', state.hueInput.value);
-  state.hueInput.style.setProperty('--min', '0');
-  state.hueInput.style.setProperty('--max', '360');
+  state.hueInput.dispatchEvent(new CustomEvent('external-sync'));
 
   state.hexField.value = hex.replace(/^#/, '');
 
@@ -260,7 +258,7 @@ function applyEnabledState(state: DropdownBorderState): void {
 
 function setRangeValue(input: HTMLInputElement, value: number) {
   input.value = String(value);
-  input.style.setProperty('--value', String(value));
+  input.dispatchEvent(new CustomEvent('external-sync'));
 }
 
 function updateHeader(state: DropdownBorderState, mode: 'border' | 'none'): void {

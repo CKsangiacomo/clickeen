@@ -158,7 +158,7 @@ the code is convenient there.
 | Stage | Status | Release state |
 | --- | --- | --- |
 | Stage 1 — Scaffold only | Complete | Committed, pushed, and deployed; no non-English experience is exposed |
-| Stage 2 — Dieter UI pass | In progress: Foundations, Agent Activity, Bulk Edit, Button, Choice Tiles, Dropdown Actions, Popover, Dropdown Border, Dropdown Edit, Dropdown Fill, Dropdown Shadow, Dropdown Upload, Menuactions, Object Manager, and Repeater complete and re-audited as consumer-agnostic primitives | Popaddlink is the next component pass |
+| Stage 2 — Dieter UI pass | In progress: Foundations, Agent Activity, Bulk Edit, Button, Choice Tiles, Dropdown Actions, Popover, Dropdown Border, Dropdown Edit, Dropdown Fill, Dropdown Shadow, Dropdown Upload, Menuactions, Object Manager, Repeater, Popup, Segmented, Slider, Tabs, and Toggle complete and re-audited as consumer-agnostic primitives; standalone Popaddlink is deleted and its one real job is internal to Dropdown Edit | Table is the next component pass |
 | Stage 3 — Bob UI pass | Not started | No authority to begin until explicitly directed |
 | Stage 4 — Roma UI pass | Not started | No authority to begin until explicitly directed |
 | Stage 5 — Translation pass | Not started | No translations may be generated yet |
@@ -273,18 +273,17 @@ Review in this order:
 10. Dropdown Upload
 11. Menuactions
 12. Object Manager
-13. Popaddlink
-14. Popover
-15. Popup
-16. Repeater
-17. Segmented
-18. Slider
-19. Table
-20. Tabs
-21. Textedit
-22. Textfield
-23. Toggle
-24. Valuefield
+13. Popover
+14. Popup
+15. Repeater
+16. Segmented
+17. Slider
+18. Table
+19. Tabs
+20. Textedit
+21. Textfield
+22. Toggle
+23. Valuefield
 
 For every component used inside ToolDrawer panels:
 
@@ -1122,3 +1121,121 @@ authorizes it.
   Cloudflare, compatibility path, service, registry, or PRD 128 change is part
   of this pass. The source pass is committed and pushed through the normal
   cloud-dev rollout; no direct deployment or remote-data operation is used.
+
+- **Popover, retired Popaddlink, Slider, Tabs, and Toggle — passed locally,
+  2026-08-13.** Popover remains the one shared floating-surface primitive: it
+  owns surface geometry, header/body alignment, radius, shadow, and the existing
+  `row|wide|extra-wide` width contract while callers retain trigger, body,
+  workflow, action, and copy ownership. No second Popover API or consumer
+  behavior was added.
+
+  Popaddlink is deleted rather than restyled. It had no Widget field contract
+  or independent product job; its only real use was a duplicate nested surface
+  inside Dropdown Edit. Dropdown Edit now owns one internal link sheet with the
+  existing URL field, one contextual Add/Remove action, and one caller-labelled
+  close action. The URL input is private component UI rather than a Bob-bound
+  field. It applies the entered href exactly and no longer trims, prefixes,
+  reserializes, validates, or silently repairs it; established public Widget
+  rendering remains the URL-safety authority. All eight Widget specs and
+  adjacent English files carry the same exact ten-key Dropdown Edit component
+  label shape, including `Close link editor`. The separate Popaddlink source,
+  hydrator, generated DevStudio route, Bob/DevStudio calls, and nested fake
+  Popover overrides are gone.
+
+  Slider now owns its progress presentation once. Its native range stencil no
+  longer carries inline JavaScript, and Dropdown Shadow no longer repeats that
+  inline behavior. One small idempotent Dieter hydrator synchronizes only the
+  range's existing visual CSS variables on initial render, native input, and
+  the existing `external-sync` signal after exact value projection;
+  Bob, Roma Widget Defaults through the shared host, and DevStudio use that
+  same path and release its listener through `destroySlider`. Numeric value,
+  units, trailing readouts, and product meaning remain caller/compound-editor
+  concerns. Bob and Roma reject missing/non-numeric Slider truth instead of
+  replacing it with the field minimum.
+
+  Tabs is reduced to a native radio group. Checked and disabled state remain
+  native input truth; Dieter CSS owns only size and presentation. The custom
+  tab roles, roving tabindex, arrow-key focus/selection program, hydrator, and
+  host calls are deleted. Choice Tiles' separate custom left/right navigation
+  residue is also removed, retaining its existing native/click selection and
+  exact value behavior. Tabs has no current Widget ToolDrawer consumer;
+  DevStudio reveals real two/three-option checked and disabled states.
+
+  Toggle remains a native checkbox-label primitive. Its root `sm|md|lg` size
+  now owns label typography as well as the switch, and the complete row owns
+  checked, hover, focus, and disabled presentation. Redundant nested consumer
+  typography inputs are removed from the completed Dropdown Border, Fill,
+  Shadow, and Repeater compositions. DevStudio reveals checked, unchecked, and
+  disabled states. Slider and Toggle labels and every Tabs group/option label
+  remain caller inputs; no Dieter catalog, locale folder, fallback, validator,
+  compatibility path, service, registry, route, storage, product-data,
+  Cloudflare, translation, or PRD 128 work was added.
+
+  Focused verification passed: Dieter typecheck/governance, DevStudio
+  generation/typecheck/build and browser behavior, Bob editor-contract and
+  typecheck, Roma Widget Defaults/command-gate checks, Widget definition-source
+  generation, all eight editor artifact pairs, root typecheck/lint, and diff
+  checks. The independent V1–V8 result is recorded with the final verification
+  of this pass. This work is local only: it is not committed, pushed, deployed,
+  or live.
+
+- **Object Manager, Repeater, Popup, and Segmented correction pass — passed
+  locally, 2026-08-14.** Object Manager and Repeater now expose one exact
+  collection boundary to their host. The outer collection field alone carries
+  `data-bob-path`; all rendered child fields retain consumer-neutral
+  `data-path`. A nested Repeater writes its exact child array to the enclosing
+  Object Manager, and only the final outer array reaches Bob or Roma Widget
+  Defaults. FAQ's section-title `labelPath` remains owned by the enclosing
+  Object Manager and retains its adjacent Widget label in compiled metadata.
+  The unused, incomplete Repeater toggle branch and the global nested-path
+  rewrite are deleted rather than preserved behind aliases.
+
+  Repeater's root size now determines the existing Button and Icon ladder for
+  reorder and remove actions, with equal leading and trailing rails around the
+  flexible item body. Object Manager's Popup row actions follow the same root
+  size. Logo Showcase's add-and-open behavior uses one exact caller-declared
+  selector for its sibling Bulk Edit; Repeater contains no Widget, Bob, Roma,
+  ToolDrawer, or document-layout branch. Existing array values, stable ids,
+  per-component jobs, external synchronization, and destroy lifecycles remain
+  intact.
+
+  Popup remains the native-dialog structural primitive. It owns the shared
+  frame, backdrop, viewport containment, three widths, scrolling body, and
+  header/body/footer geometry, while callers continue to own workflow,
+  dismissal policy, actions, persistence, and copy. The canonical title and
+  every real Popup consumer now use the existing `heading-4` treatment. Bulk
+  Edit's accessible dialog name follows its visible editor or discard title,
+  and Bob Upsell uses a semantic visible heading referenced by
+  `aria-labelledby`. DevStudio now reveals only the real small, medium, and
+  large structural sizes; the large example proves body scrolling inside the
+  fixed frame instead of inventing fake workflow categories.
+
+  Segmented is reduced to one native-radio authority. The nested Button,
+  mirrored `aria-pressed` state, JavaScript hydrator, compiler Button options,
+  and legacy style/icon-size examples are deleted. One presentational segment
+  surface composes caller-supplied text or a direct Dieter Icon, and the native
+  radio alone owns checked, disabled, focus, and submitted value. The same
+  structure is used by Logo Showcase's three Widget fields, Dropdown Fill's
+  mode selector, Bob's Manual/Copilot switch, and Bob's Desktop/Mobile switch.
+  Dropdown Fill retains its already-approved explicit 20px mode Icons; generic
+  Segmented Icons follow the small/medium/large `12/16/20px` ladder.
+
+  ToolDrawer words remain in each Widget's adjacent English label file. Popup
+  owns no words. Segmented group names, visible labels, and icon-only names are
+  exact caller inputs; Bob Chrome remains in Bob until Stage 3. No Dieter
+  locale, global copy catalog, compatibility path, fallback, validator,
+  framework, registry, route, storage, product-data, Cloudflare, translation,
+  or PRD 128 work was added.
+
+  Focused verification passed: Dieter typecheck/governance; DevStudio
+  generation/build/typecheck; Bob editor-contract and typecheck; Roma Widget
+  Defaults, command-gate, and typecheck checks; Widget definition-source
+  generation; and all eight editor artifact pairs. Local Chromium proved
+  Repeater's proportional `24/28/40px` action rails with `12/16/20px` Icons,
+  exact single-event FAQ nested aggregation, exact Logo Showcase add then
+  sibling Bulk Edit open, Split Carousel add and reorder with one event per
+  operation, native Segmented selected/disabled behavior, Object Manager's
+  root-sized modal actions, and Popup's three structural sizes with contained
+  large-body scrolling. The final independent V1–V8 audit found no violation.
+  This correction pass is local only: it is not committed, pushed, deployed,
+  or live.

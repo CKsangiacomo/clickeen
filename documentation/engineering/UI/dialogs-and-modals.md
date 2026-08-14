@@ -52,7 +52,8 @@ workflow state, copy, validation, and persistence.
 
 Dieter Popup is the shared visual and structural contract for blocking native
 `<dialog>` elements. It owns the backdrop, frame, viewport fit, border, radius,
-shadow, small/medium/large size, and header/body/footer/action slots. It does
+shadow, small/medium/large size, `heading-4` title treatment, and
+header/body/footer/action slots. It does
 not choose dismissal policy or persist work. Those remain governed by the
 matrix below and implemented by the owning workflow with the existing shared
 dialog lifecycle.

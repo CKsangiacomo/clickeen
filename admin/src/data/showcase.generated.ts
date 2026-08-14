@@ -11,25 +11,24 @@ import html8 from "../html/components/dropdown-shadow.html?raw";
 import html9 from "../html/components/dropdown-upload.html?raw";
 import html10 from "../html/components/menuactions.html?raw";
 import html11 from "../html/components/object-manager.html?raw";
-import html12 from "../html/components/popaddlink.html?raw";
-import html13 from "../html/components/popover.html?raw";
-import html14 from "../html/components/popup.html?raw";
-import html15 from "../html/components/repeater.html?raw";
-import html16 from "../html/components/segmented.html?raw";
-import html17 from "../html/components/slider.html?raw";
-import html18 from "../html/components/table.html?raw";
-import html19 from "../html/components/tabs.html?raw";
-import html20 from "../html/components/textedit.html?raw";
-import html21 from "../html/components/textfield.html?raw";
-import html22 from "../html/components/toggle.html?raw";
-import html23 from "../html/components/valuefield.html?raw";
-import html24 from "../html/foundations/colors.html?raw";
-import html25 from "../html/foundations/core-styles.html?raw";
-import html26 from "../html/foundations/icons.html?raw";
-import html27 from "../html/foundations/layouts.html?raw";
-import html28 from "../html/foundations/typography.html?raw";
-import html29 from "../html/tools/entitlements.html?raw";
-import html30 from "../html/tools/llm-management.html?raw";
+import html12 from "../html/components/popover.html?raw";
+import html13 from "../html/components/popup.html?raw";
+import html14 from "../html/components/repeater.html?raw";
+import html15 from "../html/components/segmented.html?raw";
+import html16 from "../html/components/slider.html?raw";
+import html17 from "../html/components/table.html?raw";
+import html18 from "../html/components/tabs.html?raw";
+import html19 from "../html/components/textedit.html?raw";
+import html20 from "../html/components/textfield.html?raw";
+import html21 from "../html/components/toggle.html?raw";
+import html22 from "../html/components/valuefield.html?raw";
+import html23 from "../html/foundations/colors.html?raw";
+import html24 from "../html/foundations/core-styles.html?raw";
+import html25 from "../html/foundations/icons.html?raw";
+import html26 from "../html/foundations/layouts.html?raw";
+import html27 from "../html/foundations/typography.html?raw";
+import html28 from "../html/tools/entitlements.html?raw";
+import html29 from "../html/tools/llm-management.html?raw";
 
 export const staticShowcaseModules: Record<string, string> = {
   "../html/components/agent-activity.html": html0,
@@ -44,23 +43,22 @@ export const staticShowcaseModules: Record<string, string> = {
   "../html/components/dropdown-upload.html": html9,
   "../html/components/menuactions.html": html10,
   "../html/components/object-manager.html": html11,
-  "../html/components/popaddlink.html": html12,
-  "../html/components/popover.html": html13,
-  "../html/components/popup.html": html14,
-  "../html/components/repeater.html": html15,
-  "../html/components/segmented.html": html16,
-  "../html/components/slider.html": html17,
-  "../html/components/table.html": html18,
-  "../html/components/tabs.html": html19,
-  "../html/components/textedit.html": html20,
-  "../html/components/textfield.html": html21,
-  "../html/components/toggle.html": html22,
-  "../html/components/valuefield.html": html23,
-  "../html/foundations/colors.html": html24,
-  "../html/foundations/core-styles.html": html25,
-  "../html/foundations/icons.html": html26,
-  "../html/foundations/layouts.html": html27,
-  "../html/foundations/typography.html": html28,
-  "../html/tools/entitlements.html": html29,
-  "../html/tools/llm-management.html": html30,
+  "../html/components/popover.html": html12,
+  "../html/components/popup.html": html13,
+  "../html/components/repeater.html": html14,
+  "../html/components/segmented.html": html15,
+  "../html/components/slider.html": html16,
+  "../html/components/table.html": html17,
+  "../html/components/tabs.html": html18,
+  "../html/components/textedit.html": html19,
+  "../html/components/textfield.html": html20,
+  "../html/components/toggle.html": html21,
+  "../html/components/valuefield.html": html22,
+  "../html/foundations/colors.html": html23,
+  "../html/foundations/core-styles.html": html24,
+  "../html/foundations/icons.html": html25,
+  "../html/foundations/layouts.html": html26,
+  "../html/foundations/typography.html": html27,
+  "../html/tools/entitlements.html": html28,
+  "../html/tools/llm-management.html": html29,
 };

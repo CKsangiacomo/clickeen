@@ -278,13 +278,22 @@ same Dieter behavior: Bold, Italic, Underline, Strikethrough, Link, selected-
 only Clear formatting, line breaks, and pasted inline formatting. Widgets do
 not opt individual fields into or out of links. The field value remains the
 existing compact inline HTML string; empty is exactly `""`. Each Widget's
-adjacent ToolDrawer label file supplies the field label, placeholder, and the
-exact Dropdown Edit component labels, including **Add link** and **Remove
-link**. Bob joins those values to the global Dieter stencil during the existing
+adjacent ToolDrawer label file supplies the exact ten Dropdown Edit component
+labels, including **Add link**, **Remove link**, and the accessible **Close
+link editor** name. Widget-authored Dropdown Edit fields also receive their
+field label and placeholder from that adjacent file. The two shared Header
+fields currently receive their field label and placeholder from Bob's Header
+module; that caller-copy move belongs to the Bob UI pass, not Dieter. Bob joins
+the current caller values to the global Dieter stencil during the existing
 editor-artifact build. A selected unlinked range gets one **Add link** action.
 An existing link shows its URL read-only and changes that same action to
 **Remove link**; changing the URL is remove then add. There is no Apply,
 Update, or second link action.
+
+Slider labels, Toggle labels, and every Tabs group/option label are caller
+inputs. Slider's Dieter hydrator owns only progress presentation; Toggle and
+Tabs retain native checkbox/radio behavior. None of these primitives loads a
+locale or owns visible copy. Tabs has no current Widget ToolDrawer declaration.
 
 Compact property rows use one Dieter geometry contract: labels occupy the
 leading side and dropdown values, switches, text fields, and numeric fields
@@ -354,12 +363,25 @@ dialog/action word. Widget copy resolves from
 `editor.labels.components["object-manager"]` plus the exact path under
 `editor.labels.fields["object-manager"]`.
 
-`repeater` owns one nested inline object array. Its caller supplies the exact
+`repeater` owns inline add/remove/reorder for one declared object array, whether
+that array is a top-level control or nested inside Object Manager. Its caller supplies the exact
 item template, exact `default-item`, `min`/`max` when applicable, and add,
-remove, move, reorder, optional editable-label, and optional toggle words. Add
+remove, move, reorder, and optional editable-label words. Add
 copies only that declared object and assigns only its declared empty id fields;
 no item schema is inferred from current data or markup. Reorder mode changes
 only order; ordinary nested controls continue to edit their existing paths.
+Nested fields keep neutral `data-path` coordinates. Compilation adds
+`data-bob-path` only to the true outer host-bound collection input, so nested
+fields and child collections fold into one exact parent array before Bob or
+Roma receives it. When a caller declares `add-open`, it supplies one exact
+selector for the related action; the component does not search for a consumer
+or Widget.
+
+`segmented` declares one native radio group. The root `sm|md|lg` size owns the
+rail and default Icon/text geometry; `txt`, `ic`, and `ictxt` describe only the
+caller-provided content. Each option label or icon-only accessible name and the
+group name come from caller copy. There is no nested Button, separate checked
+state, or Segmented hydrator.
 
 Dropdown Border, Dropdown Edit, Dropdown Fill, and Dropdown Shadow may declare
 `attrs["popover-width"]` as `row`, `wide`, or `extra-wide`. `row` matches the
@@ -382,7 +404,7 @@ dieter/components/{type}/{type}.spec.json
 Bob and Roma compile Dieter CSS and hydrators from source. Compiled widget
 artifacts contain panel HTML and do not contain per-control Dieter media lists.
 They also do not contain current instance or account-default values. The host
-projects exact current JSON values into `data-bob-path` fields marked with
+projects exact current JSON values into outer `data-bob-path` fields marked with
 `data-dieter-json` before running Dieter hydrators, so a compiled empty JSON field is only an unbound placeholder
 and never a runtime default or fallback. Other control values remain on their
 existing host binding path.

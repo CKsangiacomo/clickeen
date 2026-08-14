@@ -457,9 +457,15 @@ are not defaults or fallback values.
 JSON controls use Dieter's `data-dieter-json` marker and generic component
 operations use `dieter-ops`; `data-bob-path` remains the host-owned field
 coordinate. Roma destroys hydrated Dropdown Actions, Border, Edit, Fill,
-Shadow, Upload, Object Manager, and Repeater roots before replacing or
+Shadow, Upload, Object Manager, Repeater, and Slider roots before replacing or
 unmounting the Widget Defaults control surface. Collection child hydrators and
-drafts therefore have the same lifecycle in Roma as in Bob.
+drafts therefore have the same lifecycle in Roma as in Bob; Slider releases
+its native progress listener. Range values remain exact Roma draft values and
+the shared Slider hydrator owns only their visual progress presentation.
+Nested Object Manager/Repeater controls keep neutral `data-path` coordinates;
+Roma binds only the true outer `data-bob-path` collection field and receives
+one exact array update. Segmented controls rely on the same native radio state
+as Bob and require no Roma state-mirroring behavior.
 
 The persisted defaults split is `common` plus
 `widgets.{widgetType}.core`. `common` means one account default reused across

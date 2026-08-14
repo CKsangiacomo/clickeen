@@ -28,6 +28,7 @@ import {
   destroyDropdownUpload,
   destroyObjectManager,
   destroyRepeater,
+  destroySlider,
   hydrateBulkEdit,
   hydrateChoiceTiles,
   hydrateDropdownActions,
@@ -36,9 +37,7 @@ import {
   hydrateDropdownEdit,
   hydrateDropdownShadow,
   hydrateDropdownUpload,
-  hydratePopAddLink,
-  hydrateSegmented,
-  hydrateTabs,
+  hydrateSlider,
   hydrateTextedit,
   hydrateTextfield,
   hydrateValuefield,
@@ -396,9 +395,7 @@ function hydrateDieterComponents(scope: Element | DocumentFragment): () => void 
   hydrateDropdownShadow(scope);
   hydrateDropdownUpload(scope, { accountAssets: showcaseAccountAssets });
   hydrateDropdownEdit(scope);
-  hydrateTabs(scope);
-  hydrateSegmented(scope);
-  hydratePopAddLink(scope);
+  hydrateSlider(scope);
   return () => destroyDieterComponents(scope);
 }
 
@@ -411,6 +408,7 @@ function destroyDieterComponents(scope: Element | DocumentFragment): void {
   scope.querySelectorAll<HTMLElement>('.diet-dropdown-upload').forEach(destroyDropdownUpload);
   scope.querySelectorAll<HTMLElement>('.diet-object-manager').forEach(destroyObjectManager);
   scope.querySelectorAll<HTMLElement>('.diet-repeater').forEach(destroyRepeater);
+  scope.querySelectorAll<HTMLInputElement>('.diet-slider__input').forEach(destroySlider);
 }
 
 function executeScripts(scope: DocumentFragment | Element) {

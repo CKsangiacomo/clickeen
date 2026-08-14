@@ -1,5 +1,5 @@
 <div class="diet-slider{{#if block}} diet-slider--block{{/if}}" data-size="{{size}}">
-  <label class="diet-slider__label {{#if labelClass}}{{labelClass}}{{else}}label-s{{/if}}" for="{{id}}">{{label}}</label>
+  <label class="diet-slider__label" for="{{id}}">{{label}}</label>
   <input
     id="{{id}}"
     class="diet-slider__input"
@@ -8,7 +8,6 @@
     max="{{max}}"
     value="{{value}}"
     {{#if path}}data-path="{{path}}"{{/if}}
-    style="--value: {{value}}; --min: {{min}}; --max: {{max}};"
-    oninput="this.style.setProperty('--value', this.value)"
+    {{#if disabled}}disabled{{/if}}
   />
 </div>

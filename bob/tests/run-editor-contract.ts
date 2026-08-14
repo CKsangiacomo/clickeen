@@ -197,21 +197,23 @@ function assertDropdownEditLabels(args: {
       );
     }
     assert.ok(
-      root.includes(`diet-popover__header-label label-s">${label('link')}</span>`),
+      root.includes(`diet-dropdown-edit__link-header-label">${label('link')}</span>`),
       `${args.widgetType} Dropdown Edit ${index} labels Link sheet`,
     );
     assert.ok(
       root.includes(`diet-textfield__display-label label-s">${label('url')}</span>`),
       `${args.widgetType} Dropdown Edit ${index} labels URL`,
     );
-    const closeStart = root.indexOf('diet-popaddlink__close');
+    const closeStart = root.indexOf('diet-dropdown-edit__link-close');
     const closeEnd = root.indexOf('</button>', closeStart);
     assert.ok(
-      closeStart >= 0 && root.slice(closeStart, closeEnd).includes('data-size="medium"'),
-      `${args.widgetType} Dropdown Edit ${index} sizes link-sheet close through medium Button geometry`,
+      closeStart >= 0 &&
+        root.slice(closeStart, closeEnd).includes('data-size="medium"') &&
+        root.slice(closeStart, closeEnd).includes(`aria-label="${label('close-link')}"`),
+      `${args.widgetType} Dropdown Edit ${index} labels and sizes its link-sheet close action`,
     );
     assert.equal(
-      root.match(/diet-dropdown-edit__link-action/g)?.length ?? 0,
+      root.match(/class="diet-button diet-dropdown-edit__link-action"/g)?.length ?? 0,
       1,
       `${args.widgetType} Dropdown Edit ${index} has one link action`,
     );
@@ -338,6 +340,33 @@ function assertCollectionEditorContract(args: {
     contract.objectManagers,
     `${args.widgetType} Object Manager count`,
   );
+  const hostCollectionCounts: Record<string, number> = {
+    'big-bang': 0,
+    calltoaction: 0,
+    cards: 2,
+    countdown: 0,
+    faq: 1,
+    logoshowcase: 1,
+    'split-carousel-media': 1,
+    'split-media': 0,
+  };
+  const hostCollectionFields = captureAll(
+    args.html,
+    /class="diet-(?:object-manager|repeater)__field"[^>]*data-path="([^"]+)"[^>]*data-bob-path="([^"]+)"/g,
+  );
+  assert.equal(
+    hostCollectionFields.length,
+    hostCollectionCounts[args.widgetType],
+    `${args.widgetType} exposes only its top-level collection host boundaries`,
+  );
+  hostCollectionFields.forEach(([dieterPath, bobPath]) => {
+    assert.equal(bobPath, dieterPath, `${args.widgetType} preserves the exact host collection path`);
+  });
+  assert.doesNotMatch(
+    args.html,
+    /data-bob-path="[^"]*(?:__INDEX__|__SECTION__|__STRIP__)[^"]*"/,
+    `${args.widgetType} keeps nested collection coordinates consumer-neutral`,
+  );
   assert.equal(
     args.html.match(/class="diet-repeater"/g)?.length ?? 0,
     contract.repeaters,
@@ -420,6 +449,20 @@ function assertCollectionEditorContract(args: {
     /\$label:/,
     `${args.widgetType} collection controls contain no raw label tokens`,
   );
+}
+
+function assertSegmentedEditorContract(args: { widgetType: string; html: string }): void {
+  const roots = args.html.match(/<div class="diet-segmented[^\"]*"[\s\S]*?<\/div>/g) ?? [];
+  assert.ok(roots.length > 0, `${args.widgetType} compiles Segmented controls`);
+  roots.forEach((root, index) => {
+    const inputs = root.match(/class="[^"]*\bdiet-segment__input\b[^"]*"/g)?.length ?? 0;
+    const surfaces = root.match(/class="[^"]*\bdiet-segment__surface\b[^"]*"/g)?.length ?? 0;
+    const contents = root.match(/class="[^"]*\bdiet-segment__content\b[^"]*"/g)?.length ?? 0;
+    assert.ok(inputs > 1, `${args.widgetType} Segmented ${index} has a real radio group`);
+    assert.equal(surfaces, inputs, `${args.widgetType} Segmented ${index} has one surface per radio`);
+    assert.equal(contents, inputs, `${args.widgetType} Segmented ${index} has one content node per radio`);
+    assert.doesNotMatch(root, /diet-button|aria-pressed/, `${args.widgetType} Segmented ${index} has no mirrored Button state`);
+  });
 }
 
 function testInsideShadowLinkOpsPreserveHiddenValues(): void {
@@ -565,6 +608,31 @@ async function testEveryWidgetEditorContract(): Promise<void> {
       html: compiled.panels.map((panel) => panel.html).join('\n'),
       labels: (labels as { labels: Record<string, string> }).labels,
     });
+    assertSegmentedEditorContract({
+      widgetType,
+      html: compiled.panels.map((panel) => panel.html).join('\n'),
+    });
+    if (widgetType === 'faq') {
+      const sectionTitle = compiled.controls.find(
+        (control) => control.path === 'faq.sections.__SECTION__.title',
+      );
+      assert.equal(sectionTitle?.type, 'textfield', 'FAQ section title keeps textfield metadata');
+      assert.equal(sectionTitle?.label, 'Section', 'FAQ section title keeps its caller-owned label');
+    }
+    if (widgetType === 'logoshowcase') {
+      const contentHtml = compiled.panels.find((panel) => panel.id === 'content')?.html ?? '';
+      assert.equal(
+        contentHtml.match(/data-bob-group="content-logos"/g)?.length ?? 0,
+        2,
+        'Logo Showcase keeps Repeater and Bulk Edit in one declared host group',
+      );
+      assert.ok(
+        contentHtml.includes(
+          'data-add-open=".diet-bulk-edit[data-bulk-path=&quot;logoshowcase.strips&quot;] [data-bulk-open]"',
+        ),
+        'Logo Showcase keeps its caller-declared add-open target',
+      );
+    }
     const combinedBodyIds = captureAll(
       compiled.panels.map((panel) => panel.html).join('\n'),
       /class="tdmenucontent__cluster-body" id="([^"]+)"/g,

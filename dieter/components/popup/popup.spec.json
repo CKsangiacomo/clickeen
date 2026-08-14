@@ -9,55 +9,42 @@
   },
   "defaults": [
     {
-      "id": "popup-information",
-      "title": "Information",
-      "spec": ["diet-popup", "data-size='{{size}}'", "native dialog"],
+      "id": "popup-small",
+      "title": "Small",
+      "spec": ["diet-popup", "data-size='small'", "native dialog"],
       "context": {
-        "id": "popup-information",
+        "id": "popup-small",
         "size": "small",
-        "title": "Information",
-        "body": "<p>The requested operation is ready.</p>",
-        "secondaryAction": "Close",
-        "primaryAction": "Continue"
+        "title": "Popup title",
+        "body": "<p>Caller-owned content belongs in the Popup body.</p>",
+        "secondaryAction": "Secondary",
+        "primaryAction": "Primary"
       }
     },
     {
-      "id": "popup-form",
-      "title": "Form",
-      "spec": ["diet-popup", "data-size='{{size}}'", "native dialog with form"],
+      "id": "popup-medium",
+      "title": "Medium",
+      "spec": ["diet-popup", "data-size='medium'", "native dialog"],
       "context": {
-        "id": "popup-form",
+        "id": "popup-medium",
         "size": "medium",
-        "title": "Edit details",
-        "body": "<div class='diet-textfield' data-size='sm'><label class='diet-textfield__control'><span class='diet-textfield__display-label label-xs'>Name</span><input class='diet-textfield__field body-xs' type='text' value='Example' aria-label='Name' /></label></div>",
-        "secondaryAction": "Cancel",
-        "primaryAction": "Save"
+        "title": "Popup title",
+        "body": "<p>Caller-owned content belongs in the Popup body.</p><p>The shared frame owns the header, scrolling body and footer layout.</p>",
+        "secondaryAction": "Secondary",
+        "primaryAction": "Primary"
       }
     },
     {
-      "id": "popup-confirmation",
-      "title": "Confirmation",
-      "spec": ["diet-popup", "data-size='{{size}}'", "native confirmation dialog"],
+      "id": "popup-large",
+      "title": "Large with scrolling body",
+      "spec": ["diet-popup", "data-size='large'", "native dialog", "scrolling body"],
       "context": {
-        "id": "popup-confirmation",
-        "size": "medium",
-        "title": "Confirm action",
-        "body": "<p>Confirm this operation before continuing.</p>",
-        "secondaryAction": "Cancel",
-        "primaryAction": "Confirm"
-      }
-    },
-    {
-      "id": "popup-dirty",
-      "title": "Dirty edit",
-      "spec": ["diet-popup", "data-size='{{size}}'", "native dirty-edit dialog"],
-      "context": {
-        "id": "popup-dirty",
+        "id": "popup-large",
         "size": "large",
-        "title": "Discard changes?",
-        "body": "<p>Your uncommitted changes will be lost.</p>",
-        "secondaryAction": "Keep editing",
-        "primaryAction": "Discard"
+        "title": "Popup title",
+        "body": "<p>Caller-owned content belongs in the Popup body.</p><p>Long content scrolls inside the body while the header and footer remain in the shared frame.</p><p>Section one demonstrates body flow.</p><p>Section two demonstrates body flow.</p><p>Section three demonstrates body flow.</p><p>Section four demonstrates body flow.</p><p>Section five demonstrates body flow.</p><p>Section six demonstrates body flow.</p><p>Section seven demonstrates body flow.</p><p>Section eight demonstrates body flow.</p><p>Section nine demonstrates body flow.</p><p>Section ten demonstrates body flow.</p><p>Section eleven demonstrates body flow.</p><p>Section twelve demonstrates body flow.</p><p>Section thirteen demonstrates body flow.</p><p>Section fourteen demonstrates body flow.</p><p>Section fifteen demonstrates body flow.</p><p>Section sixteen demonstrates body flow.</p><p>Section seventeen demonstrates body flow.</p><p>Section eighteen demonstrates body flow.</p><p>Section nineteen demonstrates body flow.</p><p>Section twenty demonstrates body flow.</p><p>Section twenty-one demonstrates body flow.</p><p>Section twenty-two demonstrates body flow.</p><p>Section twenty-three demonstrates body flow.</p><p>Section twenty-four demonstrates body flow.</p><p>Section twenty-five demonstrates body flow.</p><p>Section twenty-six demonstrates body flow.</p><p>Section twenty-seven demonstrates body flow.</p><p>Section twenty-eight demonstrates body flow.</p><p>Section twenty-nine demonstrates body flow.</p><p>Section thirty demonstrates body flow.</p>",
+        "secondaryAction": "Secondary",
+        "primaryAction": "Primary"
       }
     }
   ]

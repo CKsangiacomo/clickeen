@@ -86,18 +86,6 @@
   text-align: start;
 }
 
-.diet-popover__header-trigger {
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0;
-  padding: 0;
-  background: transparent;
-  border: none;
-  color: var(--color-system-black);
-}
-
 .diet-popover__content,
 .diet-popover__body {
   display: flex;

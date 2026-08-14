@@ -67,15 +67,6 @@ function installHandlers(state: ChoiceTilesState) {
       input.dispatchEvent(new Event('input', { bubbles: true }));
     });
 
-    button.addEventListener('keydown', (event) => {
-      if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
-      event.preventDefault();
-      const idx = options.indexOf(button);
-      if (idx === -1) return;
-      const dir = event.key === 'ArrowRight' ? 1 : -1;
-      const nextIdx = (idx + dir + options.length) % options.length;
-      options[nextIdx]?.focus();
-    });
   });
 
   input.addEventListener('external-sync', () => syncFromValue(state, input.value));

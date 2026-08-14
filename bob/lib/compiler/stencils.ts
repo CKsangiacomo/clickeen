@@ -51,13 +51,6 @@ async function renderNestedTooldrawerFields(
   const tdRegex =
     /<tooldrawer-field(?:-([a-z0-9-]+))?((?:[^>"']|"[^"]*"|'[^']*')*)(?:\/>|>([\s\S]*?)<\/tooldrawer-field>)/gi;
 
-  const coerceRenderedToBobPaths = (rendered: string, path: unknown): string => {
-    const pathStr = typeof path === 'string' ? path.trim() : '';
-    if (!pathStr) return rendered;
-
-    return rendered.replace(/data-path="/g, 'data-bob-path="');
-  };
-
   let out = '';
   let cursor = 0;
   tdRegex.lastIndex = 0;
@@ -79,8 +72,7 @@ async function renderNestedTooldrawerFields(
 
     const { stencil: nestedStencil, spec: nestedSpec } = await loadStencil(typeInner);
     const nestedContext = await buildContext(typeInner, attrsInner, nestedSpec, loadStencil);
-    let rendered = renderComponentStencil(nestedStencil, nestedContext);
-    rendered = coerceRenderedToBobPaths(rendered, (nestedContext as Record<string, unknown>).path);
+    const rendered = renderComponentStencil(nestedStencil, nestedContext);
     const showIf = attrsInner['show-if'] || '';
     if (showIf) validateShowIfExpression(showIf);
     out += showIf
@@ -121,18 +113,6 @@ export async function buildContext(
   const headerLabel = attrs.headerLabel || '';
   const reorderLabel = attrs.reorderLabel || attrs['reorder-label'] || '';
   const reorderTitle = attrs.reorderTitle || attrs['reorder-title'] || '';
-  const reorderLabelPath =
-    attrs.reorderLabelPath ||
-    attrs['reorder-label-path'] ||
-    (merged.reorderLabelPath as string) ||
-    '';
-  const reorderMode =
-    attrs.reorderMode || attrs['reorder-mode'] || (merged.reorderMode as string) || 'inline';
-  const reorderThreshold =
-    attrs.reorderThreshold ||
-    attrs['reorder-threshold'] ||
-    (merged.reorderThreshold as string) ||
-    '';
   const defaultItemRaw = attrs.defaultItem || attrs['default-item'] || '';
   const defaultItem = normalizeJsonAttrValue(defaultItemRaw);
   const addLabel = attrs.addLabel || attrs['add-label'] || '';
@@ -299,13 +279,8 @@ export async function buildContext(
       attrs['label-placeholder'] ||
       (merged.labelPlaceholder as string) ||
       '',
-    toggleLabel: attrs.toggleLabel || attrs['toggle-label'] || (merged.toggleLabel as string) || '',
-    togglePath: attrs.togglePath || attrs['toggle-path'] || (merged.togglePath as string) || '',
     reorderLabel,
     reorderTitle,
-    reorderLabelPath,
-    reorderMode,
-    reorderThreshold,
     rowPath,
     columns,
     title,
@@ -327,6 +302,7 @@ export async function buildContext(
     addLinkLabel: attrs.addLinkLabel || attrs['add-link-label'] || '',
     boldLabel: attrs.boldLabel || attrs['bold-label'] || '',
     clearFormattingLabel: attrs.clearFormattingLabel || attrs['clear-formatting-label'] || '',
+    closeLinkLabel: attrs.closeLinkLabel || attrs['close-link-label'] || '',
     italicLabel: attrs.italicLabel || attrs['italic-label'] || '',
     linkLabel: attrs.linkLabel || attrs['link-label'] || '',
     removeLinkLabel: attrs.removeLinkLabel || attrs['remove-link-label'] || '',
@@ -385,23 +361,12 @@ export async function buildContext(
     const hasAnyIcon = segments.some((s) => Boolean(s.icon));
     const hasAnyLabel = segments.some((s) => Boolean(s.label));
     const segmentVariant = hasAnyIcon ? (hasAnyLabel ? 'ictxt' : 'ic') : 'txt';
-    const buttonByControlSize = {
-      sm: { buttonSize: 'small', buttonIconSize: '12' },
-      md: { buttonSize: 'medium', buttonIconSize: '16' },
-      lg: { buttonSize: 'large', buttonIconSize: '20' },
-    } as const;
-    const buttonContext =
-      buttonByControlSize[size as keyof typeof buttonByControlSize] ?? buttonByControlSize.md;
-
     Object.assign(merged, {
       // Defaults to a good a11y label for widget controls.
       ariaLabel: label,
       // Use stable, per-control groupName so radio inputs don't conflict across multiple segmented controls.
       groupName: `${id}-seg`,
       variant: segmentVariant,
-      buttonSize: buttonContext.buttonSize,
-      buttonType: 'quaternary',
-      buttonIconSize: buttonContext.buttonIconSize,
       segments,
     });
   }

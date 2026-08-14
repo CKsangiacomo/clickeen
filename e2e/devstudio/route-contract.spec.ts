@@ -69,7 +69,7 @@ const navGroups = [
   },
   {
     title: 'Dieter Components',
-    count: 24,
+    count: 23,
     routes: [
       { path: '/#/dieter/agent-activity', title: 'Agent Activity' },
       { path: '/#/dieter/bulk-edit', title: 'Bulk Edit' },
@@ -83,7 +83,6 @@ const navGroups = [
       { path: '/#/dieter/dropdown-upload', title: 'Dropdown Upload' },
       { path: '/#/dieter/menuactions', title: 'Menuactions' },
       { path: '/#/dieter/object-manager', title: 'Object Manager' },
-      { path: '/#/dieter/popaddlink', title: 'Popaddlink' },
       { path: '/#/dieter/popover', title: 'Popover' },
       { path: '/#/dieter/popup', title: 'Popup' },
       { path: '/#/dieter/repeater', title: 'Repeater' },

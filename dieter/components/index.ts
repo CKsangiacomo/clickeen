@@ -12,9 +12,7 @@ export { destroyDropdownEdit, hydrateDropdownEdit } from './dropdown-edit/dropdo
 export { hydrateTextfield } from './textfield/textfield';
 export { hydrateValuefield } from './valuefield/valuefield';
 export { hydrateBulkEdit } from './bulk-edit/bulk-edit';
-export { hydrateTabs } from './tabs/tabs';
-export { hydrateSegmented } from './segmented/segmented';
-export { hydratePopAddLink } from './popaddlink/popaddlink';
+export { destroySlider, hydrateSlider } from './slider/slider';
 export { hydrateChoiceTiles } from './choice-tiles/choice-tiles';
 export { destroyObjectManager, hydrateObjectManager } from './object-manager/object-manager';
 export { destroyRepeater, hydrateRepeater } from './repeater/repeater';

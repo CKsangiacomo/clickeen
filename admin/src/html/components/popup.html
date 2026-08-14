@@ -7,22 +7,22 @@
 
     <figure class="dieter-component-preview-full-wrapper">
       <figcaption class="spec-wrapper dieter-spec-wrapper">
-        <strong class="body-s">Information</strong>
+        <strong class="body-s">Small</strong>
         <span class="spec-line body-xs">diet-popup</span><span class="spec-line body-xs">data-size='small'</span><span class="spec-line body-xs">native dialog</span>
       </figcaption>
       <div class="dieter-preview">
-        <dialog class="diet-popup" data-size="small" aria-labelledby="popup-information-title" open>
+        <dialog class="diet-popup" data-size="small" aria-labelledby="popup-small-title" open>
   <header class="diet-popup__header">
-    <h2 id="popup-information-title">Information</h2>
+    <h2 class="heading-4" id="popup-small-title">Popup title</h2>
   </header>
-  <div class="diet-popup__body"><p>The requested operation is ready.</p></div>
+  <div class="diet-popup__body"><p>Caller-owned content belongs in the Popup body.</p></div>
   <footer class="diet-popup__footer">
     <div class="diet-popup__actions">
       <button class="diet-button" type="button" data-size="medium" data-type="secondary">
-        <span class="diet-button__label">Close</span>
+        <span class="diet-button__label">Secondary</span>
       </button>
       <button class="diet-button" type="button" data-size="medium" data-type="primary">
-        <span class="diet-button__label">Continue</span>
+        <span class="diet-button__label">Primary</span>
       </button>
     </div>
   </footer>
@@ -36,22 +36,22 @@
 
     <figure class="dieter-component-preview-full-wrapper">
       <figcaption class="spec-wrapper dieter-spec-wrapper">
-        <strong class="body-s">Form</strong>
-        <span class="spec-line body-xs">diet-popup</span><span class="spec-line body-xs">data-size='medium'</span><span class="spec-line body-xs">native dialog with form</span>
+        <strong class="body-s">Medium</strong>
+        <span class="spec-line body-xs">diet-popup</span><span class="spec-line body-xs">data-size='medium'</span><span class="spec-line body-xs">native dialog</span>
       </figcaption>
       <div class="dieter-preview">
-        <dialog class="diet-popup" data-size="medium" aria-labelledby="popup-form-title" open>
+        <dialog class="diet-popup" data-size="medium" aria-labelledby="popup-medium-title" open>
   <header class="diet-popup__header">
-    <h2 id="popup-form-title">Edit details</h2>
+    <h2 class="heading-4" id="popup-medium-title">Popup title</h2>
   </header>
-  <div class="diet-popup__body"><div class='diet-textfield' data-size='sm'><label class='diet-textfield__control'><span class='diet-textfield__display-label label-xs'>Name</span><input class='diet-textfield__field body-xs' type='text' value='Example' aria-label='Name' /></label></div></div>
+  <div class="diet-popup__body"><p>Caller-owned content belongs in the Popup body.</p><p>The shared frame owns the header, scrolling body and footer layout.</p></div>
   <footer class="diet-popup__footer">
     <div class="diet-popup__actions">
       <button class="diet-button" type="button" data-size="medium" data-type="secondary">
-        <span class="diet-button__label">Cancel</span>
+        <span class="diet-button__label">Secondary</span>
       </button>
       <button class="diet-button" type="button" data-size="medium" data-type="primary">
-        <span class="diet-button__label">Save</span>
+        <span class="diet-button__label">Primary</span>
       </button>
     </div>
   </footer>
@@ -65,51 +65,22 @@
 
     <figure class="dieter-component-preview-full-wrapper">
       <figcaption class="spec-wrapper dieter-spec-wrapper">
-        <strong class="body-s">Confirmation</strong>
-        <span class="spec-line body-xs">diet-popup</span><span class="spec-line body-xs">data-size='medium'</span><span class="spec-line body-xs">native confirmation dialog</span>
+        <strong class="body-s">Large with scrolling body</strong>
+        <span class="spec-line body-xs">diet-popup</span><span class="spec-line body-xs">data-size='large'</span><span class="spec-line body-xs">native dialog</span><span class="spec-line body-xs">scrolling body</span>
       </figcaption>
       <div class="dieter-preview">
-        <dialog class="diet-popup" data-size="medium" aria-labelledby="popup-confirmation-title" open>
+        <dialog class="diet-popup" data-size="large" aria-labelledby="popup-large-title" open>
   <header class="diet-popup__header">
-    <h2 id="popup-confirmation-title">Confirm action</h2>
+    <h2 class="heading-4" id="popup-large-title">Popup title</h2>
   </header>
-  <div class="diet-popup__body"><p>Confirm this operation before continuing.</p></div>
+  <div class="diet-popup__body"><p>Caller-owned content belongs in the Popup body.</p><p>Long content scrolls inside the body while the header and footer remain in the shared frame.</p><p>Section one demonstrates body flow.</p><p>Section two demonstrates body flow.</p><p>Section three demonstrates body flow.</p><p>Section four demonstrates body flow.</p><p>Section five demonstrates body flow.</p><p>Section six demonstrates body flow.</p><p>Section seven demonstrates body flow.</p><p>Section eight demonstrates body flow.</p><p>Section nine demonstrates body flow.</p><p>Section ten demonstrates body flow.</p><p>Section eleven demonstrates body flow.</p><p>Section twelve demonstrates body flow.</p><p>Section thirteen demonstrates body flow.</p><p>Section fourteen demonstrates body flow.</p><p>Section fifteen demonstrates body flow.</p><p>Section sixteen demonstrates body flow.</p><p>Section seventeen demonstrates body flow.</p><p>Section eighteen demonstrates body flow.</p><p>Section nineteen demonstrates body flow.</p><p>Section twenty demonstrates body flow.</p><p>Section twenty-one demonstrates body flow.</p><p>Section twenty-two demonstrates body flow.</p><p>Section twenty-three demonstrates body flow.</p><p>Section twenty-four demonstrates body flow.</p><p>Section twenty-five demonstrates body flow.</p><p>Section twenty-six demonstrates body flow.</p><p>Section twenty-seven demonstrates body flow.</p><p>Section twenty-eight demonstrates body flow.</p><p>Section twenty-nine demonstrates body flow.</p><p>Section thirty demonstrates body flow.</p></div>
   <footer class="diet-popup__footer">
     <div class="diet-popup__actions">
       <button class="diet-button" type="button" data-size="medium" data-type="secondary">
-        <span class="diet-button__label">Cancel</span>
+        <span class="diet-button__label">Secondary</span>
       </button>
       <button class="diet-button" type="button" data-size="medium" data-type="primary">
-        <span class="diet-button__label">Confirm</span>
-      </button>
-    </div>
-  </footer>
-</dialog>
-
-      </div>
-    </figure>
-    </div>
-
-    <div class="dieter-component-row">
-
-    <figure class="dieter-component-preview-full-wrapper">
-      <figcaption class="spec-wrapper dieter-spec-wrapper">
-        <strong class="body-s">Dirty edit</strong>
-        <span class="spec-line body-xs">diet-popup</span><span class="spec-line body-xs">data-size='large'</span><span class="spec-line body-xs">native dirty-edit dialog</span>
-      </figcaption>
-      <div class="dieter-preview">
-        <dialog class="diet-popup" data-size="large" aria-labelledby="popup-dirty-title" open>
-  <header class="diet-popup__header">
-    <h2 id="popup-dirty-title">Discard changes?</h2>
-  </header>
-  <div class="diet-popup__body"><p>Your uncommitted changes will be lost.</p></div>
-  <footer class="diet-popup__footer">
-    <div class="diet-popup__actions">
-      <button class="diet-button" type="button" data-size="medium" data-type="secondary">
-        <span class="diet-button__label">Keep editing</span>
-      </button>
-      <button class="diet-button" type="button" data-size="medium" data-type="primary">
-        <span class="diet-button__label">Discard</span>
+        <span class="diet-button__label">Primary</span>
       </button>
     </div>
   </footer>
