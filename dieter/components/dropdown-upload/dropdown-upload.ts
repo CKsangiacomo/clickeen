@@ -151,10 +151,12 @@ async function uploadSelectedFile(state: DropdownUploadState, file: File): Promi
     writeValue(state, { assetRef: asset.assetRef, name: asset.filename });
   } catch (error) {
     if (state.destroyed) return;
-    const reason = error instanceof Error ? error.message : '';
-    if (!dispatchAccountAssetUpsell(state.root, reason)) {
-      setError(state, state.uploadErrorCopy);
+    const upsellReason = state.accountAssets.resolveUploadUpsellReason(error);
+    if (upsellReason) {
+      dispatchAccountAssetUpsell(state.root, upsellReason);
+      return;
     }
+    setError(state, state.uploadErrorCopy);
   } finally {
     if (!state.destroyed) setUploading(state, false);
   }

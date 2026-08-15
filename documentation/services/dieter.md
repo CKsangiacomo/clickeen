@@ -113,11 +113,12 @@ giving Dieter ownership of the host's product meaning.
 JSON-valued controls use `data-dieter-json`; Bulk Edit emits `dieter-ops` with
 its existing exact `{ops}` payload. Neither name belongs to Bob or Roma.
 Consumers must call the exported destroy function for each hydrated root they
-actually render before replacing it. Dropdown Edit destruction detaches the locally bundled Lexical editor
-from its DOM root; Dropdown Fill and Dropdown Upload cancel pending asset work;
-Object Manager and Repeater destroy hydrated children and release their
-retained collection state and listeners; Slider releases its native input
-listener.
+actually render before replacing it. Dropdown Edit destruction detaches the
+locally bundled Lexical editor from its DOM root; Dropdown Fill and Dropdown
+Upload cancel pending asset work; Bulk Edit destroys its dialog lifecycle and
+root listeners; Object Manager and Repeater destroy hydrated children and
+release their retained collection state and listeners; Slider releases its
+native input listener.
 
 Agent Activity owns a required caller-supplied title, a required array of
 narration rows, its `sm`/`md` structure, and its active presentation. It does
@@ -279,7 +280,10 @@ complete caller label with either the caller placeholder or the exact filename
 on the trailing rail. Its row-width Popover repeats the caller label and shows
 one preview plus Upload when empty or Replace and Remove when selected. It uses
 the caller-supplied account-assets client for upload and exact asset resolution;
-it does not own account identity, route policy, file limits, storage, or Widget
+that caller-owned client validates host responses and classifies an exact
+upload upsell reason when applicable. Dieter may dispatch the supplied generic
+reason, but it does not parse Roma responses or own account-plan reason keys.
+It does not own account identity, route policy, file limits, storage, or Widget
 meaning. The component emits only the one JSON field, owns no second metadata
 path, derives preview kind only from resolved asset content type, and releases
 pending asset resolution through `destroyDropdownUpload`.
@@ -352,8 +356,9 @@ shows only the centered `square.slash` Icon rather than retaining the prior
 mode's chip.
 Structured gradients keep their declared `linear|radial|conic` kind while their angle and
 stops are edited. Image and video keep the same caller-supplied account-assets
-client, exact fill values, and generic `dieter-upsell` host event when account
-policy denies an upload. The component does not own account policy, routes,
+client, exact fill values, and generic `dieter-upsell` host event only when the
+caller maps an upload failure to that exact reason. The component does not own
+Roma response parsing, the account-policy reason set, routes,
 persistence, Widget meanings, copy, or localization. Every visible and
 accessible word is caller input, resolved from the adjacent Widget ToolDrawer
 label file for product use.
@@ -409,6 +414,9 @@ empty-state words are caller inputs; ToolDrawer consumers resolve them from
 their Widget-adjacent label file. Its column JSON is parsed directly from the
 browser-decoded attribute value; Dieter does not decode those exact words a
 second time.
+Its exported destroy function removes its listeners and destroys the shared
+dialog lifecycle before host DOM replacement, restoring page state even when
+the dialog was open.
 
 Color source keeps one small shared role layer:
 `--role-surface-bg`, `--role-surface`, `--role-surface-muted`,

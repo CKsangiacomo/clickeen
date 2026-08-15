@@ -1,5 +1,6 @@
 import type { AccountAssetsClient } from '../../../dieter/components/shared/account-assets';
 import {
+  destroyBulkEdit,
   destroyDropdownActions,
   destroyDropdownBorder,
   destroyDropdownEdit,
@@ -39,6 +40,7 @@ export function runHydrators(scope: HTMLElement, deps: DieterHydratorDeps): () =
   const destroy = () => {
     if (destroyed) return;
     destroyed = true;
+    scope.querySelectorAll<HTMLElement>('.diet-bulk-edit').forEach(destroyBulkEdit);
     scope.querySelectorAll<HTMLElement>('.diet-dropdown-actions').forEach(destroyDropdownActions);
     scope.querySelectorAll<HTMLElement>('.diet-dropdown-border').forEach(destroyDropdownBorder);
     scope.querySelectorAll<HTMLElement>('.diet-dropdown-edit').forEach(destroyDropdownEdit);

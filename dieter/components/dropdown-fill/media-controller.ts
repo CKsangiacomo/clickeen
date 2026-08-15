@@ -306,8 +306,9 @@ async function handleAssetUpload(args: {
     commitVideoAssetSelection(args.state, asset.assetRef, asset.filename, true, args.deps);
     setBrowserOpen(args.state.videoBrowser, args.state.videoChooseButton, false);
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'coreui.errors.assets.uploadFailed';
-    if (dispatchAccountAssetUpsell(args.state.root, message)) {
+    const upsellReason = args.state.accountAssets.resolveUploadUpsellReason(error);
+    if (upsellReason) {
+      dispatchAccountAssetUpsell(args.state.root, upsellReason);
       return;
     }
     setAssetPanelMessage(

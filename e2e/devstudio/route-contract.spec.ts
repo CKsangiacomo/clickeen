@@ -517,7 +517,12 @@ test.describe('DevStudio route contract', () => {
     await bulkDialog.locator('.diet-popup__dismiss').click();
     await expect(bulkDialog).toHaveJSProperty('open', false);
 
+    await bulkEdit.locator('[data-bulk-open]').click();
+    await expect(bulkDialog).toHaveJSProperty('open', true);
+    expect(await page.evaluate(() => document.body.style.overflow)).toBe('hidden');
+
     await page.goto('/#/dieter/object-manager');
+    expect(await page.evaluate(() => document.body.style.overflow)).toBe('');
     const objectManager = page
       .locator('.diet-object-manager[data-allow-structure="true"]')
       .first();

@@ -54,6 +54,11 @@ documentation/
 │   │   └── translation-agent.md
 │
 ├── engineering/              # OPERATOR RUNBOOKS
+│   ├── UI/                    # Design-system and application-UI doctrine
+│   │   ├── README.md           # UI documentation router
+│   │   ├── components.md       # Dieter component contracts
+│   │   ├── dieter.md           # Dieter system mechanics
+│   │   └── *.md                # Accessibility, color, dialogs, interactions, motion, ops, surfaces, typography
 │   ├── PlaywrightE2E.md      # Deployed-runtime browser evidence
 │   ├── CloudflareOperations.md # R2, Pages, DNS, and deploy command paths
 │   ├── CloudflarePagesCloudDevChecklist.md # Cloud-dev Pages/env/bindings

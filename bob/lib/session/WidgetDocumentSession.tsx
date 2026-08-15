@@ -3,15 +3,12 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { AccountFontLibrary } from '@clickeen/widget-foundation';
 import { createInitialSessionState, type SessionState } from './sessionTypes';
-import { useSessionTransport } from './sessionTransport';
+import { createAccountAssetsClient, useSessionTransport } from './sessionTransport';
 import { useSessionEditing } from './useSessionEditing';
 import { useSessionBoot } from './useSessionBoot';
 import { useSessionSaving } from './useSessionSaving';
 import { useWidgetSessionChromeController } from './WidgetSessionChrome';
-import {
-  createAccountAssetsClient,
-  type AccountAssetsClient,
-} from '../../../dieter/components/shared/account-assets';
+import type { AccountAssetsClient } from '../../../dieter/components/shared/account-assets';
 
 export type WidgetDocumentSessionValue = {
   compiled: SessionState['compiled'];

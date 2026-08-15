@@ -23,6 +23,7 @@ import './css/utilities.css';
 import { navGroups, showcaseIndex, showcaseModules } from './data/routes';
 import { getIcon } from './data/icons';
 import {
+  destroyBulkEdit,
   destroyDropdownActions,
   destroyDateRangePicker,
   destroyDatefield,
@@ -87,6 +88,7 @@ const showcaseUploadedAssets = new Map<string, { url: string; assetType: string;
 ]);
 
 const showcaseAccountAssets: AccountAssetsClient = {
+  resolveUploadUpsellReason: () => null,
   async listAssets() {
     return [];
   },
@@ -403,6 +405,7 @@ function hydrateDieterComponents(scope: Element | DocumentFragment): () => void 
 }
 
 function destroyDieterComponents(scope: Element | DocumentFragment): void {
+  scope.querySelectorAll<HTMLElement>('.diet-bulk-edit').forEach(destroyBulkEdit);
   scope.querySelectorAll<HTMLElement>('.diet-dropdown-actions').forEach(destroyDropdownActions);
   scope.querySelectorAll<HTMLElement>('.diet-date-range-picker').forEach(destroyDateRangePicker);
   scope.querySelectorAll<HTMLElement>('.diet-datefield').forEach(destroyDatefield);

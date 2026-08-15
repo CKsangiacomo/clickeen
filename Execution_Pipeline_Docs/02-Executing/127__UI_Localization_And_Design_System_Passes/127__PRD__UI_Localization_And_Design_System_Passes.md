@@ -158,7 +158,7 @@ the code is convenient there.
 | Stage                      | Status                                                                                                                                                                                                                                               | Release state                                                         |
 | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
 | Stage 1 — Scaffold only    | Complete                                                                                                                                                                                                                                             | Committed, pushed, and deployed; no non-English experience is exposed |
-| Stage 2 — Dieter UI pass   | In progress: Foundations, the current component inventory through Textfield and Valuefield, and the new Datefield/Date Range Picker contracts are complete and re-audited as consumer-agnostic primitives currently revealed only by DevStudio; standalone Popaddlink and Textedit are deleted because their jobs were duplicate or unused | The Widget catalog is the next Stage 2 DevStudio tab                  |
+| Stage 2 — Dieter UI pass   | In progress: Foundations and the full current 24-component inventory are complete and re-audited; Datefield and Date Range Picker remain consumer-agnostic primitives currently revealed only by DevStudio, and standalone Popaddlink and Textedit are deleted because their jobs were duplicate or unused | The Widget catalog is the next Stage 2 DevStudio tab                  |
 | Stage 3 — Bob UI pass      | Not started                                                                                                                                                                                                                                          | No authority to begin until explicitly directed                       |
 | Stage 4 — Roma UI pass     | Not started                                                                                                                                                                                                                                          | No authority to begin until explicitly directed                       |
 | Stage 5 — Translation pass | Not started                                                                                                                                                                                                                                          | No translations may be generated yet                                  |
@@ -1506,3 +1506,49 @@ authorizes it.
   consumer-integration claims in the preceding date entry; it preserves that
   entry as point-in-time execution history. Independent V1–V8 audit passed;
   the Git-connected exact-SHA rollout follows this local correction record.
+
+- **Latest completed component rollout reconciliation — live at exact SHA,
+  2026-08-15.** The cumulative completed component work through the Date
+  consumer-boundary correction is committed and pushed at
+  `63e685dcb93ba69f98da0a81add68ab68a78b8ed`, exactly matching
+  `github/main`. Cloudflare Pages reports successful production deployments
+  for `devstudio`, `bob-dev`, and `roma-dev` at that exact commit. The
+  GitHub `cloud-dev workers deploy` run `31858100156` also completed
+  successfully at the exact SHA, including the git-authored product-root sync.
+  The owning URLs responded through their expected boundaries: DevStudio
+  returned its authentication redirect, Bob returned `200` at `/bob`, and
+  Roma returned its authenticated-shell redirect at `/home`. This closes the
+  previously deferred deploy/reachability record for those completed slices;
+  it does not claim that the local correction below is deployed.
+
+- **Dieter account-asset authority and Bulk Edit lifecycle correction — passed
+  locally, 2026-08-15.** Dieter's shared account-assets source now contains
+  only the consumer-neutral resolved client type and generic upsell event. The
+  unused ten-string English error catalog is deleted. Roma response parsing,
+  exact asset-payload validation, API reason handling, and the two current
+  upload-plan denial keys now live in Bob's existing session transport adapter.
+  The caller-owned client supplies either one exact upsell reason or no upsell;
+  Dropdown Fill and Dropdown Upload retain their caller-owned failure copy and
+  no longer inspect `coreui.*` vocabulary. DevStudio and Roma Widget Defaults
+  explicitly map no local/stub upload failure to an upsell.
+
+  Bulk Edit now exports an idempotent `destroyBulkEdit` beside its existing
+  hydrator. Destruction removes its root listeners, destroys the shared dialog
+  lifecycle, clears the hydration marker, and restores an active page scroll
+  lock. Bob's existing control-host cleanup uses it, which also covers Roma
+  Widget Defaults through the already-shared host. DevStudio calls it before
+  hash-route replacement. No component registry, compatibility path, service,
+  route, storage coordinate, Widget-specific branch, copy catalog, product
+  data, or PRD 128 behavior was added.
+
+  Documentation now routes the existing `documentation/engineering/UI/`
+  authority, records Bob's account-asset adapter boundary, and lists Bulk Edit
+  with the same hydrate/destroy law as the other stateful composites. Focused
+  verification passed: Dieter governance/typecheck; Bob editor-contract and
+  typecheck, including exact response/policy mapping; Roma Widget Defaults and
+  command gates; DevStudio generation/build/typecheck/lint/Functions syntax;
+  all eight Widget source and artifact-pair checks; root typecheck/lint; diff
+  checks; and local Chromium proof that navigating away from an open Bulk Edit
+  restores the dialog lifecycle's inline body state before Object Manager
+  renders. V1–V8 pass. This correction is local only: it is not committed,
+  pushed, deployed, or live.

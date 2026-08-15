@@ -12,6 +12,8 @@ type BulkRow = {
   data: Record<string, unknown>;
 };
 
+const destroyers = new Map<HTMLElement, () => void>();
+
 function parseColumns(raw: string): BulkColumn[] {
   return JSON.parse(raw) as BulkColumn[];
 }
@@ -111,8 +113,7 @@ function renderTable(
 
 export function hydrateBulkEdit(scope: Element | DocumentFragment): void {
   scope.querySelectorAll<HTMLElement>('.diet-bulk-edit').forEach((root) => {
-    if (root.dataset.bulkEditHydrated === 'true') return;
-    root.dataset.bulkEditHydrated = 'true';
+    if (destroyers.has(root)) return;
 
     const openBtn = root.querySelector<HTMLButtonElement>('[data-bulk-open]');
     const modal = root.querySelector<HTMLDialogElement>('[data-bulk-modal]');
@@ -222,14 +223,35 @@ export function hydrateBulkEdit(scope: Element | DocumentFragment): void {
       lifecycle.close();
     };
 
+    const keepEditing = () => {
+      showEditor();
+      (modal.querySelector<HTMLElement>('[data-bulk-path]') ?? cancelBtn)?.focus();
+    };
+
+    const discardChanges = () => lifecycle.close();
+
     openBtn.addEventListener('click', openModal);
     closeBtn?.addEventListener('click', requestClose);
     cancelBtn?.addEventListener('click', requestClose);
-    keepEditingBtn.addEventListener('click', () => {
-      showEditor();
-      (modal.querySelector<HTMLElement>('[data-bulk-path]') ?? cancelBtn)?.focus();
-    });
-    discardBtn.addEventListener('click', () => lifecycle.close());
+    keepEditingBtn.addEventListener('click', keepEditing);
+    discardBtn.addEventListener('click', discardChanges);
     saveBtn.addEventListener('click', save);
+
+    root.dataset.bulkEditHydrated = 'true';
+    destroyers.set(root, () => {
+      openBtn.removeEventListener('click', openModal);
+      closeBtn?.removeEventListener('click', requestClose);
+      cancelBtn?.removeEventListener('click', requestClose);
+      keepEditingBtn.removeEventListener('click', keepEditing);
+      discardBtn.removeEventListener('click', discardChanges);
+      saveBtn.removeEventListener('click', save);
+      lifecycle.destroy();
+      delete root.dataset.bulkEditHydrated;
+      destroyers.delete(root);
+    });
   });
+}
+
+export function destroyBulkEdit(root: HTMLElement): void {
+  destroyers.get(root)?.();
 }

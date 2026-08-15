@@ -109,7 +109,9 @@ layering are owned by their own UI docs.
   Each consumer imports only the hydrators for components it actually renders;
   CSS/HTML-only components need no browser runtime. Before rendered DOM is
   replaced, the consumer calls the corresponding exported destroy function so
-  component state and listeners cannot retain detached controls. DevStudio is
+  component state and listeners cannot retain detached controls. Bulk Edit's
+  destroy path also releases its shared dialog lifecycle and any active page
+  scroll lock. DevStudio is
   currently the only consumer that hydrates Datefield and Date Range Picker;
   Bob and Roma have no date-specific host or compiler path.
 - **Consumption.** Bob and Roma compile `dieter/styles.css`; Prague compiles

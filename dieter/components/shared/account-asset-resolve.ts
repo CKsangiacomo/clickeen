@@ -8,7 +8,7 @@ type ResolveSingleAccountAssetArgs = {
   isCurrent: (requestId: number, assetRef: string) => boolean;
   onStart?: () => void;
   onResolved: (asset: ResolvedAccountAsset) => void;
-  onError: (message: string) => void;
+  onError: () => void;
 };
 
 export async function resolveSingleAccountAsset(args: ResolveSingleAccountAssetArgs): Promise<void> {
@@ -21,10 +21,13 @@ export async function resolveSingleAccountAsset(args: ResolveSingleAccountAssetA
     const resolved = await args.accountAssets.resolveAssets([assetRef]);
     if (!args.isCurrent(requestId, assetRef)) return;
     const asset = resolved.assetsByRef.get(assetRef);
-    if (!asset) throw new Error('coreui.errors.assets.payloadInvalid');
+    if (!asset) {
+      args.onError();
+      return;
+    }
     args.onResolved(asset);
-  } catch (error) {
+  } catch {
     if (!args.isCurrent(requestId, assetRef)) return;
-    args.onError(error instanceof Error ? error.message : 'coreui.errors.db.readFailed');
+    args.onError();
   }
 }

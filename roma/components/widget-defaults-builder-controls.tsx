@@ -53,6 +53,7 @@ type BuilderDefaultsControlsProps = {
 const BUILDER_CONTROLS_LOAD_ERROR_COPY = 'Builder controls could not be loaded. Please try again.';
 
 const stubAccountAssets: AccountAssetsClient = {
+  resolveUploadUpsellReason: () => null,
   listAssets: async () => [],
   resolveAssets: async () => ({ assetsByRef: new Map() }),
   uploadAsset: async () => {

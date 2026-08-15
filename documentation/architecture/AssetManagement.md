@@ -64,6 +64,13 @@ Roma current account
   -> accounts/{accountPublicId}/assets/{filename}
 ```
 
+Roma owns the current-account policy result. Bob's existing Builder session
+adapter validates the exact Roma asset response and maps the current upload
+plan-denial reason keys into the existing generic upsell request. Dieter
+receives only the resolved account-assets client. That caller-owned client
+classifies an upload failure as an exact upsell reason or an ordinary failure;
+Dieter does not parse Roma payloads or decide which plan reasons qualify.
+
 ## Operations
 
 The account asset library supports:

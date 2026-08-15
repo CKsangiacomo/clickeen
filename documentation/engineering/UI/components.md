@@ -28,7 +28,7 @@ Legend: ✅ exported from `index.ts` · Direct host import · ⊘ no custom hydr
 | choosers    | `choice-tiles`     | `hydrateChoiceTiles`, `string`                                                  | ✅     |
 | choosers    | `object-manager`   | `hydrateObjectManager` / `destroyObjectManager`, top-level object composition   | ✅     |
 | choosers    | `repeater`         | `hydrateRepeater` / `destroyRepeater`, nested inline collection editing         | ✅     |
-| choosers    | `bulk-edit`        | `hydrateBulkEdit`, `row-path`                                                   | ✅     |
+| choosers    | `bulk-edit`        | `hydrateBulkEdit` / `destroyBulkEdit`, `row-path`                               | ✅     |
 | dropdowns   | `dropdown-fill`    | `hydrateDropdownFill` / `destroyDropdownFill`, exact fill JSON                  | ✅     |
 | dropdowns   | `dropdown-actions` | `hydrateDropdownActions` / `destroyDropdownActions`, `string`                   | ✅     |
 | dropdowns   | `dropdown-border`  | `hydrateDropdownBorder` / `destroyDropdownBorder`, exact border JSON            | ✅     |
@@ -87,8 +87,9 @@ The governing component product law is:
   DevStudio is currently the only consumer that hydrates Datefield and Date
   Range Picker; Bob and Roma have no date-specific host or compiler path.
   Dropdown Edit destruction detaches its Lexical root; Fill and Upload cancel
-  pending media resolution; Object Manager and Repeater release their child
-  controls, listeners, dialogs, and active collection state.
+  pending media resolution; Bulk Edit releases its dialog lifecycle and
+  listeners; Object Manager and Repeater release their child controls,
+  listeners, dialogs, and active collection state.
 - Button is one `.diet-button` primitive. Its direct children determine whether
   it is text-only, icon-only, or icon-and-text; those are not separate Button
   classes or variants.
@@ -223,8 +224,10 @@ The governing component product law is:
   the closed row shows only the centered `square.slash` Icon; it does not retain
   or display the prior mode's chip. Gradient edits preserve the declared
   `linear|radial|conic` kind and exact stop values. Image and video modes use
-  the supplied account-assets client; the primitive does not own an account,
-  route, policy, or Widget-specific media rule. All visible and accessible
+  the supplied account-assets client. The caller-owned client validates its
+  host response and classifies any exact upload upsell reason; Dieter only
+  dispatches that supplied generic reason. The primitive does not own an
+  account, route, policy reason set, or Widget-specific media rule. All visible and accessible
   words are caller inputs from the Widget-adjacent ToolDrawer label file.
   There is no inferred media capability, component copy catalog, fallback
   fill, repaired value, or compatibility value shape.
@@ -265,7 +268,10 @@ The governing component product law is:
   placeholder, action words, and failure copy. Product Widget use resolves the
   five component words from that Widget's adjacent ToolDrawer label file.
   Preview kind is resolved from the account asset's exact content type rather
-  than guessed from the filename. DevStudio examples are local component
+  than guessed from the filename. The caller-owned asset client decides
+  whether an upload failure is an upsell request or the component's
+  caller-supplied error state; Dieter owns neither Roma response parsing nor
+  account-plan reason keys. DevStudio examples are local component
   demonstrations, not account storage.
 - Menu Actions remains a separate menu-row primitive with the single
   `sm|md|lg` size API described above. Low-level geometry tokens remain
@@ -417,6 +423,9 @@ ToolDrawer use supplies all of them through that Widget's adjacent label file.
 Bob derives each exact string or boolean item path from the same declared
 `path`, optional `row-path`, and `columns`; no hidden child fields or
 consumer-specific allowlist is required.
+Its exported destroy function removes root listeners and destroys the shared
+dialog lifecycle before a consumer replaces the hydrated DOM, including while
+the dialog is open.
 
 Dieter Popover owns the attached floating surface, padding, radius, shadow,
 header/body structure, and open-state presentation. Its standard header is a

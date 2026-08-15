@@ -19,6 +19,7 @@ import {
   assertCompiledEditorContract,
   assertSessionConfigContract,
 } from '../lib/session/sessionConfig';
+import { createAccountAssetsClient } from '../lib/session/sessionTransport';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const widgetsRoot = path.join(repoRoot, 'tokyo/product/widgets');
@@ -1228,6 +1229,63 @@ function testDropdownUploadCopyJoin(): void {
   );
 }
 
+async function testAccountAssetsHostAdapter(): Promise<void> {
+  const client = createAccountAssetsClient({
+    listAssets: async () =>
+      Response.json({
+        assets: [
+          {
+            assetRef: 'asset-logo',
+            assetType: 'image',
+            filename: 'logo.png',
+            contentType: 'image/png',
+            createdAt: '2026-08-15T00:00:00.000Z',
+            sizeBytes: 1,
+          },
+        ],
+      }),
+    resolveAssets: async () =>
+      Response.json({
+        assets: [
+          {
+            assetRef: 'asset-logo',
+            url: 'https://example.test/logo.png',
+            assetType: 'image',
+            contentType: 'image/png',
+          },
+        ],
+      }),
+    uploadAsset: async () =>
+      Response.json(
+        { error: { reasonKey: 'coreui.upsell.reason.limitReached' } },
+        { status: 403 },
+      ),
+  });
+
+  assert.equal((await client.listAssets())[0]?.assetRef, 'asset-logo');
+  assert.equal(
+    (await client.resolveAssets(['asset-logo'])).assetsByRef.get('asset-logo')?.url,
+    'https://example.test/logo.png',
+  );
+  const deniedUpload = await client
+    .uploadAsset(new File(['x'], 'logo.png', { type: 'image/png' }), 'dropdown-upload')
+    .then(
+      () => null,
+      (error: unknown) => error,
+    );
+  assert.equal(client.resolveUploadUpsellReason(deniedUpload), 'coreui.upsell.reason.limitReached');
+  assert.equal(
+    client.resolveUploadUpsellReason(new Error('coreui.errors.assets.uploadFailed')),
+    null,
+  );
+
+  const dieterSource = fs.readFileSync(
+    path.join(repoRoot, 'dieter/components/shared/account-assets.ts'),
+    'utf8',
+  );
+  assert.doesNotMatch(dieterSource, /coreui\./, 'Dieter contains no account-policy reason keys');
+}
+
 async function main(): Promise<void> {
   assert.deepEqual(
     DEFAULT_PANELS.map((panel) => panel.id),
@@ -1275,6 +1333,8 @@ async function main(): Promise<void> {
   console.log('PASS Dropdown Upload binds one exact structured value');
   testDropdownUploadCopyJoin();
   console.log('PASS Dropdown Upload joins its exact Widget-owned component copy');
+  await testAccountAssetsHostAdapter();
+  console.log('PASS Bob owns account-asset response and account-policy interpretation');
   testInsideShadowLinkOpsPreserveHiddenValues();
   console.log('PASS inside-shadow link edits preserve hidden shadow values');
   testValuefieldNumericContract();

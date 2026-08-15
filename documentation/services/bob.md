@@ -116,9 +116,10 @@ exact value from that working state into the compiled `data-bob-path` field
 marked with `data-dieter-json` before running the Dieter hydrator; the empty value authored in compiled panel
 HTML is only an unbound placeholder, not product truth or a default. Changed-path
 updates apply only while the same panel control surface remains mounted.
-Before Bob replaces or unmounts that surface, it invokes the owning Dropdown
-Actions, Border, Edit, Fill, Shadow, Upload, Object Manager, Repeater, and
-Slider destroy functions; Edit detaches its Lexical root, Fill and Upload
+Before Bob replaces or unmounts that surface, it invokes the owning Bulk Edit,
+Dropdown Actions, Border, Edit, Fill, Shadow, Upload, Object Manager, Repeater,
+and Slider destroy functions; Bulk Edit releases its dialog lifecycle and
+listeners, Edit detaches its Lexical root, Fill and Upload
 invalidate pending asset resolution, and the collection controls release their
 nested hydrators and retained draft state. Slider releases its native progress
 listener.
@@ -760,6 +761,12 @@ the upload.
 
 Bob does not expose account asset proxy routes. Account asset list, upload,
 resolve, and delete operations stay behind Roma current-account routes.
+Bob's existing session transport is the account-asset UI adapter: it validates
+the exact Roma response shapes and classifies the two current account-plan
+upload denial reason keys through the caller-owned asset client. Fill or Upload
+then emits the existing generic Dieter upsell event for an exact classified
+reason. Dieter never parses Roma payloads or decides which account-policy
+reasons qualify.
 
 ## Localization
 

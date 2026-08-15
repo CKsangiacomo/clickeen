@@ -136,11 +136,12 @@ imitation, or an account-specific branch.
 Dropdown Upload reveals the real `sm|md|lg` empty property rows and one open
 selected-file example. Its local showcase account-assets client resolves that
 example and can preview a file selected during the local demonstration; it
-does not call Roma, write account storage, or represent product data.
+maps no upload failure to an account upsell, does not call Roma, write account
+storage, or represent product data.
 These routes retain Dieter's consumer-neutral `data-dieter-json` marker in
 their generated examples. Before hash navigation replaces the reveal,
-DevStudio destroys hydrated Datefield, Date Range Picker, Dropdown Actions,
-Border, Edit, Fill, Shadow, Upload, Object Manager, Repeater, and Slider roots
+DevStudio destroys hydrated Bulk Edit, Datefield, Date Range Picker, Dropdown
+Actions, Border, Edit, Fill, Shadow, Upload, Object Manager, Repeater, and Slider roots
 through their exported component lifecycle. Object
 Manager reveals all three sizes plus
 its exact structural Add/draft/save flow; Repeater reveals all three sizes,
