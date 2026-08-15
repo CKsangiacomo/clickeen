@@ -272,13 +272,10 @@ function assertDropdownShadowLabels(args: {
 }): void {
   const expectedCounts: Record<string, number> = {
     'big-bang': 12,
-    calltoaction: 12,
     cards: 13,
     countdown: 13,
     faq: 18,
     logoshowcase: 13,
-    'split-carousel-media': 13,
-    'split-media': 13,
   };
   const roots = args.html.split('class="diet-dropdown-shadow diet-popover-host"').slice(1);
   assert.equal(roots.length, expectedCounts[args.widgetType], `${args.widgetType} Shadow count`);
@@ -358,13 +355,10 @@ function assertCollectionEditorContract(args: {
     { objectManagers: number; repeaters: number; structural: boolean }
   > = {
     'big-bang': { objectManagers: 0, repeaters: 0, structural: false },
-    calltoaction: { objectManagers: 0, repeaters: 0, structural: false },
     cards: { objectManagers: 1, repeaters: 1, structural: false },
     countdown: { objectManagers: 0, repeaters: 0, structural: false },
     faq: { objectManagers: 1, repeaters: 1, structural: true },
     logoshowcase: { objectManagers: 1, repeaters: 1, structural: true },
-    'split-carousel-media': { objectManagers: 0, repeaters: 1, structural: false },
-    'split-media': { objectManagers: 0, repeaters: 0, structural: false },
   };
   const contract = expected[args.widgetType];
   assert.ok(contract, `${args.widgetType} has a collection-editor expectation`);
@@ -375,13 +369,10 @@ function assertCollectionEditorContract(args: {
   );
   const hostCollectionCounts: Record<string, number> = {
     'big-bang': 0,
-    calltoaction: 0,
     cards: 2,
     countdown: 0,
     faq: 1,
     logoshowcase: 1,
-    'split-carousel-media': 1,
-    'split-media': 0,
   };
   const hostCollectionFields = captureAll(
     args.html,

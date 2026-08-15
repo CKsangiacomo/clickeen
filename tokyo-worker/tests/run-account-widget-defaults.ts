@@ -10,7 +10,7 @@ const valid = {
   fontLibrary: createDefaultAccountFontLibrary(),
   common: structuredClone(COMMON_WIDGET_FACTORY_DEFAULTS),
   widgets: {
-    calltoaction: {
+    'big-bang': {
       core: {},
     },
   },

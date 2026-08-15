@@ -48,7 +48,7 @@ function setRoleFont(
 async function document(): Promise<AccountWidgetDefaultsDocument> {
   const spec = JSON.parse(
     await readFile(
-      new URL('../../tokyo/product/widgets/calltoaction/spec.json', import.meta.url),
+      new URL('../../tokyo/product/widgets/big-bang/spec.json', import.meta.url),
       'utf8',
     ),
   ) as { defaults: Record<string, unknown> };
@@ -56,7 +56,7 @@ async function document(): Promise<AccountWidgetDefaultsDocument> {
     accountId: 'CLICKEEN',
     fontLibrary: fontLibraryWithAccountFont(),
     common: structuredClone(COMMON_WIDGET_FACTORY_DEFAULTS as unknown as Record<string, unknown>),
-    widgets: { calltoaction: { core: structuredClone(spec.defaults) } },
+    widgets: { 'big-bang': { core: structuredClone(spec.defaults) } },
     seededAt: '2026-01-01T00:00:00.000Z',
     updatedAt: '2026-01-01T00:00:00.000Z',
   };
@@ -106,7 +106,7 @@ async function main(): Promise<void> {
   );
 
   const misplacedCoreSize = await document();
-  misplacedCoreSize.widgets.calltoaction!.core.coreSize = structuredClone(
+  misplacedCoreSize.widgets['big-bang']!.core.coreSize = structuredClone(
     misplacedCoreSize.common.coreSize,
   );
   const misplacedCoreSizeResult = await validateAccountWidgetDefaultsContract({
@@ -115,10 +115,10 @@ async function main(): Promise<void> {
   });
   assert.equal(misplacedCoreSizeResult.ok, false);
   if (!misplacedCoreSizeResult.ok) {
-    assert.ok(misplacedCoreSizeResult.error.paths?.includes('calltoaction:coreSize.mode'));
+    assert.ok(misplacedCoreSizeResult.error.paths?.includes('big-bang:coreSize.mode'));
   }
 
-  setRoleFont(valid.widgets.calltoaction!.core, 'eyebrow', 'Custom Display', '700');
+  setRoleFont(valid.widgets['big-bang']!.core, 'bigBang', 'Custom Display', '700');
   const invalid = await validateAccountWidgetDefaultsContract({
     request,
     widgetDefaults: valid,
@@ -126,7 +126,7 @@ async function main(): Promise<void> {
   assert.equal(invalid.ok, false);
   if (!invalid.ok) {
     assert.equal(invalid.error.reasonKey, 'coreui.errors.typography.selection.invalid');
-    assert.deepEqual(invalid.error.paths, ['calltoaction:typography.roles.eyebrow.weight']);
+    assert.deepEqual(invalid.error.paths, ['big-bang:typography.roles.bigBang.weight']);
   }
 
   const malformed = await document();

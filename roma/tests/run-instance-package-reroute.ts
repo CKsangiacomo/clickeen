@@ -73,19 +73,19 @@ async function testMaterializationRequiresCompleteTypography(): Promise<void> {
     );
   }
 
-  const compiled = readWidgetForInstancePackage('calltoaction');
+  const compiled = readWidgetForInstancePackage('big-bang');
   assert.equal(compiled.ok, true, JSON.stringify(compiled));
   if (!compiled.ok) return;
 
-  const missingRole = await buildAccountDefaultStateFixture('calltoaction');
+  const missingRole = await buildAccountDefaultStateFixture('big-bang');
   const missingRoleTypography = missingRole.typography as Record<string, unknown>;
-  delete (missingRoleTypography.roles as Record<string, unknown>).eyebrow;
+  delete (missingRoleTypography.roles as Record<string, unknown>).bigBang;
   assert.deepEqual(
     validateInstanceTypographyStructure({ compiled: compiled.value, state: missingRole }),
-    ['typography.roles.eyebrow'],
+    ['typography.roles.bigBang'],
   );
 
-  const missingPreset = await buildAccountDefaultStateFixture('calltoaction');
+  const missingPreset = await buildAccountDefaultStateFixture('big-bang');
   const missingPresetTypography = missingPreset.typography as Record<string, unknown>;
   const missingPresetRoles = missingPresetTypography.roles as Record<string, unknown>;
   delete (missingPresetRoles.title as Record<string, unknown>).trackingPreset;
@@ -94,7 +94,7 @@ async function testMaterializationRequiresCompleteTypography(): Promise<void> {
     ['typography.roles.title.trackingPreset'],
   );
 
-  const missingScale = await buildAccountDefaultStateFixture('calltoaction');
+  const missingScale = await buildAccountDefaultStateFixture('big-bang');
   const missingScaleTypography = missingScale.typography as Record<string, unknown>;
   delete (missingScaleTypography.roleScales as Record<string, unknown>).title;
   assert.deepEqual(

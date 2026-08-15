@@ -18,11 +18,8 @@ Current built widgets:
 
 ```text
 big-bang
-calltoaction
 cards
 countdown
 faq
 logoshowcase
-split-carousel-media
-split-media
 ```

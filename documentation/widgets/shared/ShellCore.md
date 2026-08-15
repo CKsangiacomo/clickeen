@@ -119,13 +119,10 @@ does not calculate or reinterpret shadow values.
 | Widget | Core namespace |
 | --- | --- |
 | `big-bang` | `bigBang.*` |
-| `calltoaction` | `calltoaction.*` |
 | `cards` | `cards.*` |
 | `countdown` | `countdown.*` |
 | `faq` | `faq.*` |
 | `logoshowcase` | `logoshowcase.*` |
-| `split-carousel-media` | `splitCarouselMedia.*` |
-| `split-media` | `splitMedia.*` |
 
 Core owns body content, widget-specific layout and appearance, repeatable items,
 and widget-specific runtime behavior.

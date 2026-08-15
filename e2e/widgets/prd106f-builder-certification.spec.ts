@@ -11,12 +11,6 @@ import { hasAuthCookies } from '../helpers/auth-state';
 
 const PRD106F_INSTANCES = [
   {
-    widgetType: 'calltoaction',
-    instanceId: 'SZBSB5HHFJ',
-    corePath: 'calltoaction.action.label',
-    coreKind: 'text',
-  },
-  {
     widgetType: 'big-bang',
     instanceId: 'QD1G068MX7',
     corePath: 'bigBang.statement',
@@ -24,34 +18,22 @@ const PRD106F_INSTANCES = [
   },
   {
     widgetType: 'cards',
-    instanceId: 'U37WRSMY7J',
+    instanceId: 'M4YW8OAT5O',
     corePath: 'cards.items',
     coreKind: 'cards-json',
   },
   {
     widgetType: 'countdown',
-    instanceId: 'H7IF9M2K9B',
+    instanceId: '8LGOEM8JGC',
     corePath: 'countdown.timer.labels.days',
     coreKind: 'text',
   },
-  { widgetType: 'faq', instanceId: 'UZ3JEJSHII', corePath: 'faq.sections', coreKind: 'faq-json' },
+  { widgetType: 'faq', instanceId: 'OG66LCHRFC', corePath: 'faq.sections', coreKind: 'faq-json' },
   {
     widgetType: 'logoshowcase',
-    instanceId: '8FMVZFFPJV',
+    instanceId: '0NP67CGKVQ',
     corePath: 'logoshowcase.strips',
     coreKind: 'logos-json',
-  },
-  {
-    widgetType: 'split-media',
-    instanceId: 'KUGYTX2ZMQ',
-    corePath: 'splitMedia.alt',
-    coreKind: 'text',
-  },
-  {
-    widgetType: 'split-carousel-media',
-    instanceId: 'P10U6N7Y2X',
-    corePath: 'splitCarouselMedia.items',
-    coreKind: 'visuals-json',
   },
 ] as const;
 
@@ -86,13 +68,6 @@ const CONTENT_PANEL_TEXT_CONTROL_COVERAGE: readonly ContentPanelTextControlCover
     controls: [
       { path: 'logoshowcase.strips.0.logos.0.name', label: 'Logo Showcase logo name' },
       { path: 'logoshowcase.strips.0.logos.0.caption', label: 'Logo Showcase logo caption' },
-    ],
-  },
-  {
-    widgetType: 'split-carousel-media',
-    controls: [
-      { path: 'splitCarouselMedia.items.0.alt', label: 'Split Carousel Media first alt text' },
-      { path: 'splitCarouselMedia.items.1.alt', label: 'Split Carousel Media second alt text' },
     ],
   },
 ] as const;
@@ -472,13 +447,7 @@ function buildCoreMutation(
     return JSON.stringify(strips);
   }
 
-  const visuals = JSON.parse(rawOriginal) as Array<Record<string, unknown>>;
-  expect(
-    Array.isArray(visuals) && visuals.length > 0,
-    'Split carousel media repeater must have at least one item',
-  ).toBe(true);
-  visuals[0] = { ...visuals[0], alt: `E2E split-carousel-media core ${stamp}` };
-  return JSON.stringify(visuals);
+  throw new Error(`Unsupported certification mutation: ${instance.widgetType}`);
 }
 
 async function expectSavedFieldValue(

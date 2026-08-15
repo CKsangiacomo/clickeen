@@ -350,7 +350,7 @@ words and uses the existing account-assets client; it does not own a locale,
 file policy, storage path, account-plan reason set, or Widget-specific rule.
 The caller-owned client validates the host response and decides whether an
 upload failure supplies an exact generic upsell reason or uses the component's
-caller-owned error copy. None of the eight current
+caller-owned error copy. None of the five current
 Widget specs declares this field, so do not add unused Widget labels or a fake
 product example merely to exercise the component.
 

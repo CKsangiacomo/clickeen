@@ -66,13 +66,10 @@ runtime in the same change that exposes the mismatch.
 | Widget | Operator Spec | Source |
 | --- | --- | --- |
 | Big Bang | `widgets/big-bang.md` | `tokyo/product/widgets/big-bang/` |
-| Call to Action | `widgets/calltoaction.md` | `tokyo/product/widgets/calltoaction/` |
 | Cards | `widgets/cards.md` | `tokyo/product/widgets/cards/` |
 | Countdown | `widgets/countdown.md` | `tokyo/product/widgets/countdown/` |
 | FAQ | `widgets/faq.md` | `tokyo/product/widgets/faq/` |
 | Logo Showcase | `widgets/logoshowcase.md` | `tokyo/product/widgets/logoshowcase/` |
-| Split Carousel Media | `widgets/split-carousel-media.md` | `tokyo/product/widgets/split-carousel-media/` |
-| Split Media | `widgets/split-media.md` | `tokyo/product/widgets/split-media/` |
 
 ## Folder Map
 

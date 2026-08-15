@@ -13,13 +13,10 @@ import { extractStylesheetSources } from '../../packages/ck-runtime-materializer
 
 export const PACKAGE_PARITY_WIDGETS = [
   'big-bang',
-  'calltoaction',
   'cards',
   'countdown',
   'faq',
   'logoshowcase',
-  'split-carousel-media',
-  'split-media',
 ] as const;
 
 export type PackageParityWidget = (typeof PACKAGE_PARITY_WIDGETS)[number];

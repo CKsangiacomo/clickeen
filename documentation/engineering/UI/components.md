@@ -317,7 +317,7 @@ The governing component product law is:
   closed value through `Intl`. Dieter owns no locale file, English fallback,
   native browser date-picker skin, timezone policy, preset, Apply workflow, or
   second public Calendar component. No current Widget declares either field,
-  so the eight current Widget artifacts and product data remain unchanged.
+  so the five current Widget artifacts and product data remain unchanged.
   DevStudio is their only current consumer and exercises their real source
   lifecycle directly; product-host integration belongs to the pass that adds a
   real caller.

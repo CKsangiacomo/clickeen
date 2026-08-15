@@ -3,8 +3,6 @@
 
 import big_bangEditableFields from "../../../tokyo/product/widgets/big-bang/editable-fields.json";
 import big_bangSpec from "../../../tokyo/product/widgets/big-bang/spec.json";
-import calltoactionEditableFields from "../../../tokyo/product/widgets/calltoaction/editable-fields.json";
-import calltoactionSpec from "../../../tokyo/product/widgets/calltoaction/spec.json";
 import cardsEditableFields from "../../../tokyo/product/widgets/cards/editable-fields.json";
 import cardsSpec from "../../../tokyo/product/widgets/cards/spec.json";
 import countdownEditableFields from "../../../tokyo/product/widgets/countdown/editable-fields.json";
@@ -13,10 +11,6 @@ import faqEditableFields from "../../../tokyo/product/widgets/faq/editable-field
 import faqSpec from "../../../tokyo/product/widgets/faq/spec.json";
 import logoshowcaseEditableFields from "../../../tokyo/product/widgets/logoshowcase/editable-fields.json";
 import logoshowcaseSpec from "../../../tokyo/product/widgets/logoshowcase/spec.json";
-import split_carousel_mediaEditableFields from "../../../tokyo/product/widgets/split-carousel-media/editable-fields.json";
-import split_carousel_mediaSpec from "../../../tokyo/product/widgets/split-carousel-media/spec.json";
-import split_mediaEditableFields from "../../../tokyo/product/widgets/split-media/editable-fields.json";
-import split_mediaSpec from "../../../tokyo/product/widgets/split-media/spec.json";
 
 export type WidgetDefinitionSource = {
   widgetType: string;
@@ -29,11 +23,6 @@ export const WIDGET_DEFINITION_SOURCES = [
     widgetType: "big-bang",
     spec: big_bangSpec,
     editableFields: big_bangEditableFields,
-  },
-  {
-    widgetType: "calltoaction",
-    spec: calltoactionSpec,
-    editableFields: calltoactionEditableFields,
   },
   {
     widgetType: "cards",
@@ -54,15 +43,5 @@ export const WIDGET_DEFINITION_SOURCES = [
     widgetType: "logoshowcase",
     spec: logoshowcaseSpec,
     editableFields: logoshowcaseEditableFields,
-  },
-  {
-    widgetType: "split-carousel-media",
-    spec: split_carousel_mediaSpec,
-    editableFields: split_carousel_mediaEditableFields,
-  },
-  {
-    widgetType: "split-media",
-    spec: split_mediaSpec,
-    editableFields: split_mediaEditableFields,
   },
 ] as const satisfies readonly WidgetDefinitionSource[];

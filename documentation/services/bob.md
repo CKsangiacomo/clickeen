@@ -544,7 +544,7 @@ compiles as one JSON control at one Widget path and binds exact `null` or
 exact five component words from the declaring Widget's adjacent English label
 file; it does not retain the retired second metadata path or source marker.
 The component uses Bob's existing account-assets client and current-account
-command chain. None of the eight current Widget specs declares it, so current
+command chain. None of the five current Widget specs declares it, so current
 editor artifacts contain no Upload control and this component pass does not
 invent one.
 
@@ -755,7 +755,7 @@ accounts/{accountPublicId}/assets/{filename}
 
 Dropdown Fill uses this route chain to upload and assign media. The
 consumer-agnostic Dropdown Upload component uses the same existing route chain
-when a Widget declares one single-file field; none of the eight current Widget
+when a Widget declares one single-file field; none of the five current Widget
 specs does. SVG logos are accepted vector assets when Roma/Tokyo-worker accept
 the upload.
 
