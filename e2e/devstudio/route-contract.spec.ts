@@ -435,7 +435,7 @@ test.describe('DevStudio route contract', () => {
       purpleProbe.style.color = 'var(--color-system-purple)';
       document.body.append(purpleProbe);
       const purple = getComputedStyle(purpleProbe).color;
-      purpleProbe.style.color = 'var(--color-system-indigo)';
+      purpleProbe.style.color = 'var(--color-system-indigo-3)';
       const indigo = getComputedStyle(purpleProbe).color;
       purpleProbe.style.color = 'transparent';
       const transparent = getComputedStyle(purpleProbe).color;

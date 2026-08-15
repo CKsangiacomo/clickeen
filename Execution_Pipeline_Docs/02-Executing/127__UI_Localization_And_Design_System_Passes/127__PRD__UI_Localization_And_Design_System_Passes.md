@@ -1624,3 +1624,13 @@ authorizes it.
   consumer, binding, route, storage coordinate, or product data changed.
   Focused Dieter, DevStudio generation/typecheck/build, Chromium presentation,
   diff, and V1-V8 checks follow this correction before its direct-main rollout.
+
+- **Agent Activity indigo-stop correction — passed locally, 2026-08-15.** The
+  Agent Activity traveling highlight now uses `--color-system-indigo-3` at its
+  existing 99% stop instead of `--color-system-indigo`. This change is confined
+  to Agent Activity. Its purple start, transparent 25% and terminal sections,
+  three-layer surface composition, one-pixel geometry, three-second linear
+  rotation, reduced-motion behavior, markup, narration contract, and consumers
+  are unchanged. No global token, other component, product state, route,
+  storage coordinate, or remote product data changed. Focused component,
+  DevStudio, browser, diff, and V1-V8 checks precede rollout.

@@ -48,8 +48,8 @@ that need must be named by the owning product/component PRD first.
 Agent Activity is the named exception installed by PRD 127: while a real agent
 operation is active, its one-pixel conic highlight rotates on one `3s linear`
 cycle. The border remains transparent through 25%, travels from Dieter system
-purple to system indigo at 99%, and then returns to transparent while the
-existing surface continues behind it. This is continuous activity
+purple to `--color-system-indigo-3` at 99%, and then returns to transparent
+while the existing surface continues behind it. This is continuous activity
 communication, not an ordinary state transition or a progress estimate, so it
 does not create a shared duration token. Reduced motion keeps the same
 highlight static.

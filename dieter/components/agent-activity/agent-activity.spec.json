@@ -10,7 +10,7 @@
   "binding": { "type": "transient-agent-narration" },
   "presentation": {
     "activeSurface": "--color-system-purple-5 in both the padding-box surface and backing border-box layer",
-    "activeBorder": "1px rotating conic highlight: transparent through 25%, --color-system-purple, --color-system-indigo at 99%, then transparent",
+    "activeBorder": "1px rotating conic highlight: transparent through 25%, --color-system-purple, --color-system-indigo-3 at 99%, then transparent",
     "activeMotion": "3s linear infinite",
     "reducedMotion": "static conic highlight"
   },

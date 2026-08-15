@@ -539,7 +539,7 @@ Translation Agent events supply the dynamic rows.
 The active component uses `--color-system-purple-5` as its surface and a
 one-pixel rotating conic highlight. Transparent leading and trailing sections
 leave most of the perimeter quiet: the conic border remains transparent through
-25%, travels from `--color-system-purple` to `--color-system-indigo` at 99%,
+25%, travels from `--color-system-purple` to `--color-system-indigo-3` at 99%,
 then returns to transparent. The third background layer keeps the existing
 surface behind the transparent border sections. Its
 three-second linear rotation communicates live agent operation, not percentage

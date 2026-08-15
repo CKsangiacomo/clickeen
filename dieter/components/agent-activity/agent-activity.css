@@ -31,7 +31,7 @@
         from var(--diet-agent-activity-border-angle),
         transparent 25%,
         var(--color-system-purple),
-        var(--color-system-indigo) 99%,
+        var(--color-system-indigo-3) 99%,
         transparent
       )
       border-box,
