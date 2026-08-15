@@ -1,9 +1,8 @@
 /* Dieter Banner — persistent caller-owned message composition. */
 
 .diet-banner {
-  --banner-background: var(--color-system-blue-5);
-  --banner-border: var(--color-system-blue-3);
-  --banner-accent: var(--color-system-blue-contrast);
+  --banner-background: var(--color-system-teal-4);
+  --banner-accent: var(--color-system-teal-contrast);
   box-sizing: border-box;
   display: flex;
   flex-wrap: wrap;
@@ -11,21 +10,18 @@
   inline-size: 100%;
   gap: var(--space-3, 0.75rem);
   padding: var(--space-4, 1rem);
-  border: 1px solid var(--banner-border);
   border-radius: var(--control-radius-lg, 0.5rem);
   background: var(--banner-background);
   color: var(--color-text);
 }
 
 .diet-banner[data-tone='caution'] {
-  --banner-background: var(--color-system-orange-5);
-  --banner-border: var(--color-system-orange-3);
-  --banner-accent: var(--color-system-orange-contrast);
+  --banner-background: var(--color-system-yellow-4);
+  --banner-accent: var(--color-system-yellow-contrast);
 }
 
 .diet-banner[data-tone='critical'] {
   --banner-background: var(--color-system-red-5);
-  --banner-border: var(--color-system-red-3);
   --banner-accent: var(--color-system-red-contrast);
 }
 

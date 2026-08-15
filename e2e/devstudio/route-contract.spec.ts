@@ -330,6 +330,67 @@ test.describe('DevStudio route contract', () => {
     await expect(page.locator('.diet-banner__dismiss[aria-label="Dismiss message"]')).toHaveCount(
       1,
     );
+    const bannerPresentation = await page.locator('.diet-banner').evaluateAll((banners) => {
+      const tokenProbe = document.createElement('span');
+      document.body.append(tokenProbe);
+      const tokenColor = (token: string) => {
+        tokenProbe.style.backgroundColor = `var(${token})`;
+        return getComputedStyle(tokenProbe).backgroundColor;
+      };
+      const tokenTextColor = (token: string) => {
+        tokenProbe.style.color = `var(${token})`;
+        return getComputedStyle(tokenProbe).color;
+      };
+      const expected = {
+        default: tokenColor('--color-system-teal-4'),
+        defaultAccent: tokenTextColor('--color-system-teal-contrast'),
+        caution: tokenColor('--color-system-yellow-4'),
+        cautionAccent: tokenTextColor('--color-system-yellow-contrast'),
+        critical: tokenColor('--color-system-red-5'),
+        criticalAccent: tokenTextColor('--color-system-red-contrast'),
+      };
+      tokenProbe.remove();
+      return {
+        actual: banners.map((banner) => {
+          const style = getComputedStyle(banner);
+          return {
+            backgroundColor: style.backgroundColor,
+            borderWidth: style.borderWidth,
+            iconColor: banner.querySelector('.diet-banner__icon')
+              ? getComputedStyle(banner.querySelector('.diet-banner__icon')!).color
+              : null,
+            tone: banner.getAttribute('data-tone'),
+          };
+        }),
+        expected,
+      };
+    });
+    expect(bannerPresentation.actual).toEqual([
+      {
+        tone: 'default',
+        backgroundColor: bannerPresentation.expected.default,
+        borderWidth: '0px',
+        iconColor: bannerPresentation.expected.defaultAccent,
+      },
+      {
+        tone: 'caution',
+        backgroundColor: bannerPresentation.expected.caution,
+        borderWidth: '0px',
+        iconColor: bannerPresentation.expected.cautionAccent,
+      },
+      {
+        tone: 'critical',
+        backgroundColor: bannerPresentation.expected.critical,
+        borderWidth: '0px',
+        iconColor: bannerPresentation.expected.criticalAccent,
+      },
+      {
+        tone: 'default',
+        backgroundColor: bannerPresentation.expected.default,
+        borderWidth: '0px',
+        iconColor: null,
+      },
+    ]);
 
     await page.goto('/#/dieter/spinner');
     const standaloneSpinners = page.locator('.diet-spinner[role="status"]');

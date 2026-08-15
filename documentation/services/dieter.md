@@ -138,6 +138,9 @@ Spinner renders current-color progress at small, medium, or large; it owns no
 job lifecycle. Tooltip renders caller-owned label or description content in
 one of four placements while the trigger retains its own accessible name.
 None loads copy, infers product state, or creates a consumer-specific branch.
+Banner is borderless across all compositions: default and description-only use
+`--color-system-teal-4`, caution uses `--color-system-yellow-4`, and critical
+retains `--color-system-red-5`; Icon accents follow their tone families.
 
 Button loading composes that ordinary Spinner before a caller-supplied loading
 label. The caller disables the Button and sets `data-loading` plus `aria-busy`

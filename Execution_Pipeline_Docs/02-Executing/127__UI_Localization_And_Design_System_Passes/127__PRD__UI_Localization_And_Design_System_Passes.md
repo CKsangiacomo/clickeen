@@ -1634,3 +1634,14 @@ authorizes it.
   are unchanged. No global token, other component, product state, route,
   storage coordinate, or remote product data changed. Focused component,
   DevStudio, browser, diff, and V1-V8 checks precede rollout.
+
+- **Banner surface-color correction — passed locally, 2026-08-15.** All four
+  governed Banner compositions are now borderless. Default and description-only
+  use `--color-system-teal-4` with the teal tone accent; caution-with-action uses
+  `--color-system-yellow-4` with the yellow tone accent; critical retains its
+  existing `--color-system-red-5` critical surface and red accent while losing
+  the stroke. The correction lives only in the consumer-agnostic Banner
+  primitive and its source contract. No DevStudio override, new tone, copy,
+  behavior, consumer branch, product state, route, storage coordinate, or remote
+  product data changed. Focused Dieter, generated DevStudio, Chromium, diff, and
+  V1-V8 verification precede direct-main rollout.

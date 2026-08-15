@@ -12,6 +12,15 @@
     "ariaLive": { "enum": ["polite", "assertive"], "optional": true }
   },
   "binding": { "type": "caller-owned-persistent-message" },
+  "presentation": {
+    "border": "none for every tone and composition",
+    "defaultBackground": "--color-system-teal-4",
+    "defaultAccent": "--color-system-teal-contrast",
+    "cautionBackground": "--color-system-yellow-4",
+    "cautionAccent": "--color-system-yellow-contrast",
+    "criticalBackground": "--color-system-red-5",
+    "criticalAccent": "--color-system-red-contrast"
+  },
   "defaults": [
     {
       "id": "banner-default",

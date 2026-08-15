@@ -555,7 +555,10 @@ or own a locale source.
 Banner is a persistent parent-width message composition with default, caution,
 and critical tones. The caller may supply title, description, Icon, actions,
 semantic live-region inputs, and a labelled dismiss action. Banner does not
-invent recovery, auto-dismiss, error mapping, or product policy.
+invent recovery, auto-dismiss, error mapping, or product policy. Every Banner
+is borderless. Default—including description-only composition—uses
+`--color-system-teal-4`; caution uses `--color-system-yellow-4`; critical keeps
+`--color-system-red-5`. Each Icon accent follows the same tone family.
 
 Spinner is current-color progress presentation at small, medium, and large.
 As a standalone status it receives a caller-owned accessible label. Inside a
