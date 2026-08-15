@@ -1,4 +1,4 @@
-// Component hydration functions (for Bob and DevStudio)
+// Component hydration functions for source consumers
 export {
   destroyDropdownActions,
   hydrateDropdownActions,

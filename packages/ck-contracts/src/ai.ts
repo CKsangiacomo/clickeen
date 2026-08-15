@@ -125,8 +125,8 @@ export type ProductCopilotControl = {
   label?: string;
   options?: Array<{ label: string; value: string | number | boolean }>;
   enumValues?: string[];
-  min?: number | string;
-  max?: number | string;
+  min?: number;
+  max?: number;
   itemIdPath?: string;
   currentValue: unknown;
 };

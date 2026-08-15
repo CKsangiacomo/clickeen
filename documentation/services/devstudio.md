@@ -141,7 +141,7 @@ These routes retain Dieter's consumer-neutral `data-dieter-json` marker in
 their generated examples. Before hash navigation replaces the reveal,
 DevStudio destroys hydrated Datefield, Date Range Picker, Dropdown Actions,
 Border, Edit, Fill, Shadow, Upload, Object Manager, Repeater, and Slider roots
-through the same exported component lifecycle used by product hosts. Object
+through their exported component lifecycle. Object
 Manager reveals all three sizes plus
 its exact structural Add/draft/save flow; Repeater reveals all three sizes,
 exact default-item add, and the inline reorder mode. These are the real Dieter
@@ -180,7 +180,9 @@ copy, locale-derived calendar words, exact bounds, Clear behavior, and one open
 `extra-wide` month. The range reveal includes a cross-month interval and the
 runtime proof keeps the first click provisional until the second day commits.
 DevStudio destroys both controls before hash-route replacement; it does not
-imitate their calendar or invent product data.
+imitate their calendar or invent product data. It is their only current
+consumer; these reveal routes do not imply Bob, Roma, Widget ToolDrawer, or
+Product Copilot support.
 
 ## Pages Functions
 

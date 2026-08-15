@@ -158,7 +158,7 @@ the code is convenient there.
 | Stage                      | Status                                                                                                                                                                                                                                               | Release state                                                         |
 | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
 | Stage 1 — Scaffold only    | Complete                                                                                                                                                                                                                                             | Committed, pushed, and deployed; no non-English experience is exposed |
-| Stage 2 — Dieter UI pass   | In progress: Foundations, the current component inventory through Textfield and Valuefield, and the new Datefield/Date Range Picker contracts are complete and re-audited as consumer-agnostic primitives; standalone Popaddlink and Textedit are deleted because their jobs were duplicate or unused | The Widget catalog is the next Stage 2 DevStudio tab                  |
+| Stage 2 — Dieter UI pass   | In progress: Foundations, the current component inventory through Textfield and Valuefield, and the new Datefield/Date Range Picker contracts are complete and re-audited as consumer-agnostic primitives currently revealed only by DevStudio; standalone Popaddlink and Textedit are deleted because their jobs were duplicate or unused | The Widget catalog is the next Stage 2 DevStudio tab                  |
 | Stage 3 — Bob UI pass      | Not started                                                                                                                                                                                                                                          | No authority to begin until explicitly directed                       |
 | Stage 4 — Roma UI pass     | Not started                                                                                                                                                                                                                                          | No authority to begin until explicitly directed                       |
 | Stage 5 — Translation pass | Not started                                                                                                                                                                                                                                          | No translations may be generated yet                                  |
@@ -1471,3 +1471,38 @@ authorizes it.
   typecheck; Roma Widget Defaults/typecheck; all eight Widget artifact pairs;
   and diff checks. The independent V1–V8 audit and Git-connected exact-SHA
   rollout follow this local execution record.
+
+- **Date consumer-boundary correction — passed locally, 2026-08-14.** The
+  preceding date pass correctly created the two Dieter primitives, their one
+  private civil-date calendar, exact value contracts, generated DevStudio
+  pages, and generic Popover viewport containment. It also crossed the
+  authorized Stage 2 boundary by installing dormant date-specific compilation,
+  validation, binding, lifecycle, and metadata behavior in Bob, Roma Widget
+  Defaults, Product Copilot, and the shared AI control contract despite zero
+  current Widget declarations. That premature consumer support is removed.
+
+  Datefield and Date Range Picker remain complete consumer-agnostic Dieter
+  primitives. Their source, shared calendar, exports, styling, exact value and
+  locale behavior, DevStudio hydration/destruction, generated reveals, and
+  browser contract are preserved. Their specs now describe the real Dieter
+  markup and component-owned field targets instead of advertising a current
+  `<tooldrawer-field>` or `instanceData` integration. DevStudio is their only
+  current consumer. A future Bob/Roma integration belongs to the pass that
+  introduces a real Widget caller and its exact adjacent localization contract.
+
+  Every Bob, Roma, Product Copilot, shared AI contract, and Bob test file
+  changed by the original date integration is byte-equivalent to its pre-date
+  state. All eight Widget source contracts still declare neither component;
+  regeneration leaves all eight editor/materializer artifact pairs and the
+  materializer registry byte-identical. Stages 3 and 4 remain not started, and
+  no Widget source, locale file, account data, storage coordinate, route, or
+  public runtime changed.
+
+  Focused verification passed: Dieter typecheck/governance; exact DevStudio
+  generation, typecheck, lint, build, Functions syntax, and local Chromium date
+  behavior; Bob typecheck/editor contract; Roma typecheck; Widget source and
+  all eight artifact-pair checks; root typecheck/lint; exact consumer-boundary
+  diff and residue scans; and diff checks. This record supersedes only the
+  consumer-integration claims in the preceding date entry; it preserves that
+  entry as point-in-time execution history. Independent V1–V8 audit passed;
+  the Git-connected exact-SHA rollout follows this local correction record.

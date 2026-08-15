@@ -108,11 +108,7 @@ export async function buildContext(
   // Dieter example context.
   const placeholder = attrs.placeholder ?? '';
   const objectType = attrs.objectType || attrs['object-type'] || '';
-  const value = pathAttr
-    ? component === 'dropdown-upload' || component === 'date-range-picker'
-      ? 'null'
-      : ''
-    : attrs.value || '';
+  const value = pathAttr ? (component === 'dropdown-upload' ? 'null' : '') : attrs.value || '';
   const optionsRaw = attrs.options || '';
   const headerLabel = attrs.headerLabel || '';
   const reorderLabel = attrs.reorderLabel || attrs['reorder-label'] || '';
@@ -169,20 +165,6 @@ export async function buildContext(
   const accept = attrs.accept || '';
   const popoverWidth =
     attrs.popoverWidth || attrs['popover-width'] || (merged.popoverWidth as string);
-
-  if (component === 'datefield' || component === 'date-range-picker') {
-    const requiredDateInputs = [
-      ['path', pathAttr],
-      ['label', label],
-      ['placeholder', placeholder],
-      ['locale', attrs.locale],
-      ['previous-month-label', attrs.previousMonthLabel || attrs['previous-month-label']],
-      ['next-month-label', attrs.nextMonthLabel || attrs['next-month-label']],
-      ['clear-label', attrs.clearLabel || attrs['clear-label']],
-    ] as const;
-    const missing = requiredDateInputs.find(([, input]) => !input?.trim());
-    if (missing) throw new Error(`[BobCompiler] ${component} requires ${missing[0]}`);
-  }
 
   if (component === 'dropdown-upload') {
     if (attrs.template) {
@@ -277,10 +259,6 @@ export async function buildContext(
     showStructure: allowStructure === 'true',
     accept: component === 'dropdown-upload' ? accept : undefined,
     popoverWidth,
-    locale: attrs.locale || '',
-    previousMonthLabel: attrs.previousMonthLabel || attrs['previous-month-label'] || '',
-    nextMonthLabel: attrs.nextMonthLabel || attrs['next-month-label'] || '',
-    clearLabel: attrs.clearLabel || attrs['clear-label'] || '',
     axis: component === 'dropdown-shadow' ? axis : undefined,
     indexToken,
     id,

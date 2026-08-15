@@ -83,9 +83,9 @@ The governing component product law is:
 - Dieter JSON controls expose the consumer-neutral `data-dieter-json` marker,
   and generic multi-path component edits emit `dieter-ops`. Host-owned paths
   remain separate from that component protocol.
-- Hosts destroy hydrated Datefield, Date Range Picker, Dropdown Actions, Border,
-  Edit, Fill, Shadow, Upload, Object Manager, Repeater, and Slider roots before
-  their rendered DOM is replaced.
+- Consumers destroy every hydrated root they render before replacing its DOM.
+  DevStudio is currently the only consumer that hydrates Datefield and Date
+  Range Picker; Bob and Roma have no date-specific host or compiler path.
   Dropdown Edit destruction detaches its Lexical root; Fill and Upload cancel
   pending media resolution; Object Manager and Repeater release their child
   controls, listeners, dialogs, and active collection state.
@@ -312,6 +312,9 @@ The governing component product law is:
   native browser date-picker skin, timezone policy, preset, Apply workflow, or
   second public Calendar component. No current Widget declares either field,
   so the eight current Widget artifacts and product data remain unchanged.
+  DevStudio is their only current consumer and exercises their real source
+  lifecycle directly; product-host integration belongs to the pass that adds a
+  real caller.
 - Toggle is a native checkbox HTML/CSS/spec contract with no custom hydrator.
   Its required `sm|md|lg` size owns the complete row, label typography, switch
   rail, hover, checked, and disabled presentation. The complete row is
@@ -535,8 +538,9 @@ The `icon` component is a CSS-only `diet-icon` wrapper with numeric glyph sizes.
 The 126I execution PRD owns component-by-component API cleanup beyond those
 iconography rules.
 
-Current inventory detail: Dieter components are source modules consumed
-directly by Bob, Roma, and DevStudio; there is no runtime component manifest.
+Current inventory detail: Dieter components are source modules imported
+directly by each application only where that application actually uses them;
+there is no universal consumer and no runtime component manifest.
 `shared/` contains helpers and is not a rendered component.
 `command-activity` and `operational-table` are absent from current tracked
 source. DevStudio generates 24 source-backed component pages. Historical 126

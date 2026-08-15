@@ -111,10 +111,9 @@ Generic binding inputs and events connect a primitive to its host without
 giving Dieter ownership of the host's product meaning.
 
 JSON-valued controls use `data-dieter-json`; Bulk Edit emits `dieter-ops` with
-its existing exact `{ops}` payload. Neither name belongs to Bob or Roma. Hosts
-must call the exported Datefield, Date Range Picker, Dropdown Actions, Border,
-Edit, Fill, Shadow, Upload, Object Manager, Repeater, and Slider destroy
-functions before replacing hydrated roots. Dropdown Edit destruction detaches the locally bundled Lexical editor
+its existing exact `{ops}` payload. Neither name belongs to Bob or Roma.
+Consumers must call the exported destroy function for each hydrated root they
+actually render before replacing it. Dropdown Edit destruction detaches the locally bundled Lexical editor
 from its DOM root; Dropdown Fill and Dropdown Upload cancel pending asset work;
 Object Manager and Repeater destroy hydrated children and release their
 retained collection state and listeners; Slider releases its native input
@@ -184,6 +183,11 @@ Clear name, locale, and optional exact bounds. `Intl` derives month, weekday,
 date, and closed-summary presentation from that locale. Dieter owns no copy
 catalog, locale choice, timezone, presets, Apply action, native browser picker,
 or consumer meaning.
+
+DevStudio is currently the only consumer that hydrates Datefield and Date
+Range Picker. No current Widget declares either component, and Bob and Roma
+contain no date-specific compiler, validation, binding, or lifecycle path.
+Product-host integration belongs to the pass that introduces a real caller.
 
 Tabs is one native caller-labelled radio group with no browser hydrator.
 Native checked and disabled state remain the behavior authority; Dieter CSS

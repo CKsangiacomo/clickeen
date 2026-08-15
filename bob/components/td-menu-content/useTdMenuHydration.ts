@@ -62,20 +62,10 @@ export function useTdMenuHydration(args: {
     try {
       applyAccountFontLibraryToTypographyMenus({ container, fontLibrary });
       container
-        .querySelectorAll<HTMLInputElement>(
-          'input[data-bob-path][data-dieter-json], input.diet-datefield__field[data-bob-path]',
-        )
+        .querySelectorAll<HTMLInputElement>('input[data-bob-path][data-dieter-json]')
         .forEach((field) => {
           const path = field.getAttribute('data-bob-path')!;
-          const value = getAt(instanceDataRef.current, path);
-          if (field.dataset.dieterJson != null) {
-            field.value = serializeDieterJsonFieldValue(field, value);
-            return;
-          }
-          if (typeof value !== 'string') {
-            throw new Error(`[TdMenuContent] Datefield value for "${path}" is not a string`);
-          }
-          field.value = value;
+          field.value = serializeDieterJsonFieldValue(field, getAt(instanceDataRef.current, path));
         });
       cleanupDieterControls = runHydrators(container, { accountAssets });
       showIfEntriesRef.current = buildShowIfEntries(container);

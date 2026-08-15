@@ -1,6 +1,6 @@
 {
   "component": "date-range-picker",
-  "syntax": "<tooldrawer-field type='date-range-picker' size='{{SIZE}}' path='{{PATH}}' label='{{LABEL}}' placeholder='{{PLACEHOLDER}}' locale='{{LOCALE}}' previous-month-label='{{PREVIOUS_MONTH_LABEL}}' next-month-label='{{NEXT_MONTH_LABEL}}' clear-label='{{CLEAR_LABEL}}' value='{{VALUE}}' />",
+  "syntax": "<div class='diet-date-range-picker' data-size='{{SIZE}}' data-locale='{{LOCALE}}'>…<input class='diet-date-range-picker__field' value='{{VALUE}}' data-dieter-json />…</div>",
   "attributes": {
     "size": { "enum": ["sm", "md", "lg"], "default": "md" },
     "path": { "optional": true },
@@ -16,7 +16,7 @@
     "disabled": { "optional": true }
   },
   "binding": {
-    "path": "instanceData[PATH]",
+    "target": ".diet-date-range-picker__field",
     "type": "json",
     "shape": "null or {start: YYYY-MM-DD, end: YYYY-MM-DD}"
   },

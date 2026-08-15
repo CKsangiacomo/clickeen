@@ -8,7 +8,7 @@ import { compileControlsFromPanels, expandTooldrawerClusters } from '../lib/comp
 import { buildEditorHtmlLines } from '../lib/compiler/editor-contract';
 import { resolveWidgetTooldrawerLabels } from '../lib/compiler/tooldrawer-labels';
 import type { ComponentStencil, ComponentStencilLoader } from '../lib/compiler/stencils';
-import { buildContext, renderComponentStencil } from '../lib/compiler/stencils';
+import { buildContext } from '../lib/compiler/stencils';
 import { DEFAULT_PANELS } from '../components/TdMenu';
 import { controlHostClusterId } from '../components/td-menu-content/dom';
 import { expandLinkedOps } from '../components/td-menu-content/linkedOps';
@@ -620,13 +620,7 @@ function testValuefieldNumericContract(): void {
 }
 
 function assertCompiledValuefieldBounds(
-  controls: Array<{
-    path: string;
-    type: string;
-    min?: number | string;
-    max?: number | string;
-    step?: number;
-  }>,
+  controls: Array<{ path: string; type: string; min?: number; max?: number; step?: number }>,
   path: string,
   expected: { min?: number; max?: number; step?: number },
 ): void {
@@ -640,13 +634,7 @@ function assertCompiledValuefieldBounds(
 function assertRenderedValuefieldBounds(
   widgetType: string,
   html: string,
-  controls: Array<{
-    path: string;
-    type: string;
-    min?: number | string;
-    max?: number | string;
-    step?: number;
-  }>,
+  controls: Array<{ path: string; type: string; min?: number; max?: number; step?: number }>,
 ): void {
   const tags = html.match(/<input\b[^>]*class="diet-valuefield__field"[^>]*>/g) ?? [];
   assert.ok(tags.length > 0, `${widgetType} renders Valuefields`);
@@ -1240,124 +1228,6 @@ function testDropdownUploadCopyJoin(): void {
   );
 }
 
-async function testDateControlContracts(): Promise<void> {
-  const panels = [
-    {
-      id: 'content' as const,
-      label: 'Content',
-      html: [
-        "<tooldrawer-field type='datefield' path='filters.date' label='Date' placeholder='Choose date' locale='en-US' previous-month-label='Previous month' next-month-label='Next month' clear-label='Clear date' min='2026-08-10' max='2026-08-31' />",
-        "<tooldrawer-field type='date-range-picker' path='filters.range' label='Date range' placeholder='Choose dates' locale='en-US' previous-month-label='Previous month' next-month-label='Next month' clear-label='Clear dates' min='2026-08-10' max='2026-09-30' />",
-      ].join('\n'),
-    },
-  ];
-  const defaults = { filters: { date: '', range: null } };
-  const controls = compileControlsFromPanels({ panels, defaults });
-  const datefield = controls.find((control) => control.path === 'filters.date');
-  const range = controls.find((control) => control.path === 'filters.range');
-  assert.equal(datefield?.kind, 'string', 'Datefield compiles as exact string truth');
-  assert.equal(range?.kind, 'json', 'Date Range Picker compiles as exact JSON truth');
-  assert.equal(datefield?.min, '2026-08-10');
-  assert.equal(datefield?.max, '2026-08-31');
-  assert.equal(range?.min, '2026-08-10');
-  assert.equal(range?.max, '2026-09-30');
-  assert.deepEqual(validateValueStrict(datefield!, ''), { ok: true });
-  assert.deepEqual(
-    validateValueStrict({ ...datefield!, min: undefined, max: undefined }, '2028-02-29'),
-    { ok: true },
-  );
-  assert.equal(validateValueStrict(datefield!, '2027-02-29').ok, false);
-  assert.equal(validateValueStrict(datefield!, '02/28/2027').ok, false);
-  assert.equal(validateValueStrict(datefield!, '2026-08-09').ok, false);
-  assert.equal(validateValueStrict(datefield!, '2026-09-01').ok, false);
-  assert.deepEqual(validateValueStrict(range!, null), { ok: true });
-  assert.deepEqual(validateValueStrict(range!, { start: '2026-08-14', end: '2026-08-14' }), {
-    ok: true,
-  });
-  assert.equal(validateValueStrict(range!, { start: '2026-08-15', end: '2026-08-14' }).ok, false);
-  assert.equal(
-    validateValueStrict(range!, { start: '2026-08-09', end: '2026-08-14' }).ok,
-    false,
-  );
-  assert.equal(
-    validateValueStrict(range!, { start: '2026-09-29', end: '2026-10-01' }).ok,
-    false,
-  );
-  assert.equal(
-    validateValueStrict(range!, {
-      start: '2026-08-14',
-      end: '2026-08-15',
-      timezone: 'UTC',
-    }).ok,
-    false,
-  );
-  assert.doesNotThrow(() =>
-    assertSessionConfigContract(
-      { filters: { date: '2026-08-14', range: { start: '2026-08-14', end: '2026-08-21' } } },
-      { controls, defaults },
-    ),
-  );
-  assert.throws(() =>
-    assertSessionConfigContract(
-      { filters: { date: '2026-08-14', range: { start: '2026-08-21', end: '2026-08-14' } } },
-      { controls, defaults },
-    ),
-  );
-  assert.throws(() =>
-    assertSessionConfigContract(
-      { filters: { date: '2026-08-09', range: { start: '2026-08-14', end: '2026-08-21' } } },
-      { controls, defaults },
-    ),
-  );
-
-  for (const component of ['datefield', 'date-range-picker']) {
-    const source = await loadStencil(component);
-    const context = await buildContext(
-      component,
-      {
-        type: component,
-        path: component === 'datefield' ? 'filters.date' : 'filters.range',
-        label: component === 'datefield' ? 'Date' : 'Date range',
-        placeholder: component === 'datefield' ? 'Choose date' : 'Choose dates',
-        locale: 'en-US',
-        'previous-month-label': 'Previous month',
-        'next-month-label': 'Next month',
-        'clear-label': component === 'datefield' ? 'Clear date' : 'Clear dates',
-      },
-      source.spec,
-      loadStencil,
-    );
-    const html = renderComponentStencil(source.stencil, context);
-    assert.ok(html.includes('data-locale="en-US"'), `${component} retains exact locale`);
-    assert.ok(html.includes('aria-label="Previous month"'), `${component} retains previous copy`);
-    assert.ok(html.includes('aria-label="Next month"'), `${component} retains next copy`);
-    assert.ok(html.includes(component === 'datefield' ? 'Clear date' : 'Clear dates'));
-    if (component === 'date-range-picker') {
-      assert.ok(html.includes("value='null'"), 'Date Range Picker starts with exact null');
-      assert.ok(html.includes('data-dieter-json'), 'Date Range Picker uses JSON host binding');
-    }
-    await assert.rejects(
-      () =>
-        buildContext(
-          component,
-          {
-            type: component,
-            path: 'filters.date',
-            label: 'Date',
-            placeholder: 'Choose date',
-            locale: 'en-US',
-            'previous-month-label': 'Previous month',
-            'next-month-label': 'Next month',
-          },
-          source.spec,
-          loadStencil,
-        ),
-      /requires clear-label/,
-      `${component} fails when caller copy is incomplete`,
-    );
-  }
-}
-
 async function main(): Promise<void> {
   assert.deepEqual(
     DEFAULT_PANELS.map((panel) => panel.id),
@@ -1405,8 +1275,6 @@ async function main(): Promise<void> {
   console.log('PASS Dropdown Upload binds one exact structured value');
   testDropdownUploadCopyJoin();
   console.log('PASS Dropdown Upload joins its exact Widget-owned component copy');
-  await testDateControlContracts();
-  console.log('PASS Datefield and Date Range Picker bind exact civil-date truth');
   testInsideShadowLinkOpsPreserveHiddenValues();
   console.log('PASS inside-shadow link edits preserve hidden shadow values');
   testValuefieldNumericContract();

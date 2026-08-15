@@ -106,12 +106,12 @@ layering are owned by their own UI docs.
   a smaller source shape; the exact exceptions and deletion targets are listed
   in [`components.md`](components.md).
 - **Hydration.** Interactive components export source `hydrate*` functions.
-  Bob imports the hydrators it uses and calls them explicitly. CSS/HTML-only
-  components need no browser runtime. A dynamically removed Dropdown Actions
-  host calls the exported Datefield, Date Range Picker, Dropdown Actions,
-  Border, Edit, Fill, Shadow, Upload, Object Manager, Repeater, and Slider
-  destroy functions before its DOM is discarded so component state and
-  listeners cannot retain detached controls.
+  Each consumer imports only the hydrators for components it actually renders;
+  CSS/HTML-only components need no browser runtime. Before rendered DOM is
+  replaced, the consumer calls the corresponding exported destroy function so
+  component state and listeners cannot retain detached controls. DevStudio is
+  currently the only consumer that hydrates Datefield and Date Range Picker;
+  Bob and Roma have no date-specific host or compiler path.
 - **Consumption.** Bob and Roma compile `dieter/styles.css`; Prague compiles
   token source; widget materialization folds required Dieter CSS into instance
   `styles.css`. Roma and DevStudio also import the shared application layout

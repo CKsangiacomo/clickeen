@@ -1,16 +1,11 @@
 import type { CompiledControl } from '../types';
-import {
-  assertDateWithinBounds,
-  parseCivilDate,
-  parseCivilDateRange,
-  type CivilDateBounds,
-} from '../../../dieter/components/shared/civil-date';
 
 const TOKEN_SEGMENT = /^__[^.]+__$/;
 
 function scoreControl(control: CompiledControl) {
   return (control.options && control.options.length ? 100 : 0) + (control.type === 'field' ? 0 : 10) + (control.label ? 1 : 0);
 }
+
 function controlPathMatches(pattern: string, path: string): boolean {
   const patternSegments = pattern.split('.');
   const pathSegments = path.split('.');
@@ -46,53 +41,11 @@ function toEnumValues(control: CompiledControl): string[] | null {
   return fromOptions && fromOptions.length > 0 ? fromOptions : null;
 }
 
-function controlDateBounds(control: CompiledControl): CivilDateBounds {
-  return {
-    min: typeof control.min === 'string' ? parseCivilDate(control.min, 'min') : null,
-    max: typeof control.max === 'string' ? parseCivilDate(control.max, 'max') : null,
-  };
-}
-
-function validateDatefieldValue(
-  control: CompiledControl,
-  rawValue: unknown,
-): ValidateValueResult {
-  if (typeof rawValue !== 'string') return { ok: false, message: 'Value must be a string' };
-  if (rawValue === '') return { ok: true };
-  try {
-    const date = parseCivilDate(rawValue, 'Datefield value');
-    assertDateWithinBounds(date, controlDateBounds(control), 'Datefield value');
-    return { ok: true };
-  } catch {
-    return { ok: false, message: 'Value must be empty or YYYY-MM-DD' };
-  }
-}
-
-function validateDateRangeValue(
-  control: CompiledControl,
-  rawValue: unknown,
-): ValidateValueResult {
-  try {
-    const range = parseCivilDateRange(rawValue);
-    if (range) {
-      const bounds = controlDateBounds(control);
-      assertDateWithinBounds(range.start, bounds, 'range start');
-      assertDateWithinBounds(range.end, bounds, 'range end');
-    }
-    return { ok: true };
-  } catch {
-    return { ok: false, message: 'Value must be null or an exact ordered date range' };
-  }
-}
-
 export function validateValueStrict(control: CompiledControl, rawValue: unknown): ValidateValueResult {
   const kind = control.kind;
   if (!kind || kind === 'unknown') {
     return { ok: false, message: 'Control kind is missing or unknown' };
   }
-
-  if (control.type === 'datefield') return validateDatefieldValue(control, rawValue);
-  if (control.type === 'date-range-picker') return validateDateRangeValue(control, rawValue);
 
   if (kind === 'boolean') {
     if (typeof rawValue !== 'boolean') {
@@ -126,7 +79,7 @@ export function validateValueStrict(control: CompiledControl, rawValue: unknown)
   }
 
   if (kind === 'json') {
-    if ((control.type === 'dropdown-upload' || control.type === 'date-range-picker') && rawValue === null) return { ok: true };
+    if (control.type === 'dropdown-upload' && rawValue === null) return { ok: true };
     if (rawValue == null) return { ok: false, message: 'Value is required' };
     if (typeof rawValue !== 'string') return { ok: true };
     return { ok: false, message: 'Value must be JSON data, not a string' };

@@ -1,11 +1,5 @@
 import { BOB_WIDGET_PANEL_IDS, type CompiledControl, type CompiledWidget } from '../types';
 import {
-  assertDateWithinBounds,
-  parseCivilDate,
-  parseCivilDateRange,
-  type CivilDateBounds,
-} from '../../../dieter/components/shared/civil-date';
-import {
   accountFontLibraryToFamilyOptions,
   type AccountFontLibrary,
 } from '@clickeen/widget-foundation';
@@ -125,42 +119,10 @@ function assertControl(control: CompiledControl, value: unknown, path: string): 
   if ((control.kind === 'string' || control.kind === 'color') && typeof value !== 'string') invalid(path);
   if (control.kind === 'enum' && (typeof value !== 'string' || !control.enumValues?.includes(value))) invalid(path);
   if (control.kind === 'number' && (typeof value !== 'number' || !Number.isFinite(value) || (typeof control.min === 'number' && value < control.min) || (typeof control.max === 'number' && value > control.max))) invalid(path);
-  if ((control.kind === 'object' && !isPlainRecord(value)) || (control.kind === 'array' && !Array.isArray(value)) || (control.kind === 'json' && ((value == null && control.type !== 'dropdown-upload' && control.type !== 'date-range-picker') || typeof value === 'string'))) invalid(path);
-  if (control.type === 'datefield') assertDatefieldValue(control, value, path);
-  if (control.type === 'date-range-picker') assertDateRangeValue(control, value, path);
+  if ((control.kind === 'object' && !isPlainRecord(value)) || (control.kind === 'array' && !Array.isArray(value)) || (control.kind === 'json' && ((value == null && control.type !== 'dropdown-upload') || typeof value === 'string'))) invalid(path);
   if (control.type === 'dropdown-upload') assertUploadAssetValue(value, path);
   if (control.kind === 'array' && control.itemIdPath) (value as unknown[]).forEach((item, index) => { if (!isPlainRecord(item)) invalid(`${path}.${index}`); const id = item[control.itemIdPath!]; if (typeof id !== 'string' || !id) invalid(`${path}.${index}.${control.itemIdPath}`); });
   if (control.type === 'dropdown-fill') assertFillValue(control, value, path);
-}
-function controlDateBounds(control: CompiledControl): CivilDateBounds {
-  return {
-    min: typeof control.min === 'string' ? parseCivilDate(control.min, 'min') : null,
-    max: typeof control.max === 'string' ? parseCivilDate(control.max, 'max') : null,
-  };
-}
-
-function assertDatefieldValue(control: CompiledControl, value: unknown, path: string): void {
-  if (typeof value !== 'string') invalid(path);
-  if (value === '') return;
-  try {
-    const date = parseCivilDate(value, 'Datefield value');
-    assertDateWithinBounds(date, controlDateBounds(control), 'Datefield value');
-  } catch {
-    invalid(path);
-  }
-}
-
-function assertDateRangeValue(control: CompiledControl, value: unknown, path: string): void {
-  try {
-    const range = parseCivilDateRange(value);
-    if (range) {
-      const bounds = controlDateBounds(control);
-      assertDateWithinBounds(range.start, bounds, 'range start');
-      assertDateWithinBounds(range.end, bounds, 'range end');
-    }
-  } catch {
-    invalid(path);
-  }
 }
 
 function assertUploadAssetValue(value: unknown, path: string): void {
@@ -197,7 +159,7 @@ function assertFillValue(control: CompiledControl, value: unknown, path: string)
 
 export function assertSessionConfigContract(config: Record<string, unknown>, compiled: Pick<CompiledWidget, 'controls' | 'defaults' | 'normalization'>): void {
   const structuredPaths = compiled.controls
-    .filter((control) => (control.type === 'dropdown-fill' || control.type === 'dropdown-upload' || control.type === 'date-range-picker') && typeof control.path === 'string' && control.path)
+    .filter((control) => (control.type === 'dropdown-fill' || control.type === 'dropdown-upload') && typeof control.path === 'string' && control.path)
     .map((control) => control.path);
   assertShape(config, compiled.defaults, '', structuredPaths);
   compiled.controls.forEach((control) => collectValues(config, control.path).forEach((entry) => assertControl(control, entry.value, entry.path)));

@@ -1,8 +1,6 @@
 import type { AccountAssetsClient } from '../../../dieter/components/shared/account-assets';
 import {
   destroyDropdownActions,
-  destroyDateRangePicker,
-  destroyDatefield,
   destroyDropdownBorder,
   destroyDropdownEdit,
   destroyDropdownFill,
@@ -14,8 +12,6 @@ import {
   hydrateBulkEdit,
   hydrateChoiceTiles,
   hydrateDropdownActions,
-  hydrateDateRangePicker,
-  hydrateDatefield,
   hydrateDropdownBorder,
   hydrateDropdownEdit,
   hydrateDropdownFill,
@@ -44,8 +40,6 @@ export function runHydrators(scope: HTMLElement, deps: DieterHydratorDeps): () =
     if (destroyed) return;
     destroyed = true;
     scope.querySelectorAll<HTMLElement>('.diet-dropdown-actions').forEach(destroyDropdownActions);
-    scope.querySelectorAll<HTMLElement>('.diet-date-range-picker').forEach(destroyDateRangePicker);
-    scope.querySelectorAll<HTMLElement>('.diet-datefield').forEach(destroyDatefield);
     scope.querySelectorAll<HTMLElement>('.diet-dropdown-border').forEach(destroyDropdownBorder);
     scope.querySelectorAll<HTMLElement>('.diet-dropdown-edit').forEach(destroyDropdownEdit);
     scope.querySelectorAll<HTMLElement>('.diet-dropdown-fill').forEach(destroyDropdownFill);
@@ -65,8 +59,6 @@ export function runHydrators(scope: HTMLElement, deps: DieterHydratorDeps): () =
     hydrateBulkEdit(scope);
     hydrateChoiceTiles(scope);
     hydrateDropdownActions(scope);
-    hydrateDateRangePicker(scope);
-    hydrateDatefield(scope);
     hydrateDropdownBorder(scope);
     hydrateDropdownEdit(scope);
     hydrateDropdownFill(scope, deps);

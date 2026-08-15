@@ -1,6 +1,6 @@
 {
   "component": "datefield",
-  "syntax": "<tooldrawer-field type='datefield' size='{{SIZE}}' path='{{PATH}}' label='{{LABEL}}' placeholder='{{PLACEHOLDER}}' locale='{{LOCALE}}' previous-month-label='{{PREVIOUS_MONTH_LABEL}}' next-month-label='{{NEXT_MONTH_LABEL}}' clear-label='{{CLEAR_LABEL}}' value='{{VALUE}}' />",
+  "syntax": "<div class='diet-datefield' data-size='{{SIZE}}' data-locale='{{LOCALE}}'>…<input class='diet-datefield__field' value='{{VALUE}}' />…</div>",
   "attributes": {
     "size": { "enum": ["sm", "md", "lg"], "default": "md" },
     "path": { "optional": true },
@@ -15,7 +15,7 @@
     "clearLabel": { "required": true },
     "disabled": { "optional": true }
   },
-  "binding": { "path": "instanceData[PATH]", "type": "string", "format": "empty or YYYY-MM-DD" },
+  "binding": { "target": ".diet-datefield__field", "type": "string", "format": "empty or YYYY-MM-DD" },
   "defaults": [
     {
       "id": "datefield-sizes",

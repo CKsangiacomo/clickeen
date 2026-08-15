@@ -116,12 +116,11 @@ exact value from that working state into the compiled `data-bob-path` field
 marked with `data-dieter-json` before running the Dieter hydrator; the empty value authored in compiled panel
 HTML is only an unbound placeholder, not product truth or a default. Changed-path
 updates apply only while the same panel control surface remains mounted.
-Before Bob replaces or unmounts that surface, it invokes the owning Datefield,
-Date Range Picker, Dropdown Actions, Border, Edit, Fill, Shadow, Upload, Object
-Manager, Repeater, and Slider destroy functions; Edit detaches its Lexical root,
-Fill and Upload invalidate pending asset resolution, the date controls release
-their calendar listeners, and the collection controls release their nested
-hydrators and retained draft state. Slider releases its native progress
+Before Bob replaces or unmounts that surface, it invokes the owning Dropdown
+Actions, Border, Edit, Fill, Shadow, Upload, Object Manager, Repeater, and
+Slider destroy functions; Edit detaches its Lexical root, Fill and Upload
+invalidate pending asset resolution, and the collection controls release their
+nested hydrators and retained draft state. Slider releases its native progress
 listener.
 
 Textfield and Valuefield use native input behavior and require no teardown.
@@ -130,15 +129,6 @@ panel; Dieter demonstration copy never becomes product copy. Valuefield edits
 pass only when the input is finite and inside the exact caller-declared
 inclusive bounds. Bob does not clamp, coerce, substitute, or enforce `step` as
 a second value rule; signed caller ranges remain valid.
-
-Datefield and Date Range Picker are generic compiled control types even though
-none of the eight current Widgets declares either one. Bob projects an exact
-Datefield string or exact Date Range Picker JSON value before hydration and
-dispatches the existing external-sync signal after a browser-memory change.
-Datefield accepts only empty or real `YYYY-MM-DD`; Date Range Picker accepts
-only `null` or the exact ordered `{start,end}` civil-date object. Their calendar
-does not parse timezones, repair malformed dates, or write a provisional first
-range click into Bob state.
 
 ## Dieter Icons
 
@@ -506,14 +496,6 @@ Segmented controls keep native radio truth. Logo Showcase Widget options,
 Dropdown Fill modes, Bob's Manual/Copilot mode, and Desktop/Mobile preview all
 compose direct Segment content; Bob does not mirror checked state through a
 nested Button or `aria-pressed` helper.
-
-Datefield and Date Range Picker use Dieter's one private civil-date calendar,
-not a Bob calendar or native browser picker. Bob compiles their exact caller
-label, placeholder, locale, previous-month, next-month, and Clear inputs. A
-future Widget declaration must source every human-language value through that
-Widget's adjacent ToolDrawer label file. Bob owns only the bound browser-memory
-path and exact control acceptance; no Widget branch, date default, timezone,
-preset, or Apply workflow is added.
 
 Dropdown Edit is the shared Dieter inline rich-text control. Bob compiles every
 Widget `type="dropdown-edit"` declaration with that Widget's adjacent English

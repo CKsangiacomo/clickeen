@@ -8,10 +8,6 @@ import type {
 import { encodeHtmlEntities, parseTooldrawerAttributes } from '../compiler.shared';
 import { getAt } from '../utils/paths';
 import { validateShowIfExpression } from '../../components/td-menu-content/showIf';
-import {
-  compareCivilDates,
-  parseCivilDate,
-} from '../../../dieter/components/shared/civil-date';
 
 const TOKEN_SEGMENT = /^__[^.]+__$/;
 
@@ -210,7 +206,6 @@ function inferControlMetadata(
   if (control.type === 'toggle') return { kind: 'boolean' };
   if (
     control.type === 'textfield' ||
-    control.type === 'datefield' ||
     control.type === 'choice-cards' ||
     control.type === 'choice-tiles' ||
     control.type === 'dropdown-edit'
@@ -219,7 +214,6 @@ function inferControlMetadata(
   if (control.type === 'slider' || control.type === 'valuefield') return { kind: 'number' };
   if (control.type === 'dropdown-fill' || control.type === 'dropdown-upload')
     return { kind: 'json' };
-  if (control.type === 'date-range-picker') return { kind: 'json' };
 
   if (control.type === 'repeater' || control.type === 'object-manager') {
     const itemIdPath =
@@ -255,17 +249,6 @@ function parseNumberAttr(value: string | undefined): number | undefined {
   if (!trimmed) return undefined;
   const num = Number(trimmed);
   return Number.isFinite(num) ? num : undefined;
-}
-
-function parseControlBound(
-  type: string | undefined,
-  value: string | undefined,
-  name: 'min' | 'max',
-): number | string | undefined {
-  if (type !== 'datefield' && type !== 'date-range-picker') return parseNumberAttr(value);
-  if (value === undefined) return undefined;
-  const bound = value.trim();
-  return parseCivilDate(bound, name).iso;
 }
 
 function parseFillModes(value: string | undefined): string[] | null {
@@ -305,21 +288,14 @@ function collectControlsFromMarkup(markup: string, panelId: PanelId, controls: C
     };
 
     if (type && path) {
-      const min = parseControlBound(type, attrs.min, 'min');
-      const max = parseControlBound(type, attrs.max, 'max');
+      const min = parseNumberAttr(attrs.min);
+      const max = parseNumberAttr(attrs.max);
       const step = parseNumberAttr(attrs.step);
       const required = parseBooleanAttr(attrs.required);
       const fillModes =
         type === 'dropdown-fill' ? parseFillModes(attrs.fillModes || attrs['fill-modes']) : null;
       if (type === 'dropdown-fill' && !fillModes) {
         throw new Error(`[BobCompiler] dropdown-fill control "${path}" requires fill-modes`);
-      }
-      if (
-        typeof min === 'string' &&
-        typeof max === 'string' &&
-        compareCivilDates(parseCivilDate(min, 'min'), parseCivilDate(max, 'max')) > 0
-      ) {
-        throw new Error(`[BobCompiler] ${type} control "${path}" min must not be after max`);
       }
       const showIf = attrs['show-if'] || undefined;
       const explicitGroupLabel =
