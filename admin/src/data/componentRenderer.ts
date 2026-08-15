@@ -46,10 +46,16 @@ const renderPreviews = (source: ComponentSource, previews: Preview[]): string[] 
     .map((preview) => renderVariantTiles(source.name, preview, source.template))
     .filter((html): html is string => Boolean(html));
 
-const createCoveragePreview = (source: ComponentSource, preview: Preview, name: string, value: string): Preview => {
+const createCoveragePreview = (
+  source: ComponentSource,
+  preview: Preview,
+  name: string,
+  value: string,
+): Preview => {
   const baseContext = preview.context ?? {};
   const contextSize = typeof baseContext.size === 'string' ? baseContext.size : undefined;
-  const previewSize = Array.isArray(preview.sizes) && preview.sizes.length > 0 ? preview.sizes[0] : undefined;
+  const previewSize =
+    Array.isArray(preview.sizes) && preview.sizes.length > 0 ? preview.sizes[0] : undefined;
   const size = name === 'size' ? value : (contextSize ?? previewSize);
 
   return {
@@ -70,7 +76,8 @@ const renderVariantTiles = (
   preview: Preview,
   stencil?: string,
 ): string | null => {
-  const sizeVariants = Array.isArray(preview.sizes) && preview.sizes.length > 0 ? preview.sizes : [undefined];
+  const sizeVariants =
+    Array.isArray(preview.sizes) && preview.sizes.length > 0 ? preview.sizes : [undefined];
 
   const axisKey = Array.isArray(preview.types) && preview.types.length > 0 ? 'type' : 'variant';
   let axisValues: (string | undefined)[] = [undefined];
@@ -138,7 +145,7 @@ const renderVariantTiles = (
               ? `<strong class="body-s">${preview.title}</strong>`
               : '';
 
-          const wrapperClass = ['table', 'popup'].includes(componentName)
+          const wrapperClass = ['data-table', 'table', 'popup'].includes(componentName)
             ? 'dieter-component-preview-full-wrapper'
             : wrapPreviewComponents.has(componentName)
               ? 'dieter-component-preview-wrap-wrapper'
@@ -178,8 +185,13 @@ export const renderComponentDoc = (source: ComponentSource): ComponentDoc | null
       ? source.spec.previews
       : Array.isArray(source.spec?.examples)
         ? (source.spec.examples as Array<Record<string, unknown>>).map((example, index) => ({
-            id: typeof example?.description === 'string' ? example.description : `${source.name}-${index + 1}`,
-            spec: [typeof example?.code === 'string' ? example.code : source.spec.syntax].filter(Boolean),
+            id:
+              typeof example?.description === 'string'
+                ? example.description
+                : `${source.name}-${index + 1}`,
+            spec: [typeof example?.code === 'string' ? example.code : source.spec.syntax].filter(
+              Boolean,
+            ),
             sizes:
               source.spec.attributes &&
               typeof source.spec.attributes === 'object' &&

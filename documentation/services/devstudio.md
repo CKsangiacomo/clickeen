@@ -105,13 +105,21 @@ header, row, cell, border, or overflow presentation locally.
 
 Hash routes are generated from `admin/src/html/**` and route data in
 `admin/src/data/routes.ts`. There is no separate design-system admin app. The
-current generated inventory is 5 Foundation routes, 24 Dieter Component routes,
+current generated inventory is 5 Foundation routes, 29 Dieter Component routes,
 and 2 Policy routes. CSS-only Dieter contracts do not create empty showcase
 routes.
 
 The Agent Activity route is generated from its real Dieter spec, stencil, and
 CSS. It reveals both supported sizes with the actual multi-row contract and
 active presentation; it does not maintain a DevStudio-only imitation.
+
+Badge, Banner, Spinner, Tooltip, and Data Table are generated from their real
+Dieter source. Their routes expose complete tones, sizes, placements,
+Button-loading composition, controlled selection, batch-action, loading,
+empty, filtered-empty, sorting, row-action, and pagination structures without
+adding a DevStudio behavior controller. Data Table uses the same full-width
+preview lane as Table because its operational composition is intentionally
+wider than a property control.
 
 The generated Menuactions route reveals the one real unbound action-row
 contract at `sm|md|lg`: caller label only, caller label with one trailing

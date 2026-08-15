@@ -1,0 +1,11 @@
+<span class="diet-tooltip" data-tooltip="{{tooltip}}" data-tooltip-kind="{{kind}}" data-tooltip-placement="{{placement}}">
+  <button class="diet-button" data-size="medium" data-type="quaternary" type="button" aria-label="{{triggerLabel}}"{{#if descriptionId}} aria-describedby="{{descriptionId}}"{{/if}}>
+    <span class="diet-icon" data-icon="{{icon}}" aria-hidden="true"></span>
+    {{#if visibleLabel}}
+    <span class="diet-button__label">{{visibleLabel}}</span>
+    {{/if}}
+  </button>
+  {{#if descriptionId}}
+  <span class="sr-only" id="{{descriptionId}}">{{tooltip}}</span>
+  {{/if}}
+</span>

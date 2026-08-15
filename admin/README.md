@@ -20,8 +20,9 @@ superadmin account browser.
   composition, and the public Widget Stage/Pod/Shell/Header/Core contract with
   their exact class taxonomy, owners, consumers, and source paths. The four
   application-layout tokens remain editable through the validated token path.
-- Dieter Components: 24 generated component pages, including Datefield, Date
-  Range Picker, the shared Table, and the blocking Popup contracts.
+- Dieter Components: 29 generated component pages, including Badge, Banner,
+  Data Table, Spinner, Tooltip, Datefield, Date Range Picker, the shared Table,
+  and the blocking Popup contracts.
 - Policy: entitlements + AI runtime Policy Editor at `/#/policy/entitlements`.
 - LLM Management: read-only managed model configuration
   at `/#/policy/llm-management`.

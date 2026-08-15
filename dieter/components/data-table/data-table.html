@@ -1,0 +1,115 @@
+<div class="diet-data-table">
+  <div class="diet-data-table__batch-toolbar">
+    <span class="diet-badge label-xs" data-tone="neutral">
+      <span class="diet-badge__label">1 selected</span>
+    </span>
+    <div class="diet-data-table__batch-actions">
+      <button class="diet-button" data-size="small" data-type="secondary" type="button">
+        <span class="diet-button__label">Move</span>
+      </button>
+      <button class="diet-button" data-size="small" data-type="secondary" type="button">
+        <span class="diet-button__label">Delete</span>
+      </button>
+    </div>
+  </div>
+  <div class="diet-table">
+    <table class="diet-table__table">
+      <caption class="sr-only">
+        Operational records
+      </caption>
+      <thead>
+        <tr>
+          <th class="label-s diet-data-table__selection-cell" scope="col">
+            <input
+              class="diet-data-table__selection-control"
+              type="checkbox"
+              aria-label="Select all records"
+              aria-checked="mixed"
+            />
+          </th>
+          <th class="label-s" scope="col" aria-sort="ascending">
+            <span>Name</span>
+            <button
+              class="diet-button"
+              data-size="small"
+              data-type="quaternary"
+              type="button"
+              aria-label="Sort by name"
+            >
+              <span
+                class="diet-icon"
+                data-size="12"
+                data-icon="chevron.up.2"
+                aria-hidden="true"
+              ></span>
+            </button>
+          </th>
+          <th class="label-s" scope="col" aria-sort="none">
+            <span>Status</span>
+            <button
+              class="diet-button"
+              data-size="small"
+              data-type="quaternary"
+              type="button"
+              aria-label="Sort by status"
+            >
+              <span
+                class="diet-icon"
+                data-size="12"
+                data-icon="chevron.down.dotted.2"
+                aria-hidden="true"
+              ></span>
+            </button>
+          </th>
+          <th class="label-s diet-table__cell--action" scope="col">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="diet-data-table__row">
+          <td class="body-s diet-data-table__selection-cell">
+            <input
+              class="diet-data-table__selection-control"
+              type="checkbox"
+              checked
+              aria-label="Deselect first record"
+            />
+          </td>
+          <th class="body-s" scope="row">First record</th>
+          <td class="body-s">Active</td>
+          <td class="body-s diet-table__cell--action">
+            <button class="diet-button" data-size="small" data-type="secondary" type="button">
+              <span class="diet-button__label">Edit</span>
+            </button>
+          </td>
+        </tr>
+        <tr class="diet-data-table__row">
+          <td class="body-s diet-data-table__selection-cell">
+            <input
+              class="diet-data-table__selection-control"
+              type="checkbox"
+              aria-label="Select second record"
+            />
+          </td>
+          <th class="body-s" scope="row">Second record</th>
+          <td class="body-s">Draft</td>
+          <td class="body-s diet-table__cell--action">
+            <button class="diet-button" data-size="small" data-type="secondary" type="button">
+              <span class="diet-button__label">Edit</span>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="diet-data-table__pagination">
+    <span class="diet-data-table__pagination-summary body-s">1–2 of 12</span>
+    <div class="diet-data-table__pagination-actions">
+      <button class="diet-button" data-size="small" data-type="secondary" type="button">
+        <span class="diet-button__label">Previous</span>
+      </button>
+      <button class="diet-button" data-size="small" data-type="secondary" type="button">
+        <span class="diet-button__label">Next</span>
+      </button>
+    </div>
+  </div>
+</div>

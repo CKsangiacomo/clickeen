@@ -1,7 +1,9 @@
 import '@dieter/tokens/tokens.css';
 import '@dieter/layouts/main-container/main-container.css';
 import '@dieter/components/icon/icon.css';
+import '@dieter/components/badge/badge.css';
 import '@dieter/components/button/button.css';
+import '@dieter/components/spinner/spinner.css';
 import '@dieter/components/popup/popup.css';
 import '@dieter/components/shared/property-row.css';
 import '@dieter/components/shared/civil-date-calendar.css';

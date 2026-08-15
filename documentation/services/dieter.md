@@ -123,7 +123,24 @@ native input listener.
 Agent Activity owns a required caller-supplied title, a required array of
 narration rows, its `sm`/`md` structure, and its active presentation. It does
 not own caller wording. Bob supplies the static title from the open widget
-artifact and renders Translation Agent event messages as the rows.
+artifact and renders Translation Agent event messages as the rows. Active
+presentation is a one-pixel conic border rotating through only system purple
+and indigo over the existing purple surface; reduced motion leaves the same
+border static.
+
+Badge, Banner, Spinner, and Tooltip are consumer-agnostic feedback primitives.
+Badge renders compact caller-owned state text in one of five presentation
+tones. Banner renders a persistent caller-owned default, caution, or critical
+message with optional Icon, actions, semantics, and labelled dismissal.
+Spinner renders current-color progress at small, medium, or large; it owns no
+job lifecycle. Tooltip renders caller-owned label or description content in
+one of four placements while the trigger retains its own accessible name.
+None loads copy, infers product state, or creates a consumer-specific branch.
+
+Button loading composes that ordinary Spinner before a caller-supplied loading
+label. The caller disables the Button and sets `data-loading` plus `aria-busy`
+for the exact lifetime of its command; Button derives Spinner size from its
+existing small/medium/large Icon ladder and does not own the asynchronous work.
 
 Choice Tiles owns two- and three-option selection structure, interaction,
 selected presentation, and one proportional `sm|md|lg` tile geometry. Its
@@ -446,6 +463,14 @@ Dieter Icon. Inactive columns use `chevron.down.dotted.2` with
 `--color-system-gray-3`; the active column uses `chevron.up.2` or
 `chevron.down.2` with `--color-system-gray-2`. The app still owns sort state,
 direction, the exact icon, and row ordering.
+
+Dieter Data Table is a controlled operational composition over that Table
+substrate. It provides shared presentation slots for native selection,
+selected-count Badge, batch actions, sorting controls, row actions, truthful
+loading/empty/filtered-empty rows, and pagination. It has no hydrator or data
+engine. The caller owns records, selection, sorting, paging, commands, and all
+visible and accessible copy. Ordinary Table remains the smaller contract when
+those operational slots are not needed.
 
 ## Icon Delivery
 

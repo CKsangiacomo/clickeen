@@ -1,0 +1,81 @@
+{
+  "component": "data-table",
+  "syntax": "<div class='diet-data-table'>…<div class='diet-table'><table class='diet-table__table'>…</table></div>…</div>",
+  "attributes": {},
+  "contract": {
+    "stateAuthority": "caller",
+    "records": "caller-rendered",
+    "selection": "caller controls each native checkbox and renders the batch toolbar only when selection exists",
+    "indeterminate": "caller sets the select-all checkbox indeterminate property and aria-checked='mixed' for a partial selection",
+    "sorting": "caller owns sort state, row order, and the exact current Table sort icon",
+    "rowActions": "caller-composed Dieter controls",
+    "loadingAndEmpty": "caller renders one truthful state row with exact resolved copy",
+    "pagination": "caller-rendered controls and summary; Dieter owns only slot geometry",
+    "localization": "all visible and accessible strings are exact caller inputs",
+    "hydrator": "none"
+  },
+  "presentation": {
+    "base": "Dieter Table",
+    "surface": "--role-surface",
+    "radius": "--control-radius-lg",
+    "selection": "native checkbox with --color-system-blue; selected rows use --color-system-blue-5",
+    "separators": "--color-system-gray-step5",
+    "inactiveSortIcon": "chevron.down.dotted.2 / --color-system-gray-3",
+    "activeSortIcons": "chevron.up.2 or chevron.down.2 / --color-system-gray-2"
+  },
+  "defaults": [
+    {
+      "id": "controlled-selection",
+      "title": "Controlled partial selection",
+      "spec": [
+        "Caller-owned records and selection",
+        "Header checkbox is indeterminate",
+        "Table sort and row-action composition",
+        "Caller-rendered pagination"
+      ],
+      "context": {}
+    },
+    {
+      "id": "no-selection",
+      "title": "No selection",
+      "spec": ["The batch toolbar is absent when nothing is selected"],
+      "html": "<div class='diet-data-table'><div class='diet-table'><table class='diet-table__table'><caption class='sr-only'>Unselected operational records</caption><thead><tr><th class='label-s diet-data-table__selection-cell' scope='col'><input class='diet-data-table__selection-control' type='checkbox' aria-label='Select all records' /></th><th class='label-s' scope='col'>Name</th><th class='label-s' scope='col'>Status</th></tr></thead><tbody><tr class='diet-data-table__row'><td class='body-s diet-data-table__selection-cell'><input class='diet-data-table__selection-control' type='checkbox' aria-label='Select first record' /></td><th class='body-s' scope='row'>First record</th><td class='body-s'>Active</td></tr><tr class='diet-data-table__row'><td class='body-s diet-data-table__selection-cell'><input class='diet-data-table__selection-control' type='checkbox' aria-label='Select second record' /></td><th class='body-s' scope='row'>Second record</th><td class='body-s'>Draft</td></tr></tbody></table></div></div>",
+      "context": {}
+    },
+    {
+      "id": "all-selected",
+      "title": "All presented rows selected",
+      "spec": ["The caller controls the header and row checkboxes together"],
+      "html": "<div class='diet-data-table'><div class='diet-data-table__batch-toolbar'><span class='diet-badge label-xs' data-tone='neutral'><span class='diet-badge__label'>2 selected</span></span><div class='diet-data-table__batch-actions'><button class='diet-button' data-size='small' data-type='secondary' type='button'><span class='diet-button__label'>Move</span></button><button class='diet-button' data-size='small' data-type='secondary' type='button'><span class='diet-button__label'>Delete</span></button></div></div><div class='diet-table'><table class='diet-table__table'><caption class='sr-only'>Selected operational records</caption><thead><tr><th class='label-s diet-data-table__selection-cell' scope='col'><input class='diet-data-table__selection-control' type='checkbox' checked aria-label='Deselect all records' /></th><th class='label-s' scope='col'>Name</th><th class='label-s' scope='col'>Status</th></tr></thead><tbody><tr class='diet-data-table__row'><td class='body-s diet-data-table__selection-cell'><input class='diet-data-table__selection-control' type='checkbox' checked aria-label='Deselect first record' /></td><th class='body-s' scope='row'>First record</th><td class='body-s'>Active</td></tr><tr class='diet-data-table__row'><td class='body-s diet-data-table__selection-cell'><input class='diet-data-table__selection-control' type='checkbox' checked aria-label='Deselect second record' /></td><th class='body-s' scope='row'>Second record</th><td class='body-s'>Draft</td></tr></tbody></table></div></div>",
+      "context": {}
+    },
+    {
+      "id": "loading",
+      "title": "Loading",
+      "spec": ["The caller exposes truthful pending state and exact copy"],
+      "html": "<div class='diet-data-table' data-state='loading'><div class='diet-table'><table class='diet-table__table' aria-busy='true'><caption class='sr-only'>Operational records</caption><thead><tr><th class='label-s' scope='col'>Name</th><th class='label-s' scope='col'>Status</th></tr></thead><tbody><tr><td class='diet-data-table__state-cell' colspan='2'><div class='diet-data-table__state body-s' role='status'>Loading records…</div></td></tr></tbody></table></div></div>",
+      "context": {}
+    },
+    {
+      "id": "empty",
+      "title": "Empty",
+      "spec": ["The caller supplies the empty-state title and guidance"],
+      "html": "<div class='diet-data-table' data-state='empty'><div class='diet-table'><table class='diet-table__table'><caption class='sr-only'>Operational records</caption><thead><tr><th class='label-s' scope='col'>Name</th><th class='label-s' scope='col'>Status</th></tr></thead><tbody><tr><td class='diet-data-table__state-cell' colspan='2'><div class='diet-data-table__state'><strong class='diet-data-table__state-title label-s'>No records yet</strong><span class='body-s'>Create the first record to get started.</span></div></td></tr></tbody></table></div></div>",
+      "context": {}
+    },
+    {
+      "id": "filtered-empty",
+      "title": "Filtered empty",
+      "spec": ["Filtered empty remains distinct from an empty dataset"],
+      "html": "<div class='diet-data-table' data-state='filtered-empty'><div class='diet-table'><table class='diet-table__table'><caption class='sr-only'>Filtered operational records</caption><thead><tr><th class='label-s' scope='col'>Name</th><th class='label-s' scope='col'>Status</th></tr></thead><tbody><tr><td class='diet-data-table__state-cell' colspan='2'><div class='diet-data-table__state'><strong class='diet-data-table__state-title label-s'>No matching records</strong><span class='body-s'>Change or clear the current filters.</span></div></td></tr></tbody></table></div></div>",
+      "context": {}
+    },
+    {
+      "id": "pagination",
+      "title": "Pagination slot",
+      "spec": ["The caller owns paging state, commands, labels, and summary"],
+      "html": "<div class='diet-data-table'><div class='diet-table'><table class='diet-table__table'><caption class='sr-only'>Paged operational records</caption><thead><tr><th class='label-s' scope='col'>Name</th><th class='label-s' scope='col'>Status</th></tr></thead><tbody><tr><th class='body-s' scope='row'>First record</th><td class='body-s'>Active</td></tr><tr><th class='body-s' scope='row'>Second record</th><td class='body-s'>Draft</td></tr></tbody></table></div><div class='diet-data-table__pagination'><span class='diet-data-table__pagination-summary body-s'>1–2 of 12</span><div class='diet-data-table__pagination-actions'><button class='diet-button' data-size='small' data-type='secondary' type='button' disabled><span class='diet-button__label'>Previous</span></button><button class='diet-button' data-size='small' data-type='secondary' type='button'><span class='diet-button__label'>Next</span></button></div></div></div>",
+      "context": {}
+    }
+  ]
+}

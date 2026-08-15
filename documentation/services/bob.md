@@ -299,6 +299,12 @@ translations, or mutate locale overlays from the `update-instance` command.
 Bob treats the save response as base-source and base-package persistence truth
 only.
 
+While that existing Save request is pending, TopDrawer keeps the same primary
+Dieter Button, changes its exact caller-owned label to `Saving…`, sets the
+Button's loading and busy state, disables repeat submission, and composes the
+ordinary Dieter Spinner. The Spinner is presentation only; it does not start,
+retry, complete, persist, or reinterpret the Save command.
+
 When translations need update, that attention belongs to the Translations panel.
 [`interactions.md`](../engineering/UI/interactions.md) owns interaction feedback
 behavior. The Bob/Roma UI execution PRDs own any future top-of-builder attention

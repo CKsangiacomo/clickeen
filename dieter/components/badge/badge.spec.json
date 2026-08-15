@@ -1,0 +1,44 @@
+{
+  "component": "badge",
+  "syntax": "<span class='diet-badge label-xs' data-tone='{{tone}}'>…</span>",
+  "attributes": {
+    "tone": {
+      "enum": ["neutral", "info", "positive", "warning", "critical"],
+      "required": true
+    },
+    "label": { "required": true },
+    "icon": { "optional": true }
+  },
+  "binding": { "type": "caller-owned-state-label" },
+  "defaults": [
+    {
+      "id": "badge-tones",
+      "spec": [
+        "diet-badge",
+        "data-tone='neutral|info|positive|warning|critical'",
+        "caller-owned label"
+      ],
+      "context": { "tone": "neutral", "label": "Neutral" }
+    },
+    {
+      "id": "badge-info",
+      "spec": ["diet-badge", "data-tone='info'", "optional Dieter Icon"],
+      "context": { "tone": "info", "label": "Information", "icon": "info.triangle" }
+    },
+    {
+      "id": "badge-positive",
+      "spec": ["diet-badge", "data-tone='positive'", "caller-owned label"],
+      "context": { "tone": "positive", "label": "Published" }
+    },
+    {
+      "id": "badge-warning",
+      "spec": ["diet-badge", "data-tone='warning'", "caller-owned label"],
+      "context": { "tone": "warning", "label": "Needs attention" }
+    },
+    {
+      "id": "badge-critical",
+      "spec": ["diet-badge", "data-tone='critical'", "long caller-owned label wraps"],
+      "context": { "tone": "critical", "label": "Action could not be completed" }
+    }
+  ]
+}

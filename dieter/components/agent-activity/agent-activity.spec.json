@@ -8,16 +8,18 @@
     "rows": { "required": true }
   },
   "binding": { "type": "transient-agent-narration" },
+  "presentation": {
+    "activeSurface": "--color-system-purple-5",
+    "activeBorder": "1px rotating conic gradient using --color-system-purple and --color-system-indigo",
+    "activeMotion": "3s linear infinite",
+    "reducedMotion": "static conic border"
+  },
   "defaults": [
     {
       "id": "agent-activity",
       "sizes": ["sm", "md"],
       "variants": ["active"],
-      "spec": [
-        "diet-agent-activity",
-        "data-size='{{size}}'",
-        "data-tone='{{tone}}'"
-      ],
+      "spec": ["diet-agent-activity", "data-size='{{size}}'", "data-tone='{{tone}}'"],
       "context": {
         "size": "sm",
         "tone": "active",

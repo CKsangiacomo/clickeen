@@ -1,0 +1,34 @@
+/* Dieter Spinner — currentColor progress presentation with caller-owned status. */
+
+.diet-spinner {
+  --diet-spinner-size: var(--icon-size-16, 1rem);
+  box-sizing: border-box;
+  display: inline-block;
+  flex: 0 0 var(--diet-spinner-size);
+  inline-size: var(--diet-spinner-size);
+  block-size: var(--diet-spinner-size);
+  border: max(1px, calc(var(--diet-spinner-size) / 8)) solid
+    color-mix(in oklab, currentColor, transparent 72%);
+  border-block-start-color: currentColor;
+  border-radius: 50%;
+  color: inherit;
+  animation: diet-spinner-rotate calc(var(--duration-base) * 5) linear infinite;
+}
+
+.diet-spinner[data-size='small'] {
+  --diet-spinner-size: var(--icon-size-12, 0.75rem);
+}
+
+.diet-spinner[data-size='medium'] {
+  --diet-spinner-size: var(--icon-size-16, 1rem);
+}
+
+.diet-spinner[data-size='large'] {
+  --diet-spinner-size: var(--icon-size-20, 1.25rem);
+}
+
+@keyframes diet-spinner-rotate {
+  to {
+    transform: rotate(1turn);
+  }
+}

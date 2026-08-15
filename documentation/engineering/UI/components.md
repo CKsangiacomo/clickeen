@@ -9,14 +9,16 @@
   `dieter/components/index.ts`.
 - System mechanics (hydration model, spec binding, build): see [`dieter.md`](dieter.md). This doc is the per-component lookup; that doc explains the system once.
 
-## Catalog (27 non-empty source directories including `shared`)
+## Catalog (31 non-empty source directories including `shared`)
 
 Legend: ✅ exported from `index.ts` · Direct host import · ⊘ no custom hydrator.
 
 | Group       | Component          | Hydrate / binding                                                               | Status |
 | ----------- | ------------------ | ------------------------------------------------------------------------------- | ------ |
+| atoms       | `badge`            | Caller-owned compact state label                                                | ⊘      |
 | atoms       | `button`           | Native button/link, spec `string`, `data-size`/`data-type`                      | ⊘      |
 | atoms       | `icon`             | — (CSS-only wrapper)                                                            | ⊘      |
+| atoms       | `spinner`          | Caller-owned progress status; decorative inside a labelled Button              | ⊘      |
 | atoms       | `tabs`             | Native radio-group behavior, caller-owned labels                                | ⊘      |
 | atoms       | `segmented`        | Native radio-group behavior, caller-owned labels                                | ⊘      |
 | atoms       | `toggle`           | Native checkbox behavior                                                        | ⊘      |
@@ -36,11 +38,13 @@ Legend: ✅ exported from `index.ts` · Direct host import · ⊘ no custom hydr
 | dropdowns   | `dropdown-upload`  | `hydrateDropdownUpload` / `destroyDropdownUpload`, exact asset JSON             | ✅     |
 | dropdowns   | `dropdown-edit`    | `hydrateDropdownEdit` / `destroyDropdownEdit`, exact inline HTML string         | ✅     |
 | dropdowns   | `menuactions`      | native action row, unbound                                                      | ⊘      |
+| feedback    | `banner`           | Caller-owned persistent message, actions, and dismissal                         | ⊘      |
 | composites  | `popover`          | — (CSS/HTML/spec; container)                                                    | ⊘      |
 | structural  | `table`            | semantic table visual base and overflow shell                                   | ⊘      |
+| structural  | `data-table`       | controlled operational composition over Table                                  | ⊘      |
 | structural  | `popup`            | blocking native-dialog visual structure                                         | ⊘      |
 | activity    | `agent-activity`   | — (transient narration strip)                                                   | ⊘      |
-| operational | `tooltip`          | CSS label from `data-tooltip`                                                   | ⊘      |
+| operational | `tooltip`          | Caller-owned label or description from `data-tooltip`                           | ⊘      |
 | other       | `shared/`          | helpers (`account-assets`, `dialog-lifecycle`, `dropdownToggle`) — not rendered | —      |
 
 ## Component Contract
@@ -114,6 +118,12 @@ The governing component product law is:
   Icon's proportional default: `.75rem` for small, `1rem` for medium, and
   `1.25rem` for large. An explicit numeric Icon size remains authoritative when
   a composition deliberately needs it. Button labels have no hidden padding.
+- Button loading is one state of the same Button, not a second action control.
+  The caller owns the asynchronous command, disables the Button, sets
+  `data-loading="true"` and `aria-busy="true"`, and supplies the exact loading
+  label. Button composes the ordinary current-color Spinner before that label
+  and derives its size from the Button's existing icon ladder. Spinner never
+  starts, retries, completes, or interprets the command.
 - Choice Tiles is a two- or three-option string chooser with one `sm|md|lg`
   size authority on its root. Small, medium, and large use proportional
   `4rem/4.5rem/5rem` minimum heights, `.5rem/.5rem/.75rem` block padding,
@@ -490,6 +500,16 @@ inactive columns use `chevron.down.dotted.2` with
 through `aria-sort`; apps own the exact icon derived from their selected
 column and direction, plus row ordering.
 
+Data Table is the operational composition over that unchanged Table base. It
+owns reusable slots and presentation for native controlled selection, the
+selected-count Badge, caller-composed batch actions, sortable headers, row
+actions, loading, empty, filtered-empty, and pagination. It does not fetch,
+store, filter, sort, page, select, or mutate records and has no hydrator or
+React abstraction. The caller owns every record, state transition, command,
+visible word, and accessible label. Roma may use this composition when an
+operational domain actually needs bulk selection; the current Table remains
+the right primitive for ordinary static or app-owned tabular layouts.
+
 Dieter Popup owns the blocking native `<dialog>` appearance and structural
 slots: header, body, footer, and actions, with small, medium, and large sizes.
 The Popup is one continuous elevated surface: it has no outer stroke or
@@ -516,17 +536,38 @@ visible words. In Bob's ToolDrawer, the open widget artifact supplies the
 static title from `compiled.toolDrawerLabels.components["agent-activity"].title`, and
 Translation Agent events supply the dynamic rows.
 
-The active component uses `--color-system-purple-5` as its surface and a thin
-animated gradient stroke composed from existing system colors. The gradient is
-activity presentation, not progress measurement. Dieter's global reduced-motion
-guard applies to the animation.
+The active component uses `--color-system-purple-5` as its surface and a
+one-pixel rotating conic border made only from `--color-system-purple` and
+`--color-system-indigo`. Its three-second linear rotation communicates live
+agent operation, not percentage progress. Reduced motion keeps the same static
+two-color border without rotation.
+
+## Status And Feedback Primitives
+
+Badge is compact, non-interactive state text. Its neutral, info, positive,
+warning, and critical tones own only presentation; the caller supplies the
+complete label and optional Dieter Icon. Badge does not infer status from data
+or own a locale source.
+
+Banner is a persistent parent-width message composition with default, caution,
+and critical tones. The caller may supply title, description, Icon, actions,
+semantic live-region inputs, and a labelled dismiss action. Banner does not
+invent recovery, auto-dismiss, error mapping, or product policy.
+
+Spinner is current-color progress presentation at small, medium, and large.
+As a standalone status it receives a caller-owned accessible label. Inside a
+labelled Button it is decorative. Reduced motion keeps a static progress glyph;
+the caller remains the sole authority for whether work is actually pending.
 
 ## Tooltip Contract
 
-Unfamiliar icon-only actions use one small Dieter tooltip contract. The tooltip
-appears on hover while the control retains its accessible name. Native `title`
-is not the designed tooltip system. This contract does not
-create a tooltip framework or move product copy into Dieter.
+Unfamiliar icon-only actions use one governed Dieter Tooltip contract. A label
+names an otherwise unfamiliar control; a description adds caller-owned context
+through an exact `aria-describedby` target. Top, right, bottom, and left
+placement are presentation inputs. Tooltip content wraps, is non-interactive,
+and never replaces the trigger's accessible name. Native `title` is not the
+designed tooltip system. This contract does not create a tooltip controller or
+move product copy into Dieter.
 
 ## Per-Component Consumption
 
@@ -551,6 +592,5 @@ Current inventory detail: Dieter components are source modules imported
 directly by each application only where that application actually uses them;
 there is no universal consumer and no runtime component manifest.
 `shared/` contains helpers and is not a rendered component.
-`command-activity` and `operational-table` are absent from current tracked
-source. DevStudio generates 24 source-backed component pages. Historical 126
-audits remain point-in-time evidence.
+DevStudio generates 29 source-backed component pages. Historical 126 audits
+remain point-in-time evidence.

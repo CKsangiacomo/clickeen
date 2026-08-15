@@ -1,0 +1,46 @@
+/* Dieter Badge — compact, non-interactive caller-owned state text. */
+
+.diet-badge {
+  --badge-background: var(--role-surface-muted);
+  --badge-color: var(--color-text);
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  max-inline-size: 100%;
+  min-block-size: var(--control-size-sm, 1.25rem);
+  gap: var(--control-inline-gap-xs, 0.125rem);
+  padding-block: var(--space-1, 0.25rem);
+  padding-inline: var(--space-2, 0.5rem);
+  border-radius: var(--control-radius-sm, 0.25rem);
+  background: var(--badge-background);
+  color: var(--badge-color);
+}
+
+.diet-badge[data-tone='info'] {
+  --badge-background: var(--color-system-blue-5);
+  --badge-color: var(--color-system-blue-contrast);
+}
+
+.diet-badge[data-tone='positive'] {
+  --badge-background: var(--color-system-green-5);
+  --badge-color: var(--color-system-green-contrast);
+}
+
+.diet-badge[data-tone='warning'] {
+  --badge-background: var(--color-system-orange-5);
+  --badge-color: var(--color-system-orange-contrast);
+}
+
+.diet-badge[data-tone='critical'] {
+  --badge-background: var(--color-system-red-5);
+  --badge-color: var(--color-system-red-contrast);
+}
+
+.diet-badge > .diet-icon:not([data-size]) {
+  --diet-icon-size: var(--icon-size-12, 0.75rem);
+}
+
+.diet-badge__label {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}

@@ -1,0 +1,65 @@
+/* Dieter Banner — persistent caller-owned message composition. */
+
+.diet-banner {
+  --banner-background: var(--color-system-blue-5);
+  --banner-border: var(--color-system-blue-3);
+  --banner-accent: var(--color-system-blue-contrast);
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: start;
+  inline-size: 100%;
+  gap: var(--space-3, 0.75rem);
+  padding: var(--space-4, 1rem);
+  border: 1px solid var(--banner-border);
+  border-radius: var(--control-radius-lg, 0.5rem);
+  background: var(--banner-background);
+  color: var(--color-text);
+}
+
+.diet-banner[data-tone='caution'] {
+  --banner-background: var(--color-system-orange-5);
+  --banner-border: var(--color-system-orange-3);
+  --banner-accent: var(--color-system-orange-contrast);
+}
+
+.diet-banner[data-tone='critical'] {
+  --banner-background: var(--color-system-red-5);
+  --banner-border: var(--color-system-red-3);
+  --banner-accent: var(--color-system-red-contrast);
+}
+
+.diet-banner__icon {
+  flex: 0 0 auto;
+  color: var(--banner-accent);
+}
+
+.diet-banner__content {
+  display: grid;
+  flex: 1 1 16rem;
+  min-inline-size: 0;
+  gap: var(--space-1, 0.25rem);
+}
+
+.diet-banner__title,
+.diet-banner__description {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.diet-banner__description {
+  color: var(--color-text-secondary);
+}
+
+.diet-banner__actions {
+  display: flex;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2, 0.5rem);
+}
+
+.diet-banner__dismiss {
+  flex: 0 0 auto;
+}

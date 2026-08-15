@@ -9,11 +9,12 @@
     "iconStart": { "optional": true },
     "iconEnd": { "optional": true },
     "iconSize": { "enum": ["12", "16", "20", "24", "28", "32", "36", "40"], "optional": true },
+    "loading": { "optional": true },
     "tabIndex": { "optional": true },
     "disabled": { "optional": true },
     "path": { "optional": true }
   },
-  "binding": { "path": "instanceData[PATH]", "type": "string" },
+  "binding": { "type": "caller-owned-action" },
   "defaults": [
     {
       "id": "button-icon-text-start",
@@ -70,15 +71,30 @@
       "id": "button-text",
       "sizes": ["small", "medium", "large"],
       "types": ["primary", "secondary", "tertiary", "quaternary"],
-      "spec": [
-        "diet-button",
-        "data-size='{{size}}'",
-        "data-type='{{type}}'"
-      ],
+      "spec": ["diet-button", "data-size='{{size}}'", "data-type='{{type}}'"],
       "context": {
         "size": "medium",
         "type": "primary",
         "label": "Text button"
+      }
+    },
+    {
+      "id": "button-loading",
+      "sizes": ["small", "medium", "large"],
+      "types": ["primary", "secondary", "tertiary", "quaternary"],
+      "spec": [
+        "diet-button",
+        "data-size='{{size}}'",
+        "data-type='{{type}}'",
+        "data-loading='true'",
+        "caller-owned loading label"
+      ],
+      "context": {
+        "size": "medium",
+        "type": "primary",
+        "label": "Saving…",
+        "loading": true,
+        "disabled": true
       }
     }
   ]

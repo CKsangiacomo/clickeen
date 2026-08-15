@@ -1,0 +1,67 @@
+{
+  "component": "banner",
+  "syntax": "<section class='diet-banner' data-tone='{{tone}}'>…</section>",
+  "attributes": {
+    "tone": { "enum": ["default", "caution", "critical"], "required": true },
+    "title": { "optional": true },
+    "description": { "optional": true },
+    "icon": { "optional": true },
+    "actions": { "optional": true },
+    "dismissLabel": { "optional": true },
+    "semanticRole": { "enum": ["status", "alert"], "optional": true },
+    "ariaLive": { "enum": ["polite", "assertive"], "optional": true }
+  },
+  "binding": { "type": "caller-owned-persistent-message" },
+  "defaults": [
+    {
+      "id": "banner-default",
+      "title": "Default",
+      "spec": ["diet-banner", "data-tone='default'", "caller-owned title and description"],
+      "context": {
+        "tone": "default",
+        "title": "Information",
+        "description": "Caller-provided content explains the current situation.",
+        "icon": "info.triangle",
+        "semanticRole": "status",
+        "ariaLive": "polite"
+      }
+    },
+    {
+      "id": "banner-caution",
+      "title": "Caution with action",
+      "spec": ["diet-banner", "data-tone='caution'", "caller-composed action"],
+      "context": {
+        "tone": "caution",
+        "title": "Review required",
+        "description": "The complete caller-provided message remains visible until the situation changes.",
+        "icon": "exclamationmark.triangle",
+        "actions": "<button class='diet-button' data-size='medium' data-type='secondary' type='button'><span class='diet-button__label'>Review</span></button>",
+        "semanticRole": "status"
+      }
+    },
+    {
+      "id": "banner-critical",
+      "title": "Critical and dismissible",
+      "spec": ["diet-banner", "data-tone='critical'", "caller-owned alert and dismiss labels"],
+      "context": {
+        "tone": "critical",
+        "title": "Operation failed",
+        "description": "The caller keeps durable failure details beside the work and owns recovery.",
+        "icon": "exclamationmark.triangle",
+        "actions": "<button class='diet-button' data-size='medium' data-type='secondary' type='button'><span class='diet-button__label'>Try again</span></button>",
+        "dismissLabel": "Dismiss message",
+        "semanticRole": "alert",
+        "ariaLive": "assertive"
+      }
+    },
+    {
+      "id": "banner-description-only",
+      "title": "Description only",
+      "spec": ["diet-banner", "data-tone='default'", "title omitted"],
+      "context": {
+        "tone": "default",
+        "description": "Caller-provided content can stand alone without an invented component title."
+      }
+    }
+  ]
+}

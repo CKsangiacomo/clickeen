@@ -291,6 +291,7 @@ function render(state: RepeaterState): void {
     const moveLabel = labelWithIndex(state.moveLabel, index);
     handle.setAttribute('aria-label', moveLabel);
     handle.setAttribute('data-tooltip', moveLabel);
+    handle.setAttribute('data-tooltip-kind', 'label');
     handle.setAttribute('data-tooltip-placement', 'right');
     handle.append(state.handleIcon.cloneNode(true));
 
@@ -307,6 +308,7 @@ function render(state: RepeaterState): void {
     const removeLabel = labelWithIndex(state.removeLabel, index);
     remove.setAttribute('aria-label', removeLabel);
     remove.setAttribute('data-tooltip', removeLabel);
+    remove.setAttribute('data-tooltip-kind', 'label');
     remove.setAttribute('data-tooltip-placement', 'left');
     remove.append(state.trashIcon.cloneNode(true));
     remove.addEventListener('click', () => {

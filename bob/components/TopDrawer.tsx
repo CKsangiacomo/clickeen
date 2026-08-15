@@ -98,9 +98,7 @@ export function TopDrawer({
       <div className="topdrawer-context-wrap">
         <div className="topdrawer-context">
           {hasInstance ? (
-            <span className="topdrawer-instance-title heading-3">
-              {currentLabel}
-            </span>
+            <span className="topdrawer-instance-title heading-3">{currentLabel}</span>
           ) : null}
           {meta?.publishStatus ? (
             <span className="topdrawer-publish-status body-xs">
@@ -162,10 +160,13 @@ export function TopDrawer({
             className="diet-button"
             data-size="large"
             data-type="primary"
+            data-loading={isSaving || undefined}
             type="button"
+            aria-busy={isSaving || undefined}
             disabled={isSaving}
             onClick={() => save()}
           >
+            {isSaving ? <span className="diet-spinner" aria-hidden="true" /> : null}
             <span className="diet-button__label">{isSaving ? 'Saving…' : 'Save'}</span>
           </button>
         ) : null}

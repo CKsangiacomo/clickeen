@@ -55,6 +55,10 @@ test.describe("PRD 126B.1 Bob color truth and theme deletion", () => {
     page,
   }) => {
     let interceptedSavePuts = 0;
+    let releaseSaveResponse!: () => void;
+    const saveResponseGate = new Promise<void>((resolve) => {
+      releaseSaveResponse = resolve;
+    });
     const unexpectedInstanceMutations: string[] = [];
 
     await page.route(
@@ -65,6 +69,7 @@ test.describe("PRD 126B.1 Bob color truth and theme deletion", () => {
         const url = request.url();
         if (method === "PUT" && INSTANCE_PATH.test(url)) {
           interceptedSavePuts += 1;
+          await saveResponseGate;
           await route.fulfill({
             status: 503,
             contentType: "application/json",
@@ -138,6 +143,16 @@ test.describe("PRD 126B.1 Bob color truth and theme deletion", () => {
     const saveButton = bobFrame.getByRole("button", { name: "Save" }).first();
     await expect(saveButton).toBeEnabled();
     await saveButton.click();
+
+    const savingButton = bobFrame.locator(
+      '.diet-button[data-loading="true"][aria-busy="true"]',
+    );
+    await expect(savingButton).toBeDisabled();
+    await expect(savingButton).toContainText("Saving…");
+    await expect(
+      savingButton.locator('.diet-spinner[aria-hidden="true"]'),
+    ).toHaveCount(1);
+    releaseSaveResponse();
 
     const saveAlert = bobFrame
       .getByRole("alert")

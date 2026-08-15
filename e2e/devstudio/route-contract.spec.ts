@@ -75,12 +75,15 @@ const navGroups = [
   },
   {
     title: 'Dieter Components',
-    count: 24,
+    count: 29,
     routes: [
       { path: '/#/dieter/agent-activity', title: 'Agent Activity' },
+      { path: '/#/dieter/badge', title: 'Badge' },
+      { path: '/#/dieter/banner', title: 'Banner' },
       { path: '/#/dieter/bulk-edit', title: 'Bulk Edit' },
       { path: '/#/dieter/button', title: 'Button' },
       { path: '/#/dieter/choice-tiles', title: 'Choice Tiles' },
+      { path: '/#/dieter/data-table', title: 'Data Table' },
       { path: '/#/dieter/date-range-picker', title: 'Date Range Picker' },
       { path: '/#/dieter/datefield', title: 'Datefield' },
       { path: '/#/dieter/dropdown-actions', title: 'Dropdown Actions' },
@@ -96,10 +99,12 @@ const navGroups = [
       { path: '/#/dieter/repeater', title: 'Repeater' },
       { path: '/#/dieter/segmented', title: 'Segmented' },
       { path: '/#/dieter/slider', title: 'Slider' },
+      { path: '/#/dieter/spinner', title: 'Spinner' },
       { path: '/#/dieter/table', title: 'Table' },
       { path: '/#/dieter/tabs', title: 'Tabs' },
       { path: '/#/dieter/textfield', title: 'Textfield' },
       { path: '/#/dieter/toggle', title: 'Toggle' },
+      { path: '/#/dieter/tooltip', title: 'Tooltip' },
       { path: '/#/dieter/valuefield', title: 'Valuefield' },
     ],
   },
@@ -310,6 +315,146 @@ test.describe('DevStudio route contract', () => {
     ).toHaveCount(0);
   });
 
+  test('new status, feedback, progress, tooltip, and operational-table contracts are source-backed', async ({
+    page,
+  }) => {
+    await page.goto('/#/dieter/badge');
+    await expect(page.locator('.diet-badge')).toHaveCount(5);
+    for (const tone of ['neutral', 'info', 'positive', 'warning', 'critical']) {
+      await expect(page.locator(`.diet-badge[data-tone="${tone}"]`)).toHaveCount(1);
+    }
+
+    await page.goto('/#/dieter/banner');
+    await expect(page.locator('.diet-banner')).toHaveCount(4);
+    await expect(page.locator('.diet-banner[data-tone="critical"][role="alert"]')).toHaveCount(1);
+    await expect(page.locator('.diet-banner__dismiss[aria-label="Dismiss message"]')).toHaveCount(
+      1,
+    );
+
+    await page.goto('/#/dieter/spinner');
+    const standaloneSpinners = page.locator('.diet-spinner[role="status"]');
+    await expect(standaloneSpinners).toHaveCount(3);
+    for (const [index, size] of ['12px', '16px', '20px'].entries()) {
+      await expect(standaloneSpinners.nth(index)).toHaveCSS('inline-size', size);
+      await expect(standaloneSpinners.nth(index)).toHaveCSS('block-size', size);
+    }
+
+    await page.goto('/#/dieter/button');
+    const loadingButtons = page.locator('.diet-button[data-loading="true"][aria-busy="true"]');
+    await expect(loadingButtons).toHaveCount(12);
+    await expect(loadingButtons.locator(':scope > .diet-spinner[aria-hidden="true"]')).toHaveCount(
+      12,
+    );
+    for (const [size, expected] of Object.entries({
+      small: '12px',
+      medium: '16px',
+      large: '20px',
+    })) {
+      const spinner = page
+        .locator(
+          `.diet-button[data-loading="true"][aria-busy="true"][data-size="${size}"]`,
+        )
+        .locator(':scope > .diet-spinner')
+        .first();
+      await expect(spinner).toHaveCSS('inline-size', expected);
+      await expect(spinner).toHaveCSS('block-size', expected);
+      await expect(spinner).toHaveCSS('animation-name', 'diet-spinner-rotate');
+    }
+
+    await page.goto('/#/dieter/tooltip');
+    await expect(page.locator('.diet-tooltip')).toHaveCount(5);
+    for (const [placement, count] of Object.entries({ top: 2, right: 1, bottom: 1, left: 1 })) {
+      await expect(
+        page.locator(`.diet-tooltip[data-tooltip-placement="${placement}"]`),
+      ).toHaveCount(count);
+    }
+    const tooltip = page.locator('.diet-tooltip[data-tooltip-placement="top"]').first();
+    await tooltip.hover();
+    await expect
+      .poll(() => tooltip.evaluate((element) => getComputedStyle(element, '::after').visibility))
+      .toBe('visible');
+    await tooltip.locator(':scope > .diet-button').focus();
+    await expect
+      .poll(() => tooltip.evaluate((element) => getComputedStyle(element, '::after').visibility))
+      .toBe('visible');
+
+    await page.goto('/#/dieter/data-table');
+    await expect(
+      page.locator('.dieter-component-preview-full-wrapper .diet-data-table'),
+    ).toHaveCount(7);
+    const controlled = page.locator('.diet-data-table').first();
+    await expect(controlled.locator('.diet-table')).toHaveCount(1);
+    const selectedBadge = controlled.locator('.diet-badge');
+    await expect(selectedBadge).toHaveText('1 selected');
+    const badgePresentation = await selectedBadge.evaluate((element) => {
+      const style = getComputedStyle(element);
+      const tokenProbe = document.createElement('span');
+      tokenProbe.style.backgroundColor = 'var(--role-surface-muted)';
+      element.append(tokenProbe);
+      const expectedBackgroundColor = getComputedStyle(tokenProbe).backgroundColor;
+      tokenProbe.remove();
+      return {
+        paddingBlock: style.paddingBlock,
+        paddingInline: style.paddingInline,
+        borderRadius: style.borderRadius,
+        backgroundColor: style.backgroundColor,
+        expectedBackgroundColor,
+      };
+    });
+    expect(badgePresentation.paddingBlock).toBe('4px');
+    expect(badgePresentation.paddingInline).toBe('8px');
+    expect(badgePresentation.borderRadius).toBe('4px');
+    expect(badgePresentation.backgroundColor).toBe(badgePresentation.expectedBackgroundColor);
+    await expect(controlled.locator('input[type="checkbox"]')).toHaveCount(3);
+    const selectedCellColors = await controlled.evaluate((element) => {
+      const cell = element.querySelector<HTMLElement>('.diet-data-table__row > *');
+      if (!cell) throw new Error('Controlled DataTable is missing its selected row.');
+      const tokenProbe = document.createElement('span');
+      tokenProbe.style.color = 'var(--color-system-blue-5)';
+      element.append(tokenProbe);
+      const expected = getComputedStyle(tokenProbe).color;
+      tokenProbe.remove();
+      return { actual: getComputedStyle(cell).backgroundColor, expected };
+    });
+    expect(selectedCellColors.actual).toBe(selectedCellColors.expected);
+    await expect(
+      page.locator('.diet-data-table[data-state="loading"] [aria-busy="true"]'),
+    ).toHaveCount(1);
+    await expect(page.locator('.diet-data-table[data-state="empty"]')).toHaveCount(1);
+    await expect(page.locator('.diet-data-table[data-state="filtered-empty"]')).toHaveCount(1);
+  });
+
+  test('Agent Activity uses the two-color rotating border without changing its content surface', async ({
+    page,
+  }) => {
+    await page.goto('/#/dieter/agent-activity');
+    const active = page.locator('.diet-agent-activity[data-tone="active"]').first();
+    const presentation = await active.evaluate((element) => {
+      const style = getComputedStyle(element);
+      const purpleProbe = document.createElement('span');
+      purpleProbe.style.color = 'var(--color-system-purple)';
+      document.body.append(purpleProbe);
+      const purple = getComputedStyle(purpleProbe).color;
+      purpleProbe.style.color = 'var(--color-system-indigo)';
+      const indigo = getComputedStyle(purpleProbe).color;
+      purpleProbe.remove();
+      return {
+        animationDuration: style.animationDuration,
+        animationName: style.animationName,
+        backgroundImage: style.backgroundImage,
+        borderWidth: style.borderWidth,
+        indigo,
+        purple,
+      };
+    });
+    expect(presentation.borderWidth).toBe('1px');
+    expect(presentation.animationName).toBe('diet-agent-activity-border-spin');
+    expect(presentation.animationDuration).toBe('3s');
+    expect(presentation.backgroundImage).toContain('conic-gradient');
+    expect(presentation.backgroundImage).toContain(presentation.purple);
+    expect(presentation.backgroundImage).toContain(presentation.indigo);
+  });
+
   test('Table exposes the six governed compositions and exact shared presentation', async ({
     page,
   }) => {
@@ -479,7 +624,8 @@ test.describe('DevStudio route contract', () => {
         footerGap: getComputedStyle(footer).marginBlockStart,
         dismissHeight: dismiss.getBoundingClientRect().height,
         dismissWidth: dismiss.getBoundingClientRect().width,
-        dismissIconHeight: dismiss.querySelector<HTMLElement>('.diet-icon')?.getBoundingClientRect().height,
+        dismissIconHeight: dismiss.querySelector<HTMLElement>('.diet-icon')?.getBoundingClientRect()
+          .height,
       };
     });
     expect(presentation).toEqual({
@@ -523,9 +669,7 @@ test.describe('DevStudio route contract', () => {
 
     await page.goto('/#/dieter/object-manager');
     expect(await page.evaluate(() => document.body.style.overflow)).toBe('');
-    const objectManager = page
-      .locator('.diet-object-manager[data-allow-structure="true"]')
-      .first();
+    const objectManager = page.locator('.diet-object-manager[data-allow-structure="true"]').first();
     const objectDialog = objectManager.locator('[data-objects-modal]');
     const manage = objectManager.locator('[data-objects-manage]');
 
@@ -833,7 +977,6 @@ test.describe('DevStudio route contract', () => {
     });
     await expect(range.locator('.diet-date-range-picker__value')).toHaveText('Sep 1 – 4, 2026');
   });
-
 
   test('Layouts reveals the exact source contract and edits its four tokens through the foundation path', async ({
     page,

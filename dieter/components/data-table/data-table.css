@@ -1,0 +1,108 @@
+/* Dieter Data Table
+   Operational table composition built on the Dieter Table substrate. Callers
+   own records, selection, sorting, actions, pagination, and every word. */
+
+.diet-data-table {
+  display: grid;
+  box-sizing: border-box;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  overflow: hidden;
+  border-radius: var(--control-radius-lg);
+  background: var(--role-surface);
+  color: var(--color-text);
+}
+
+.diet-data-table > .diet-table {
+  border-radius: 0;
+}
+
+.diet-data-table__batch-toolbar,
+.diet-data-table__pagination {
+  display: flex;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  min-inline-size: 0;
+  padding: var(--space-3) var(--space-4);
+  background: var(--role-surface);
+}
+
+.diet-data-table__batch-toolbar {
+  border-block-end: 1px solid var(--color-system-gray-step5);
+}
+
+.diet-data-table__batch-toolbar[hidden],
+.diet-data-table__pagination[hidden] {
+  display: none;
+}
+
+.diet-data-table__batch-actions,
+.diet-data-table__pagination-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.diet-data-table__selection-cell {
+  inline-size: 1%;
+  min-inline-size: max-content;
+  white-space: nowrap;
+}
+
+.diet-data-table__selection-control {
+  display: block;
+  box-sizing: border-box;
+  inline-size: var(--icon-size-16);
+  block-size: var(--icon-size-16);
+  margin: 0;
+  accent-color: var(--color-system-blue);
+}
+
+.diet-data-table__selection-control:indeterminate,
+.diet-data-table__selection-control[aria-checked='mixed'] {
+  -webkit-appearance: none;
+  appearance: none;
+  border: 1px solid var(--color-system-blue);
+  border-radius: var(--control-radius-2xs);
+  background:
+    linear-gradient(var(--color-system-white), var(--color-system-white)) center / 0.5rem 0.125rem
+      no-repeat,
+    var(--color-system-blue);
+}
+
+.diet-data-table__row:has(.diet-data-table__selection-control:checked) > * {
+  background: var(--color-system-blue-5);
+}
+
+.diet-data-table__state-cell {
+  padding-block: var(--space-8) !important;
+  text-align: center !important;
+}
+
+.diet-data-table__state {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-1);
+  color: var(--color-text-secondary);
+}
+
+.diet-data-table__state-title {
+  color: var(--color-text);
+}
+
+.diet-data-table__pagination {
+  border-block-start: 1px solid var(--color-system-gray-step5);
+}
+
+.diet-data-table__pagination-summary {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}

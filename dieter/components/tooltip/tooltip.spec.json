@@ -1,0 +1,46 @@
+{
+  "component": "tooltip",
+  "syntax": "<span class='diet-tooltip' data-tooltip='{{tooltip}}' data-tooltip-kind='{{kind}}' data-tooltip-placement='{{placement}}'>…</span>",
+  "attributes": {
+    "kind": { "enum": ["label", "description"], "required": true },
+    "placement": { "enum": ["top", "right", "bottom", "left"], "required": true },
+    "tooltip": { "required": true },
+    "triggerLabel": { "required": true },
+    "icon": { "optional": true },
+    "visibleLabel": { "optional": true },
+    "descriptionId": { "optional": true }
+  },
+  "binding": { "type": "caller-owned-contextual-information" },
+  "defaults": [
+    {
+      "id": "tooltip-placements",
+      "sizes": ["top", "right", "bottom", "left"],
+      "spec": ["diet-tooltip", "data-tooltip-kind='label'", "data-tooltip-placement='{{size}}'"],
+      "context": {
+        "kind": "label",
+        "placement": "{{size}}",
+        "tooltip": "More actions",
+        "triggerLabel": "More actions",
+        "icon": "ellipsis"
+      }
+    },
+    {
+      "id": "tooltip-description",
+      "title": "Description",
+      "spec": [
+        "diet-tooltip",
+        "data-tooltip-kind='description'",
+        "caller-owned aria-describedby target"
+      ],
+      "context": {
+        "kind": "description",
+        "placement": "top",
+        "tooltip": "This longer caller-provided explanation wraps within the Tooltip surface.",
+        "triggerLabel": "More information",
+        "visibleLabel": "Details",
+        "icon": "info.triangle",
+        "descriptionId": "tooltip-description-copy"
+      }
+    }
+  ]
+}

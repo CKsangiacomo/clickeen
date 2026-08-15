@@ -1,0 +1,23 @@
+{
+  "component": "spinner",
+  "syntax": "<span class='diet-spinner' data-size='{{size}}' role='status' aria-label='{{label}}'></span>",
+  "attributes": {
+    "size": { "enum": ["small", "medium", "large"], "required": true },
+    "label": { "required": true }
+  },
+  "binding": { "type": "caller-owned-progress-status" },
+  "defaults": [
+    {
+      "id": "spinner-sizes",
+      "sizes": ["small", "medium", "large"],
+      "spec": ["diet-spinner", "data-size='{{size}}'", "caller-owned accessible label"],
+      "context": { "size": "medium", "label": "Loading" }
+    },
+    {
+      "id": "spinner-in-button",
+      "title": "Decorative inside a labelled Button",
+      "spec": ["diet-button", "data-loading='true'", "Spinner is aria-hidden"],
+      "html": "<button class='diet-button' data-size='medium' data-type='primary' data-loading='true' aria-busy='true' disabled><span class='diet-spinner' aria-hidden='true'></span><span class='diet-button__label'>Saving…</span></button>"
+    }
+  ]
+}

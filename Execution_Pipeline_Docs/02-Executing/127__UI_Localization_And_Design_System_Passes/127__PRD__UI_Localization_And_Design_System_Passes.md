@@ -158,7 +158,7 @@ the code is convenient there.
 | Stage                      | Status                                                                                                                                                                                                                                               | Release state                                                         |
 | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
 | Stage 1 — Scaffold only    | Complete                                                                                                                                                                                                                                             | Committed, pushed, and deployed; no non-English experience is exposed |
-| Stage 2 — Dieter UI pass   | In progress: Foundations and the full current 24-component inventory are complete and re-audited; Datefield and Date Range Picker remain consumer-agnostic primitives currently revealed only by DevStudio, and standalone Popaddlink and Textedit are deleted because their jobs were duplicate or unused | The Widget catalog is the next Stage 2 DevStudio tab                  |
+| Stage 2 — Dieter UI pass   | In progress: Foundations and the current 29-component inventory are complete and re-audited; the latest source-backed additions are Badge, Banner, Data Table, Spinner, and governed Tooltip, while Datefield and Date Range Picker remain DevStudio-only consumer-agnostic primitives | Widget-system passes continue; the Roma Assets workspace remains planning-only behind its recorded owner authority gates |
 | Stage 3 — Bob UI pass      | Not started                                                                                                                                                                                                                                          | No authority to begin until explicitly directed                       |
 | Stage 4 — Roma UI pass     | Not started                                                                                                                                                                                                                                          | No authority to begin until explicitly directed                       |
 | Stage 5 — Translation pass | Not started                                                                                                                                                                                                                                          | No translations may be generated yet                                  |
@@ -262,29 +262,34 @@ and layouts without parallel local systems.
 Review in this order:
 
 1. Agent Activity
-2. Bulk Edit
-3. Button
-4. Choice Tiles
-5. Date Range Picker
-6. Datefield
-7. Dropdown Actions
-8. Dropdown Border
-9. Dropdown Edit
-10. Dropdown Fill
-11. Dropdown Shadow
-12. Dropdown Upload
-13. Menuactions
-14. Object Manager
-15. Popover
-16. Popup
-17. Repeater
-18. Segmented
-19. Slider
-20. Table
-21. Tabs
-22. Textfield
-23. Toggle
-24. Valuefield
+2. Badge
+3. Banner
+4. Bulk Edit
+5. Button
+6. Choice Tiles
+7. Data Table
+8. Date Range Picker
+9. Datefield
+10. Dropdown Actions
+11. Dropdown Border
+12. Dropdown Edit
+13. Dropdown Fill
+14. Dropdown Shadow
+15. Dropdown Upload
+16. Menuactions
+17. Object Manager
+18. Popover
+19. Popup
+20. Repeater
+21. Segmented
+22. Slider
+23. Spinner
+24. Table
+25. Tabs
+26. Textfield
+27. Toggle
+28. Tooltip
+29. Valuefield
 
 For every component used inside ToolDrawer panels:
 
@@ -1552,3 +1557,54 @@ authorizes it.
   restores the dialog lifecycle's inline body state before Object Manager
   renders. V1–V8 pass. This correction is local only: it is not committed,
   pushed, deployed, or live.
+
+- **Operational UI foundation — passed locally, 2026-08-15.** Dieter now owns
+  source-backed Badge, Banner, Spinner, Tooltip, and Data Table components.
+  Badge is caller-owned compact state text; Banner is caller-owned persistent
+  feedback; Spinner is current-color progress presentation; Tooltip is the one
+  governed label/description surface for unfamiliar controls; and Data Table is
+  a controlled operational composition over the unchanged shared Table. Data
+  Table exposes selection, a selected-count Badge, caller-composed batch
+  actions, sort presentation, row actions, loading, empty, filtered-empty, and
+  pagination slots without owning records, fetching, selection policy, sorting,
+  pagination, mutation, Assets meaning, or another data engine.
+
+  Button now composes the ordinary Spinner for an exact caller-owned loading
+  state and keeps its existing size ladder. Bob's existing Save command uses
+  that state only while its current save promise is pending, disables repeat
+  submission, and preserves the existing success/failure path. Current
+  Object Manager, Repeater, and Bob icon-action Tooltip callers use the one
+  governed label contract; no parallel tooltip controller or locale catalog was
+  added. Agent Activity's active state keeps its existing content surface and
+  now presents a 1px, three-second rotating conic border using only
+  `--color-system-purple` and `--color-system-indigo`, with a local static
+  reduced-motion state.
+
+  DevStudio now generates 29 component pages from governed source. Its existing
+  dependency-import path supplies Badge styling to Data Table and Spinner
+  styling to Button, so composed primitives render from their real source
+  contracts rather than copied local CSS. Local Chromium proved all five new
+  routes, 12/16/20px standalone and Button Spinner geometry plus animation,
+  Badge token geometry inside Data Table, Tooltip hover and nested-trigger
+  focus visibility, Data Table selection/state compositions, and the exact
+  Agent Activity border colors, width, surface, and motion.
+
+  The Roma Assets folder/batch planning PRD now consumes this controlled Data
+  Table foundation and records the real storage/command authority gate. Assets
+  runtime was deliberately not implemented: current R2 asset writes and
+  per-instance saves cannot truthfully provide the previously claimed atomic
+  move, and current Widget contracts do not define one generic replacement for
+  a deleted referenced asset. The owner must choose immutable asset identity
+  plus placement metadata versus a new CAS-managed asset-library artifact (or
+  accept explicit partial results), and must choose referenced-deletion law,
+  before that separate product-path execution can begin.
+
+  Focused verification passed: Dieter typecheck/governance; exact DevStudio
+  generation, typecheck, lint, build, Functions syntax, and focused Chromium;
+  Bob typecheck, accessibility-copy, editor-contract, translations-panel, and
+  typography tests; Roma typecheck, Widget command gates, and Widget Defaults
+  typography; five Widget source/artifact pairs; Playwright discovery for the
+  Bob pending-Save proof; and diff checks. Independent V1–V8 audit passed after
+  correcting both composed-component CSS dependencies and the Tooltip wrapper
+  focus selector. This foundation is local only: it is not committed, pushed,
+  deployed, or live, and no remote product data changed.

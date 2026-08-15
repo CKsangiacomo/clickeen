@@ -51,6 +51,7 @@ export function TdMenu({ active, onSelect, panels }: TdMenuProps) {
             aria-selected={isActive}
             aria-label={panel.label}
             data-tooltip={panel.label}
+            data-tooltip-kind="label"
             data-tooltip-placement="right"
             onClick={() => handleSelect(panel.id)}
             className="diet-button diet-tooltip"
