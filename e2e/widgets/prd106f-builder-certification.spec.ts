@@ -138,8 +138,9 @@ function formatConsoleMessage(message: ConsoleMessage): string {
   return `${message.text()}${source}`;
 }
 
-function bobPathSelector(path: string): string {
-  return `[data-bob-path="${path.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"]`;
+function controlPathSelector(path: string): string {
+  const escaped = path.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  return `:is([data-bob-path="${escaped}"], [data-path="${escaped}"])`;
 }
 
 function nearestClassLocator(locator: Locator, className: string): Locator {
@@ -198,7 +199,9 @@ async function expectDropdownEditUsable(
 }
 
 async function expectContentTextControlUsable(bobFrame: Frame, control: ContentPanelTextControl) {
-  const field = bobFrame.locator(`.tdmenucontent__fields ${bobPathSelector(control.path)}`).first();
+  const field = bobFrame
+    .locator(`.tdmenucontent__fields ${controlPathSelector(control.path)}`)
+    .first();
   await expect(field, `${control.label} should be mounted at ${control.path}`).toBeAttached({
     timeout: 45_000,
   });
@@ -216,7 +219,7 @@ async function expectContentTextControlUsable(bobFrame: Frame, control: ContentP
 
   const editable = container
     .locator(
-      `${bobPathSelector(control.path)}:not([type="hidden"]), textarea${bobPathSelector(control.path)}`,
+      `${controlPathSelector(control.path)}:not([type="hidden"]), textarea${controlPathSelector(control.path)}`,
     )
     .first();
   await expect(editable, `${control.label} should expose a visible text input`).toBeVisible({
@@ -352,7 +355,7 @@ async function openBuilderFrame(page: Page, instanceId: string): Promise<Frame> 
   const bobFrame = await frameHandle.contentFrame();
   expect(bobFrame, `Bob frame should exist for ${instanceId}`).not.toBeNull();
 
-  await bobFrame!.getByRole('button', { name: /Manual/i }).waitFor({ timeout: 60_000 });
+  await bobFrame!.getByRole('radio', { name: /Manual/i }).waitFor({ timeout: 60_000 });
   const instanceSelected = await waitForSelectedInstance(bobFrame!);
   if (!instanceSelected) {
     const retried = await retryBuilderOpenIfAvailable(page, instanceId, 10_000);
@@ -364,9 +367,7 @@ async function openBuilderFrame(page: Page, instanceId: string): Promise<Frame> 
       })
       .toBe(true);
   }
-  await expect(bobFrame!.getByRole('button', { name: 'Save' }).first()).toBeDisabled({
-    timeout: 20_000,
-  });
+  await expect(bobFrame!.getByRole('button', { name: 'Save' })).toHaveCount(0);
   return bobFrame!;
 }
 
@@ -599,9 +600,9 @@ test.describe('PRD106F authenticated Builder browser certification', () => {
       }
 
       await expect(
-        bobFrame.getByRole('button', { name: 'Save' }).first(),
+        bobFrame.getByRole('button', { name: 'Save' }),
         `${coverage.widgetType} text-control checks should not dirty the instance`,
-      ).toBeDisabled({ timeout: 10_000 });
+      ).toHaveCount(0);
     }
 
     expectNoCollectedErrors('Content panel text controls', collector);
