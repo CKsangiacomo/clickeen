@@ -29,11 +29,13 @@
     linear-gradient(var(--color-system-purple-5), var(--color-system-purple-5)) padding-box,
     conic-gradient(
         from var(--diet-agent-activity-border-angle),
+        transparent 25%,
         var(--color-system-purple),
-        var(--color-system-indigo),
-        var(--color-system-purple)
+        var(--color-system-indigo) 99%,
+        transparent
       )
-      border-box;
+      border-box,
+    linear-gradient(var(--color-system-purple-5), var(--color-system-purple-5)) border-box;
   animation: diet-agent-activity-border-spin 3s linear infinite;
 }
 

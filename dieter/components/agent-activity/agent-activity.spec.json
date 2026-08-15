@@ -9,10 +9,10 @@
   },
   "binding": { "type": "transient-agent-narration" },
   "presentation": {
-    "activeSurface": "--color-system-purple-5",
-    "activeBorder": "1px rotating conic gradient using --color-system-purple and --color-system-indigo",
+    "activeSurface": "--color-system-purple-5 in both the padding-box surface and backing border-box layer",
+    "activeBorder": "1px rotating conic highlight: transparent through 25%, --color-system-purple, --color-system-indigo at 99%, then transparent",
     "activeMotion": "3s linear infinite",
-    "reducedMotion": "static conic border"
+    "reducedMotion": "static conic highlight"
   },
   "defaults": [
     {

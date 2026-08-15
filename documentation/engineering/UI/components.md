@@ -537,10 +537,13 @@ static title from `compiled.toolDrawerLabels.components["agent-activity"].title`
 Translation Agent events supply the dynamic rows.
 
 The active component uses `--color-system-purple-5` as its surface and a
-one-pixel rotating conic border made only from `--color-system-purple` and
-`--color-system-indigo`. Its three-second linear rotation communicates live
-agent operation, not percentage progress. Reduced motion keeps the same static
-two-color border without rotation.
+one-pixel rotating conic highlight. Transparent leading and trailing sections
+leave most of the perimeter quiet: the conic border remains transparent through
+25%, travels from `--color-system-purple` to `--color-system-indigo` at 99%,
+then returns to transparent. The third background layer keeps the existing
+surface behind the transparent border sections. Its
+three-second linear rotation communicates live agent operation, not percentage
+progress. Reduced motion keeps the same highlight static.
 
 ## Status And Feedback Primitives
 

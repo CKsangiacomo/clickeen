@@ -1608,3 +1608,19 @@ authorizes it.
   correcting both composed-component CSS dependencies and the Tooltip wrapper
   focus selector. This foundation is local only: it is not committed, pushed,
   deployed, or live, and no remote product data changed.
+
+- **Agent Activity traveling-highlight correction — passed locally,
+  2026-08-15.** The operational foundation pass changed Agent Activity to a
+  continuously colored purple/indigo perimeter. That was not the approved
+  reference effect. The active component now keeps its existing purple content
+  surface and uses the requested three-layer background: the content surface in
+  the padding box, a one-pixel conic highlight with transparent leading and
+  trailing sections in the border box, and the same surface behind the
+  transparent border sections. The highlight is transparent through 25%,
+  transitions from `--color-system-purple` to `--color-system-indigo` at 99%,
+  and then returns to transparent. Only those two Dieter system tokens color
+  the traveling highlight. The three-second linear rotation and static
+  reduced-motion presentation remain component owned. No markup, copy, state,
+  consumer, binding, route, storage coordinate, or product data changed.
+  Focused Dieter, DevStudio generation/typecheck/build, Chromium presentation,
+  diff, and V1-V8 checks follow this correction before its direct-main rollout.

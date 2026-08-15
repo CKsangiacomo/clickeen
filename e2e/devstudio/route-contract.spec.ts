@@ -424,7 +424,7 @@ test.describe('DevStudio route contract', () => {
     await expect(page.locator('.diet-data-table[data-state="filtered-empty"]')).toHaveCount(1);
   });
 
-  test('Agent Activity uses the two-color rotating border without changing its content surface', async ({
+  test('Agent Activity uses the requested traveling conic highlight without changing its content surface', async ({
     page,
   }) => {
     await page.goto('/#/dieter/agent-activity');
@@ -437,22 +437,40 @@ test.describe('DevStudio route contract', () => {
       const purple = getComputedStyle(purpleProbe).color;
       purpleProbe.style.color = 'var(--color-system-indigo)';
       const indigo = getComputedStyle(purpleProbe).color;
+      purpleProbe.style.color = 'transparent';
+      const transparent = getComputedStyle(purpleProbe).color;
+      purpleProbe.style.color = 'var(--color-system-purple-5)';
+      const surface = getComputedStyle(purpleProbe).color;
       purpleProbe.remove();
       return {
         animationDuration: style.animationDuration,
+        animationIterationCount: style.animationIterationCount,
         animationName: style.animationName,
+        animationTimingFunction: style.animationTimingFunction,
+        backgroundClip: style.backgroundClip,
         backgroundImage: style.backgroundImage,
         borderWidth: style.borderWidth,
         indigo,
         purple,
+        surface,
+        transparent,
       };
     });
     expect(presentation.borderWidth).toBe('1px');
     expect(presentation.animationName).toBe('diet-agent-activity-border-spin');
     expect(presentation.animationDuration).toBe('3s');
+    expect(presentation.animationTimingFunction).toBe('linear');
+    expect(presentation.animationIterationCount).toBe('infinite');
     expect(presentation.backgroundImage).toContain('conic-gradient');
     expect(presentation.backgroundImage).toContain(presentation.purple);
-    expect(presentation.backgroundImage).toContain(presentation.indigo);
+    expect(presentation.backgroundImage).toContain(`${presentation.indigo} 99%`);
+    expect(presentation.backgroundImage).toContain(`${presentation.transparent} 25%`);
+    expect(presentation.backgroundImage.match(/gradient/g)).toHaveLength(3);
+    expect(presentation.backgroundImage.split(presentation.surface)).toHaveLength(5);
+    expect(presentation.backgroundClip).toBe('padding-box, border-box, border-box');
+
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await expect(active).toHaveCSS('animation-name', 'none');
   });
 
   test('Table exposes the six governed compositions and exact shared presentation', async ({

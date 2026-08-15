@@ -124,9 +124,11 @@ Agent Activity owns a required caller-supplied title, a required array of
 narration rows, its `sm`/`md` structure, and its active presentation. It does
 not own caller wording. Bob supplies the static title from the open widget
 artifact and renders Translation Agent event messages as the rows. Active
-presentation is a one-pixel conic border rotating through only system purple
-and indigo over the existing purple surface; reduced motion leaves the same
-border static.
+presentation is a one-pixel conic highlight rotating from system purple to
+indigo over the existing purple surface. The border remains transparent through
+25%, reaches indigo at 99%, and then returns to transparent. The existing
+surface continues behind those transparent sections; reduced motion leaves the
+same highlight static.
 
 Badge, Banner, Spinner, and Tooltip are consumer-agnostic feedback primitives.
 Badge renders compact caller-owned state text in one of five presentation
