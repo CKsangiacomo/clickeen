@@ -13,7 +13,8 @@
   z-index: 12;
   opacity: 0;
   transform: translateY(calc(-100% - var(--space-1, 0.5rem)));
-  transition: opacity var(--duration-base) var(--easing-standard),
+  transition:
+    opacity var(--duration-base) var(--easing-standard),
     transform var(--duration-base) var(--easing-standard);
   pointer-events: none;
 }
@@ -30,6 +31,8 @@
   left: var(--popover-fixed-left);
   top: var(--popover-fixed-top);
   inline-size: var(--popover-fixed-width);
+  max-block-size: calc(100dvh - 1rem);
+  overflow-y: auto;
 }
 
 .diet-popover-host[data-state='open'] > .diet-popover {

@@ -105,7 +105,7 @@ header, row, cell, border, or overflow presentation locally.
 
 Hash routes are generated from `admin/src/html/**` and route data in
 `admin/src/data/routes.ts`. There is no separate design-system admin app. The
-current generated inventory is 5 Foundation routes, 22 Dieter Component routes,
+current generated inventory is 5 Foundation routes, 24 Dieter Component routes,
 and 2 Policy routes. CSS-only Dieter contracts do not create empty showcase
 routes.
 
@@ -139,9 +139,10 @@ example and can preview a file selected during the local demonstration; it
 does not call Roma, write account storage, or represent product data.
 These routes retain Dieter's consumer-neutral `data-dieter-json` marker in
 their generated examples. Before hash navigation replaces the reveal,
-DevStudio destroys hydrated Dropdown Actions, Border, Edit, Fill, Shadow,
-Upload, Object Manager, Repeater, and Slider roots through the same exported component
-lifecycle used by product hosts. Object Manager reveals all three sizes plus
+DevStudio destroys hydrated Datefield, Date Range Picker, Dropdown Actions,
+Border, Edit, Fill, Shadow, Upload, Object Manager, Repeater, and Slider roots
+through the same exported component lifecycle used by product hosts. Object
+Manager reveals all three sizes plus
 its exact structural Add/draft/save flow; Repeater reveals all three sizes,
 exact default-item add, and the inline reorder mode. These are the real Dieter
 stencils and hydrators, not DevStudio imitations.
@@ -171,6 +172,15 @@ reveals an empty value with caller-supplied placeholder copy; Valuefield reveals
 ordinary nonnegative caller bounds, a caller-authorized signed range, and
 content-sized short and longer numeric editors with complete-row neutral hover.
 These pages install no component hydrator and invent no product validation.
+
+Datefield and Date Range Picker are generated from their real Dieter stencils,
+specs, shared civil-date calendar, and hydrators. Each reveals the exact
+`sm|md|lg` row and day-size ladder, selected and disabled truth, caller-owned
+copy, locale-derived calendar words, exact bounds, Clear behavior, and one open
+`extra-wide` month. The range reveal includes a cross-month interval and the
+runtime proof keeps the first click provisional until the second day commits.
+DevStudio destroys both controls before hash-route replacement; it does not
+imitate their calendar or invent product data.
 
 ## Pages Functions
 

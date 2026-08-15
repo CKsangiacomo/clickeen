@@ -303,6 +303,12 @@ export function useTdMenuBindings(args: {
             detail: { value: nextValue, source: 'tdmenu' },
           }),
         );
+      } else if (field.classList.contains('diet-datefield__field')) {
+        field.dispatchEvent(
+          new CustomEvent('external-sync', {
+            detail: { value: nextValue, source: 'tdmenu' },
+          }),
+        );
       }
     });
   }, [

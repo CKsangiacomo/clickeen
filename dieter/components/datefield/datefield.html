@@ -1,0 +1,64 @@
+<div
+  class="diet-datefield diet-popover-host"
+  data-size="{{size}}"
+  data-state="{{state}}"
+  data-locale="{{locale}}"
+  data-placeholder="{{placeholder}}"
+  {{#if min}}data-min="{{min}}"{{/if}}
+  {{#if max}}data-max="{{max}}"{{/if}}
+>
+  <input
+    id="{{id}}"
+    type="hidden"
+    class="diet-datefield__field"
+    value="{{value}}"
+    {{#if path}}data-path="{{path}}"{{/if}}
+  />
+
+  <button
+    type="button"
+    class="diet-dropdown-header diet-datefield__control"
+    aria-haspopup="dialog"
+    aria-expanded="{{expanded}}"
+    aria-labelledby="{{id}}-label"
+    {{#if disabled}}disabled{{/if}}
+  >
+    <span class="diet-dropdown-header-label" id="{{id}}-label">{{label}}</span>
+    <span class="diet-dropdown-header-value">
+      <span class="diet-datefield__value" data-muted="true">{{placeholder}}</span>
+      <span class="diet-icon" data-icon="calendar" aria-hidden="true"></span>
+    </span>
+  </button>
+
+  <div
+    class="diet-popover diet-datefield__popover"
+    data-width="extra-wide"
+    role="dialog"
+    aria-labelledby="{{id}}-popover-label"
+    data-state="{{state}}"
+  >
+    <div class="diet-popover__header">
+      <span class="diet-popover__header-label" id="{{id}}-popover-label">{{label}}</span>
+    </div>
+    <div class="diet-popover__body">
+      <div class="diet-calendar">
+        <div class="diet-calendar__navigation">
+          <button type="button" class="diet-button diet-calendar__previous" data-size="small" data-type="quaternary" aria-label="{{previousMonthLabel}}">
+            <span class="diet-icon" data-size="16" data-icon="chevron.left" aria-hidden="true"></span>
+          </button>
+          <span class="diet-calendar__month-label"></span>
+          <button type="button" class="diet-button diet-calendar__next" data-size="small" data-type="quaternary" aria-label="{{nextMonthLabel}}">
+            <span class="diet-icon" data-size="16" data-icon="chevron.right" aria-hidden="true"></span>
+          </button>
+        </div>
+        <div class="diet-calendar__weekdays" aria-hidden="true"></div>
+        <div class="diet-calendar__days"></div>
+        <div class="diet-calendar__actions">
+          <button type="button" class="diet-button diet-calendar__clear" data-size="{{buttonSize}}" data-type="quaternary" hidden>
+            <span class="diet-button__label">{{clearLabel}}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

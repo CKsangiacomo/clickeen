@@ -60,6 +60,13 @@ Compiler-enforced rules:
 - Path-bound fields must resolve against composed defaults.
 - `dropdown-upload` binds one exact JSON path whose value is
   `null | {assetRef:string,name:string}` and requires its caller-owned copy.
+- `datefield` binds one exact string path whose value is `"" | YYYY-MM-DD`.
+  `date-range-picker` binds one exact JSON path whose value is
+  `null | {start:YYYY-MM-DD,end:YYYY-MM-DD}` with `start <= end`.
+- Both date controls require caller-owned field label, placeholder, previous
+  month, next month, and Clear copy plus one exact locale. Optional `min` and
+  `max` are exact civil dates; missing, malformed, impossible, reversed, or
+  out-of-bounds values fail rather than being repaired.
 - Panel ids must be one of the five current widget panels; unknown ids fail compile.
 - Every resolved cluster must have a non-empty plain-text label; missing label
   keys and unlabeled clusters fail compile.
@@ -131,6 +138,14 @@ while the Translation Agent continues to own the dynamic activity-row words.
 Choice Tiles likewise receives its group label and every option label from the
 same resolved Widget label file; the Dieter stencil owns no words and allows
 those exact values to wrap inside the tile.
+Datefield and Date Range Picker use the same copy route when a Widget declares
+them: the ordinary field label and placeholder plus
+`previous-month-label`, `next-month-label`, and `clear-label` are exact
+`$label:{key}` inputs resolved from that Widget's adjacent file. The locale is
+an exact caller input used by Dieter `Intl` formatting; Dieter has no locale
+catalog or English fallback. No current Widget declares either control, so the
+eight current English editor/materializer artifact pairs contain neither and
+remain unchanged.
 Dropdown Border follows the same ownership rule for everything visible inside
 the ToolDrawer. `editor.labels.components.dropdown-border` names its global
 stencil inputs; `editor.labels.fields.dropdown-border` maps only

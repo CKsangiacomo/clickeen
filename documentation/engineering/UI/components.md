@@ -9,7 +9,7 @@
   `dieter/components/index.ts`.
 - System mechanics (hydration model, spec binding, build): see [`dieter.md`](dieter.md). This doc is the per-component lookup; that doc explains the system once.
 
-## Catalog (25 non-empty source directories including `shared`)
+## Catalog (27 non-empty source directories including `shared`)
 
 Legend: ✅ exported from `index.ts` · Direct host import · ⊘ no custom hydrator.
 
@@ -21,6 +21,8 @@ Legend: ✅ exported from `index.ts` · Direct host import · ⊘ no custom hydr
 | atoms       | `segmented`        | Native radio-group behavior, caller-owned labels                                | ⊘      |
 | atoms       | `toggle`           | Native checkbox behavior                                                        | ⊘      |
 | atoms       | `slider`           | `hydrateSlider` / `destroySlider`, numeric binding                              | ✅     |
+| inputs      | `datefield`        | `hydrateDatefield` / `destroyDatefield`, empty or exact civil-date string       | ✅     |
+| inputs      | `date-range-picker`| `hydrateDateRangePicker` / `destroyDateRangePicker`, null or exact range JSON   | ✅     |
 | inputs      | `textfield`        | Native one-line string input                                                    | ⊘      |
 | inputs      | `valuefield`       | Native finite-number input with caller bounds                                   | ⊘      |
 | choosers    | `choice-tiles`     | `hydrateChoiceTiles`, `string`                                                  | ✅     |
@@ -81,8 +83,9 @@ The governing component product law is:
 - Dieter JSON controls expose the consumer-neutral `data-dieter-json` marker,
   and generic multi-path component edits emit `dieter-ops`. Host-owned paths
   remain separate from that component protocol.
-- Hosts destroy hydrated Dropdown Actions, Border, Edit, Fill, Shadow, Upload,
-  Object Manager, Repeater, and Slider roots before their rendered DOM is replaced.
+- Hosts destroy hydrated Datefield, Date Range Picker, Dropdown Actions, Border,
+  Edit, Fill, Shadow, Upload, Object Manager, Repeater, and Slider roots before
+  their rendered DOM is replaced.
   Dropdown Edit destruction detaches its Lexical root; Fill and Upload cancel
   pending media resolution; Object Manager and Repeater release their child
   controls, listeners, dialogs, and active collection state.
@@ -286,6 +289,29 @@ The governing component product law is:
   without clamping, coercing, substituting, or changing the current draft.
   Native `step` remains browser input metadata, not a second Dieter validation
   rule.
+- Datefield and Date Range Picker share one private Dieter civil-date calendar
+  presentation while remaining two separate field contracts. Datefield binds
+  only `"" | "YYYY-MM-DD"`. Date Range Picker binds only
+  `null | {start:"YYYY-MM-DD",end:"YYYY-MM-DD"}` with exact keys and
+  `start <= end`. Both use Gregorian civil dates without timezone conversion,
+  accept optional exact `min`/`max` bounds, and reject malformed, impossible,
+  reversed, or out-of-bounds truth instead of repairing it.
+- Their closed `sm|md|lg` rows use the shared property-row model and a calendar
+  Icon. The attached one-month `extra-wide` Popover composes the existing
+  Popover, Button, and Icon primitives. Datefield commits one selected day and
+  closes. Date Range Picker keeps the first day provisional only inside the
+  open surface, previews the interval on hover, and commits on the second day;
+  choosing an earlier second day restarts the provisional range. Same-day
+  ranges are valid. Clear commits the exact empty value for that field. Escape
+  or outside dismissal discards only a provisional range and preserves the
+  prior committed value.
+- Every human-language input is caller-owned: field label, placeholder,
+  Previous month, Next month, and Clear. The caller also supplies the exact
+  locale; Dieter derives the month heading, weekday labels, date names, and
+  closed value through `Intl`. Dieter owns no locale file, English fallback,
+  native browser date-picker skin, timezone policy, preset, Apply workflow, or
+  second public Calendar component. No current Widget declares either field,
+  so the eight current Widget artifacts and product data remain unchanged.
 - Toggle is a native checkbox HTML/CSS/spec contract with no custom hydrator.
   Its required `sm|md|lg` size owns the complete row, label typography, switch
   rail, hover, checked, and disabled presentation. The complete row is
@@ -410,7 +436,9 @@ changing the dropdown's `sm|md|lg` height, typography, Icon, or radius
 contract. Border, Fill, and Shadow render their 18-color palettes as one direct
 nine-column grid, yielding two rows in their default wide Popovers. Edit gives
 the extra width directly to its writing surface and toolbar. Actions and Upload
-remain row-width.
+remain row-width. Wide and extra-wide Popovers also remain inside the viewport
+with an 8px vertical inset; this is shared Popover geometry, not a date-specific
+positioning exception.
 
 Per-component source documentation records markup, `data-*` attributes,
 binding, behavior/hydration, variants, sizes, states, and semantics. Step 6 maps
@@ -511,5 +539,5 @@ Current inventory detail: Dieter components are source modules consumed
 directly by Bob, Roma, and DevStudio; there is no runtime component manifest.
 `shared/` contains helpers and is not a rendered component.
 `command-activity` and `operational-table` are absent from current tracked
-source. DevStudio generates 22 source-backed component pages. Historical 126
+source. DevStudio generates 24 source-backed component pages. Historical 126
 audits remain point-in-time evidence.

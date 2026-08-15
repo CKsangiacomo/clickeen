@@ -74,8 +74,8 @@ export interface CompiledControl {
   kind?: ControlKind;
   enumValues?: string[];
   itemIdPath?: string;
-  min?: number;
-  max?: number;
+  min?: number | string;
+  max?: number | string;
   step?: number;
   required?: boolean;
 }

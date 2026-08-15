@@ -34,8 +34,8 @@ export type BuilderDefaultsControl = {
   path: string;
   panelId: string;
   type: string;
-  min?: number;
-  max?: number;
+  min?: number | string;
+  max?: number | string;
 };
 
 type BuilderDefaultsControlsProps = {
@@ -208,6 +208,14 @@ function syncFieldValue(field: HTMLElement, values: Record<string, unknown>) {
     return;
   }
 
+  if (
+    field instanceof HTMLInputElement &&
+    field.classList.contains('diet-datefield__field') &&
+    typeof value !== 'string'
+  ) {
+    throw new Error(`Datefield value for "${path}" is not a string`);
+  }
+
   const nextValue =
     field instanceof HTMLInputElement && field.dataset.dieterJson != null
       ? serializeDieterJsonFieldValue(field, value)
@@ -225,7 +233,8 @@ function syncFieldValue(field: HTMLElement, values: Record<string, unknown>) {
     (field.dataset.dieterJson != null ||
       field.classList.contains('diet-dropdown-actions__value-field') ||
       field.classList.contains('diet-dropdown-edit__field') ||
-      field.classList.contains('diet-choice-tiles__field'))
+      field.classList.contains('diet-choice-tiles__field') ||
+      field.classList.contains('diet-datefield__field'))
   ) {
     field.dispatchEvent(new CustomEvent('external-sync', { detail: { value: nextValue } }));
   }

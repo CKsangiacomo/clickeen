@@ -3,6 +3,11 @@ export {
   destroyDropdownActions,
   hydrateDropdownActions,
 } from './dropdown-actions/dropdown-actions';
+export { destroyDatefield, hydrateDatefield } from './datefield/datefield';
+export {
+  destroyDateRangePicker,
+  hydrateDateRangePicker,
+} from './date-range-picker/date-range-picker';
 export { destroyDropdownFill, hydrateDropdownFill } from './dropdown-fill/dropdown-fill';
 export { destroyDropdownBorder, hydrateDropdownBorder } from './dropdown-border/dropdown-border';
 export { destroyDropdownShadow, hydrateDropdownShadow } from './dropdown-shadow/dropdown-shadow';

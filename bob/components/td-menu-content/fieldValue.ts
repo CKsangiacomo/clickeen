@@ -11,7 +11,6 @@ export function resolvePathFromTarget(target: EventTarget | null): string | null
   }
   return null;
 }
-
 function expectsJsonArrayField(input: HTMLElement): boolean {
   return (
     input.classList.contains('diet-repeater__field') ||
@@ -72,6 +71,9 @@ export function serializeDieterJsonFieldValue(input: HTMLInputElement, value: un
     return serializeDieterJsonArrayValue(value);
   }
   if (input.classList.contains('diet-dropdown-upload__value-field') && value === null) {
+    return 'null';
+  }
+  if (input.classList.contains('diet-date-range-picker__field') && value === null) {
     return 'null';
   }
   return serializeDieterJsonValue(value);

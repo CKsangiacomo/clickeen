@@ -23,9 +23,14 @@ function syncPopoverGeometry(record: HostRecord): void {
 
   const rect = root.getBoundingClientRect();
   const extension = width === 'wide' ? 40 : 80;
+  const viewportInset = 8;
   popover.style.setProperty('--popover-fixed-left', `${rect.left}px`);
   popover.style.setProperty('--popover-fixed-top', `${rect.top}px`);
   popover.style.setProperty('--popover-fixed-width', `${rect.width + extension}px`);
+  const popoverHeight = popover.getBoundingClientRect().height;
+  const maxTop = Math.max(viewportInset, window.innerHeight - popoverHeight - viewportInset);
+  const top = Math.min(Math.max(rect.top, viewportInset), maxTop);
+  popover.style.setProperty('--popover-fixed-top', `${top}px`);
 }
 
 export type DropdownHydrator = {

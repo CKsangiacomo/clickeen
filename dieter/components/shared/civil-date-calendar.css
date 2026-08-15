@@ -1,0 +1,233 @@
+.diet-datefield,
+.diet-date-range-picker {
+  --date-control-height: var(--control-size-md);
+  --date-control-radius: var(--control-radius-md);
+  --date-control-font-size: var(--fs-13);
+  --date-control-line-height: var(--lh-body-ui);
+  --date-control-icon-size: var(--icon-size-16);
+  --calendar-day-size: 2rem;
+  --calendar-day-radius: var(--control-radius-sm);
+  --calendar-font-size: var(--fs-13);
+  --calendar-line-height: var(--lh-body-ui);
+  --calendar-heading-font-size: var(--fs-14);
+  position: relative;
+  display: grid;
+  gap: var(--vertspace-2);
+  inline-size: 100%;
+}
+
+:is(.diet-datefield, .diet-date-range-picker)[data-size='sm'] {
+  --date-control-height: var(--control-size-sm);
+  --date-control-radius: var(--control-radius-sm);
+  --date-control-font-size: var(--fs-11);
+  --date-control-line-height: var(--lh-tight);
+  --date-control-icon-size: var(--icon-size-12);
+  --calendar-day-size: 1.75rem;
+  --calendar-day-radius: var(--control-radius-xs);
+  --calendar-font-size: var(--fs-11);
+  --calendar-line-height: var(--lh-tight);
+  --calendar-heading-font-size: var(--fs-13);
+}
+
+:is(.diet-datefield, .diet-date-range-picker)[data-size='lg'] {
+  --date-control-height: var(--control-size-lg);
+  --date-control-radius: var(--control-radius-lg);
+  --date-control-font-size: var(--fs-14);
+  --date-control-line-height: var(--lh-body-ui);
+  --date-control-icon-size: var(--icon-size-20);
+  --calendar-day-size: 2.25rem;
+  --calendar-day-radius: var(--control-radius-md);
+  --calendar-font-size: var(--fs-14);
+  --calendar-line-height: var(--lh-body-ui);
+  --calendar-heading-font-size: var(--fs-16);
+}
+
+:is(.diet-datefield, .diet-date-range-picker) > .diet-dropdown-header {
+  min-block-size: var(--date-control-height);
+  border-radius: var(--date-control-radius);
+}
+
+:is(.diet-datefield, .diet-date-range-picker)
+  :is(.diet-dropdown-header-label, .diet-dropdown-header-value, .diet-popover__header-label) {
+  font:
+    400 var(--date-control-font-size) / var(--date-control-line-height) 'Inter Tight',
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
+}
+
+:is(.diet-datefield, .diet-date-range-picker) .diet-dropdown-header-label,
+:is(.diet-datefield, .diet-date-range-picker) .diet-popover__header-label {
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+:is(.diet-datefield, .diet-date-range-picker) .diet-dropdown-header-value > .diet-icon {
+  --diet-icon-size: var(--date-control-icon-size);
+  flex: 0 0 auto;
+}
+
+:is(.diet-datefield, .diet-date-range-picker) > .diet-popover {
+  border-radius: var(--date-control-radius);
+}
+
+:is(.diet-datefield, .diet-date-range-picker) > .diet-dropdown-header:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+}
+
+.diet-calendar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  inline-size: 100%;
+}
+
+.diet-calendar__navigation {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.diet-calendar__month-label {
+  overflow: hidden;
+  font:
+    500 var(--calendar-heading-font-size) / var(--calendar-line-height) 'Inter Tight',
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
+  letter-spacing: -0.02em;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.diet-calendar__weekdays,
+.diet-calendar__days {
+  display: grid;
+  grid-template-columns: repeat(7, var(--calendar-day-size));
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.diet-calendar__weekday {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: 0;
+  color: var(--color-system-gray-3);
+  font:
+    500 var(--fs-11) / var(--lh-tight) 'Inter Tight',
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.diet-calendar__day {
+  position: relative;
+  isolation: isolate;
+  appearance: none;
+  inline-size: var(--calendar-day-size);
+  block-size: var(--calendar-day-size);
+  padding: 0;
+  border: 0;
+  border-radius: var(--calendar-day-radius);
+  background: transparent;
+  color: var(--color-system-black);
+  font:
+    400 var(--calendar-font-size) / 1 'Inter Tight',
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
+  cursor: pointer;
+}
+
+.diet-calendar__day:hover:not(:disabled):not([data-selected='true']):not(
+    [data-range-start='true']
+  ):not([data-range-end='true']) {
+  background: color-mix(in oklab, var(--color-system-black), transparent 92%);
+}
+
+.diet-calendar__day[data-outside-month='true'] {
+  color: var(--color-system-gray-4);
+}
+
+.diet-calendar__day[aria-current='date'] {
+  box-shadow: inset 0 0 0 0.0625rem var(--color-system-gray-step3);
+}
+
+.diet-calendar__day[data-in-range='true'],
+.diet-calendar__day[data-preview='true'] {
+  background: transparent;
+}
+
+.diet-calendar__day:is([data-in-range='true'], [data-preview='true'])::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset-block: 0;
+  inset-inline: calc(-1 * var(--space-1));
+  background: color-mix(in oklab, var(--color-system-blue), transparent 88%);
+}
+
+.diet-calendar__day[data-week-start='true']::before,
+.diet-calendar__day[data-range-start='true']::before {
+  inset-inline-start: 0;
+  border-start-start-radius: var(--calendar-day-radius);
+  border-end-start-radius: var(--calendar-day-radius);
+}
+
+.diet-calendar__day[data-week-end='true']::before,
+.diet-calendar__day[data-range-end='true']::before {
+  inset-inline-end: 0;
+  border-start-end-radius: var(--calendar-day-radius);
+  border-end-end-radius: var(--calendar-day-radius);
+}
+
+.diet-calendar__day[data-range-start='true'],
+.diet-calendar__day[data-range-end='true'],
+.diet-calendar__day[data-selected='true'] {
+  border-radius: var(--calendar-day-radius);
+  background: var(--color-system-blue);
+  color: var(--color-system-white);
+  box-shadow: none;
+}
+
+.diet-calendar__day:disabled {
+  color: var(--color-system-gray-step5);
+  cursor: not-allowed;
+}
+
+.diet-calendar__day:focus-visible {
+  outline: none;
+}
+
+.diet-calendar__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.diet-calendar__clear[hidden] {
+  display: none;
+}

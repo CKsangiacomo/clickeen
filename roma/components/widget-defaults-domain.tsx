@@ -43,8 +43,8 @@ type DefaultsControl = {
   path: string;
   label?: string;
   showIf?: string;
-  min?: number;
-  max?: number;
+  min?: number | string;
+  max?: number | string;
 };
 
 type WidgetDefaultsEntry = {

@@ -158,7 +158,7 @@ the code is convenient there.
 | Stage                      | Status                                                                                                                                                                                                                                               | Release state                                                         |
 | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
 | Stage 1 — Scaffold only    | Complete                                                                                                                                                                                                                                             | Committed, pushed, and deployed; no non-English experience is exposed |
-| Stage 2 — Dieter UI pass   | In progress: Foundations and every current Dieter component through Textfield and Valuefield are complete and re-audited as consumer-agnostic primitives; standalone Popaddlink and Textedit are deleted because their jobs were duplicate or unused | The Widget catalog is the next Stage 2 DevStudio tab                  |
+| Stage 2 — Dieter UI pass   | In progress: Foundations, the current component inventory through Textfield and Valuefield, and the new Datefield/Date Range Picker contracts are complete and re-audited as consumer-agnostic primitives; standalone Popaddlink and Textedit are deleted because their jobs were duplicate or unused | The Widget catalog is the next Stage 2 DevStudio tab                  |
 | Stage 3 — Bob UI pass      | Not started                                                                                                                                                                                                                                          | No authority to begin until explicitly directed                       |
 | Stage 4 — Roma UI pass     | Not started                                                                                                                                                                                                                                          | No authority to begin until explicitly directed                       |
 | Stage 5 — Translation pass | Not started                                                                                                                                                                                                                                          | No translations may be generated yet                                  |
@@ -265,24 +265,26 @@ Review in this order:
 2. Bulk Edit
 3. Button
 4. Choice Tiles
-5. Dropdown Actions
-6. Dropdown Border
-7. Dropdown Edit
-8. Dropdown Fill
-9. Dropdown Shadow
-10. Dropdown Upload
-11. Menuactions
-12. Object Manager
-13. Popover
-14. Popup
-15. Repeater
-16. Segmented
-17. Slider
-18. Table
-19. Tabs
-20. Textfield
-21. Toggle
-22. Valuefield
+5. Date Range Picker
+6. Datefield
+7. Dropdown Actions
+8. Dropdown Border
+9. Dropdown Edit
+10. Dropdown Fill
+11. Dropdown Shadow
+12. Dropdown Upload
+13. Menuactions
+14. Object Manager
+15. Popover
+16. Popup
+17. Repeater
+18. Segmented
+19. Slider
+20. Table
+21. Tabs
+22. Textfield
+23. Toggle
+24. Valuefield
 
 For every component used inside ToolDrawer panels:
 
@@ -1423,3 +1425,49 @@ authorizes it.
   dismissal and the existing dirty Object Manager discard decision. Commit,
   push, Git-connected exact-SHA rollout, and live owning-surface reconciliation
   follow this local execution record.
+
+- **Datefield and Date Range Picker — passed locally, 2026-08-14.** Dieter now
+  owns two consumer-agnostic date fields over one private shared civil-date
+  calendar. Datefield binds only exact `"" | "YYYY-MM-DD"`; Date Range Picker
+  binds only exact `null | {start:"YYYY-MM-DD",end:"YYYY-MM-DD"}` with no
+  additional keys and `start <= end`. Both validate real Gregorian dates and
+  exact optional bounds without timezone conversion, coercion, clamping,
+  fallback, or silent repair. Empty controls open on today's month only as a
+  presentation coordinate; they do not write today as product truth.
+
+  The UI follows the accepted Stripe mental model through Clickeen's existing
+  Dieter system: one compact `sm|md|lg` property row, the calendar Icon, an
+  existing `extra-wide` Popover, 24px month controls, one 7-column month, and
+  proportional 28/32/36px day cells. Datefield commits one day immediately.
+  Date Range Picker keeps the first click provisional, previews a continuous
+  interval, commits one complete object on the second day, supports same-day
+  and cross-month ranges, and restarts from an earlier second click. Clear
+  writes the field's exact empty value; Escape/outside dismissal preserves the
+  prior committed range. The shared wide/extra-wide Popover authority now also
+  clamps vertically to an 8px viewport inset so the complete work area remains
+  reachable without a date-specific positioning system.
+
+  All human-language inputs remain caller-owned: label, placeholder, Previous
+  month, Next month, and Clear. The exact caller locale drives `Intl` month,
+  weekday, date-name, and closed-summary presentation. Dieter owns no locale
+  catalog, native browser date-picker skin, timezone, preset, Apply action,
+  Widget branch, or public Calendar component. Bob compiles and validates the
+  two generic field shapes, projects exact browser-memory truth before
+  hydration, and destroys the calendar roots with the existing control host.
+  Roma Widget Defaults reuses that same host and exact external-sync path. No
+  current Widget declares either field, so all eight Widget source contracts,
+  English label files, generated editor/materializer artifacts, account data,
+  public Widget packages, and storage coordinates remain unchanged.
+
+  DevStudio now generates 24 component pages and reveals both controls from
+  their real stencils/specs/source. Local Chromium proved the 20/24/28px closed
+  row ladder, 28/32/36px day ladder, exact leap-day and bound handling,
+  locale-derived summaries, one-write Datefield selection, no write after the
+  first range click, hover preview, earlier-date restart, same-day and
+  cross-month commits, exact Clear, external sync, Escape cancellation, route
+  teardown, continuous range geometry, and complete viewport containment.
+  Focused verification covers Dieter typecheck/governance; exact DevStudio
+  generation/typecheck/build and route contract; Bob editor-contract and
+  typecheck; Roma Widget Defaults/typecheck; all eight Widget artifact pairs;
+  and diff checks. The independent V1–V8 audit and Git-connected exact-SHA
+  rollout follow this local execution record.

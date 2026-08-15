@@ -460,9 +460,9 @@ updates only when the projected value actually changes; compiled empty fields
 are not defaults or fallback values.
 JSON controls use Dieter's `data-dieter-json` marker and generic component
 operations use `dieter-ops`; `data-bob-path` remains the host-owned field
-coordinate. Roma destroys hydrated Dropdown Actions, Border, Edit, Fill,
-Shadow, Upload, Object Manager, Repeater, and Slider roots before replacing or
-unmounting the Widget Defaults control surface. Collection child hydrators and
+coordinate. Roma destroys hydrated Datefield, Date Range Picker, Dropdown
+Actions, Border, Edit, Fill, Shadow, Upload, Object Manager, Repeater, and
+Slider roots before replacing or unmounting the Widget Defaults control surface. Collection child hydrators and
 drafts therefore have the same lifecycle in Roma as in Bob; Slider releases
 its native progress listener. Range values remain exact Roma draft values and
 the shared Slider hydrator owns only their visual progress presentation.
@@ -471,6 +471,12 @@ Valuefield control metadata retains the caller's inclusive `min` and `max`;
 Roma changes the Widget Defaults draft only for a finite value inside those
 bounds. Invalid input stays visible in the native field but does not clamp,
 coerce, substitute, or mutate the draft.
+Datefield and Date Range Picker use the same shared host: Roma projects an exact
+empty-or-civil-date string or exact null/range object before hydration, relays
+only complete committed control input to the local defaults draft, dispatches
+external sync for a genuinely changed value, and releases calendar listeners
+on replacement. No current Widget Defaults artifact declares either component,
+so this generic host support changes no current account defaults or saved data.
 Nested Object Manager/Repeater controls keep neutral `data-path` coordinates;
 Roma binds only the true outer `data-bob-path` collection field and receives
 one exact array update. Segmented controls rely on the same native radio state

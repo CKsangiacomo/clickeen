@@ -4,8 +4,11 @@ import '@dieter/components/icon/icon.css';
 import '@dieter/components/button/button.css';
 import '@dieter/components/popup/popup.css';
 import '@dieter/components/shared/property-row.css';
+import '@dieter/components/shared/civil-date-calendar.css';
 import '@dieter/components/popover/popover.css';
 import '@dieter/components/dropdown-actions/dropdown-actions.css';
+import '@dieter/components/date-range-picker/date-range-picker.css';
+import '@dieter/components/datefield/datefield.css';
 import '@dieter/components/menuactions/menuactions.css';
 import '@dieter/components/table/table.css';
 import '@dieter/components/textfield/textfield.css';
@@ -21,6 +24,8 @@ import { navGroups, showcaseIndex, showcaseModules } from './data/routes';
 import { getIcon } from './data/icons';
 import {
   destroyDropdownActions,
+  destroyDateRangePicker,
+  destroyDatefield,
   destroyDropdownBorder,
   destroyDropdownEdit,
   destroyDropdownFill,
@@ -32,6 +37,8 @@ import {
   hydrateBulkEdit,
   hydrateChoiceTiles,
   hydrateDropdownActions,
+  hydrateDateRangePicker,
+  hydrateDatefield,
   hydrateDropdownBorder,
   hydrateDropdownFill,
   hydrateDropdownEdit,
@@ -384,6 +391,8 @@ function hydrateDieterComponents(scope: Element | DocumentFragment): () => void 
   hydrateObjectManager(scope, nested);
   hydrateRepeater(scope, nested);
   hydrateDropdownActions(scope);
+  hydrateDateRangePicker(scope);
+  hydrateDatefield(scope);
   hydrateDropdownBorder(scope);
   hydrateDropdownFill(scope, { accountAssets: showcaseAccountAssets });
   hydrateDropdownShadow(scope);
@@ -395,6 +404,8 @@ function hydrateDieterComponents(scope: Element | DocumentFragment): () => void 
 
 function destroyDieterComponents(scope: Element | DocumentFragment): void {
   scope.querySelectorAll<HTMLElement>('.diet-dropdown-actions').forEach(destroyDropdownActions);
+  scope.querySelectorAll<HTMLElement>('.diet-date-range-picker').forEach(destroyDateRangePicker);
+  scope.querySelectorAll<HTMLElement>('.diet-datefield').forEach(destroyDatefield);
   scope.querySelectorAll<HTMLElement>('.diet-dropdown-border').forEach(destroyDropdownBorder);
   scope.querySelectorAll<HTMLElement>('.diet-dropdown-edit').forEach(destroyDropdownEdit);
   scope.querySelectorAll<HTMLElement>('.diet-dropdown-fill').forEach(destroyDropdownFill);

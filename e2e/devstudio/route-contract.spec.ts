@@ -75,12 +75,14 @@ const navGroups = [
   },
   {
     title: 'Dieter Components',
-    count: 22,
+    count: 24,
     routes: [
       { path: '/#/dieter/agent-activity', title: 'Agent Activity' },
       { path: '/#/dieter/bulk-edit', title: 'Bulk Edit' },
       { path: '/#/dieter/button', title: 'Button' },
       { path: '/#/dieter/choice-tiles', title: 'Choice Tiles' },
+      { path: '/#/dieter/date-range-picker', title: 'Date Range Picker' },
+      { path: '/#/dieter/datefield', title: 'Datefield' },
       { path: '/#/dieter/dropdown-actions', title: 'Dropdown Actions' },
       { path: '/#/dieter/dropdown-border', title: 'Dropdown Border' },
       { path: '/#/dieter/dropdown-edit', title: 'Dropdown Edit' },
@@ -704,6 +706,129 @@ test.describe('DevStudio route contract', () => {
     await expect(page.locator('#valuefield-negative')).toHaveAttribute('min', '-2');
     await expect(page.locator('#valuefield-disabled')).toBeDisabled();
   });
+
+  test('Datefield and Date Range Picker preserve exact civil-date commit boundaries', async ({
+    page,
+  }) => {
+    await page.goto('/#/dieter/datefield');
+    await expect(page.locator('.diet-datefield')).toHaveCount(7);
+    const dateGeometry = await page.locator('.diet-datefield').evaluateAll((roots) =>
+      roots.slice(0, 3).map((root) => {
+        const control = root.querySelector<HTMLElement>('.diet-datefield__control');
+        const day = root.querySelector<HTMLElement>('.diet-calendar__day');
+        if (!control || !day) throw new Error('Datefield reveal is incomplete.');
+        return {
+          controlHeight: control.getBoundingClientRect().height,
+          daySize: getComputedStyle(day).width,
+          radius: getComputedStyle(control).borderRadius,
+        };
+      }),
+    );
+    expect(dateGeometry).toEqual([
+      { controlHeight: 20, daySize: '28px', radius: '4px' },
+      { controlHeight: 24, daySize: '32px', radius: '6px' },
+      { controlHeight: 28, daySize: '36px', radius: '8px' },
+    ]);
+    const localizedDatefield = page.locator('#datefield-gregorian-locale').locator('xpath=..');
+    await expect(localizedDatefield.locator('.diet-calendar__month-label')).toContainText('٢٠٢٦');
+    await expect(localizedDatefield.locator('[data-date="2026-08-14"]')).toHaveText('١٤');
+
+    const datefield = page.locator('#datefield-selected').locator('xpath=..');
+    const dateInput = datefield.locator('.diet-datefield__field');
+    await datefield.locator('.diet-datefield__control').dispatchEvent('click');
+    await datefield.locator('[data-date="2026-08-20"]').dispatchEvent('click');
+    await expect(dateInput).toHaveValue('2026-08-20');
+    await expect(datefield).toHaveAttribute('data-state', 'closed');
+    await dateInput.evaluate((input: HTMLInputElement) => {
+      input.value = '2028-02-29';
+      input.dispatchEvent(new CustomEvent('external-sync'));
+    });
+    await expect(datefield.locator('.diet-datefield__value')).toContainText('Feb 29, 2028');
+    await datefield.locator('.diet-datefield__control').dispatchEvent('click');
+    await datefield.locator('.diet-calendar__clear').dispatchEvent('click');
+    await expect(dateInput).toHaveValue('');
+    await dateInput.evaluate((input: HTMLInputElement) => {
+      input.value = '0001-01-15';
+      input.dispatchEvent(new CustomEvent('external-sync'));
+    });
+    await datefield.locator('.diet-datefield__control').dispatchEvent('click');
+    await expect(datefield.locator('.diet-calendar__previous')).toBeDisabled();
+    await page.keyboard.press('Escape');
+    await dateInput.evaluate((input: HTMLInputElement) => {
+      input.value = '9999-12-15';
+      input.dispatchEvent(new CustomEvent('external-sync'));
+    });
+    await datefield.locator('.diet-datefield__control').dispatchEvent('click');
+    await expect(datefield.locator('.diet-calendar__next')).toBeDisabled();
+    await page.keyboard.press('Escape');
+
+    const boundedDatefield = page.locator('#datefield-open-bounded').locator('xpath=..');
+    await expect(boundedDatefield.locator('[data-date="2026-08-09"]')).toBeDisabled();
+    await expect(boundedDatefield.locator('[data-date="2026-08-10"]')).toBeEnabled();
+
+    await page.goto('/#/dieter/date-range-picker');
+    await expect(page.locator('.diet-date-range-picker')).toHaveCount(6);
+    const crossMonth = page.locator('#date-range-picker-open').locator('xpath=..');
+    await expect(crossMonth.locator('.diet-calendar__day')).toHaveCount(42);
+    const openGeometry = await crossMonth.evaluate((root) => {
+      const row = root.getBoundingClientRect();
+      const popover = root.querySelector<HTMLElement>('.diet-popover')!.getBoundingClientRect();
+      return {
+        leftDelta: popover.left - row.left,
+        widthDelta: popover.width - row.width,
+        top: popover.top,
+        bottomInset: window.innerHeight - popover.bottom,
+      };
+    });
+    expect(openGeometry.leftDelta).toBe(0);
+    expect(openGeometry.widthDelta).toBe(80);
+    expect(openGeometry.top).toBeGreaterThanOrEqual(8);
+    expect(openGeometry.bottomInset).toBeGreaterThanOrEqual(8);
+    await crossMonth.locator('[data-date="2026-08-30"]').dispatchEvent('click');
+    await crossMonth.locator('.diet-calendar__next').dispatchEvent('click');
+    await expect(crossMonth.locator('.diet-calendar__month-label')).toHaveText('September 2026');
+    await crossMonth.locator('[data-date="2026-09-04"]').dispatchEvent('click');
+    await expect(crossMonth.locator('.diet-date-range-picker__field')).toHaveValue(
+      '{"start":"2026-08-30","end":"2026-09-04"}',
+    );
+
+    const range = page.locator('#date-range-picker-selected').locator('xpath=..');
+    const rangeInput = range.locator('.diet-date-range-picker__field');
+    const committed = await rangeInput.inputValue();
+    await range.locator('.diet-date-range-picker__control').click({ force: true });
+    await range.locator('[data-date="2026-08-25"]').dispatchEvent('click');
+    await expect(rangeInput).toHaveValue(committed);
+    await range.locator('[data-date="2026-08-27"]').dispatchEvent('pointerover');
+    await expect(range.locator('[data-preview="true"]')).toHaveCount(3);
+    await range.locator('[data-date="2026-08-27"]').dispatchEvent('click');
+    await expect(rangeInput).toHaveValue('{"start":"2026-08-25","end":"2026-08-27"}');
+
+    await range.locator('.diet-date-range-picker__control').click({ force: true });
+    await range.locator('[data-date="2026-08-20"]').dispatchEvent('click');
+    await range.locator('[data-date="2026-08-18"]').dispatchEvent('click');
+    await expect(rangeInput).toHaveValue('{"start":"2026-08-25","end":"2026-08-27"}');
+    await expect(range.locator('[data-range-start="true"]')).toHaveAttribute(
+      'data-date',
+      '2026-08-18',
+    );
+    await page.keyboard.press('Escape');
+    await expect(rangeInput).toHaveValue('{"start":"2026-08-25","end":"2026-08-27"}');
+
+    await range.locator('.diet-date-range-picker__control').click({ force: true });
+    await range.locator('[data-date="2026-08-30"]').dispatchEvent('click');
+    await range.locator('[data-date="2026-08-30"]').dispatchEvent('click');
+    await expect(rangeInput).toHaveValue('{"start":"2026-08-30","end":"2026-08-30"}');
+    await range.locator('.diet-date-range-picker__control').click({ force: true });
+    await range.locator('.diet-calendar__clear').dispatchEvent('click');
+    await expect(rangeInput).toHaveValue('null');
+
+    await rangeInput.evaluate((input: HTMLInputElement) => {
+      input.value = '{"start":"2026-09-01","end":"2026-09-04"}';
+      input.dispatchEvent(new CustomEvent('external-sync'));
+    });
+    await expect(range.locator('.diet-date-range-picker__value')).toHaveText('Sep 1 – 4, 2026');
+  });
+
 
   test('Layouts reveals the exact source contract and edits its four tokens through the foundation path', async ({
     page,

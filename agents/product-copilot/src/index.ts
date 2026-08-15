@@ -154,7 +154,7 @@ function controlLine(control: ProductCopilotControl): string {
     const enumValues = control.enumValues ?? control.options?.map((o) => String(o.value)) ?? [];
     if (enumValues.length) parts.push(`enum=${enumValues.join('|')}`);
   }
-  if (typeof control.min === 'number' || typeof control.max === 'number') {
+  if (control.min !== undefined || control.max !== undefined) {
     parts.push(`range=${control.min ?? '?'}..${control.max ?? '?'}`);
   }
   parts.push(`current=${serializePromptValue(control.currentValue)}`);

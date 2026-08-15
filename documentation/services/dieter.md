@@ -88,9 +88,12 @@ portrait; consumer code owns only open state and navigation/page content.
 Compact property controls share row geometry through
 `dieter/components/shared/property-row.css`. Components continue to own their
 specific input, switch, dropdown, popover, editing, selected, and disabled
-behavior. The complete property row owns neutral hover presentation. Dieter
-does not install a custom keyboard-navigation program or blue focus-ring
-treatment; blue is reserved for actual selected or active product state.
+behavior. `dieter/components/shared/civil-date-calendar.*` is the one private
+calendar presentation and civil-date interaction source shared only by
+Datefield and Date Range Picker; it is not a third public field component. The
+complete property row owns neutral hover presentation. Dieter does not install
+a custom keyboard-navigation program or blue focus-ring treatment; blue is
+reserved for actual selected or active product state.
 
 Dieter components are consumer-agnostic primitives. They own reusable
 structure, presentation, and interaction, not Widget paths, account policy, or
@@ -109,9 +112,9 @@ giving Dieter ownership of the host's product meaning.
 
 JSON-valued controls use `data-dieter-json`; Bulk Edit emits `dieter-ops` with
 its existing exact `{ops}` payload. Neither name belongs to Bob or Roma. Hosts
-must call the exported Dropdown Actions, Border, Edit, Fill, Shadow, Upload,
-Object Manager, Repeater, and Slider destroy functions before replacing
-hydrated roots. Dropdown Edit destruction detaches the locally bundled Lexical editor
+must call the exported Datefield, Date Range Picker, Dropdown Actions, Border,
+Edit, Fill, Shadow, Upload, Object Manager, Repeater, and Slider destroy
+functions before replacing hydrated roots. Dropdown Edit destruction detaches the locally bundled Lexical editor
 from its DOM root; Dropdown Fill and Dropdown Upload cancel pending asset work;
 Object Manager and Repeater destroy hydrated children and release their
 retained collection state and listeners; Slider releases its native input
@@ -161,6 +164,26 @@ bounded by the row. Product hosts reject non-finite and caller-out-of-bounds
 edits without clamping, coercing, or changing the current value. Signed ranges
 remain caller-authorized, and native `step` metadata is not a second validation
 authority.
+
+Datefield owns one exact civil date. Its bound value is only an empty string or
+`YYYY-MM-DD`; Date Range Picker owns only exact `null` or
+`{start:"YYYY-MM-DD",end:"YYYY-MM-DD"}` with no extra keys and an ordered
+inclusive interval. Both reject malformed or impossible Gregorian dates and
+out-of-bounds values without parsing through a timezone, clamping, repairing,
+or substituting today's date as stored truth. Today's date is only the initial
+calendar view when the committed value is empty.
+
+Both controls use the compact property-row contract at rest and compose the
+same one-month calendar inside an existing `extra-wide` Popover. Datefield
+commits on the day click. Date Range Picker keeps its first click as local open
+surface state, previews the interval on hover, and emits one whole range only
+after the second click; an earlier second click becomes the new start. Clear
+emits the exact empty value and dismissal cancels only unfinished range work.
+Caller inputs own the field label, placeholder, previous/next month names,
+Clear name, locale, and optional exact bounds. `Intl` derives month, weekday,
+date, and closed-summary presentation from that locale. Dieter owns no copy
+catalog, locale choice, timezone, presets, Apply action, native browser picker,
+or consumer meaning.
 
 Tabs is one native caller-labelled radio group with no browser hydrator.
 Native checked and disabled state remain the behavior authority; Dieter CSS
@@ -368,7 +391,9 @@ the right, and `extra-wide` extends it 80px. The left edge remains aligned with
 the closed row. Dropdown Border, Fill, and Shadow own `wide` as their global
 default; Dropdown Edit owns `extra-wide`. The expanded surface is positioned
 above the ToolDrawer and workspace rather than resizing either one, and its
-position follows the row while the containing surface scrolls or resizes.
+position follows the row while the containing surface scrolls or resizes. Wide
+and extra-wide surfaces clamp to an 8px vertical viewport inset so their
+complete work area remains reachable without consumer-local placement rules.
 Border, Fill, and Shadow use their added width for one direct nine-column,
 two-row color palette. Edit gives its added width to the editor and toolbar.
 Dropdown Actions and Dropdown Upload retain row width.

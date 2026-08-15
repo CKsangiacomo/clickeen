@@ -1,0 +1,126 @@
+{
+  "component": "date-range-picker",
+  "syntax": "<tooldrawer-field type='date-range-picker' size='{{SIZE}}' path='{{PATH}}' label='{{LABEL}}' placeholder='{{PLACEHOLDER}}' locale='{{LOCALE}}' previous-month-label='{{PREVIOUS_MONTH_LABEL}}' next-month-label='{{NEXT_MONTH_LABEL}}' clear-label='{{CLEAR_LABEL}}' value='{{VALUE}}' />",
+  "attributes": {
+    "size": { "enum": ["sm", "md", "lg"], "default": "md" },
+    "path": { "optional": true },
+    "label": { "required": true },
+    "placeholder": { "required": true },
+    "locale": { "required": true },
+    "value": { "optional": true },
+    "min": { "optional": true },
+    "max": { "optional": true },
+    "previousMonthLabel": { "required": true },
+    "nextMonthLabel": { "required": true },
+    "clearLabel": { "required": true },
+    "disabled": { "optional": true }
+  },
+  "binding": {
+    "path": "instanceData[PATH]",
+    "type": "json",
+    "shape": "null or {start: YYYY-MM-DD, end: YYYY-MM-DD}"
+  },
+  "defaults": [
+    {
+      "id": "date-range-picker-sizes",
+      "title": "Empty",
+      "sizes": ["sm", "md", "lg"],
+      "spec": ["diet-date-range-picker", "data-size='{{size}}'"],
+      "context": {
+        "size": "md",
+        "id": "date-range-picker-{{size}}",
+        "buttonSize": "medium",
+        "label": "Date range",
+        "placeholder": "Choose dates",
+        "locale": "en-US",
+        "value": "null",
+        "path": "",
+        "min": "",
+        "max": "",
+        "previousMonthLabel": "Previous month",
+        "nextMonthLabel": "Next month",
+        "clearLabel": "Clear dates",
+        "state": "closed",
+        "expanded": "false",
+        "disabled": false
+      },
+      "sizeContext": {
+        "sm": { "buttonSize": "small" },
+        "md": { "buttonSize": "medium" },
+        "lg": { "buttonSize": "large" }
+      }
+    },
+    {
+      "id": "date-range-picker-selected",
+      "title": "Complete range",
+      "sizes": ["md"],
+      "spec": ["diet-date-range-picker", "complete range"],
+      "context": {
+        "size": "md",
+        "id": "date-range-picker-selected",
+        "buttonSize": "medium",
+        "label": "Date range",
+        "placeholder": "Choose dates",
+        "locale": "en-US",
+        "value": "{\"start\":\"2026-08-14\",\"end\":\"2026-08-21\"}",
+        "path": "",
+        "min": "",
+        "max": "",
+        "previousMonthLabel": "Previous month",
+        "nextMonthLabel": "Next month",
+        "clearLabel": "Clear dates",
+        "state": "closed",
+        "expanded": "false",
+        "disabled": false
+      }
+    },
+    {
+      "id": "date-range-picker-disabled",
+      "title": "Disabled",
+      "sizes": ["md"],
+      "spec": ["diet-date-range-picker", "disabled"],
+      "context": {
+        "size": "md",
+        "id": "date-range-picker-disabled",
+        "buttonSize": "medium",
+        "label": "Date range",
+        "placeholder": "Choose dates",
+        "locale": "en-US",
+        "value": "{\"start\":\"2026-08-14\",\"end\":\"2026-08-21\"}",
+        "path": "",
+        "min": "",
+        "max": "",
+        "previousMonthLabel": "Previous month",
+        "nextMonthLabel": "Next month",
+        "clearLabel": "Clear dates",
+        "state": "closed",
+        "expanded": "false",
+        "disabled": true
+      }
+    },
+    {
+      "id": "date-range-picker-open",
+      "title": "Open cross-month range",
+      "sizes": ["md"],
+      "spec": ["diet-date-range-picker", "min='2026-08-10' max='2026-09-20'", "data-state='open'"],
+      "context": {
+        "size": "md",
+        "id": "date-range-picker-open",
+        "buttonSize": "medium",
+        "label": "Date range",
+        "placeholder": "Choose dates",
+        "locale": "en-US",
+        "value": "{\"start\":\"2026-08-28\",\"end\":\"2026-09-04\"}",
+        "path": "",
+        "min": "2026-08-10",
+        "max": "2026-09-20",
+        "previousMonthLabel": "Previous month",
+        "nextMonthLabel": "Next month",
+        "clearLabel": "Clear dates",
+        "state": "open",
+        "expanded": "true",
+        "disabled": false
+      }
+    }
+  ]
+}

@@ -1,0 +1,146 @@
+{
+  "component": "datefield",
+  "syntax": "<tooldrawer-field type='datefield' size='{{SIZE}}' path='{{PATH}}' label='{{LABEL}}' placeholder='{{PLACEHOLDER}}' locale='{{LOCALE}}' previous-month-label='{{PREVIOUS_MONTH_LABEL}}' next-month-label='{{NEXT_MONTH_LABEL}}' clear-label='{{CLEAR_LABEL}}' value='{{VALUE}}' />",
+  "attributes": {
+    "size": { "enum": ["sm", "md", "lg"], "default": "md" },
+    "path": { "optional": true },
+    "label": { "required": true },
+    "placeholder": { "required": true },
+    "locale": { "required": true },
+    "value": { "optional": true },
+    "min": { "optional": true },
+    "max": { "optional": true },
+    "previousMonthLabel": { "required": true },
+    "nextMonthLabel": { "required": true },
+    "clearLabel": { "required": true },
+    "disabled": { "optional": true }
+  },
+  "binding": { "path": "instanceData[PATH]", "type": "string", "format": "empty or YYYY-MM-DD" },
+  "defaults": [
+    {
+      "id": "datefield-sizes",
+      "title": "Empty",
+      "sizes": ["sm", "md", "lg"],
+      "spec": ["diet-datefield", "data-size='{{size}}'"],
+      "context": {
+        "size": "md",
+        "id": "datefield-{{size}}",
+        "buttonSize": "medium",
+        "label": "Start date",
+        "placeholder": "Choose a date",
+        "locale": "en-US",
+        "value": "",
+        "path": "",
+        "min": "",
+        "max": "",
+        "previousMonthLabel": "Previous month",
+        "nextMonthLabel": "Next month",
+        "clearLabel": "Clear date",
+        "state": "closed",
+        "expanded": "false",
+        "disabled": false
+      },
+      "sizeContext": {
+        "sm": { "buttonSize": "small" },
+        "md": { "buttonSize": "medium" },
+        "lg": { "buttonSize": "large" }
+      }
+    },
+    {
+      "id": "datefield-selected",
+      "title": "Selected",
+      "sizes": ["md"],
+      "spec": ["diet-datefield", "value='2026-08-14'"],
+      "context": {
+        "size": "md",
+        "id": "datefield-selected",
+        "buttonSize": "medium",
+        "label": "Start date",
+        "placeholder": "Choose a date",
+        "locale": "en-US",
+        "value": "2026-08-14",
+        "path": "",
+        "min": "",
+        "max": "",
+        "previousMonthLabel": "Previous month",
+        "nextMonthLabel": "Next month",
+        "clearLabel": "Clear date",
+        "state": "closed",
+        "expanded": "false",
+        "disabled": false
+      }
+    },
+    {
+      "id": "datefield-disabled",
+      "title": "Disabled",
+      "sizes": ["md"],
+      "spec": ["diet-datefield", "disabled"],
+      "context": {
+        "size": "md",
+        "id": "datefield-disabled",
+        "buttonSize": "medium",
+        "label": "Start date",
+        "placeholder": "Choose a date",
+        "locale": "en-US",
+        "value": "2026-08-14",
+        "path": "",
+        "min": "",
+        "max": "",
+        "previousMonthLabel": "Previous month",
+        "nextMonthLabel": "Next month",
+        "clearLabel": "Clear date",
+        "state": "closed",
+        "expanded": "false",
+        "disabled": true
+      }
+    },
+    {
+      "id": "datefield-gregorian-locale",
+      "title": "Gregorian locale formatting",
+      "sizes": ["md"],
+      "spec": ["diet-datefield", "locale='ar-SA-u-ca-islamic'"],
+      "context": {
+        "size": "md",
+        "id": "datefield-gregorian-locale",
+        "buttonSize": "medium",
+        "label": "Start date",
+        "placeholder": "Choose a date",
+        "locale": "ar-SA-u-ca-islamic",
+        "value": "2026-08-14",
+        "path": "",
+        "min": "",
+        "max": "",
+        "previousMonthLabel": "Previous month",
+        "nextMonthLabel": "Next month",
+        "clearLabel": "Clear date",
+        "state": "open",
+        "expanded": "true",
+        "disabled": false
+      }
+    },
+    {
+      "id": "datefield-open-bounded",
+      "title": "Open and bounded",
+      "sizes": ["md"],
+      "spec": ["diet-datefield", "min='2026-08-10' max='2026-09-08'", "data-state='open'"],
+      "context": {
+        "size": "md",
+        "id": "datefield-open-bounded",
+        "buttonSize": "medium",
+        "label": "Start date",
+        "placeholder": "Choose a date",
+        "locale": "en-US",
+        "value": "2026-08-14",
+        "path": "",
+        "min": "2026-08-10",
+        "max": "2026-09-08",
+        "previousMonthLabel": "Previous month",
+        "nextMonthLabel": "Next month",
+        "clearLabel": "Clear date",
+        "state": "open",
+        "expanded": "true",
+        "disabled": false
+      }
+    }
+  ]
+}
