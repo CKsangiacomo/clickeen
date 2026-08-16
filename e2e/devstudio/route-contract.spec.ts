@@ -786,8 +786,23 @@ test.describe('DevStudio route contract', () => {
     await page.goto('/#/dieter/object-manager');
     const objectManager = page.locator('.diet-object-manager[data-allow-structure="true"]').first();
     const objectAdd = objectManager.locator('[data-objects-add]');
+    const objectManage = objectManager.locator('[data-objects-manage]');
     await expect(objectAdd.locator(':scope > .diet-icon')).toHaveCount(1);
     await expect(objectAdd.locator(':scope > .diet-button__label')).toHaveText('Add object');
+    await expect(objectManage).toHaveAttribute('data-type', 'secondary');
+    await expect(objectManage).not.toHaveClass(/diet-object-manager__add/);
+    const objectAddSurface = await objectAdd.evaluate((element) => {
+      const probe = document.createElement('span');
+      probe.style.backgroundColor = 'var(--color-system-indigo-5)';
+      element.append(probe);
+      const expected = getComputedStyle(probe).backgroundColor;
+      probe.remove();
+      return {
+        actual: getComputedStyle(element).backgroundColor,
+        expected,
+      };
+    });
+    expect(objectAddSurface.actual).toBe(objectAddSurface.expected);
 
     await page.goto('/#/dieter/repeater');
     const repeaters = page.locator('.diet-repeater');

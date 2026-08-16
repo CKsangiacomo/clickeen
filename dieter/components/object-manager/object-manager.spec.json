@@ -22,7 +22,8 @@
         "diet-object-manager",
         "data-size='{{size}}'",
         "data-allow-structure='{{allowStructure}}'",
-        "plus Icon before caller-owned Add label"
+        "plus Icon before caller-owned Add label",
+        "Add action surface: --color-system-indigo-5; Manage items retains ordinary secondary Button"
       ],
       "context": {
         "size": "md",

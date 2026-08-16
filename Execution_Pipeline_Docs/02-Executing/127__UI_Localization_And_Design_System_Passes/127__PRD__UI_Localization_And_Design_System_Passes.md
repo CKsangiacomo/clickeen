@@ -1685,3 +1685,15 @@ authorizes it.
   exact Table token colors, and the exact Tooltip surface mix. Independent
   verification found no remaining defect and passed V1–V8. No remote product
   data changed.
+
+- **Object Manager Add-action surface correction — passed locally,
+  2026-08-15.** Object Manager's existing structural Add action now uses the
+  exact `--color-system-indigo-5` resting surface. Its hover and active colors
+  follow Button's existing 6%/14% state progression from that same token. The
+  adjacent Manage items action remains the ordinary secondary Button. The
+  existing `plus` Icon, caller-owned label, size ladder, structural behavior,
+  exact array binding, lifecycle, and localization contract are unchanged.
+  The change is confined to the existing Object Manager primitive, source
+  contract, generated DevStudio reveal, focused browser proof, and current
+  operator documentation. No Button variant, consumer override, locale key,
+  fallback, route, storage coordinate, or product-data operation was added.

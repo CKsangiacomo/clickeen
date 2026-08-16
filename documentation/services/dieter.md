@@ -254,7 +254,9 @@ Widget uses resolve it from the adjacent ToolDrawer label file.
 Object Manager's structural Add action and Repeater's inline Add action compose
 the ordinary Dieter `plus` Icon before that caller label. Repeater uses compact
 root/item insets, equal reorder rails, and keeps its completion action in the
-top header rail.
+top header rail. Object Manager gives only its structural Add action the
+`--color-system-indigo-5` surface with the existing Button state progression;
+Manage items retains the ordinary secondary Button treatment.
 Nested fields use neutral `data-path`. Only the true outer host-bound collection
 field also carries `data-bob-path`; a child collection writes its exact array to
 its parent, and only the parent reaches the host. A caller may declare one exact

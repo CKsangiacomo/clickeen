@@ -155,8 +155,10 @@ Manager reveals all three sizes plus
 its exact structural Add/draft/save flow; Repeater reveals all three sizes,
 exact default-item add, compact aligned geometry, its header-owned completion
 action, and the inline reorder mode. Both collection reveals compose their
-source-owned `plus` Icon in the existing caller-labelled Add action. These are
-the real Dieter stencils and hydrators, not DevStudio imitations.
+source-owned `plus` Icon in the existing caller-labelled Add action. Object
+Manager also reveals the Add-only `--color-system-indigo-5` surface beside the
+unchanged secondary Manage items action. These are the real Dieter stencils and
+hydrators, not DevStudio imitations.
 
 Popup reveals exactly the three structural small, medium, and large frames.
 The large example proves body scrolling inside the viewport-bound frame; the

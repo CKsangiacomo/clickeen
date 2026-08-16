@@ -369,7 +369,9 @@ The governing component product law is:
   draft, while a dirty draft uses the existing caller-labelled
   keep-editing/discard flow. Object Manager never infers an object shape,
   label, Widget path, minimum, or structural permission. Its existing Add
-  action composes the ordinary Dieter `plus` Icon before its caller label.
+  action composes the ordinary Dieter `plus` Icon before its caller label and
+  alone uses the `--color-system-indigo-5` surface with the existing Button
+  state progression. Manage items retains the ordinary secondary Button.
 - Repeater owns inline item add/remove/reorder for a declared collection,
   whether that collection is top-level or nested inside an Object Manager. It
   renders the caller template for every exact item, adds an exact caller-supplied

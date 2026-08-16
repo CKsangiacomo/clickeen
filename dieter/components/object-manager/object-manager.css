@@ -37,6 +37,12 @@
   gap: var(--space-2);
 }
 
+.diet-object-manager .diet-object-manager__add {
+  --button-bg: var(--color-system-indigo-5);
+  --button-hover-bg: color-mix(in oklab, var(--color-system-indigo-5), var(--color-text) 6%);
+  --button-active-bg: color-mix(in oklab, var(--color-system-indigo-5), var(--color-text) 14%);
+}
+
 .diet-object-manager [data-objects-manage][hidden] {
   display: none;
 }
