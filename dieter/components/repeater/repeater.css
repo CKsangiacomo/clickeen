@@ -1,8 +1,8 @@
 .diet-repeater {
   --repeater-gap: var(--space-1);
-  --repeater-padding: var(--space-2);
+  --repeater-padding: var(--space-1);
   --repeater-radius: var(--control-radius-sm);
-  --repeater-item-padding: var(--space-1);
+  --repeater-item-padding: var(--space-0);
   display: grid;
   gap: var(--repeater-gap);
   padding: var(--repeater-padding);
@@ -12,15 +12,16 @@
 }
 
 .diet-repeater[data-size='sm'] {
-  --repeater-padding: var(--space-1);
+  --repeater-gap: var(--space-0);
+  --repeater-padding: var(--space-0);
   --repeater-radius: var(--control-radius-xs);
+  --repeater-item-padding: 0;
 }
 
 .diet-repeater[data-size='lg'] {
-  --repeater-gap: var(--space-2);
-  --repeater-padding: var(--space-3);
+  --repeater-padding: var(--space-2);
   --repeater-radius: var(--control-radius-md);
-  --repeater-item-padding: var(--space-2);
+  --repeater-item-padding: var(--space-1);
 }
 
 .diet-repeater__icon-stash {
@@ -29,6 +30,14 @@
 
 .diet-repeater[data-reorder='on'] {
   background: var(--color-system-indigo-5);
+}
+
+.diet-repeater[data-reorder='on'] .diet-repeater__header-main {
+  align-items: flex-start;
+}
+
+.diet-repeater[data-reorder='on'] .diet-repeater__actions {
+  align-self: flex-start;
 }
 
 .diet-repeater__header {

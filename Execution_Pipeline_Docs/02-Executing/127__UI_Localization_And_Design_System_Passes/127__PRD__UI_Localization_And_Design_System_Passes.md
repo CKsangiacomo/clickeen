@@ -1645,3 +1645,43 @@ authorizes it.
   behavior, consumer branch, product state, route, storage coordinate, or remote
   product data changed. Focused Dieter, generated DevStudio, Chromium, diff, and
   V1-V8 verification precede direct-main rollout.
+
+- **Collection, Popup, Segmented, Table, and Tooltip visual correction — passed
+  locally, 2026-08-15.** Object Manager's existing structural Add action and
+  Repeater's existing inline Add action now compose the ordinary Dieter `plus`
+  Icon before their exact caller labels. The Button size remains the sole Icon
+  size authority. Repeater's root/item insets now follow a compact `2/4/8px`
+  root and `0/2/4px` item ladder across `sm/md/lg`; its leading and trailing
+  reorder rails remain aligned, and its completion check remains in the top
+  header rail. No collection behavior, value, path, copy, default item, host
+  binding, or lifecycle changed.
+
+  Popup keeps its existing borderless single-surface structure, optional title,
+  native dialog lifecycle, and caller-owned dismissal policy. Only the existing
+  header-to-body and body-to-footer rhythm moves from `--space-5` to
+  `--space-6`. Segmented keeps the native radio as its sole state authority; a
+  two-pixel rail inset makes the selected surface visibly smaller, while hover
+  is limited to enabled unselected segments so it cannot erase the selected
+  surface. Table's existing sort Icons and application-owned sort behavior are
+  unchanged; the inactive Icon now uses `--color-system-gray` and the active
+  ascending/descending Icon uses `--color-system-black`. Tooltip keeps its
+  caller-owned label/description and placement contract on an 85%-opaque
+  `--color-system-blue-contrast` surface.
+
+  The changes remain in the six existing Dieter component authorities and
+  their current source specs. DevStudio pages and the five current Widget
+  artifact pairs were regenerated through their existing generators. No new
+  component, variant, hydrator, controller, locale catalog, consumer branch,
+  fallback, validation layer, route, storage coordinate, product-data
+  operation, or PRD 128 work was added. All visible and accessible words remain
+  caller-owned, so no l10n contract changed.
+
+  Focused verification passed: Dieter typecheck/governance; DevStudio exact
+  generation, typecheck, lint, build, Functions syntax, and five Chromium
+  contracts; Bob editor-contract and typecheck; Roma Widget Defaults, command
+  gates, and typecheck; five Widget definition/artifact pairs; and diff checks.
+  Chromium proved the three Repeater padding/Icon sizes, header alignment,
+  selected Segmented hover stability and 2px inset, Popup 24px section rhythm,
+  exact Table token colors, and the exact Tooltip surface mix. Independent
+  verification found no remaining defect and passed V1–V8. No remote product
+  data changed.

@@ -54,7 +54,7 @@
 
 .diet-popup__header + .diet-popup__body,
 .diet-popup__body + .diet-popup__footer {
-  margin-block-start: var(--space-5);
+  margin-block-start: var(--space-6);
 }
 
 .diet-popup__body > :first-child {

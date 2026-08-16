@@ -21,7 +21,8 @@
       "spec": [
         "diet-object-manager",
         "data-size='{{size}}'",
-        "data-allow-structure='{{allowStructure}}'"
+        "data-allow-structure='{{allowStructure}}'",
+        "plus Icon before caller-owned Add label"
       ],
       "context": {
         "size": "md",

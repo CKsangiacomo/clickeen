@@ -10,6 +10,10 @@
     "accessible-name": { "description": "Required when title is not rendered." },
     "dismiss-label": { "optional": true }
   },
+  "presentation": {
+    "outerInset": "--space-6",
+    "sectionGap": "--space-6"
+  },
   "defaults": [
     {
       "id": "popup-small",

@@ -434,6 +434,19 @@ test.describe('DevStudio route contract', () => {
     await expect
       .poll(() => tooltip.evaluate((element) => getComputedStyle(element, '::after').visibility))
       .toBe('visible');
+    const tooltipSurface = await tooltip.evaluate((element) => {
+      const probe = document.createElement('span');
+      probe.style.backgroundColor =
+        'color-mix(in oklab, var(--color-system-blue-contrast) 85%, transparent)';
+      document.body.append(probe);
+      const expected = getComputedStyle(probe).backgroundColor;
+      probe.remove();
+      return {
+        actual: getComputedStyle(element, '::after').backgroundColor,
+        expected,
+      };
+    });
+    expect(tooltipSurface.actual).toBe(tooltipSurface.expected);
     await tooltip.locator(':scope > .diet-button').focus();
     await expect
       .poll(() => tooltip.evaluate((element) => getComputedStyle(element, '::after').visibility))
@@ -618,10 +631,10 @@ test.describe('DevStudio route contract', () => {
         };
       };
       const tokenProbe = document.createElement('span');
-      tokenProbe.style.color = 'var(--color-system-gray-2)';
+      tokenProbe.style.color = 'var(--color-system-black)';
       document.body.append(tokenProbe);
       const activeColor = getComputedStyle(tokenProbe).color;
-      tokenProbe.style.color = 'var(--color-system-gray-3)';
+      tokenProbe.style.color = 'var(--color-system-gray)';
       const inactiveColor = getComputedStyle(tokenProbe).color;
       tokenProbe.remove();
       return {
@@ -713,8 +726,8 @@ test.describe('DevStudio route contract', () => {
       paddingInlineStart: '24px',
       headerDivider: '0px',
       footerDivider: '0px',
-      bodyGap: '20px',
-      footerGap: '20px',
+      bodyGap: '24px',
+      footerGap: '24px',
       dismissHeight: 28,
       dismissWidth: 28,
       dismissIconHeight: 16,
@@ -765,6 +778,78 @@ test.describe('DevStudio route contract', () => {
     await expect(objectDialog.locator('[data-objects-editor]')).toBeHidden();
     await objectDialog.locator('[data-objects-keep-editing]').click();
     await expect(objectDialog.locator('[data-objects-editor]')).toBeVisible();
+  });
+
+  test('Collection controls and Segmented expose the compact aligned source geometry', async ({
+    page,
+  }) => {
+    await page.goto('/#/dieter/object-manager');
+    const objectManager = page.locator('.diet-object-manager[data-allow-structure="true"]').first();
+    const objectAdd = objectManager.locator('[data-objects-add]');
+    await expect(objectAdd.locator(':scope > .diet-icon')).toHaveCount(1);
+    await expect(objectAdd.locator(':scope > .diet-button__label')).toHaveText('Add object');
+
+    await page.goto('/#/dieter/repeater');
+    const repeaters = page.locator('.diet-repeater');
+    await expect(repeaters).toHaveCount(3);
+    const collectionGeometry = await repeaters.evaluateAll((roots) =>
+      roots.map((root) => {
+        const item = root.querySelector<HTMLElement>('.diet-repeater__item');
+        const add = root.querySelector<HTMLElement>('.diet-repeater__add');
+        const plus = add?.querySelector<HTMLElement>('.diet-icon');
+        if (!item || !add || !plus) throw new Error('Repeater reveal is incomplete.');
+        return {
+          addIconHeight: plus.getBoundingClientRect().height,
+          itemPadding: getComputedStyle(item).paddingBlockStart,
+          rootPadding: getComputedStyle(root).paddingBlockStart,
+        };
+      }),
+    );
+    expect(collectionGeometry).toEqual([
+      { addIconHeight: 12, itemPadding: '0px', rootPadding: '2px' },
+      { addIconHeight: 16, itemPadding: '2px', rootPadding: '4px' },
+      { addIconHeight: 20, itemPadding: '4px', rootPadding: '8px' },
+    ]);
+    const mediumRepeater = repeaters.nth(1);
+    await mediumRepeater.locator('.diet-repeater__reorder').click();
+    await expect(mediumRepeater).toHaveAttribute('data-reorder', 'on');
+    await expect(mediumRepeater.locator('.diet-repeater__reorder-icon--active')).toBeVisible();
+    const headerAlignment = await mediumRepeater.evaluate((root) => {
+      const header = root.querySelector<HTMLElement>('.diet-repeater__header-main');
+      const action = root.querySelector<HTMLElement>('.diet-repeater__actions');
+      if (!header || !action) throw new Error('Repeater header is incomplete.');
+      return {
+        actionTop: action.getBoundingClientRect().top,
+        headerTop: header.getBoundingClientRect().top,
+      };
+    });
+    expect(headerAlignment.actionTop).toBe(headerAlignment.headerTop);
+
+    await page.goto('/#/dieter/segmented');
+    const segment = page.locator('.diet-segmented').first().locator('.diet-segment').first();
+    const selectedSurface = segment.locator('.diet-segment__surface');
+    const selectedBackground = await selectedSurface.evaluate(
+      (element) => getComputedStyle(element).backgroundColor,
+    );
+    await segment.hover();
+    await expect
+      .poll(() =>
+        selectedSurface.evaluate((element) => getComputedStyle(element).backgroundColor),
+      )
+      .toBe(selectedBackground);
+    const selectedInset = await segment.evaluate((element) => {
+      const rail = element.closest<HTMLElement>('.diet-segmented');
+      const surface = element.querySelector<HTMLElement>('.diet-segment__surface');
+      if (!rail || !surface) throw new Error('Segmented reveal is incomplete.');
+      const railRect = rail.getBoundingClientRect();
+      const surfaceRect = surface.getBoundingClientRect();
+      return {
+        blockEnd: railRect.bottom - surfaceRect.bottom,
+        blockStart: surfaceRect.top - railRect.top,
+        padding: getComputedStyle(rail).paddingBlockStart,
+      };
+    });
+    expect(selectedInset).toEqual({ blockEnd: 2, blockStart: 2, padding: '2px' });
   });
 
   test('Textfield and Valuefield expose the exact compact native-input geometry', async ({

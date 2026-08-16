@@ -11,6 +11,9 @@
     "descriptionId": { "optional": true }
   },
   "binding": { "type": "caller-owned-contextual-information" },
+  "presentation": {
+    "surface": "--color-system-blue-contrast at 85% opacity"
+  },
   "defaults": [
     {
       "id": "tooltip-placements",

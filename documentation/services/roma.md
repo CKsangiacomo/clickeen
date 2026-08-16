@@ -336,8 +336,8 @@ remain in one ellipsis menu. The header status filter and the Widget, Instance
 name, and Published sorts are client-side projections over the validated
 account list. Their headers use the shared `small` Dieter sort control. The active
 sort uses `chevron.up.2` or `chevron.down.2` with
-`--color-system-gray-2`; inactive sorts use `chevron.down.dotted.2` with
-`--color-system-gray-3`.
+`--color-system-black`; inactive sorts use `chevron.down.dotted.2` with
+`--color-system-gray`.
 
 Rename, Duplicate, and Delete use the same unbound Dieter Menu Actions row.
 Roma owns their exact Chrome wording and command handlers; Menu Actions owns
@@ -416,8 +416,8 @@ only their current actions and busy state to that header. The asset table uses
 the Dieter table contract; Asset, Type, and Size use the same inline label plus
 `small` Dieter icon-button sorting pattern as the Widgets table. Active sort
 controls use `chevron.up.2` or `chevron.down.2` with
-`--color-system-gray-2`; inactive controls use `chevron.down.dotted.2` with
-`--color-system-gray-3`.
+`--color-system-black`; inactive controls use `chevron.down.dotted.2` with
+`--color-system-gray`.
 
 The active asset route chain is:
 

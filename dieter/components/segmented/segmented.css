@@ -1,6 +1,6 @@
 .diet-segmented {
   --seg-rail-height: 1.75rem;
-  --seg-rail-padding: 0.0625rem;
+  --seg-rail-padding: var(--space-0);
   --seg-rail-radius: var(--control-radius-md);
   --seg-surface-radius: var(--control-radius-sm);
   --seg-gap: var(--space-1);
@@ -113,7 +113,8 @@
   white-space: nowrap;
 }
 
-.diet-segment:not(:has(.diet-segment__input:disabled)):hover .diet-segment__surface {
+.diet-segment:has(.diet-segment__input:not(:disabled):not(:checked)):hover
+  .diet-segment__surface {
   background: color-mix(in oklab, var(--seg-surface-bg), transparent 70%);
 }
 

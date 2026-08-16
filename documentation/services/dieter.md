@@ -136,7 +136,8 @@ tones. Banner renders a persistent caller-owned default, caution, or critical
 message with optional Icon, actions, semantics, and labelled dismissal.
 Spinner renders current-color progress at small, medium, or large; it owns no
 job lifecycle. Tooltip renders caller-owned label or description content in
-one of four placements while the trigger retains its own accessible name.
+one of four placements on an 85%-opaque `--color-system-blue-contrast` surface
+while the trigger retains its own accessible name.
 None loads copy, infers product state, or creates a consumer-specific branch.
 Banner is borderless across all compositions: default and description-only use
 `--color-system-teal-4`, caution uses `--color-system-yellow-4`, and critical
@@ -223,9 +224,10 @@ Its `sm|md|lg` root owns the rail, selected surface, typography, and default
 `12/16/20px` Icon ladder; an explicit numeric Dieter Icon size remains an
 ordinary caller composition. The native input is the sole checked/disabled
 authority. Direct `.diet-segment__content` carries optional label and Icon
-content; there is no nested Button, mirrored `aria-pressed`, or parallel state
-controller. Widget option labels resolve from the adjacent Widget label file;
-Bob application labels remain Bob-owned copy.
+content. A two-pixel rail inset keeps the selected surface inside the rail, and
+hover never replaces a selected surface. There is no nested Button, mirrored
+`aria-pressed`, or parallel state controller. Widget option labels resolve from
+the adjacent Widget label file; Bob application labels remain Bob-owned copy.
 
 Menu Actions owns one compact native action row inside a menu or Popover. It is
 unbound and has no browser hydrator: the caller supplies `type="button"`, the
@@ -249,6 +251,10 @@ state, use one root `sm|md|lg` size, and release their child hydrators on
 destruction. They never derive item shapes, defaults, permissions, Widget
 paths, or copy. Every visible and accessible word is an exact caller input;
 Widget uses resolve it from the adjacent ToolDrawer label file.
+Object Manager's structural Add action and Repeater's inline Add action compose
+the ordinary Dieter `plus` Icon before that caller label. Repeater uses compact
+root/item insets, equal reorder rails, and keeps its completion action in the
+top header rail.
 Nested fields use neutral `data-path`. Only the true outer host-bound collection
 field also carries `data-bob-path`; a child collection writes its exact array to
 its parent, and only the parent reaches the host. A caller may declare one exact
@@ -257,7 +263,7 @@ current document or shadow root without knowing the consumer or Widget.
 
 Popup is the shared native-dialog frame. It owns backdrop, viewport fit,
 small/medium/large width, the seamless borderless elevated surface,
-`--space-6` outer inset, `--space-5` section separation, header/body/footer
+`--space-6` outer inset, `--space-6` section separation, header/body/footer
 layout, body scrolling, and action alignment. When present, the Popup title
 uses the existing `heading-4` class. A titleless Popup requires the caller's
 exact alternate accessible name. The optional dismiss presentation is one
@@ -465,8 +471,8 @@ stripes, and small preview and action column composition classes. Apps own
 data and behavior, not another table presentation. When an app makes a column
 sortable, its header uses a `small` quaternary Dieter Button containing a 12px
 Dieter Icon. Inactive columns use `chevron.down.dotted.2` with
-`--color-system-gray-3`; the active column uses `chevron.up.2` or
-`chevron.down.2` with `--color-system-gray-2`. The app still owns sort state,
+`--color-system-gray`; the active column uses `chevron.up.2` or
+`chevron.down.2` with `--color-system-black`. The app still owns sort state,
 direction, the exact icon, and row ordering.
 
 Dieter Data Table is a controlled operational composition over that Table

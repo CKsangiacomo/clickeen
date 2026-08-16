@@ -23,6 +23,10 @@
       }
     }
   },
+  "presentation": {
+    "railInset": "--space-0",
+    "selectedHover": "selected surface remains unchanged"
+  },
   "defaults": [
     {
       "id": "segmented-size-ladder",

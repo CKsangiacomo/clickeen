@@ -437,6 +437,11 @@ function assertCollectionEditorContract(args: {
           `${args.widgetType} resolves Object Manager ${key}`,
         );
       }
+      assert.match(
+        args.html,
+        /data-objects-add[^>]*>[\s\S]*?<span class="diet-icon" data-icon="plus" aria-hidden="true"><\/span>[\s\S]*?<span class="diet-button__label">/,
+        `${args.widgetType} Object Manager Add action composes the systemic plus Icon before its caller label`,
+      );
     } else {
       assert.doesNotMatch(
         args.html,
@@ -483,6 +488,11 @@ function assertCollectionEditorContract(args: {
       args.html,
       /diet-repeater__[^"]*icon[^>]*data-size=/,
       `${args.widgetType} lets Repeater size own its Icons`,
+    );
+    assert.match(
+      args.html,
+      /diet-repeater__add[^>]*>[\s\S]*?<span class="diet-icon" data-icon="plus" aria-hidden="true"><\/span>[\s\S]*?<span class="diet-button__label">/,
+      `${args.widgetType} Repeater Add action composes the systemic plus Icon before its caller label`,
     );
   }
   assert.doesNotMatch(

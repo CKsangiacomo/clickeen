@@ -12,7 +12,11 @@
   max-inline-size: min(15rem, calc(100vw - var(--space-4)));
   padding: var(--space-1) var(--space-2);
   border-radius: var(--control-radius-sm);
-  background: var(--color-system-black);
+  background: color-mix(
+    in oklab,
+    var(--color-system-blue-contrast) 85%,
+    transparent
+  );
   color: var(--color-system-white);
   font:
     500 var(--fs-11, 0.6875rem) / var(--lh-tight, 1rem) 'Inter Tight',

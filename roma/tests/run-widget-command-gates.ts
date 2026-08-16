@@ -259,8 +259,8 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
   assert.match(tableCss, /padding: var\(--space-3\) var\(--space-4\);/);
   assert.match(tableCss, /border-block-end: 1px solid var\(--color-system-gray-step5\);/);
   assert.match(tableCss, /border-block-end-color: var\(--color-system-gray-step3\);/);
-  assert.match(tableCss, /th\[aria-sort\] > \.diet-button \{\s+--button-color: var\(--color-system-gray-3\);/);
-  assert.match(tableCss, /th\[aria-sort='ascending'\] > \.diet-button,[\s\S]*?th\[aria-sort='descending'\] > \.diet-button \{\s+--button-color: var\(--color-system-gray-2\);/);
+  assert.match(tableCss, /th\[aria-sort\] > \.diet-button \{\s+--button-color: var\(--color-system-gray\);/);
+  assert.match(tableCss, /th\[aria-sort='ascending'\] > \.diet-button,[\s\S]*?th\[aria-sort='descending'\] > \.diet-button \{\s+--button-color: var\(--color-system-black\);/);
 
   assert.match(assetsPage, /<AssetsDomain assetFilter=\{assetFilter\} onHeaderActions=\{setHeaderActions\} \/>/);
   assert.doesNotMatch(assetsPage, /useRomaAccountContext|useRomaAccountApi|refreshToken|onLoadingChange/);

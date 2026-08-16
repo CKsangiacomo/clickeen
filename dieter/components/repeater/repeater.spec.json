@@ -19,7 +19,12 @@
     {
       "id": "repeater",
       "sizes": ["sm", "md", "lg"],
-      "spec": ["diet-repeater", "data-size='{{size}}'"],
+      "spec": [
+        "diet-repeater",
+        "data-size='{{size}}'",
+        "compact size-owned insets",
+        "plus Icon before caller-owned Add label"
+      ],
       "context": {
         "label": "Items",
         "addLabel": "Add item",

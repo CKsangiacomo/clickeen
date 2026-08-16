@@ -353,7 +353,9 @@ The governing component product law is:
 - Segmented is one native radio group with `sm|md|lg` geometry and
   `txt|ic|ictxt` content shapes. The radio input is the sole checked and
   disabled authority; Dieter CSS owns the rail, selected surface, typography,
-  Icon ladder, hover, and disabled presentation. Each segment contains
+  Icon ladder, hover, and disabled presentation. The rail keeps a two-pixel
+  inset around the selected surface, and hovering a selected segment does not
+  replace or wash out that selected surface. Each segment contains
   direct presentational content rather than a nested Button, and no hydrator
   mirrors state through `aria-pressed`. Visible labels, icon-only accessible
   names, and the group name are exact caller inputs. Widget options resolve
@@ -366,15 +368,20 @@ The governing component product law is:
   editors; it emits no structural controls or behavior. Cancel closes a clean
   draft, while a dirty draft uses the existing caller-labelled
   keep-editing/discard flow. Object Manager never infers an object shape,
-  label, Widget path, minimum, or structural permission.
+  label, Widget path, minimum, or structural permission. Its existing Add
+  action composes the ordinary Dieter `plus` Icon before its caller label.
 - Repeater owns inline item add/remove/reorder for a declared collection,
-  whether that collection is top-level or nested inside an Object Manager. It renders the
-  caller template for every exact item, adds an exact caller-supplied
+  whether that collection is top-level or nested inside an Object Manager. It
+  renders the caller template for every exact item, adds an exact caller-supplied
   `default-item`, removes subject to the declared `min`, and reorders through
   one explicit drag mode. The exact array is its only bound value. Existing
   values and every new default item must carry a stable non-empty `id`; the
   component assigns new ids only into caller-declared empty `id` coordinates.
-  It does not derive an item shape from current values or template fields.
+  It does not derive an item shape from current values or template fields. Its
+  compact root and item insets preserve the same leading and trailing
+  alignment in rest and reorder states; the reorder completion action remains
+  in the top header rail, and the Add action composes the ordinary Dieter
+  `plus` Icon before its caller label.
 - Nested collection fields retain consumer-neutral `data-path` coordinates.
   Only each actual host-bound outer collection field also receives Bob's
   `data-bob-path`; child components fold their exact array into the parent
@@ -495,8 +502,8 @@ composition classes rather than consumer-local base styling.
 Sortable headers remain app-owned behavior composed inside Dieter Table. Their
 control is a `small` quaternary `.diet-button` with a 12px `.diet-icon`:
 inactive columns use `chevron.down.dotted.2` with
-`--color-system-gray-3`; the active column uses `chevron.up.2` or
-`chevron.down.2` with `--color-system-gray-2`. Dieter owns the color treatment
+`--color-system-gray`; the active column uses `chevron.up.2` or
+`chevron.down.2` with `--color-system-black`. Dieter owns the color treatment
 through `aria-sort`; apps own the exact icon derived from their selected
 column and direction, plus row ordering.
 
@@ -514,7 +521,7 @@ Dieter Popup owns the blocking native `<dialog>` appearance and structural
 slots: header, body, footer, and actions, with small, medium, and large sizes.
 The Popup is one continuous elevated surface: it has no outer stroke or
 internal header/footer rules, uses the shared `2xl` radius, and provides one
-`--space-6` outer inset with `--space-5` separation between the structural
+`--space-6` outer inset with `--space-6` separation between the structural
 sections. When a visible title is present it uses the existing `heading-4`
 treatment and names the dialog. A caller may omit the visible title only when
 it supplies the exact alternate accessible name.
@@ -571,7 +578,8 @@ Unfamiliar icon-only actions use one governed Dieter Tooltip contract. A label
 names an otherwise unfamiliar control; a description adds caller-owned context
 through an exact `aria-describedby` target. Top, right, bottom, and left
 placement are presentation inputs. Tooltip content wraps, is non-interactive,
-and never replaces the trigger's accessible name. Native `title` is not the
+and uses `--color-system-blue-contrast` at 85% surface opacity. It never
+replaces the trigger's accessible name. Native `title` is not the
 designed tooltip system. This contract does not create a tooltip controller or
 move product copy into Dieter.
 

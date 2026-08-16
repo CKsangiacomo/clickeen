@@ -153,8 +153,10 @@ Actions, Border, Edit, Fill, Shadow, Upload, Object Manager, Repeater, and Slide
 through their exported component lifecycle. Object
 Manager reveals all three sizes plus
 its exact structural Add/draft/save flow; Repeater reveals all three sizes,
-exact default-item add, and the inline reorder mode. These are the real Dieter
-stencils and hydrators, not DevStudio imitations.
+exact default-item add, compact aligned geometry, its header-owned completion
+action, and the inline reorder mode. Both collection reveals compose their
+source-owned `plus` Icon in the existing caller-labelled Add action. These are
+the real Dieter stencils and hydrators, not DevStudio imitations.
 
 Popup reveals exactly the three structural small, medium, and large frames.
 The large example proves body scrolling inside the viewport-bound frame; the
@@ -172,8 +174,10 @@ disabled radio states with no custom tab/arrow-key controller. Toggle reveals
 checked, unchecked, and disabled native-checkbox states through the component's
 own size and presentation authority. Segmented reveals the real `sm|md|lg`
 icon-and-text ladder plus compact text-only and icon-only selected, unselected,
-and disabled groups; it has no nested Button or state-mirroring hydrator. The retired standalone Popaddlink route is
-absent because link editing is now an internal Dropdown Edit sheet.
+and disabled groups, including its two-pixel surface inset and stable selected
+hover state; it has no nested Button or state-mirroring hydrator. The retired
+standalone Popaddlink route is absent because link editing is now an internal
+Dropdown Edit sheet.
 
 Textfield and Valuefield are generated from their real native-input stencils.
 Both reveal the exact `sm|md|lg` geometry and disabled state. Textfield also
