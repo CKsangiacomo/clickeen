@@ -158,7 +158,7 @@ the code is convenient there.
 | Stage                      | Status                                                                                                                                                                                                                                               | Release state                                                         |
 | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
 | Stage 1 — Scaffold only    | Complete                                                                                                                                                                                                                                             | Committed, pushed, and deployed; no non-English experience is exposed |
-| Stage 2 — Dieter UI pass   | In progress: Foundations and the current 29-component inventory are complete and re-audited; the latest source-backed additions are Badge, Banner, Data Table, Spinner, and governed Tooltip, while Datefield and Date Range Picker remain DevStudio-only consumer-agnostic primitives; Big Bang, Countdown, Cards, FAQ, and Logo Showcase plus their five-Widget system reconciliation are complete locally | The Widget-system pass is complete locally; the Roma Assets workspace remains planning-only behind its recorded owner authority gates |
+| Stage 2 — Dieter UI pass   | In progress: Foundations and the current 29-component inventory are complete and re-audited; the latest source-backed additions are Badge, Banner, Data Table, Spinner, and governed Tooltip, while Datefield and Date Range Picker remain DevStudio-only consumer-agnostic primitives; Big Bang, Countdown, Cards, FAQ, and Logo Showcase plus their five-Widget system reconciliation are complete and live in cloud-dev | The Widget-system pass and FAQ Content authority hard cut are deployed and reconciled in cloud-dev; the Roma Assets workspace remains planning-only behind its recorded owner authority gates |
 | Stage 3 — Bob UI pass      | Not started                                                                                                                                                                                                                                          | No authority to begin until explicitly directed                       |
 | Stage 4 — Roma UI pass     | Not started                                                                                                                                                                                                                                          | No authority to begin until explicitly directed                       |
 | Stage 5 — Translation pass | Not started                                                                                                                                                                                                                                          | No translations may be generated yet                                  |
@@ -178,7 +178,7 @@ Build the English foundation without generating or exposing non-English UI.
 - Define the future Roma Chrome schema boundary.
 - Define the future Bob Chrome schema boundary.
 - Define the per-Widget ToolDrawer-label schema.
-- Create English label files for the eight current Widgets.
+- Create English label files for the current five Widgets.
 - Move English ToolDrawer literals from `spec.json` into those Widget-owned
   files.
 - Update the compiler to join Widget structure, English labels, and Dieter
@@ -1987,3 +1987,51 @@ authorizes it.
   write, or fallback is allowed.
   This correction is not yet committed, pushed, deployed, live, or applied to
   remote product data.
+
+- **FAQ Content authority release and Roma boundary correction — complete in
+  cloud-dev, 2026-08-16.** The five-Widget source pass and FAQ hard cut were
+  committed and pushed at `99a80b5bb803fcbca32bc2322100998ebfb93414`.
+  Bob, Roma, and the Tokyo product-root deployment completed from that exact
+  source. The deployed FAQ contract and runtime contain no per-question
+  `defaultOpen` field or behavior. The live Bob Builder now renders one
+  **Show section titles** control directly before the Sections Object Manager,
+  with no standalone **Section titles** section, no **Open by default** row,
+  and no retired `defaultOpen` coordinate in the rendered editor.
+
+  The release exposed a separate owning-boundary violation in Roma: account
+  Widget Defaults were being compared with Bob's compiled ToolDrawer controls,
+  incorrectly turning the editable projection into a persistence allowlist.
+  That path policing was deleted completely at
+  `7cad0e13e5676b183f18f66bf009125d64030a66`. Roma now returns the exact Tokyo
+  Widget Defaults document, creates instances from that exact current-account
+  document, and does not block or filter Widget state because a path is not an
+  editor control. The only remaining Widget Defaults policy check is the
+  existing account font-selection rule owned by Roma. No replacement schema,
+  compatibility reader, hidden control, cleanup filter, or fallback was added.
+  Roma Pages deployment `33fbaca9-a5b1-472a-9b0f-9b6ea8f4d02d` and GitHub
+  workflow run `31957995233` both completed successfully at the correction
+  commit.
+
+  Before product-data writes, 53 exact R2 objects were copied read-only to
+  `/tmp/clickeen-faq-backup.62SacC` with a SHA-256 manifest. Product data was
+  then changed only through authenticated current-account Roma routes. The
+  full Widget Defaults document and each of `I5918UU0IA`, `OG66LCHRFC`, and
+  `VUWUJ7OQ0Y` had exactly four false `defaultOpen` properties removed. Every
+  write was read back before continuing. The two published instances remain
+  published and return HTTP 200; the unpublished canary remains unpublished
+  and returns HTTP 404. All three Builder-open envelopes return HTTP 200 with
+  zero retired properties, their display names and all other composed config
+  values are exact, their twelve-field content maps are unchanged, and all 28
+  saved locale overlays for `VUWUJ7OQ0Y` remain byte-identical. Source/package
+  fingerprints reconcile through Builder-open. Countdown account state,
+  including `countdown.appearance.textColor`, remained exact and was not
+  migrated or filtered.
+
+  Focused verification passed Roma typecheck, Widget Defaults typography,
+  command-gate and instance-package checks, lint apart from one unrelated
+  existing Product Copilot warning, five-Widget source/artifact validation,
+  Bob editor-contract checks, deployed Builder/public reads, direct stored
+  config/content/overlay reconciliation, and live Chromium Builder inspection
+  with no page errors. V1-V8 passed: no truth was substituted, healed, omitted,
+  treated as absent, partially reported, or moved behind another wrapper; no
+  enforcement failed open; and runtime does not depend on verification code.
