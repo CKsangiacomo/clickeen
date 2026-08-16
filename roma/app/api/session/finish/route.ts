@@ -268,7 +268,6 @@ export async function GET(request: NextRequest) {
       );
     }
     const widgetDefaults = await materializeInitialAccountWidgetDefaults({
-      request,
       accountId: bootstrap.accountId,
       widgetTypes: widgetDefinitions.value.widgetDefinitions.map((entry) => entry.widgetType),
     });

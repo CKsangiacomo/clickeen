@@ -481,19 +481,21 @@ The persisted defaults split is `common` plus
 widget types; it does not mean Shell ownership. The retired `shell` bucket is
 not read as an alias and is rejected as invalid stored truth.
 
-Widget Defaults must fail closed when compiled Builder controls are unavailable,
-when Dieter source hydration fails, or when the rendered controls do not cover
-every requested common/Core default path. Metadata coverage alone is not enough:
-the rendered `[data-bob-path]` set is the editable surface. Roma compiles the
-shared Dieter CSS and hydrators from source; compiled widget artifacts do not
-carry per-control Dieter media lists.
+Widget Defaults must fail closed when compiled Builder controls are unavailable
+or Dieter source hydration fails. The rendered `[data-bob-path]` set is the
+editable surface only; it is not a schema or allowlist for the persisted
+document. Non-editable Widget state remains in the full draft and round-trips
+unchanged. Roma compiles the shared Dieter CSS and hydrators from source;
+compiled widget artifacts do not carry per-control Dieter media lists.
 
 Widget Defaults is the second account-bound typography editor host. It uses the
 same current account `fontLibrary`, family transition resolver, and relational
 family/weight/style validator as Bob for both common and widget Core defaults.
 Each accepted family transition updates all three values in one draft-state
-update. GET and PUT reject exact invalid typography paths before Tokyo
-persistence. The account-backed controls expose only available choices.
+update. GET returns Tokyo's exact current document without comparing Widget
+state to ToolDrawer controls. PUT enforces the current account's exact
+typography selection before Tokyo persistence. The account-backed controls
+expose only available choices.
 
 Every initial account font library includes the seven global Clickeen special
 fonts as `source: "tokyo"` records. Account-uploaded fonts remain separate

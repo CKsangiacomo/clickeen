@@ -1,45 +1,10 @@
-import { isRecord } from '@clickeen/ck-contracts';
 import {
   ACCOUNT_TYPOGRAPHY_SELECTION_INVALID_REASON_KEY,
-  isCommonWidgetControlPath,
-  listCommonWidgetAccountDefaultMetadataPaths,
-  listCommonWidgetControlPaths,
   normalizeAccountFontLibrary,
   validateAccountTypographyFontSelections,
 } from '@clickeen/widget-foundation';
-import type { NextRequest } from 'next/server';
-import {
-  readWidgetForInstancePackage,
-  type InstancePackageFailure,
-} from './account-instance-public-package';
+import type { InstancePackageFailure } from './account-instance-public-package';
 import type { AccountWidgetDefaultsDocument } from './account-widget-defaults-direct';
-
-const CORE_SOFTWARE_METADATA_PATHS = ['uiLabels.core', 'typography.roleScales'] as const;
-
-function collectDefaultPaths(value: unknown, prefix = ''): string[] {
-  if (Array.isArray(value)) return prefix ? [prefix] : [];
-  if (!isRecord(value)) return prefix ? [prefix] : [];
-  const paths = Object.entries(value).flatMap(([key, child]) =>
-    collectDefaultPaths(child, prefix ? `${prefix}.${key}` : key),
-  );
-  return paths.length > 0 ? paths : prefix ? [prefix] : [];
-}
-
-function pathIsCovered(path: string, allowedRoots: readonly string[]): boolean {
-  return allowedRoots.some((allowed) => path === allowed || path.startsWith(`${allowed}.`));
-}
-
-function validationFailure(paths: string[]): InstancePackageFailure {
-  return {
-    ok: false,
-    status: 422,
-    error: {
-      kind: 'VALIDATION',
-      reasonKey: 'coreui.errors.widgetDefaults.unmappedPaths',
-      paths,
-    },
-  };
-}
 
 function typographyValidationFailure(paths: string[]): InstancePackageFailure {
   return {
@@ -53,59 +18,32 @@ function typographyValidationFailure(paths: string[]): InstancePackageFailure {
   };
 }
 
-function compiledCoreDefaultControlPaths(controls: Array<{ path?: string }> | undefined): string[] {
-  return (controls ?? [])
-    .map((control) => (typeof control.path === 'string' ? control.path.trim() : ''))
-    .filter((path) => path && !isCommonWidgetControlPath(path))
-    .sort((left, right) => left.localeCompare(right));
-}
-
-export async function validateAccountWidgetDefaultsContract(args: {
-  request: NextRequest;
-  widgetDefaults: AccountWidgetDefaultsDocument;
-  widgetTypes?: string[];
-}): Promise<{ ok: true } | InstancePackageFailure> {
-  const fontLibrary = normalizeAccountFontLibrary(args.widgetDefaults.fontLibrary);
+export function validateAccountWidgetDefaultsTypography(
+  widgetDefaults: AccountWidgetDefaultsDocument,
+): { ok: true } | InstancePackageFailure {
+  const fontLibrary = normalizeAccountFontLibrary(widgetDefaults.fontLibrary);
   if (!fontLibrary) {
-    return validationFailure(['fontLibrary']);
+    return typographyValidationFailure(['fontLibrary']);
   }
-  const widgetTypes = args.widgetTypes ?? Object.keys(args.widgetDefaults.widgets);
+  const widgetTypes = Object.keys(widgetDefaults.widgets);
   const invalidTypographyPaths = validateAccountTypographyFontSelections({
     fontLibrary,
-    typography: args.widgetDefaults.common.typography,
+    typography: widgetDefaults.common.typography,
     required: true,
   }).map((path) => `common:${path}`);
-  const unmappedPaths: string[] = collectDefaultPaths(args.widgetDefaults.common)
-    .filter((path) => !pathIsCovered(path, listCommonWidgetControlPaths()))
-    .filter((path) => !pathIsCovered(path, listCommonWidgetAccountDefaultMetadataPaths()))
-    .map((path) => `common:${path}`);
 
   for (const widgetType of widgetTypes) {
-    const widgetDefaults = args.widgetDefaults.widgets[widgetType];
-    if (!widgetDefaults || !isRecord(widgetDefaults.core)) {
-      unmappedPaths.push(`${widgetType}:core`);
-      continue;
-    }
-    const compiled = readWidgetForInstancePackage(widgetType);
-    if (!compiled.ok) return compiled;
-    const controlPaths = compiledCoreDefaultControlPaths(compiled.value.controls);
+    const widget = widgetDefaults.widgets[widgetType]!;
     invalidTypographyPaths.push(
       ...validateAccountTypographyFontSelections({
         fontLibrary,
-        typography: widgetDefaults.core.typography,
+        typography: widget.core.typography,
       }).map((path) => `${widgetType}:${path}`),
-    );
-    unmappedPaths.push(
-      ...collectDefaultPaths(widgetDefaults.core)
-        .filter((path) => !pathIsCovered(path, controlPaths))
-        .filter((path) => !pathIsCovered(path, CORE_SOFTWARE_METADATA_PATHS))
-        .map((path) => `${widgetType}:${path}`),
     );
   }
 
   if (invalidTypographyPaths.length) {
     return typographyValidationFailure(invalidTypographyPaths);
   }
-  if (unmappedPaths.length) return validationFailure(unmappedPaths);
   return { ok: true };
 }

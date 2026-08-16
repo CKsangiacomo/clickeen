@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BOB_WIDGET_PANEL_IDS } from '@clickeen/bob/control-host';
 import {
   isCommonWidgetControlPath,
-  listCommonWidgetAccountDefaultMetadataPaths,
   type AccountFontLibrary,
 } from '@clickeen/widget-foundation';
 import { useRomaAccountApi } from './account-api';
@@ -55,8 +54,6 @@ type WidgetDefaultsEntry = {
   payload?: BuilderControlPayload;
 };
 
-const COMMON_SOFTWARE_METADATA_PATHS = new Set(listCommonWidgetAccountDefaultMetadataPaths());
-const CORE_SOFTWARE_METADATA_PATHS = new Set(['uiLabels.core', 'typography.roleScales']);
 const WIDGET_DEFAULTS_LOAD_ERROR_COPY = 'Widget defaults could not be loaded. Please try again.';
 const WIDGET_CONTROLS_LOAD_ERROR_COPY = 'Builder controls could not be loaded. Please try again.';
 const WIDGET_DEFAULTS_SAVE_ERROR_COPY = 'Widget defaults could not be saved. Please try again.';
@@ -191,29 +188,6 @@ function uniqueControls(controls: DefaultsControl[]): DefaultsControl[] {
     unique.push(control);
   }
   return unique;
-}
-
-function isPathCoveredByControl(path: string, controlPaths: Set<string>): boolean {
-  for (const controlPath of controlPaths) {
-    if (path === controlPath || path.startsWith(`${controlPath}.`)) return true;
-  }
-  return false;
-}
-
-function isPathCoveredByMetadata(path: string, metadataPaths: Set<string>): boolean {
-  for (const metadataPath of metadataPaths) {
-    if (path === metadataPath || path.startsWith(`${metadataPath}.`)) return true;
-  }
-  return false;
-}
-
-function collectDefaultPaths(value: unknown, prefix = ''): string[] {
-  if (Array.isArray(value)) return prefix ? [prefix] : [];
-  if (!isRecord(value)) return prefix ? [prefix] : [];
-  const paths = Object.entries(value).flatMap(([key, child]) =>
-    collectDefaultPaths(child, prefix ? `${prefix}.${key}` : key),
-  );
-  return paths.length > 0 ? paths : prefix ? [prefix] : [];
 }
 
 function WidgetDefaultsCoreSection(args: {
@@ -449,40 +423,6 @@ export function WidgetDefaultsDomain() {
     });
   }, [compiledControls, compiledPayloads, compiledWidgetLabels, draft, widgetTypes]);
 
-  const unmappedDefaultPaths = useMemo(() => {
-    if (!draft || !controlsLoaded) return [];
-    const compiledCommonControls = uniqueControls(
-      Object.values(compiledControls)
-        .flat()
-        .filter(
-          (control) =>
-            isCommonWidgetControlPath(control.path) && pathExists(draft.common, control.path),
-        ),
-    );
-    const commonControlPaths = new Set(compiledCommonControls.map((control) => control.path));
-    const commonPaths = collectDefaultPaths(draft.common)
-      .filter((path) => !isPathCoveredByControl(path, commonControlPaths))
-      .filter((path) => !isPathCoveredByMetadata(path, COMMON_SOFTWARE_METADATA_PATHS))
-      .map((path) => `Common: ${path}`);
-
-    const corePaths = widgetTypes.flatMap((widgetType) => {
-      const core = draft.widgets[widgetType]?.core ?? {};
-      const compiledCoreControls = uniqueControls(
-        (compiledControls[widgetType] ?? []).filter(
-          (control) => !isCommonWidgetControlPath(control.path) && pathExists(core, control.path),
-        ),
-      );
-      const coreControlPaths = new Set(compiledCoreControls.map((control) => control.path));
-      const widgetLabel = compiledWidgetLabels[widgetType] as string;
-      return collectDefaultPaths(core)
-        .filter((path) => !isPathCoveredByControl(path, coreControlPaths))
-        .filter((path) => !isPathCoveredByMetadata(path, CORE_SOFTWARE_METADATA_PATHS))
-        .map((path) => `${widgetLabel}: ${path}`);
-    });
-
-    return [...commonPaths, ...corePaths].sort((left, right) => left.localeCompare(right));
-  }, [compiledControls, compiledWidgetLabels, controlsLoaded, draft, widgetTypes]);
-
   const updateCommonOps = useCallback((ops: Array<{ path: string; value: unknown }>) => {
     setDraft((current) =>
       current
@@ -623,24 +563,6 @@ export function WidgetDefaultsDomain() {
     return (
       <section className="rd-canvas-module body-m" role="status">
         Loading Builder controls...
-      </section>
-    );
-  }
-
-  if (unmappedDefaultPaths.length > 0) {
-    return (
-      <section className="rd-canvas-module widget-defaults-contract-error" role="alert">
-        <div>
-          <h2 className="heading-4">Widget Defaults Contract Error</h2>
-          {error ? <p className="body-s widget-defaults-error">{error}</p> : null}
-        </div>
-        <p className="body-m">
-          Account defaults contain paths that are not exposed by the compiled Builder control
-          contract. Fix the common controls or the widget spec before editing defaults.
-        </p>
-        <pre className="widget-defaults-contract-error__paths body-s">
-          {unmappedDefaultPaths.join('\n')}
-        </pre>
       </section>
     );
   }

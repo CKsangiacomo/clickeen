@@ -5,7 +5,7 @@ import {
   saveAccountWidgetDefaultsInTokyo,
   type AccountWidgetDefaultsDocument,
 } from '@roma/lib/account-widget-defaults-direct';
-import { validateAccountWidgetDefaultsContract } from '@roma/lib/account-widget-defaults-contract';
+import { validateAccountWidgetDefaultsTypography } from '@roma/lib/account-widget-defaults-contract';
 import { readJsonPayloadOrValidation } from '@roma/lib/route-helpers';
 import {
   resolveCurrentAccountRouteContext,
@@ -59,18 +59,6 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const contract = await validateAccountWidgetDefaultsContract({
-    request,
-    widgetDefaults: result.value.widgetDefaults,
-  });
-  if (!contract.ok) {
-    return withSession(
-      request,
-      NextResponse.json({ error: contract.error }, { status: contract.status }),
-      current.value.setCookies,
-    );
-  }
-
   return withSession(request, NextResponse.json(result.value), current.value.setCookies);
 }
 
@@ -103,10 +91,7 @@ export async function PUT(request: NextRequest) {
     accountId,
     widgetDefaults: widgetDefaults as AccountWidgetDefaultsDocument,
   });
-  const contract = await validateAccountWidgetDefaultsContract({
-    request,
-    widgetDefaults: stamped,
-  });
+  const contract = validateAccountWidgetDefaultsTypography(stamped);
   if (!contract.ok) {
     return withSession(
       request,

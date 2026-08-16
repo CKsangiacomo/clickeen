@@ -3,12 +3,10 @@ import {
   createDefaultAccountFontLibrary,
   COMMON_WIDGET_FACTORY_DEFAULTS,
 } from '@clickeen/widget-foundation';
-import type { NextRequest } from 'next/server';
 import {
   readWidgetForInstancePackage,
   type InstancePackageFailure,
 } from './account-instance-public-package';
-import { validateAccountWidgetDefaultsContract } from './account-widget-defaults-contract';
 import type { AccountWidgetDefaultsDocument } from './account-widget-defaults-direct';
 
 function cloneRecord(value: Record<string, unknown>): Record<string, unknown> {
@@ -28,7 +26,6 @@ function validationFailure(reasonKey: string, detail?: string): InstancePackageF
 }
 
 export async function materializeInitialAccountWidgetDefaults(args: {
-  request: NextRequest;
   accountId: string;
   widgetTypes: string[];
   now?: string;
@@ -63,12 +60,6 @@ export async function materializeInitialAccountWidgetDefaults(args: {
     seededAt: now,
     updatedAt: now,
   };
-  const contract = await validateAccountWidgetDefaultsContract({
-    request: args.request,
-    widgetDefaults,
-    widgetTypes: args.widgetTypes,
-  });
-  if (!contract.ok) return contract;
   return {
     ok: true,
     widgetDefaults,

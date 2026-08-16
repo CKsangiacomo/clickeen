@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { NextRequest } from 'next/server';
 import {
   createDefaultAccountFontLibrary,
   isCommonWidgetControlPath,
@@ -8,7 +7,7 @@ import {
   COMMON_WIDGET_FACTORY_DEFAULTS,
   type AccountFontLibrary,
 } from '@clickeen/widget-foundation';
-import { validateAccountWidgetDefaultsContract } from '../lib/account-widget-defaults-contract';
+import { validateAccountWidgetDefaultsTypography } from '../lib/account-widget-defaults-contract';
 import {
   normalizeAccountWidgetDefaultsDocument,
   type AccountWidgetDefaultsDocument,
@@ -68,7 +67,6 @@ async function main(): Promise<void> {
   assert.equal(readValuefieldInput(-1, { min: 0, max: 160 }), null);
   assert.equal(readValuefieldInput(161, { min: 0, max: 160 }), null);
   assert.equal(readValuefieldInput(Number.NaN, { min: 0, max: 160 }), null);
-  const request = new NextRequest('https://roma.test/api/account/widget-defaults');
   const globalOrio = createDefaultAccountFontLibrary().fonts.Orio;
   assert.equal(globalOrio?.source, 'tokyo');
   if (globalOrio?.source === 'tokyo') {
@@ -100,29 +98,10 @@ async function main(): Promise<void> {
     [],
   );
   setRoleFont(valid.common, 'title', 'Custom Display', '400');
-  assert.deepEqual(
-    await validateAccountWidgetDefaultsContract({ request, widgetDefaults: valid }),
-    { ok: true },
-  );
-
-  const misplacedCoreSize = await document();
-  misplacedCoreSize.widgets['big-bang']!.core.coreSize = structuredClone(
-    misplacedCoreSize.common.coreSize,
-  );
-  const misplacedCoreSizeResult = await validateAccountWidgetDefaultsContract({
-    request,
-    widgetDefaults: misplacedCoreSize,
-  });
-  assert.equal(misplacedCoreSizeResult.ok, false);
-  if (!misplacedCoreSizeResult.ok) {
-    assert.ok(misplacedCoreSizeResult.error.paths?.includes('big-bang:coreSize.mode'));
-  }
+  assert.deepEqual(validateAccountWidgetDefaultsTypography(valid), { ok: true });
 
   setRoleFont(valid.widgets['big-bang']!.core, 'bigBang', 'Custom Display', '700');
-  const invalid = await validateAccountWidgetDefaultsContract({
-    request,
-    widgetDefaults: valid,
-  });
+  const invalid = validateAccountWidgetDefaultsTypography(valid);
   assert.equal(invalid.ok, false);
   if (!invalid.ok) {
     assert.equal(invalid.error.reasonKey, 'coreui.errors.typography.selection.invalid');
@@ -131,15 +110,12 @@ async function main(): Promise<void> {
 
   const malformed = await document();
   malformed.common.typography = { roles: { title: 'bad' } };
-  const malformedResult = await validateAccountWidgetDefaultsContract({
-    request,
-    widgetDefaults: malformed,
-  });
+  const malformedResult = validateAccountWidgetDefaultsTypography(malformed);
   assert.equal(malformedResult.ok, false);
   if (!malformedResult.ok) {
     assert.deepEqual(malformedResult.error.paths, ['common:typography.roles.title']);
   }
-  console.log('PASS Widget Defaults common/core and typography contracts');
+  console.log('PASS Widget Defaults typography contracts');
 }
 
 void main();
