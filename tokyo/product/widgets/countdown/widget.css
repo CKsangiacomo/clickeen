@@ -48,6 +48,7 @@
   justify-content: var(--countdown-justify, center);
   gap: var(--space-2);
   flex-wrap: wrap;
+  container-type: inline-size;
 }
 
 .ck-countdown__number {
@@ -60,6 +61,8 @@
   box-shadow: var(--ck-cardwrapper-shadow, none);
   border-radius: var(--ck-cardwrapper-radius, var(--control-radius-md));
   min-width: 120px;
+  max-inline-size: 100%;
+  box-sizing: border-box;
 }
 
 .ck-countdown__units {
@@ -81,10 +84,13 @@
   border: var(--ck-cardwrapper-border-width, 0px) solid var(--ck-cardwrapper-border-color, transparent);
   box-shadow: var(--ck-cardwrapper-shadow, none);
   border-radius: var(--ck-cardwrapper-radius, var(--control-radius-md));
+  max-inline-size: 100%;
+  box-sizing: border-box;
 }
 
 .ck-countdown__separator {
   font-family: var(--typo-timer-family, "Inter", sans-serif);
+  font-style: var(--typo-timer-style, normal);
   font-size: var(--typo-timer-size, var(--fs-32));
   font-weight: var(--typo-timer-weight, 700);
   letter-spacing: var(--typo-timer-tracking, 0em);
@@ -110,7 +116,21 @@
   font-weight: var(--typo-label-weight, 400);
   letter-spacing: var(--typo-label-tracking, 0em);
   line-height: var(--typo-label-line-height, var(--lh-tight));
-  color: color-mix(in oklab, var(--typo-label-color, var(--countdown-text-color)), transparent 30%);
+  color: var(--typo-label-color, var(--countdown-text-color));
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+
+.ck-countdown__number .ck-countdown__value,
+.ck-countdown__unit .ck-countdown__value {
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+
+.ck-countdown__unit[data-unit='days'][hidden] + .ck-countdown__separator {
+  display: none !important;
 }
 
 .ck-countdown[data-timer-style='inline'] .ck-countdown__units {
@@ -137,9 +157,55 @@
   display: none !important;
 }
 
+@container (max-width: 34rem) {
+  .ck-countdown__separator {
+    display: none !important;
+  }
+}
+
+@container (max-width: 30rem) {
+  .ck-countdown__units {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    inline-size: 100%;
+  }
+
+  .ck-countdown__unit {
+    min-inline-size: 0;
+    inline-size: 100%;
+  }
+
+  .ck-countdown__unit[data-unit='days'][hidden] ~ .ck-countdown__unit[data-unit='seconds'] {
+    grid-column: 1 / -1;
+    inline-size: calc((100% - var(--space-2)) / 2);
+    justify-self: center;
+  }
+}
+
+@container (max-width: 18rem) {
+  .ck-countdown__unit {
+    padding-inline: var(--space-1);
+  }
+}
+
+@container (max-width: 12rem) {
+  .ck-countdown__units {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ck-countdown__unit[data-unit='days'][hidden] ~ .ck-countdown__unit[data-unit='seconds'] {
+    grid-column: auto;
+    inline-size: 100%;
+  }
+}
+
 .ck-countdown__actions {
   display: flex;
   justify-content: var(--countdown-justify, center);
+}
+
+.ck-countdown__actions:has(> .ck-countdown__cta[hidden]) {
+  display: none;
 }
 
 .ck-countdown__cta {
@@ -159,6 +225,10 @@
   background: var(--countdown-cta-bg);
   border: 1px solid var(--countdown-cta-bg);
   transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  max-inline-size: 100%;
+  box-sizing: border-box;
+  overflow-wrap: anywhere;
+  text-align: center;
 }
 
 .ck-countdown__cta:hover {

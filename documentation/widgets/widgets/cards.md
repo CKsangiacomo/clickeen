@@ -33,7 +33,7 @@ widget.client.js
 | `widgetname` | `cards` |
 | display name | Cards |
 | Core namespace | `cards.*` |
-| panels | `content`, `typography`, `layout`, `appearance`, `settings` |
+| panels | `content`, `layout`, `appearance`, `typography`, `settings` |
 
 Core defaults live under:
 
@@ -73,6 +73,29 @@ cards.items[].link.label
 HTML supports emphasis, `br`, and `http(s)` links.
 
 `cards.items[]` entries carry stable `id` values in widget Core state.
+The Content Repeater's declared new-card object carries the same nested field
+shape as a saved card, including `media.image: { "type": "none" }`, and leaves
+only its declared `id` empty for Repeater to assign.
+
+## Editor Composition
+
+Cards follows the canonical ToolDrawer sequence:
+
+1. **Content** — shared Header plus the initially open Cards section. Each
+   repeated card owns title, copy, media, image alt text, and link values.
+   `linked-cards` already makes every card a link, so that treatment exposes
+   Link URL and Link label directly and omits the otherwise optional Add link
+   to card toggle.
+2. **Layout** — shared Header/Core/Stage/Pod layout, Card format, Columns,
+   exact pixel gap/padding, and connector enable/type/geometry.
+3. **Appearance** — shared Header/Stage/Pod appearance, optional per-card
+   styling, and the existing connector line/icon colors. Color controls remain
+   in Appearance; connector arrangement remains in Layout.
+4. **Typography** — the Card title and Card copy roles after the shared roles.
+5. **Settings** — shared branding and social-share behavior only.
+
+Only shared Header and the primary Cards Content section start open. Every
+Layout, Appearance, Typography, and Settings section starts collapsed.
 
 ## Limits
 
@@ -114,6 +137,40 @@ Runtime invariants:
 - Card wrapper styling uses shared `CKSurface.applyCardWrapper`, not a
   widget-local surface helper.
 
+Presentation invariants:
+
+- Header title typography remains owned by the shared Header role; Card title
+  typography applies only to rendered cards.
+- Card-title and Card-copy rich-text links inherit their exact role color.
+- Complete titles, copy, and link labels wrap inside the available card width.
+- Steps removes the browser's native ordered-list marker/margin/padding and
+  uses only the existing Cards step marker.
+- Responsive card composition follows the Pod's existing inline-size
+  container: two columns at `900px` or less and one column at `620px` or less.
+  Connector placement follows that effective column count rather than the
+  wider configured column value.
+
+## Current Frozen-Functionality Boundaries
+
+This Widget-system presentation pass deliberately does not reinterpret these
+existing product contracts:
+
+- Selecting Image exposes its asset control before an image source exists, so
+  exact runtime validation can reject that intermediate preview state. A
+  different draft-validity law requires a separate product decision.
+- Per-card Fill value `type: "none"` means exact transparent fill. It is not an
+  inheritance marker. Enabling per-card styles with untouched `none` values
+  therefore does not preserve the shared card border/accent.
+- The current `textTone` choices do not override the exact Card title/Card copy
+  typography colors, and `inherit`/`default` are not yet distinct visible
+  outcomes. Defining those meanings is product behavior, not a presentation
+  cleanup.
+- A whole-card link can currently contain rich-text links from title/copy.
+  Resolving that nested-interaction model requires a deliberate link contract.
+- The non-structural Appearance Object Manager currently renders repeated
+  per-card controls without visible item headings. That behavior belongs to
+  the shared Object Manager contract, not Cards-local markup.
+
 Treatment and layout state:
 
 ```text
@@ -130,4 +187,5 @@ cards.appearance.cardwrapper
 
 ```bash
 pnpm validate:widgets
+pnpm --filter @clickeen/bob test:editor-contract
 ```

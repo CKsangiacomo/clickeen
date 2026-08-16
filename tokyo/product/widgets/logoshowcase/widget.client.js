@@ -576,9 +576,15 @@
     });
   }
 
-  function isMobile() {
-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
-    return window.matchMedia('(max-width: 900px)').matches;
+  function readRenderedGap(element, context) {
+    if (!(element instanceof HTMLElement)) {
+      throw new Error(`[LogoShowcase] Missing ${context}`);
+    }
+    const gap = Number.parseFloat(getComputedStyle(element).columnGap);
+    if (!Number.isFinite(gap) || gap < 0) {
+      throw new Error(`[LogoShowcase] Invalid rendered gap for ${context}`);
+    }
+    return gap;
   }
 
   function animateScrollLeft(el, targetLeft, durationMs, runtime) {
@@ -665,10 +671,12 @@
     };
 
     const getPaging = () => {
-      const itemCount = stripEl.querySelectorAll('[data-role="logos"] [data-role="logo"]').length;
-      const first = stripEl.querySelector('[data-role="logos"] [data-role="logo"]');
+      const listEl = stripEl.querySelector('[data-role="logos"]');
+      if (!(listEl instanceof HTMLElement)) throw new Error('[LogoShowcase] Missing paged logo list');
+      const itemCount = listEl.querySelectorAll('[data-role="logo"]').length;
+      const first = listEl.querySelector('[data-role="logo"]');
       const tileW = first instanceof HTMLElement ? first.getBoundingClientRect().width : 0;
-      const gap = isMobile() ? state.logoshowcase.spacing.mobileGap : state.logoshowcase.spacing.gap;
+      const gap = readRenderedGap(listEl, 'paged logo list');
       const viewportW = viewportEl.clientWidth;
       const perPage = tileW > 0 ? Math.max(1, Math.floor((viewportW + gap) / (tileW + gap))) : 1;
       const stepMode = cfg.step === 'logo' ? 'logo' : 'page';
@@ -780,7 +788,8 @@
     const applyTickerVars = () => {
       const listEl = stripEl.querySelector('[data-role="ticker-a"] [data-role="logos"]');
       if (!(listEl instanceof HTMLElement)) throw new Error('[LogoShowcase] Missing continuous ticker list');
-      const distancePx = Math.max(0, Math.ceil(listEl.scrollWidth));
+      const seamGap = readRenderedGap(trackEl, 'continuous ticker track');
+      const distancePx = Math.max(0, Math.ceil(listEl.scrollWidth + seamGap));
       const speed = cfg.speed;
       const durationSec = distancePx / speed;
 

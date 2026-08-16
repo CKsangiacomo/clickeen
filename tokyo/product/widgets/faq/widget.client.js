@@ -278,7 +278,6 @@
         faqIds.add(itemId);
         assertString(item.question, `${itemPath}.question`);
         assertString(item.answer, `${itemPath}.answer`);
-        assertBoolean(item.defaultOpen, `${itemPath}.defaultOpen`);
       });
     });
   }
@@ -327,7 +326,7 @@
     }
   }
 
-  function renderItems(sections, behavior, displayCategoryTitles, isAccordion) {
+  function renderItems(sections, displayCategoryTitles, isAccordion) {
     const instanceId = resolvedInstanceId;
     const markup = sections
       .map((section) => {
@@ -560,7 +559,7 @@
     accordionRuntime.deepLinksEnabled = state.faq.geo.enableDeepLinks === true;
 
     // If we rebuild list markup (e.g. while typing in Bob), preserve the current expanded state.
-    // Otherwise, "expandFirst/defaultOpen" would only apply on the initial mount and get lost on re-render.
+    // When no item is open, reapply the configured global startup behavior after the rebuild.
     let desiredExpandedAnchorIds = null;
     const captureExpandedAnchors = () => {
       const expanded = [];
@@ -586,12 +585,11 @@
       }
       renderItems(
         state.faq.sections,
-        state.faq.behavior,
         state.faq.displayCategoryTitles === true,
         state.faq.layout.type === 'accordion',
       );
       if (accordionRuntime.isAccordion === true && state.faq.layout.type === 'accordion' && !desiredExpandedAnchorIds) {
-        // No items were open before the re-render: re-run initial expand logic (expandFirst/defaultOpen/expandAll).
+        // No items were open before the re-render: re-run the global startup behavior.
         lastAccordionSignature = '';
       }
     }
@@ -614,7 +612,6 @@
       state.faq.behavior.multiOpen === true,
       state.faq.behavior.expandAll === true,
       state.faq.behavior.expandFirst === true,
-      state.faq.sections.map((section) => section.faqs.map((faq) => faq.defaultOpen === true)),
     ]);
     if (desiredExpandedAnchorIds && desiredExpandedAnchorIds.length) {
       lastAccordionSignature = sig;
@@ -638,11 +635,6 @@
 
       if (state.faq.behavior.expandAll === true) {
         questions.forEach((question) => setExpanded(question, true));
-      } else if (state.faq.sections.some((section) => section.faqs.some((faq) => faq.defaultOpen === true))) {
-        const flat = state.faq.sections.flatMap((section) => section.faqs);
-        questions.forEach((question, idx) => {
-          if (flat[idx]?.defaultOpen === true) setExpanded(question, true);
-        });
       } else if (state.faq.behavior.expandFirst === true) {
         const first = questions[0];
         if (first) setExpanded(first, true);

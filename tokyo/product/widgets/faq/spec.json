@@ -127,26 +127,22 @@
             {
               "id": "q1",
               "answer": "Clickeen is a widget SaaS platform that lets you add polished, high-performing widgets to your website in minutes--no heavy dev work required.",
-              "question": "What is Clickeen?",
-              "defaultOpen": false
+              "question": "What is Clickeen?"
             },
             {
               "id": "q2",
               "answer": "Yes. The Free plan includes 1 active widget with essential features so you can try Clickeen on a live site.",
-              "question": "Do you offer a free plan?",
-              "defaultOpen": false
+              "question": "Do you offer a free plan?"
             },
             {
               "id": "q3",
               "answer": "Create your widget, copy the embed code, and paste it right before the closing </body> tag on your website. Changes you make in Clickeen update instantly.",
-              "question": "How do I install a widget on my site?",
-              "defaultOpen": false
+              "question": "How do I install a widget on my site?"
             },
             {
               "id": "89cc1b7e-73b8-44ac-aeb3-7a6667387e94",
               "answer": "Launch faster with flexible design controls, simple updates, and reliable performance--so your team can ship improvements without maintaining custom code.",
-              "question": "Why use Clickeen instead of building widgets from scratch?",
-              "defaultOpen": false
+              "question": "Why use Clickeen instead of building widgets from scratch?"
             }
           ],
           "title": "Getting started"
@@ -398,6 +394,15 @@
             "nodes": [
               {
                 "kind": "field",
+                "type": "toggle",
+                "path": "faq.displayCategoryTitles",
+                "label": "$label:content.field.faq.display-category-titles.toggle.label",
+                "attrs": {
+                  "size": "md"
+                }
+              },
+              {
+                "kind": "field",
                 "type": "object-manager",
                 "groupId": "content-sections",
                 "path": "faq.sections",
@@ -420,36 +425,22 @@
                             "kind": "field",
                             "type": "dropdown-edit",
                             "path": "faq.sections.__SECTION__.faqs.__INDEX__.question",
-                            "label": "$label:content.template.q",
+                            "label": "$label:content.field.faq.sections.section.faqs.index.question.dropdown-edit.label",
                             "attrs": {
                               "size": "md",
-                              "headerLabel": "$label:content.template.question",
-                              "placeholder": "$label:content.template.type-your-question"
+                              "headerLabel": "$label:content.field.faq.sections.section.faqs.index.question.dropdown-edit.attr.header-label",
+                              "placeholder": "$label:content.field.faq.sections.section.faqs.index.question.dropdown-edit.attr.placeholder"
                             }
                           },
                           {
                             "kind": "field",
                             "type": "dropdown-edit",
                             "path": "faq.sections.__SECTION__.faqs.__INDEX__.answer",
-                            "label": "$label:content.template.a",
+                            "label": "$label:content.field.faq.sections.section.faqs.index.answer.dropdown-edit.label",
                             "attrs": {
                               "size": "md",
-                              "headerLabel": "$label:content.template.answer",
-                              "placeholder": "$label:content.template.type-your-answer"
-                            }
-                          },
-                          {
-                            "kind": "field",
-                            "type": "toggle",
-                            "path": "faq.sections.__SECTION__.faqs.__INDEX__.defaultOpen",
-                            "label": "$label:content.field.faq.sections.section.faqs.index.default-open.toggle.label",
-                            "showIf": {
-                              "path": "faq.layout.type",
-                              "op": "equals",
-                              "value": "accordion"
-                            },
-                            "attrs": {
-                              "size": "md"
+                              "headerLabel": "$label:content.field.faq.sections.section.faqs.index.answer.dropdown-edit.attr.header-label",
+                              "placeholder": "$label:content.field.faq.sections.section.faqs.index.answer.dropdown-edit.attr.placeholder"
                             }
                           }
                         ]
@@ -468,8 +459,7 @@
                       "default-item": {
                         "id": "",
                         "question": "New question",
-                        "answer": "New answer",
-                        "defaultOpen": false
+                        "answer": "New answer"
                       }
                     }
                   }
@@ -492,43 +482,15 @@
                       {
                         "id": "",
                         "question": "New question",
-                        "answer": "New answer",
-                        "defaultOpen": false
+                        "answer": "New answer"
                       }
                     ]
                   }
                 }
               }
             ]
-          },
-          {
-            "label": "$label:content.cluster.section-titles.label",
-            "nodes": [
-              {
-                "kind": "field",
-                "type": "toggle",
-                "groupId": "title-settings",
-                "path": "faq.displayCategoryTitles",
-                "label": "$label:content.field.faq.display-category-titles.toggle.label",
-                "attrs": {
-                  "group-label": "",
-                  "size": "md"
-                }
-              }
-            ]
           }
         ]
-      },
-      {
-        "id": "typography",
-        "shared": {
-          "id": "typography",
-          "roleLabels": {
-            "section": "$label:typography.role.section.label",
-            "question": "$label:typography.role.question.label",
-            "answer": "$label:typography.role.answer.label"
-          }
-        }
       },
       {
         "id": "layout",
@@ -583,62 +545,6 @@
                   "size": "md",
                   "min": 0,
                   "max": 160
-                }
-              },
-              {
-                "kind": "field",
-                "type": "toggle",
-                "groupId": "type-settings",
-                "path": "faq.behavior.expandFirst",
-                "label": "$label:layout.field.faq.behavior.expand-first.toggle.label",
-                "showIf": {
-                  "all": [
-                    {
-                      "path": "faq.layout.type",
-                      "op": "equals",
-                      "value": "accordion"
-                    },
-                    {
-                      "path": "faq.behavior.expandAll",
-                      "op": "isFalse"
-                    }
-                  ]
-                },
-                "attrs": {
-                  "group-label": "",
-                  "size": "md"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "toggle",
-                "groupId": "type-settings",
-                "path": "faq.behavior.multiOpen",
-                "label": "$label:layout.field.faq.behavior.multi-open.toggle.label",
-                "showIf": {
-                  "path": "faq.layout.type",
-                  "op": "equals",
-                  "value": "accordion"
-                },
-                "attrs": {
-                  "group-label": "",
-                  "size": "md"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "toggle",
-                "groupId": "type-settings",
-                "path": "faq.behavior.expandAll",
-                "label": "$label:layout.field.faq.behavior.expand-all.toggle.label",
-                "showIf": {
-                  "path": "faq.layout.type",
-                  "op": "equals",
-                  "value": "accordion"
-                },
-                "attrs": {
-                  "group-label": "",
-                  "size": "md"
                 }
               },
               {
@@ -881,6 +787,10 @@
         "id": "appearance",
         "clusters": [
           {
+            "kind": "shared",
+            "id": "header-appearance"
+          },
+          {
             "label": "$label:appearance.cluster.accordion.label",
             "nodes": [
               {
@@ -937,11 +847,12 @@
                   "value": "{{faq.appearance.iconColor}}"
                 }
               }
-            ]
-          },
-          {
-            "kind": "shared",
-            "id": "header-appearance"
+            ],
+            "showIf": {
+              "path": "faq.layout.type",
+              "op": "equals",
+              "value": "accordion"
+            }
           },
           {
             "nodes": [
@@ -1293,6 +1204,17 @@
         ]
       },
       {
+        "id": "typography",
+        "shared": {
+          "id": "typography",
+          "roleLabels": {
+            "section": "$label:typography.role.section.label",
+            "question": "$label:typography.role.question.label",
+            "answer": "$label:typography.role.answer.label"
+          }
+        }
+      },
+      {
         "id": "settings",
         "clusters": [
           {
@@ -1300,6 +1222,63 @@
               {
                 "kind": "field",
                 "type": "toggle",
+                "groupId": "faq-behavior",
+                "path": "faq.behavior.expandFirst",
+                "label": "$label:settings.field.faq.behavior.expand-first.toggle.label",
+                "showIf": {
+                  "all": [
+                    {
+                      "path": "faq.layout.type",
+                      "op": "equals",
+                      "value": "accordion"
+                    },
+                    {
+                      "path": "faq.behavior.expandAll",
+                      "op": "isFalse"
+                    }
+                  ]
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "toggle",
+                "groupId": "faq-behavior",
+                "path": "faq.behavior.multiOpen",
+                "label": "$label:settings.field.faq.behavior.multi-open.toggle.label",
+                "showIf": {
+                  "path": "faq.layout.type",
+                  "op": "equals",
+                  "value": "accordion"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "toggle",
+                "groupId": "faq-behavior",
+                "path": "faq.behavior.expandAll",
+                "label": "$label:settings.field.faq.behavior.expand-all.toggle.label",
+                "showIf": {
+                  "path": "faq.layout.type",
+                  "op": "equals",
+                  "value": "accordion"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "toggle",
+                "groupId": "faq-behavior",
                 "path": "faq.geo.enableDeepLinks",
                 "label": "$label:settings.field.faq.geo.enable-deep-links.toggle.label",
                 "showIf": {
@@ -1313,7 +1292,12 @@
                 }
               }
             ],
-            "label": "$label:settings.cluster.faq-behavior.label"
+            "label": "$label:settings.cluster.faq-behavior.label",
+            "showIf": {
+              "path": "faq.layout.type",
+              "op": "equals",
+              "value": "accordion"
+            }
           },
           {
             "kind": "shared",

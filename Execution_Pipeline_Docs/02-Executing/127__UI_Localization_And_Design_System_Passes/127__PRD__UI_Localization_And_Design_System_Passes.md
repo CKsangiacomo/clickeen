@@ -158,7 +158,7 @@ the code is convenient there.
 | Stage                      | Status                                                                                                                                                                                                                                               | Release state                                                         |
 | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
 | Stage 1 — Scaffold only    | Complete                                                                                                                                                                                                                                             | Committed, pushed, and deployed; no non-English experience is exposed |
-| Stage 2 — Dieter UI pass   | In progress: Foundations and the current 29-component inventory are complete and re-audited; the latest source-backed additions are Badge, Banner, Data Table, Spinner, and governed Tooltip, while Datefield and Date Range Picker remain DevStudio-only consumer-agnostic primitives | Widget-system passes continue; the Roma Assets workspace remains planning-only behind its recorded owner authority gates |
+| Stage 2 — Dieter UI pass   | In progress: Foundations and the current 29-component inventory are complete and re-audited; the latest source-backed additions are Badge, Banner, Data Table, Spinner, and governed Tooltip, while Datefield and Date Range Picker remain DevStudio-only consumer-agnostic primitives; Big Bang, Countdown, Cards, FAQ, and Logo Showcase plus their five-Widget system reconciliation are complete locally | The Widget-system pass is complete locally; the Roma Assets workspace remains planning-only behind its recorded owner authority gates |
 | Stage 3 — Bob UI pass      | Not started                                                                                                                                                                                                                                          | No authority to begin until explicitly directed                       |
 | Stage 4 — Roma UI pass     | Not started                                                                                                                                                                                                                                          | No authority to begin until explicitly directed                       |
 | Stage 5 — Translation pass | Not started                                                                                                                                                                                                                                          | No translations may be generated yet                                  |
@@ -191,7 +191,7 @@ Build the English foundation without generating or exposing non-English UI.
 
 ### Current Implementation Shape
 
-The eight current Widget folders contain one adjacent English label file. Raw
+The five current Widget folders contain one adjacent English label file. Raw
 specs carry `$label:{key}` tokens. The compiler rejects missing, malformed, or
 unused label entries and emits resolved English artifacts through the existing
 artifact path. Resolved defaults and browser artifacts do not persist label
@@ -1697,3 +1697,293 @@ authorizes it.
   contract, generated DevStudio reveal, focused browser proof, and current
   operator documentation. No Button variant, consumer override, locale key,
   fallback, route, storage coordinate, or product-data operation was added.
+
+- **Big Bang Widget-system pass — passed locally, 2026-08-15.** Big Bang was
+  reviewed one panel at a time under the Widget-only execution boundary.
+  Content, Appearance, Typography control structure, and Settings already
+  followed the approved product model and passed without functional changes.
+  Layout keeps its exact alignment, width, and gap paths, options, defaults,
+  and bounds while its adjacent English ToolDrawer labels now describe the
+  complete statement/supporting-copy column: Content area, Content layout,
+  Content alignment, Text width, and Statement and copy gap. The authored
+  panel objects now follow the canonical Content, Layout, Appearance,
+  Typography, Settings order already emitted by the compiler.
+
+  The public Widget keeps its existing runtime, modes, validation, defaults,
+  shared-helper calls, and saved-state contract. Its rich-text links now
+  inherit their configured Statement or Body typography color instead of the
+  browser's default blue, and one unreachable mobile line-height fallback was
+  removed. The Widget operator manual now records the canonical panel order,
+  complete control inventory, content-column ownership, and link-color
+  behavior. No Bob, Dieter, Roma, Tokyo-worker, shared Widget runtime, route,
+  storage coordinate, account data, or other Widget source changed.
+
+  Focused checks passed: five Widget definition/artifact pairs, Bob
+  editor-contract, scoped diff checks, default materialization, and Chromium
+  proof that Statement and supporting-copy links inherit their exact role
+  colors. Independent V1-V8 audit passed. This Widget slice is local only: it
+  is not committed, pushed, deployed, or live, and no remote product data
+  changed.
+
+- **Countdown Widget-system pass — passed locally, 2026-08-15.** Countdown was
+  reviewed in the required Content, Layout, Appearance, Typography, Settings,
+  and whole-Widget slices. Its exact Date, visitor-relative Countdown, and
+  Number counter modes; defaults; show-if behavior; timer scheduling;
+  validation; localStorage coordinate; actions; editable fields; limits; and
+  shared utility calls are unchanged. Widget-owned English copy now describes
+  the existing date/time format, IANA/browser timezone input, mode-specific
+  sections, actions, complete Countdown area, Timer values, Unit labels, and
+  mode-neutral Display surface precisely. The Counter choice now uses the
+  existing `numbers.rectangle` Icon. Separator label keys are semantic rather
+  than legacy copy coordinates, and the authored panel order now matches the
+  compiled Content, Layout, Appearance, Typography, Settings order.
+
+  Appearance no longer renders the proven no-op `countdown.appearance.textColor`
+  editor row; its persisted/default runtime path remains unchanged, while the
+  existing Typography roles remain the sole visible timer-value and unit-label
+  color authority. Counter mode no longer exposes an empty Timer display
+  section. The public package starts with customer-text hooks empty and Header
+  and timer hidden until exact saved state is applied. Separators now honor the
+  complete Timer typography role, unit labels render their exact configured
+  color, hidden Days cannot leave a leading separator, and a local inline-size
+  container composes narrow timers into clean two-column then one-column
+  layouts without standalone separators. Long localized labels, action copy,
+  and valid numeric values remain complete inside the available surface; an
+  absent active action no longer reserves a ghost layout row.
+
+  Focused checks passed: five Widget definition/artifact pairs, Bob
+  editor-contract, full Widget validation, JSON/diff checks, and local Chromium
+  materialization across wide/narrow, separated/inline, Auto/H:M:S, exact
+  Typography colors/italic separators, hidden pre-runtime truth, empty actions,
+  long localized labels, and a 21-digit Number counter with zero horizontal
+  overflow. No Bob, Dieter, Roma, Tokyo-worker, shared Widget runtime, route,
+  storage coordinate, account data, or other Widget source changed. This
+  Widget slice is local only: it is not committed, pushed, deployed, or live,
+  and no remote product data changed.
+
+- **Cards Widget-system pass — passed locally, 2026-08-15.** Cards was reviewed
+  one panel at a time through Content, Layout, Appearance, Typography,
+  Settings, and whole-Widget reconciliation. Its modes, state paths, persisted
+  Widget defaults, existing default values, option values, runtime validation,
+  editable fields, limits, save behavior, and shared utility calls are
+  unchanged; only the Add-card template gains the missing exact nested image
+  leaf described below. The authored panel order now matches
+  the compiled Content, Layout, Appearance, Typography, Settings order, and
+  adjacent English ToolDrawer copy now names the existing card format,
+  connector, geometry, media, link, and per-card style controls directly.
+
+  Content now gives each newly added card the existing exact
+  `media.image: {type: "none"}` shape required by its nested Fill control.
+  Linked-card composition no longer exposes a meaningless enable-link toggle;
+  its existing URL and label fields remain visible because that existing mode
+  already links every card. Layout retains the exact configured columns and
+  breakpoint values while its public CSS now derives effective connector
+  placement from the available Pod container width. The Steps list resets
+  native list margins, padding, and markers so only the Widget's existing
+  counter remains. Existing connector color controls now sit in Appearance,
+  which owns their presentation paths, without changing their values or
+  runtime use.
+
+  The shared Header title no longer carries the Card-title class, so Header and
+  Card typography roles remain independent. Card title and copy links inherit
+  their exact role colors, and long localized title, copy, and action-label
+  content wraps within each card rather than creating horizontal overflow.
+  Settings required no Cards-owned correction. Existing ambiguous product
+  contracts remain explicit and unchanged: image selection still needs a
+  source before preview can validate it; Fill `none` remains exact transparent
+  rather than an invented inherit value; text-tone outcomes remain constrained
+  by exact Typography colors; linked whole-card anchors may still contain rich
+  inline links; and the shared nonstructural Object Manager still provides no
+  per-item heading. Those require later product or shared-component decisions,
+  not silent Widget-local reinterpretation.
+
+  Focused checks passed: complete five-Widget source/artifact validation, Bob
+  editor-contract, JSON/JavaScript/diff checks, and materialized Chromium proof
+  for independent Header/Card typography, exact rich-link colors, native-list
+  reset, Pod-owned two-column and one-column connector geometry, linked-card
+  control visibility, long-copy wrapping, and zero horizontal overflow at a
+  390px viewport. The compiled editor remains 214 controls / 213 unique paths,
+  all 168 adjacent labels resolve with zero missing or unused keys, and only
+  Header and Content initially open. No Bob, Dieter, Roma, Tokyo-worker,
+  shared Widget runtime, route, storage coordinate, account data, or other
+  Widget source changed. This Widget slice is local only: it is not committed,
+  pushed, deployed, or live, and no remote product data changed.
+
+- **FAQ Widget-system pass — passed locally, 2026-08-15.** FAQ was reviewed one
+  panel at a time through Content, Layout, Appearance, Typography, Settings,
+  and whole-Widget reconciliation. Its layouts, modes, state paths, persisted
+  defaults, existing default content, stable section/question identities,
+  runtime validation, editable fields, limits, save behavior, and shared
+  utility calls are unchanged. The authored panel order now matches the
+  compiled Content, Layout, Appearance, Typography, Settings order. Existing
+  Accordion behavior controls now compose under Settings rather than Layout,
+  without changing their paths, values, visibility conditions, or runtime
+  meaning. Accordion-only Appearance and Settings sections are hidden as
+  complete sections outside Accordion mode.
+
+  Widget-owned English ToolDrawer copy now names the existing FAQ size,
+  section-title choice, Question and Answer editors, content gap, Q&A-card
+  geometry, multicolumn arrangement, Accordion icon, and Accordion behavior
+  directly. All 215 adjacent English keys resolve exactly with zero missing or
+  unused entries; no raw Widget-authored editor copy or unresolved label token
+  remains. The complete compiled editor remains 235 controls, only shared
+  Header and the primary Content section start open, and source/editor/
+  materializer defaults, editable fields, and limits remain exact.
+
+  The public package no longer contains an invented English empty-state flash;
+  its existing empty hook starts empty and hidden until exact valid state is
+  applied. Multicolumn Grid and Masonry now respond to the existing Pod
+  inline-size container rather than the browser viewport. The full FAQ layout
+  chain and section/question/answer text owners remain bounded, so complete
+  localized copy and rich links wrap without widening the Pod or document.
+  No runtime JavaScript behavior changed.
+
+  Existing runtime behavior outside the frozen presentation pass remains
+  explicit: `multiOpen: false` can still initialize multiple questions open
+  through `expandAll` or multiple per-question `defaultOpen` values; Accordion
+  question/answer regions do not yet expose complete heading/region naming;
+  and malformed percent-encoded deep-link hashes still throw. Cross-section
+  duplicate FAQ ids also remain a latent identity-contract concern. Correcting
+  any of those changes runtime, accessibility, or identity behavior and needs
+  a separately authorized product decision rather than a silent change in this
+  no-functionality pass.
+
+  Focused checks passed: complete five-Widget source/artifact validation, Bob
+  editor-contract, JSON/JavaScript/diff checks, and current-source Chromium
+  materialization for List, Accordion, multicolumn Grid and Masonry, valid deep
+  links, link/toggle isolation, category visibility, exact typography, wide and
+  narrow Pod composition, long localized copy, and zero horizontal overflow or
+  page errors. No Bob, Dieter, Roma, Tokyo-worker, shared Widget runtime, route,
+  storage coordinate, account data, or other Widget source changed. This
+  Widget slice is local only: it is not committed, pushed, deployed, or live,
+  and no remote product data changed.
+
+- **Logo Showcase Widget-system pass — passed locally, 2026-08-15.** Logo
+  Showcase was reviewed one panel at a time through Content, Layout,
+  Appearance, Typography, Settings, and whole-Widget reconciliation. Its state
+  paths, persisted defaults, modes, validation, deterministic ordering,
+  stable strip/logo identities, editable fields, limits, save behavior, link
+  output, shared utility calls, and account-media contract are unchanged. The
+  authored panel order now matches the compiled Content, Layout, Appearance,
+  Typography, Settings order. Content owns exact Header and strip/logo content;
+  Grid/Carousel selection, logo geometry, and existing Carousel controls now
+  compose in Layout; deterministic shuffle composes in Settings; and shared
+  Header appearance precedes logo and tile appearance.
+
+  Widget-owned English ToolDrawer copy now names the existing logo editor,
+  Grid/Carousel layout, Carousel behavior, geometry, and deterministic shuffle
+  directly. Pause on hover remains visible for Continuous Carousel and for
+  Paged Carousel only while Autoplay is enabled. All 201 adjacent English keys
+  resolve exactly against 196 explicit label coordinates plus the five panel
+  labels. The compiled editor remains 199 controls, only shared Header and the
+  primary Content section start open, and generated editor/materializer
+  artifacts remain exact.
+
+  The static public package no longer contains an invented Header title, CTA
+  label, or CTA URL before exact saved/localized state applies. Logo-grid,
+  strip, tile, and Carousel gaps now respond to the existing Pod inline-size
+  container. Paged motion reads the actual rendered CSS gap, and Continuous
+  motion includes the configured gap across the seam between its two ticker
+  copies. Independent Chromium proof confirmed exact 20px/16px wide/narrow
+  gaps, exact tile-plus-gap Paged movement, exact Continuous seam distance and
+  speed, contained localized content, unchanged exact link output, and zero
+  browser errors.
+
+  Existing behavior outside the frozen presentation pass remains explicit:
+  final partial-page indexing, malformed-link handling, duplicated Continuous
+  accessibility traversal, speed validation, runtime-owned English arrow
+  names, touch caption reveal, shared Header narrow-Pod composition, and Bob's
+  phantom Object Manager-derived `logos.0.name` Copilot control all require
+  later product or owning-system decisions. None was hidden behind a
+  Widget-local substitute. Focused five-Widget artifact validation, Bob
+  editor-contract, JavaScript/JSON/diff checks, browser verification, and
+  independent V1-V8 audit passed. No Bob, Dieter, Roma, Tokyo-worker, shared
+  Widget runtime, route, storage coordinate, account data, or other Widget
+  source changed. This Widget slice is local only: it is not committed, pushed,
+  deployed, or live, and no remote product data changed.
+
+- **Five-Widget system reconciliation — passed locally, 2026-08-15.** The
+  complete current Widget inventory is exactly Big Bang, Cards, Countdown, FAQ,
+  and Logo Showcase: five git-authored source folders, five adjacent English
+  ToolDrawer label files, and five deterministic editor/materializer artifact
+  pairs. Every authored and compiled editor follows Content, Layout,
+  Appearance, Typography, Settings order. Every artifact opens exactly shared
+  Header and its primary Content section and keeps every other section
+  collapsed.
+
+  The five adjacent English contracts resolve exactly with no missing, unused,
+  blank, pre-encoded, raw, or unresolved Widget-owned ToolDrawer copy. Their
+  current exact label-key counts are 101, 168, 191, 215, and 201. Persisted
+  defaults, Widget identities, editable-field contracts, and entitlement-limit
+  maps remain byte-semantically equal to the pre-pass source for every Widget.
+  Cards' declared Add-card template alone gains the missing existing
+  `media.image: {type: "none"}` leaf required to create the already-defined
+  exact item shape; it does not alter saved Widget defaults or invent a new
+  behavior.
+
+  Focused reconciliation passed five definition/artifact generation checks,
+  Bob's editor contract, runtime-materializer tests and typecheck, Bob and Roma
+  typechecks, Roma instance-package and source-save boundary tests,
+  Tokyo-worker typecheck, all five Widget client syntax checks, scoped diff
+  integrity, and the per-Widget independent browser proofs recorded above. The
+  diff contains no Bob, Dieter, Roma, Tokyo-worker, shared Widget runtime,
+  route, storage, or account-data change. Each Widget manual records its exact
+  current composition and any reachable behavior deferred by the frozen
+  functionality boundary instead of claiming it fixed.
+
+  Independent V1-V8 reconciliation passed: no missing or invalid truth was
+  substituted or healed; no required artifact, control, copy, or operation was
+  omitted; enforcement remains fail-closed; corrupt state was not treated as
+  absent; no partial work is presented as complete; no compatibility wrapper or
+  alternate runtime path was introduced; and product runtime has no test
+  dependency. This complete five-Widget pass is local only: it is not
+  committed, pushed, deployed, or live, and no remote product data changed.
+
+- **FAQ Content authority hard cut — passed locally, release pending,
+  2026-08-16.** The product owner removed per-question startup behavior from
+  FAQ content and made global Accordion Settings the sole startup authority.
+  `faq.sections[].faqs[].defaultOpen` is deleted from the authored defaults,
+  initial questions, Repeater new-item shape, Object Manager nested new-item
+  shape, structured ToolDrawer control, adjacent English label contract,
+  runtime validation, runtime signature, and runtime initialization. A FAQ
+  item now contains only its stable `id`, `question`, and `answer`. Accordion
+  startup is exact: `expandAll` opens all questions; otherwise `expandFirst`
+  opens the first; otherwise none start open. Existing `multiOpen`, expanded-
+  anchor restoration, valid deep links, layouts, content, editable fields,
+  limits, and shared runtime calls remain unchanged.
+
+  `faq.displayCategoryTitles` retains its exact saved path, default, label,
+  and runtime meaning, but **Show section titles** now composes as the first
+  direct control inside the primary Content section immediately above the
+  Sections Object Manager. The retired standalone **Section titles** section
+  and its empty grouping metadata are absent. The compiled FAQ editor now has
+  234 controls and the adjacent English contract has 213 exact keys. Only
+  shared Header and the primary Content section start open; every other
+  section remains collapsed. Generated editor and materializer artifacts have
+  zero `defaultOpen` control or state references and remain deterministic with
+  the other four Widget pairs.
+
+  Local verification passed complete five-Widget source/artifact generation,
+  Bob editor-contract tests, FAQ runtime syntax, runtime-materializer tests and
+  typecheck, Roma instance-package/defaults tests and typecheck, Tokyo-worker
+  typecheck, exact source/artifact hierarchy assertions, and diff integrity.
+  No Bob, Dieter, Roma, Tokyo-worker, shared Widget source, route, locale
+  overlay, editable-field contract, or entitlement-limit source changed.
+
+  Cloud-dev was inspected read-only through the documented R2 preflight. The
+  `CLICKEEN` account has three saved FAQ instances—`I5918UU0IA`,
+  `OG66LCHRFC`, and `VUWUJ7OQ0Y`—plus FAQ account Widget Defaults. Each exact
+  stored coordinate contains four retired `defaultOpen` properties and all
+  sixteen values are `false`; two instances are published and one is
+  unpublished. No remote value was mutated during this local slice. Bob
+  validates saved instance shape exactly, so each saved instance must be
+  migrated before it can reopen against the new contract. Account Widget
+  Defaults also needs an explicit full-document migration because its current
+  nested-array coverage check accepts the `faq.sections` root and would
+  otherwise preserve the retired nested properties. The source release must
+  therefore be followed by one explicit current-account Roma transition that
+  removes only those properties and rematerializes each instance package. No
+  compatibility reader, hidden field, read-time stripping, direct account-R2
+  write, or fallback is allowed.
+  This correction is not yet committed, pushed, deployed, live, or applied to
+  remote product data.

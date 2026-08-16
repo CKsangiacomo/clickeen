@@ -271,7 +271,7 @@
                     {
                       "label": "$label:content.field.countdown.timer.mode.choice-tiles.option.number.label",
                       "value": "number",
-                      "icon": "plus"
+                      "icon": "numbers.rectangle"
                     }
                   ]
                 }
@@ -642,16 +642,6 @@
         ]
       },
       {
-        "id": "typography",
-        "shared": {
-          "id": "typography",
-          "roleLabels": {
-            "timer": "$label:typography.role.timer.label",
-            "label": "$label:typography.role.label.label"
-          }
-        }
-      },
-      {
         "id": "layout",
         "clusters": [
           {
@@ -750,19 +740,6 @@
               },
               {
                 "kind": "field",
-                "type": "dropdown-fill",
-                "groupId": "appearance-settings",
-                "path": "countdown.appearance.textColor",
-                "label": "$label:appearance.field.countdown.appearance.text-color.dropdown-fill.label",
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "fill-modes": "color",
-                  "value": "{{countdown.appearance.textColor}}"
-                }
-              },
-              {
-                "kind": "field",
                 "type": "dropdown-actions",
                 "groupId": "appearance-settings",
                 "path": "countdown.appearance.separator",
@@ -778,22 +755,27 @@
                   "value": "{{countdown.appearance.separator}}",
                   "options": [
                     {
-                      "label": "$label:appearance.field.countdown.appearance.separator.dropdown-actions.option.copy.label",
+                      "label": "$label:appearance.field.countdown.appearance.separator.dropdown-actions.option.colon.label",
                       "value": ":"
                     },
                     {
-                      "label": "$label:appearance.field.countdown.appearance.separator.dropdown-actions.option.copy.label-2",
+                      "label": "$label:appearance.field.countdown.appearance.separator.dropdown-actions.option.slash.label",
                       "value": "/"
                     },
                     {
-                      "label": "$label:appearance.field.countdown.appearance.separator.dropdown-actions.option.copy.label-3",
+                      "label": "$label:appearance.field.countdown.appearance.separator.dropdown-actions.option.dash.label",
                       "value": "-"
                     }
                   ]
                 }
               }
             ],
-            "label": "$label:appearance.cluster.timer-text.label"
+            "label": "$label:appearance.cluster.timer-text.label",
+            "showIf": {
+              "path": "countdown.timer.mode",
+              "op": "notEquals",
+              "value": "number"
+            }
           },
           {
             "kind": "shared",
@@ -1077,6 +1059,16 @@
             "id": "stagepod-appearance"
           }
         ]
+      },
+      {
+        "id": "typography",
+        "shared": {
+          "id": "typography",
+          "roleLabels": {
+            "timer": "$label:typography.role.timer.label",
+            "label": "$label:typography.role.label.label"
+          }
+        }
       },
       {
         "id": "settings",

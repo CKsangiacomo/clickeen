@@ -299,30 +299,6 @@
             "nodes": [
               {
                 "kind": "field",
-                "type": "segmented",
-                "groupId": "content-type",
-                "path": "logoshowcase.type",
-                "label": "$label:content.field.logoshowcase.type.segmented.label",
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "value": "{{logoshowcase.type}}",
-                  "options": [
-                    {
-                      "label": "$label:content.field.logoshowcase.type.segmented.option.grid.label",
-                      "value": "grid",
-                      "icon": "circle.grid.2x2"
-                    },
-                    {
-                      "label": "$label:content.field.logoshowcase.type.segmented.option.carousel.label",
-                      "value": "carousel",
-                      "icon": "ellipsis"
-                    }
-                  ]
-                }
-              },
-              {
-                "kind": "field",
                 "type": "object-manager",
                 "groupId": "content-logos",
                 "path": "logoshowcase.strips",
@@ -461,215 +437,8 @@
                 }
               }
             ]
-          },
-          {
-            "label": "$label:content.cluster.carousel.label",
-            "nodes": [
-              {
-                "kind": "field",
-                "type": "segmented",
-                "groupId": "carousel-settings",
-                "path": "logoshowcase.typeConfig.carousel.mode",
-                "label": "$label:content.field.logoshowcase.type-config.carousel.mode.segmented.label",
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "options": [
-                    {
-                      "label": "$label:content.field.logoshowcase.type-config.carousel.mode.segmented.option.paged.label",
-                      "value": "paged"
-                    },
-                    {
-                      "label": "$label:content.field.logoshowcase.type-config.carousel.mode.segmented.option.continuous.label",
-                      "value": "continuous"
-                    }
-                  ]
-                }
-              },
-              {
-                "kind": "field",
-                "type": "segmented",
-                "groupId": "carousel-settings",
-                "path": "logoshowcase.typeConfig.carousel.step",
-                "label": "$label:content.field.logoshowcase.type-config.carousel.step.segmented.label",
-                "showIf": {
-                  "path": "logoshowcase.typeConfig.carousel.mode",
-                  "op": "equals",
-                  "value": "paged"
-                },
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "options": [
-                    {
-                      "label": "$label:content.field.logoshowcase.type-config.carousel.step.segmented.option.logo.label",
-                      "value": "logo"
-                    },
-                    {
-                      "label": "$label:content.field.logoshowcase.type-config.carousel.step.segmented.option.page.label",
-                      "value": "page"
-                    }
-                  ]
-                }
-              },
-              {
-                "kind": "field",
-                "type": "toggle",
-                "groupId": "carousel-settings",
-                "path": "logoshowcase.typeConfig.carousel.showArrows",
-                "label": "$label:content.field.logoshowcase.type-config.carousel.show-arrows.toggle.label",
-                "showIf": {
-                  "path": "logoshowcase.typeConfig.carousel.mode",
-                  "op": "equals",
-                  "value": "paged"
-                },
-                "attrs": {
-                  "group-label": "",
-                  "size": "md"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "toggle",
-                "groupId": "carousel-settings",
-                "path": "logoshowcase.typeConfig.carousel.allowSwipe",
-                "label": "$label:content.field.logoshowcase.type-config.carousel.allow-swipe.toggle.label",
-                "showIf": {
-                  "path": "logoshowcase.typeConfig.carousel.mode",
-                  "op": "equals",
-                  "value": "paged"
-                },
-                "attrs": {
-                  "group-label": "",
-                  "size": "md"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "toggle",
-                "groupId": "carousel-settings",
-                "path": "logoshowcase.typeConfig.carousel.autoplay",
-                "label": "$label:content.field.logoshowcase.type-config.carousel.autoplay.toggle.label",
-                "showIf": {
-                  "path": "logoshowcase.typeConfig.carousel.mode",
-                  "op": "equals",
-                  "value": "paged"
-                },
-                "attrs": {
-                  "group-label": "",
-                  "size": "md"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "valuefield",
-                "groupId": "carousel-settings",
-                "path": "logoshowcase.typeConfig.carousel.autoSlideDelayMs",
-                "label": "$label:content.field.logoshowcase.type-config.carousel.auto-slide-delay-ms.valuefield.label",
-                "showIf": {
-                  "all": [
-                    {
-                      "path": "logoshowcase.typeConfig.carousel.mode",
-                      "op": "equals",
-                      "value": "paged"
-                    },
-                    {
-                      "path": "logoshowcase.typeConfig.carousel.autoplay",
-                      "op": "isTrue"
-                    }
-                  ]
-                },
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "min": 0
-                }
-              },
-              {
-                "kind": "field",
-                "type": "valuefield",
-                "groupId": "carousel-settings",
-                "path": "logoshowcase.typeConfig.carousel.transitionMs",
-                "label": "$label:content.field.logoshowcase.type-config.carousel.transition-ms.valuefield.label",
-                "showIf": {
-                  "path": "logoshowcase.typeConfig.carousel.mode",
-                  "op": "equals",
-                  "value": "paged"
-                },
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "min": 0
-                }
-              },
-              {
-                "kind": "field",
-                "type": "valuefield",
-                "groupId": "carousel-settings",
-                "path": "logoshowcase.typeConfig.carousel.speed",
-                "label": "$label:content.field.logoshowcase.type-config.carousel.speed.valuefield.label",
-                "showIf": {
-                  "path": "logoshowcase.typeConfig.carousel.mode",
-                  "op": "equals",
-                  "value": "continuous"
-                },
-                "attrs": {
-                  "group-label": "",
-                  "size": "md"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "dropdown-actions",
-                "groupId": "carousel-settings",
-                "path": "logoshowcase.typeConfig.carousel.direction",
-                "label": "$label:content.field.logoshowcase.type-config.carousel.direction.dropdown-actions.label",
-                "showIf": {
-                  "path": "logoshowcase.typeConfig.carousel.mode",
-                  "op": "equals",
-                  "value": "continuous"
-                },
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "value": "{{logoshowcase.typeConfig.carousel.direction}}",
-                  "options": [
-                    {
-                      "label": "$label:content.field.logoshowcase.type-config.carousel.direction.dropdown-actions.option.left.label",
-                      "value": "left"
-                    },
-                    {
-                      "label": "$label:content.field.logoshowcase.type-config.carousel.direction.dropdown-actions.option.right.label",
-                      "value": "right"
-                    }
-                  ]
-                }
-              },
-              {
-                "kind": "field",
-                "type": "toggle",
-                "groupId": "carousel-settings",
-                "path": "logoshowcase.typeConfig.carousel.pauseOnHover",
-                "label": "$label:content.field.logoshowcase.type-config.carousel.pause-on-hover.toggle.label",
-                "attrs": {
-                  "group-label": "",
-                  "size": "md"
-                }
-              }
-            ],
-            "showIf": {
-              "path": "logoshowcase.type",
-              "op": "equals",
-              "value": "carousel"
-            }
           }
         ]
-      },
-      {
-        "id": "typography",
-        "shared": {
-          "id": "typography"
-        }
       },
       {
         "id": "layout",
@@ -684,6 +453,30 @@
           },
           {
             "nodes": [
+              {
+                "kind": "field",
+                "type": "segmented",
+                "groupId": "logo-layout",
+                "path": "logoshowcase.type",
+                "label": "$label:layout.field.logoshowcase.type.segmented.label",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{logoshowcase.type}}",
+                  "options": [
+                    {
+                      "label": "$label:layout.field.logoshowcase.type.segmented.option.grid.label",
+                      "value": "grid",
+                      "icon": "circle.grid.2x2"
+                    },
+                    {
+                      "label": "$label:layout.field.logoshowcase.type.segmented.option.carousel.label",
+                      "value": "carousel",
+                      "icon": "ellipsis"
+                    }
+                  ]
+                }
+              },
               {
                 "kind": "field",
                 "type": "slider",
@@ -761,20 +554,232 @@
                   "size": "md",
                   "min": 0
                 }
+              }
+            ],
+            "label": "$label:layout.cluster.widget-layout.label"
+          },
+          {
+            "label": "$label:layout.cluster.carousel.label",
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "segmented",
+                "groupId": "carousel-settings",
+                "path": "logoshowcase.typeConfig.carousel.mode",
+                "label": "$label:layout.field.logoshowcase.type-config.carousel.mode.segmented.label",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "options": [
+                    {
+                      "label": "$label:layout.field.logoshowcase.type-config.carousel.mode.segmented.option.paged.label",
+                      "value": "paged"
+                    },
+                    {
+                      "label": "$label:layout.field.logoshowcase.type-config.carousel.mode.segmented.option.continuous.label",
+                      "value": "continuous"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "segmented",
+                "groupId": "carousel-settings",
+                "path": "logoshowcase.typeConfig.carousel.step",
+                "label": "$label:layout.field.logoshowcase.type-config.carousel.step.segmented.label",
+                "showIf": {
+                  "path": "logoshowcase.typeConfig.carousel.mode",
+                  "op": "equals",
+                  "value": "paged"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "options": [
+                    {
+                      "label": "$label:layout.field.logoshowcase.type-config.carousel.step.segmented.option.logo.label",
+                      "value": "logo"
+                    },
+                    {
+                      "label": "$label:layout.field.logoshowcase.type-config.carousel.step.segmented.option.page.label",
+                      "value": "page"
+                    }
+                  ]
+                }
               },
               {
                 "kind": "field",
                 "type": "toggle",
-                "groupId": "layout-behavior",
-                "path": "logoshowcase.behavior.randomOrder",
-                "label": "$label:layout.field.logoshowcase.behavior.random-order.toggle.label",
+                "groupId": "carousel-settings",
+                "path": "logoshowcase.typeConfig.carousel.showArrows",
+                "label": "$label:layout.field.logoshowcase.type-config.carousel.show-arrows.toggle.label",
+                "showIf": {
+                  "path": "logoshowcase.typeConfig.carousel.mode",
+                  "op": "equals",
+                  "value": "paged"
+                },
                 "attrs": {
                   "group-label": "",
                   "size": "md"
                 }
+              },
+              {
+                "kind": "field",
+                "type": "toggle",
+                "groupId": "carousel-settings",
+                "path": "logoshowcase.typeConfig.carousel.allowSwipe",
+                "label": "$label:layout.field.logoshowcase.type-config.carousel.allow-swipe.toggle.label",
+                "showIf": {
+                  "path": "logoshowcase.typeConfig.carousel.mode",
+                  "op": "equals",
+                  "value": "paged"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "toggle",
+                "groupId": "carousel-settings",
+                "path": "logoshowcase.typeConfig.carousel.autoplay",
+                "label": "$label:layout.field.logoshowcase.type-config.carousel.autoplay.toggle.label",
+                "showIf": {
+                  "path": "logoshowcase.typeConfig.carousel.mode",
+                  "op": "equals",
+                  "value": "paged"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "valuefield",
+                "groupId": "carousel-settings",
+                "path": "logoshowcase.typeConfig.carousel.autoSlideDelayMs",
+                "label": "$label:layout.field.logoshowcase.type-config.carousel.auto-slide-delay-ms.valuefield.label",
+                "showIf": {
+                  "all": [
+                    {
+                      "path": "logoshowcase.typeConfig.carousel.mode",
+                      "op": "equals",
+                      "value": "paged"
+                    },
+                    {
+                      "path": "logoshowcase.typeConfig.carousel.autoplay",
+                      "op": "isTrue"
+                    }
+                  ]
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "min": 0
+                }
+              },
+              {
+                "kind": "field",
+                "type": "valuefield",
+                "groupId": "carousel-settings",
+                "path": "logoshowcase.typeConfig.carousel.transitionMs",
+                "label": "$label:layout.field.logoshowcase.type-config.carousel.transition-ms.valuefield.label",
+                "showIf": {
+                  "path": "logoshowcase.typeConfig.carousel.mode",
+                  "op": "equals",
+                  "value": "paged"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "min": 0
+                }
+              },
+              {
+                "kind": "field",
+                "type": "valuefield",
+                "groupId": "carousel-settings",
+                "path": "logoshowcase.typeConfig.carousel.speed",
+                "label": "$label:layout.field.logoshowcase.type-config.carousel.speed.valuefield.label",
+                "showIf": {
+                  "path": "logoshowcase.typeConfig.carousel.mode",
+                  "op": "equals",
+                  "value": "continuous"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "groupId": "carousel-settings",
+                "path": "logoshowcase.typeConfig.carousel.direction",
+                "label": "$label:layout.field.logoshowcase.type-config.carousel.direction.dropdown-actions.label",
+                "showIf": {
+                  "path": "logoshowcase.typeConfig.carousel.mode",
+                  "op": "equals",
+                  "value": "continuous"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{logoshowcase.typeConfig.carousel.direction}}",
+                  "options": [
+                    {
+                      "label": "$label:layout.field.logoshowcase.type-config.carousel.direction.dropdown-actions.option.left.label",
+                      "value": "left"
+                    },
+                    {
+                      "label": "$label:layout.field.logoshowcase.type-config.carousel.direction.dropdown-actions.option.right.label",
+                      "value": "right"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "toggle",
+                "groupId": "carousel-settings",
+                "path": "logoshowcase.typeConfig.carousel.pauseOnHover",
+                "label": "$label:layout.field.logoshowcase.type-config.carousel.pause-on-hover.toggle.label",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md"
+                },
+                "showIf": {
+                  "any": [
+                    {
+                      "path": "logoshowcase.typeConfig.carousel.mode",
+                      "op": "equals",
+                      "value": "continuous"
+                    },
+                    {
+                      "all": [
+                        {
+                          "path": "logoshowcase.typeConfig.carousel.mode",
+                          "op": "equals",
+                          "value": "paged"
+                        },
+                        {
+                          "path": "logoshowcase.typeConfig.carousel.autoplay",
+                          "op": "isTrue"
+                        }
+                      ]
+                    }
+                  ]
+                }
               }
             ],
-            "label": "$label:layout.cluster.widget-layout.label"
+            "showIf": {
+              "path": "logoshowcase.type",
+              "op": "equals",
+              "value": "carousel"
+            }
           },
           {
             "kind": "shared",
@@ -785,6 +790,10 @@
       {
         "id": "appearance",
         "clusters": [
+          {
+            "kind": "shared",
+            "id": "header-appearance"
+          },
           {
             "label": "$label:appearance.cluster.logos.label",
             "nodes": [
@@ -825,10 +834,6 @@
                 }
               }
             ]
-          },
-          {
-            "kind": "shared",
-            "id": "header-appearance"
           },
           {
             "nodes": [
@@ -1087,8 +1092,30 @@
         ]
       },
       {
+        "id": "typography",
+        "shared": {
+          "id": "typography"
+        }
+      },
+      {
         "id": "settings",
         "clusters": [
+          {
+            "label": "$label:settings.cluster.logo-order.label",
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "toggle",
+                "groupId": "logo-order",
+                "path": "logoshowcase.behavior.randomOrder",
+                "label": "$label:settings.field.logoshowcase.behavior.random-order.toggle.label",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md"
+                }
+              }
+            ]
+          },
           {
             "kind": "shared",
             "id": "settings-behavior"

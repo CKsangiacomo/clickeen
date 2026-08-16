@@ -33,7 +33,7 @@ widget.client.js
 | `widgetname` | `big-bang` |
 | display name | Big Bang |
 | Core namespace | `bigBang.*` |
-| panels | `content`, `typography`, `layout`, `appearance`, `settings` |
+| panels | `content`, `layout`, `appearance`, `typography`, `settings` |
 
 Core defaults live under:
 
@@ -57,11 +57,16 @@ bigBang.textWidth
 Operator controls:
 
 ```text
+bigBang.statement
 bigBang.showSupportingCopy
+bigBang.supportingCopy
 bigBang.alignment
 bigBang.textWidth
 bigBang.gap
 ```
+
+Alignment and text width apply to the complete statement/supporting-copy
+content column. The gap is the vertical space between those two values.
 
 ## Editable Fields
 
@@ -75,7 +80,8 @@ bigBang.supportingCopy
 
 `header.title`, `header.subtitleHtml`, `bigBang.statement`, and
 `bigBang.supportingCopy` are rich-text Dropdown Edit fields. Their saved inline
-HTML supports emphasis, `br`, and `http(s)` links.
+HTML supports emphasis, `br`, and `http(s)` links. Statement and supporting-copy
+links inherit the color of their configured typography role.
 
 ## Limits
 

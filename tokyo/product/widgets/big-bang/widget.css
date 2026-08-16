@@ -54,16 +54,15 @@
   line-height: var(--typo-body-line-height, 1.42);
 }
 
+.ck-bigBang__statement a,
+.ck-bigBang__support a {
+  color: inherit;
+}
+
 .ck-bigBang__core[data-align="center"] .ck-bigBang__support {
   margin-inline: auto;
 }
 
 .ck-bigBang__support[hidden] {
   display: none;
-}
-
-@media (max-width: 700px) {
-  .ck-bigBang__statement {
-    line-height: var(--typo-bigBang-line-height, 1);
-  }
 }

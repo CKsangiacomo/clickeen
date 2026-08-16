@@ -204,16 +204,6 @@
         ]
       },
       {
-        "id": "typography",
-        "shared": {
-          "id": "typography",
-          "roleLabels": {
-            "bigBang": "$label:typography.role.big-bang.label",
-            "body": "$label:typography.role.body.label"
-          }
-        }
-      },
-      {
         "id": "layout",
         "clusters": [
           {
@@ -288,6 +278,16 @@
             "id": "stagepod-appearance"
           }
         ]
+      },
+      {
+        "id": "typography",
+        "shared": {
+          "id": "typography",
+          "roleLabels": {
+            "bigBang": "$label:typography.role.big-bang.label",
+            "body": "$label:typography.role.body.label"
+          }
+        }
       },
       {
         "id": "settings",

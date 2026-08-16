@@ -37,7 +37,7 @@ its adjacent English label file is compiler input, not runtime code.
 | `widgetname` | `countdown` |
 | display name | Countdown |
 | Core namespace | `countdown.*` |
-| panels | `content`, `typography`, `layout`, `appearance`, `settings` |
+| panels | `content`, `layout`, `appearance`, `typography`, `settings` |
 
 Core defaults live under:
 
@@ -54,6 +54,24 @@ countdown.actions
 countdown.appearance
 countdown.timer
 ```
+
+## Editor Composition
+
+Content presents the three existing timer jobs first: fixed Date, visitor-relative
+Countdown, and Number counter. The remaining sections are mode-specific and keep
+the existing timer, unit-label, during-action, and after-action paths unchanged.
+The Header and primary Content sections are initially open; all other sections are
+collapsed.
+
+Layout is composed entirely from the shared Header, Countdown area, Pod, and
+Stage controls. Appearance exposes Timer display only for Date and Countdown
+modes. Display surface is available for the Number counter and for separated
+Date/Countdown tiles. Visible timer-value and unit-label colors are owned by
+their exact Typography roles; Appearance does not expose a duplicate color
+control.
+
+Typography exposes `Timer values` and `Unit labels`. Settings remains the shared
+locale-switcher, branding, and social-share composition.
 
 Countdown declares complete `label` and `timer` typography roles, including
 explicit normal tracking and line-height presets. Runtime does not infer those
@@ -136,6 +154,19 @@ Timer failure rules:
 
 Appearance state includes timer style, time format, labels, separator, text
 color, item background, and card-wrapper radius/border/shadow.
+
+The static package keeps customer-text hooks empty and the Header/timer hidden
+until exact saved state is applied. Timer values and separators use the complete
+Timer typography role; unit labels use the complete Unit labels role without a
+second color transformation.
+
+The timer owns its responsive presentation through a local inline-size
+container inside the existing Pod boundary. A complete wide row keeps the
+chosen separators. Narrow rows remove
+standalone separators and compose tiles in two columns, then one column when the
+available width cannot hold two tiles. Hidden Days never leaves a leading
+separator. Long numeric values and localized labels remain complete and wrap
+inside the available surface instead of widening the page.
 
 ## Shared Widget Utilities
 

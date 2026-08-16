@@ -13,7 +13,18 @@
   --ck-cardwrapper-border-color: var(--color-system-gray-5);
 }
 
+.ck-faq__body,
+.ck-faq__sections,
+.ck-faq__section,
+.ck-faq__list,
+.ck-faq__item,
+.ck-faq__q {
+  min-width: 0;
+  max-width: 100%;
+}
+
 .ck-faq__sections {
+  width: 100%;
   list-style: none;
   padding: 0;
   margin: 0;
@@ -22,11 +33,13 @@
 }
 
 .ck-faq__section {
+  width: 100%;
   display: grid;
   gap: var(--space-2);
 }
 
 .ck-faq__list {
+  width: 100%;
   list-style: none;
   padding: 0;
   margin: 0;
@@ -35,6 +48,9 @@
 }
 
 .ck-faq__category {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
   font-family: var(--typo-section-family, "Inter", sans-serif);
   font-style: var(--typo-section-style, normal);
   font-weight: var(--typo-section-weight, 600);
@@ -100,6 +116,9 @@
 }
 
 .ck-faq__q-text {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
   font-family: var(--typo-question-family, "Inter", sans-serif);
   font-style: var(--typo-question-style, normal);
   font-size: var(--typo-question-size, var(--faq-question-size, var(--fs-14)));
@@ -160,6 +179,9 @@
 }
 
 .ck-faq__a {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
   font: var(--typo-answer-weight, 400)
     var(--typo-answer-size, var(--faq-answer-size, var(--fs-14)))
     / var(--typo-answer-line-height, var(--lh-body))
@@ -277,7 +299,7 @@
   margin: 0 0 var(--layout-gap, var(--space-3));
 }
 
-@media (max-width: 900px) {
+@container (max-width: 900px) {
   .ck-faq[data-layout='multicolumn'] .ck-faq__list {
     grid-template-columns: repeat(var(--faq-columns-mobile, 1), minmax(0, 1fr));
   }
