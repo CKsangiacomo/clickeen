@@ -175,6 +175,7 @@ async function assertPostCommitPurgeFailureTruth(): Promise<void> {
     ACCOUNT_PUBLICATION_COORDINATOR: {} as DurableObjectNamespace,
     CLOUDFLARE_ZONE_ID: 'zone',
     CLOUDFLARE_CACHE_PURGE_TOKEN: 'token',
+    PUBLIC_SERVING_BASE_URL: 'https://dev.clk.live',
   } satisfies Env;
   await seedInstance(env, firstInstanceId);
 
@@ -190,13 +191,17 @@ async function assertPostCommitPurgeFailureTruth(): Promise<void> {
   );
   const originalFetch = globalThis.fetch;
   let purgeSucceeds = false;
-  globalThis.fetch = async () => new Response(
-    JSON.stringify({ success: purgeSucceeds }),
-    {
-      status: purgeSucceeds ? 200 : 500,
-      headers: { 'content-type': 'application/json' },
-    },
-  );
+  const purgeBodies: unknown[] = [];
+  globalThis.fetch = async (_input, init) => {
+    purgeBodies.push(JSON.parse(String(init?.body)));
+    return new Response(
+      JSON.stringify({ success: purgeSucceeds }),
+      {
+        status: purgeSucceeds ? 200 : 500,
+        headers: { 'content-type': 'application/json' },
+      },
+    );
+  };
 
   try {
     const failedPublish = await coordinator.fetch(
@@ -215,6 +220,9 @@ async function assertPostCommitPurgeFailureTruth(): Promise<void> {
         status: 'published',
         changed: true,
       },
+    });
+    assert.deepEqual(purgeBodies[0], {
+      prefixes: [`dev.clk.live/${accountId}/${firstInstanceId}`],
     });
     const publishedPointer = await readAccountInstanceSourcePointer({
       env,
@@ -304,6 +312,7 @@ async function run(): Promise<void> {
     ACCOUNT_PUBLICATION_COORDINATOR: {} as DurableObjectNamespace,
     CLOUDFLARE_ZONE_ID: 'zone',
     CLOUDFLARE_CACHE_PURGE_TOKEN: 'token',
+    PUBLIC_SERVING_BASE_URL: 'https://dev.clk.live',
   } satisfies Env;
   await Promise.all([
     seedInstance(env, firstInstanceId),

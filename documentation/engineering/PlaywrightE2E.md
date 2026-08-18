@@ -247,7 +247,7 @@ rewrite account locale settings.
 - `e2e/widgets/prd106f-builder-certification.spec.ts`: certifies current
   Builder behavior for the named widget flow.
 - `e2e/widgets/prd129-cloud-dev-lifecycle.spec.ts`: opt-in deployed lifecycle,
-  stable-overlay, and instance cache-tag proof using a dedicated temporary
+  stable-overlay, and instance URL-prefix invalidation proof using a dedicated temporary
   instance.
 - `e2e/devstudio/route-contract.spec.ts`: verifies DevStudio route shell,
   navigation, and policy read lane.

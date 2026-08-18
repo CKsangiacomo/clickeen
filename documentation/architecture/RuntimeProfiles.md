@@ -114,6 +114,6 @@ verification completed for product commit `e2ac3589`; owner QA remains pending.
   JavaScript and references identical support URLs.
 - Overlay behavior: changing one overlay changes that locale response HTML and
   the exact switcher option set authored into every index response; one
-  instance cache-tag purge covers every package and query variant.
+  exact instance URL-prefix purge covers every package path and query variant.
 - R2: exactly one base artifact set and overlay JSON; no locale-derived runtime
   objects.

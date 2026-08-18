@@ -361,8 +361,10 @@ accounts/{accountPublicId}/instances/{instanceId}/
 ```
 
 Tokyo-worker stores the three exact generated strings, writes published serve
-state, and purges the instance's one Cloudflare cache tag after a successful
-Publish. That tag covers HTML, CSS, JavaScript, locales, and query variants. A
+state, and purges the instance's one exact Cloudflare URL prefix after a
+successful Publish. The prefix is the configured public-serving host plus the
+exact encoded account and instance path. It covers base HTML, support-file
+paths, locale queries, and tracking-query variants without enumerating them. A
 republish replaces the same three package objects for the same instance. No
 second storage or release workflow exists.
 
@@ -525,6 +527,9 @@ those operations exist.
 - a post-commit cache-purge failure returns explicit failure plus exact
   committed publication truth, Roma reconciles its visible state to that truth,
   and the ordinary status command remains retryable;
+- Publish/Republish, Unpublish, Delete, and exact overlay mutation use the same
+  exact instance URL-prefix invalidation coordinate, covering package paths and
+  locale/tracking query variants;
 - Save source remains unchanged by Publish;
 - repeated localized content follows stable identity across reorder/add/delete,
   and editable attributes use their exact authored target;
@@ -569,7 +574,8 @@ account suspension lifecycle runner/full deletion: documented follow-on account 
 account product data: unchanged
 stored positional-overlay Generate/delete cutover: pending
 republish of affected pre-stable-slot public packages: pending
-cache-tag invalidation proof for base and locale variants: pending
+instance URL-prefix invalidation proof for base and locale variants: pending
+prior Cache-Tag purge runtime result: proved silent no-op after warm base/locale HIT responses and successful Republish; replaced locally, post-deploy proof pending
 post-commit publication/purge result correction: implemented locally; cloud-dev deploy proof pending
 product commit: e2ac3589
 main push: performed

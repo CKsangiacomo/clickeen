@@ -195,8 +195,10 @@ For a selected non-base locale, Tokyo-worker:
 The response references the same stored CSS and JavaScript. No locale-derived
 package is stored. Successful base/locale responses use the existing public
 cache policy and the locale query is part of the request cache coordinate. An
-exact overlay write/delete purges the instance's one Cloudflare cache tag after
-the mutation; that tag covers every package file and locale/query variant.
+exact overlay write/delete purges the instance's one exact Cloudflare URL
+prefix after the mutation. That prefix is the configured public-serving host
+plus account/instance path and covers every package path and locale/query
+variant.
 
 Public serving does not inject `CK_LOCALE_CONTEXT`, run a client localizer,
 compare package fingerprints, compare overlay values with saved content, call a
@@ -265,8 +267,11 @@ relationship without a second SEO/Discovery renderer.
   Previously stored positional overlays still require the documented explicit
   Generate Translations or deletion cutover, and previously published packages
   must be Republished when they predate the stable content slots.
-- Publish/overlay cache-tag invalidation still requires the documented
-  cloud-dev base-and-locale runtime proof. Owner QA remains pending.
+- The prior deployed Cache-Tag purge was proved a silent no-op: after base and
+  French responses were warm cache `HIT`s, Republish returned `200` while both
+  variants remained `HIT`. The current local source replaces invalidation with
+  one exact instance URL-prefix purge. Its cloud-dev deployment and successful
+  base-and-locale freshness proof remain pending. Owner QA remains pending.
 
 ## Verification
 

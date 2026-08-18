@@ -101,8 +101,10 @@ stored. Missing locale truth is `404` and never falls back to base content. An a
 JSON-decode failure remains explicit; Tokyo does not revalidate the stored
 overlay against another Clickeen artifact on every request. Because the option
 set appears in every index response, Publish, unpublish, Delete, and overlay
-mutation purge the instance's one Cloudflare cache tag after the owning truth
-mutation. The tag covers every package file and locale/query variant.
+mutation purge the instance's one exact Cloudflare URL prefix after the owning
+truth mutation. The prefix is the configured public-serving host plus the
+exact account/instance path and covers every package path and locale/query
+variant.
 
 Current cloud-dev implementation: public serving trusts every current Widget's Roma
 package and exact overlay, then uses Cloudflare `HTMLRewriter` over materialized

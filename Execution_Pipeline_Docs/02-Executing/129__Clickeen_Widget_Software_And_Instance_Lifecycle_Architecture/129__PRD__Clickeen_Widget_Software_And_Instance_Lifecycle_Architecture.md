@@ -179,13 +179,19 @@ An allowed Publish:
 4. asks Tokyo-worker to store the generated files and publication truth; and
 5. makes that stored package the public truth for the instance.
 
-Publication truth commits before the instance cache-tag purge. If the commit
+Publication truth commits before the instance URL-prefix purge. If the commit
 succeeds and the purge then fails, the command is not reported as full success
 and the committed publication is not hidden as a failed Publish. Tokyo returns
 the explicit purge error with the exact
 `committed: { instanceId, status, changed }` transition. Roma reconciles the
 visible state, shows a status-specific account-shell banner, and the existing
 Republish or Unpublish command retries delivery refresh.
+
+The invalidation coordinate is one exact prefix composed from the configured
+public-serving host plus the encoded account and instance path. It covers that
+instance's base HTML, support-file paths, locale variants, and tracking-query
+variants. `Cache-Tag` may remain response metadata, but it is not the purge
+authority.
 
 A Publish denied by Roma's fast local capacity precheck performs no
 materialization. A request that reaches Tokyo-worker but loses the final
@@ -459,7 +465,8 @@ authored exact attribute localization: present in cloud-dev
 pre-GA positional-overlay compatibility path: absent; explicit Generate/delete cutover is required for previously stored positional overlays
 stored positional-overlay Generate/delete cutover: pending
 republish of affected pre-stable-slot public packages: pending
-cache-tag invalidation proof for base and locale variants: pending
+instance URL-prefix invalidation proof for base and locale variants: pending
+prior Cache-Tag purge runtime result: proved silent no-op after warm base/locale HIT responses and successful Republish; replaced locally, post-deploy proof pending
 post-commit publication/purge result correction: implemented locally; cloud-dev deploy proof pending
 independent V1-V8 audits: Pass for all-Widget source/materialization, stable localization, atomic Publish, exact product-root cutover, and the cloud-dev deploy; owner QA pending
 ```

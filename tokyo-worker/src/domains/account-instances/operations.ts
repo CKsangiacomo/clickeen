@@ -4,7 +4,7 @@ import {
   writeInstancePublicPackage,
   type SubmittedInstancePublicPackage,
 } from './package-files';
-import { accountInstanceCacheTag } from './keys';
+import { accountInstanceCachePrefix } from './keys';
 import { deleteAccountInstanceSubtree } from './delete';
 import {
   listAccountInstanceIds,
@@ -71,7 +71,8 @@ export async function purgeClkLiveEntryCache(args: {
 }): Promise<void> {
   const zoneId = String(args.env.CLOUDFLARE_ZONE_ID || '').trim();
   const token = String(args.env.CLOUDFLARE_CACHE_PURGE_TOKEN || '').trim();
-  if (!zoneId || !token) {
+  const publicServingBaseUrl = String(args.env.PUBLIC_SERVING_BASE_URL || '').trim();
+  if (!zoneId || !token || !publicServingBaseUrl) {
     throw new AccountInstanceTransitionError({
       status: 503,
       kind: 'UPSTREAM_UNAVAILABLE',
@@ -87,7 +88,7 @@ export async function purgeClkLiveEntryCache(args: {
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        tags: [accountInstanceCacheTag(args.accountId, args.instanceId)],
+        prefixes: [accountInstanceCachePrefix(publicServingBaseUrl, args.accountId, args.instanceId)],
       }),
     });
   } catch (error) {
