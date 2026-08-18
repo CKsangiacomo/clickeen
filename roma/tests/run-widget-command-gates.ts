@@ -21,6 +21,11 @@ function assertNoOldUpgradePath(source: string): void {
 
 async function testPublishGateBeforeTransition(): Promise<void> {
   const source = await readRoute('app/api/account/instances/[instanceId]/publish/route.ts');
+  const unpublishRoute = await readRoute('app/api/account/instances/[instanceId]/unpublish/route.ts');
+  const directSource = await readRoute('lib/account-instance-direct.ts');
+  const tokyoClientSource = await readRoute('lib/tokyo-client.ts');
+  const builderSource = await readRoute('components/builder-domain.tsx');
+  const widgetsSource = await readRoute('components/widgets-domain.tsx');
   const tokyoOperations = await readFile(
     new URL('../../tokyo-worker/src/domains/account-instances/operations.ts', import.meta.url),
     'utf8',
@@ -54,6 +59,21 @@ async function testPublishGateBeforeTransition(): Promise<void> {
     'this.active = false;',
     'await purgeClkLiveEntryCache({',
   );
+  assert.match(tokyoCoordinator, /error\.committed = transition/);
+  assert.match(tokyoOperations, /error\.committed = transition/);
+  assert.match(tokyoClientSource, /committed\?: unknown/);
+  assert.match(directSource, /committed\?: AccountInstanceStatusTransition/);
+  assert.match(source, /publish\.committed \? \{ committed: publish\.committed \} : \{\}/);
+  assert.match(unpublishRoute, /unpublish\.committed \? \{ committed: unpublish\.committed \} : \{\}/);
+  assert.match(builderSource, /resolveCommittedPublicationFailureCopy/);
+  assertBefore(builderSource, 'await openActiveInstanceInBobRef.current();', 'setPublicationError(message);');
+  assert.match(widgetsSource, /entry\.instanceId === committed\.instanceId/);
+  assert.match(widgetsSource, /status: committed\.status/);
+  assert.match(widgetsSource, /setMutationError\(resolveCommittedPublicationFailureCopy/);
+  assert.match(widgetsSource, /setPublicationRetry\(\{ instance, status: committed\.status \}\)/);
+  assert.match(widgetsSource, />Retry public delivery<\/span>/);
+  assert.match(widgetsSource, /handleStatusChange\(publicationRetry\.instance, publicationRetry\.status\)/);
+  assert.match(widgetsSource, /if \(!isPublicationRetry\) setPublicationRetry\(null\)/);
 }
 
 async function testDeleteDoesNotDependOnRetiredPages(): Promise<void> {

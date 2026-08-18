@@ -96,6 +96,10 @@ The system policy matrix owns every tier value. Free is `1`.
 This means a Free user may retain many editable instances but may have only one
 published and publicly served instance at a time.
 
+The matrix deliberately keeps Tier 1 at that same one-instance capacity because
+Tier 1 expands product features. Tier 2, at five published instances, is the
+first multi-publish tier.
+
 ### 5.1 First Publish
 
 Publishing an unpublished instance consumes one publication slot. Roma uses
@@ -272,8 +276,10 @@ relate.
 
 The system supplies the tier rule:
 
-- Free and Tier 1 receive the Clickeen baseline for that Widget;
-- Tier 2 and above may use exact saved content when **Enable SEO/GEO** is on.
+- every tier receives the Clickeen baseline title and description for that
+  Widget;
+- Tier 2 and above may additionally use exact saved content when **Enable
+  SEO/GEO** is on.
 
 Only the materializer writes the resulting technical output into
 `index.html`. Bob does not write it, `discovery.json` does not contain output
@@ -367,9 +373,14 @@ that transition receives `409`; a request arriving after commit reads the new
 serve state even while purge is finishing. No TTL, lease, reclaim, stale-holder,
 or release-failure path exists.
 
-Publish success means Tokyo-worker has stored the complete generated package
-and the intended publication truth. A failed Publish is reported as a failed
-Publish; no separate AI-invented status vocabulary is introduced.
+Publish success means Tokyo-worker has stored the complete generated package,
+committed the intended publication truth, and completed its cache purge. If
+package and publication truth commit but the following purge fails, Tokyo
+returns an explicit HTTP `502` purge failure, or HTTP `503` missing-purge-
+configuration failure, together with the exact
+`committed: { instanceId, status, changed }` transition. It does not claim full
+success, hide the committed publication as a failed Publish, or roll the
+publication back.
 
 ## 13. First Publish, Republish, And Unpublish
 
@@ -387,6 +398,17 @@ replaces the currently public package for that same instance.
 
 Unpublish changes publication truth so the package is no longer served. It
 does not delete editable source and does not materialize another package.
+
+For either publication direction, Roma consumes a post-commit purge failure as
+two exact facts: the requested publication state committed, and public delivery
+refresh failed. Builder reopens the exact instance and Widgets updates its row
+and cache from `committed`; Roma then shows a status-specific durable account-
+shell banner. A committed Publish is retried through Republish. A committed
+Unpublish is retried through the Widgets banner's **Retry public delivery**
+action, which invokes the same idempotent Unpublish command with the committed
+status. Bob's ToolDrawer and the upsell
+Popup do not own this result, and no queue, polling loop, rollback, or alternate
+retry route is added.
 
 Bob TopDrawer exposes Publish for a clean unpublished instance and Republish for
 a clean published instance. It sends one host intent to Roma; it does not Save
@@ -495,9 +517,14 @@ those operations exist.
   JavaScript, including complete FAQ questions and answers;
 - `styles.css` contains complete shared and Widget presentation;
 - `runtime.js` contains visitor functionality without Bob or initial rendering;
-- Free/Tier 1 Discovery output uses the exact Clickeen baseline;
-- Tier 2+ enabled output uses only exact declared saved content;
+- every tier's Discovery output uses the exact Clickeen baseline title and
+  description;
+- Tier 2+ enabled content-derived output uses only exact declared saved
+  content and does not replace the baseline;
 - Tokyo-worker stores Roma's generated files without generating Widget code;
+- a post-commit cache-purge failure returns explicit failure plus exact
+  committed publication truth, Roma reconciles its visible state to that truth,
+  and the ordinary status command remains retryable;
 - Save source remains unchanged by Publish;
 - repeated localized content follows stable identity across reorder/add/delete,
   and editable attributes use their exact authored target;
@@ -515,7 +542,7 @@ those operations exist.
 | V3 | Pass | Policy decision, materialization, account-atomic storage/publication, and Serve handoff remain explicit; account suspension lifecycle remains with its named owner. |
 | V4 | Pass | Roma's fast precheck and Tokyo's lifecycle-fenced per-account coordinator prevent over-capacity first-Publish success across ordinary interleaving and Durable Object restart; a contender fails explicitly and persists nothing. |
 | V5 | Pass | Missing or corrupt source/package truth is not treated as an unpublished empty instance. |
-| V6 | Pass | Publish succeeds only as complete package storage plus publication truth; final contention and stable-identity add/reorder/delete outcomes are explicit. |
+| V6 | Pass | Publish succeeds only as complete package storage, publication truth, and cache purge; a post-commit purge failure exposes both the committed transition and failed delivery refresh instead of masquerading as full success or total Publish failure. |
 | V7 | Pass | No Save-time materializer, alternate release workflow, or client initial renderer is authorized. |
 | V8 | Pass | Verification remains offline/operator evidence, not part of Publish or Serve. |
 
@@ -540,6 +567,10 @@ authored exact attribute localization target: present in cloud-dev
 pre-GA positional-overlay compatibility path: absent; explicit Generate/delete cutover required for previously stored positional overlays
 account suspension lifecycle runner/full deletion: documented follow-on account work, not a PRD 129 blocker
 account product data: unchanged
+stored positional-overlay Generate/delete cutover: pending
+republish of affected pre-stable-slot public packages: pending
+cache-tag invalidation proof for base and locale variants: pending
+post-commit publication/purge result correction: implemented locally; cloud-dev deploy proof pending
 product commit: e2ac3589
 main push: performed
 deploy: cloud-dev Worker/R2 run 32087699030 and Bob/Roma Pages deployments passed

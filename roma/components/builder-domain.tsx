@@ -8,7 +8,10 @@ import type { AccountFontLibrary } from '@clickeen/widget-foundation';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { resolveAccountShellErrorCopy } from '../lib/account-shell-copy';
+import {
+  resolveAccountShellErrorCopy,
+  resolveCommittedPublicationFailureCopy,
+} from '../lib/account-shell-copy';
 import { resolveBobBaseUrl } from '../lib/env/bob';
 import { formatAccountTierLabel } from '../lib/format';
 import { buildWidgetPublicActions, type WidgetPublicActions } from '../lib/public-widget-actions';
@@ -203,6 +206,15 @@ type BuilderOpenResponse = {
   fontLibrary: AccountFontLibrary;
   publishStatus: 'published' | 'unpublished';
   copilot: unknown;
+};
+
+type PublicationFailureResponse = {
+  error: { reasonKey: string };
+  committed?: {
+    instanceId: string;
+    status: 'published' | 'unpublished';
+    changed: boolean;
+  };
 };
 
 const BUILDER_REASON_COPY: Record<string, string> = {
@@ -966,7 +978,17 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         return;
       }
       if (!response.ok) {
-        const failed = await response.json() as { error: { reasonKey: string } };
+        const failed = await response.json() as PublicationFailureResponse;
+        if (failed.committed) {
+          const message = resolveCommittedPublicationFailureCopy(
+            failed.committed.status,
+            failed.error.reasonKey,
+            'The publication state changed, but public delivery could not be refreshed. Retry the publication action.',
+          );
+          await openActiveInstanceInBobRef.current();
+          setPublicationError(message);
+          return;
+        }
         setPublicationError(
           resolveAccountShellErrorCopy(
             failed.error.reasonKey,

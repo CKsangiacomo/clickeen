@@ -79,8 +79,9 @@ Its entitlement is:
 embed.seoGeo.enabled
 ```
 
-- Free and Tier 1 receive the Widget's Clickeen baseline output.
-- Tier 2 and above may enable the Widget's authored content-derived output.
+- Every tier receives the Widget's Clickeen baseline title and description.
+- Tier 2 and above may additionally enable the Widget's authored
+  content-derived output.
 - Bob applies the edit entitlement before draft mutation.
 - A denial leaves the draft unchanged and sends Roma the exact
   `{ capability, messageId, required }`.
@@ -102,7 +103,9 @@ parts: section title, question, answer
 relationship: question answers answer
 ```
 
-Every FAQ Publish writes the exact baseline `<title>` and meta description.
+Every FAQ Publish writes the exact baseline `<title>` and meta description on
+every tier. Enabled Tier 2+ content-derived output augments that baseline; it
+does not replace or suppress it.
 
 When both the saved `behavior.seoGeo.enabled` value and system
 `embed.seoGeo.enabled` flag are true, FAQ Core's authored schema.org

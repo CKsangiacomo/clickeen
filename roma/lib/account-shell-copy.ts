@@ -31,3 +31,21 @@ export function resolveAccountShellErrorCopy(reason: string, fallback: string): 
   if (mapped) return mapped;
   return fallback;
 }
+
+export function resolveCommittedPublicationFailureCopy(
+  status: 'published' | 'unpublished',
+  reason: string,
+  fallback: string,
+): string {
+  if (reason === 'tokyo.errors.publicCache.purgeConfigMissing') {
+    return status === 'published'
+      ? 'Published, but public delivery cache is not configured. Republish after it is configured.'
+      : 'Unpublished, but public delivery cache is not configured. Retry public delivery after it is configured.';
+  }
+  if (reason === 'tokyo.errors.publicCache.purgeFailed') {
+    return status === 'published'
+      ? 'Published, but public delivery could not be refreshed. Republish to retry.'
+      : 'Unpublished, but public delivery could not be refreshed. Retry public delivery.';
+  }
+  return fallback;
+}

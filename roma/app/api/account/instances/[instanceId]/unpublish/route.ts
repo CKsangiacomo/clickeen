@@ -30,7 +30,14 @@ export async function POST(request: NextRequest, context: RouteContext) {
   if (!unpublish.ok) {
     return withSession(
       request,
-      NextResponse.json({ error: unpublish.error }, { status: unpublish.status }),
+      NextResponse.json(
+        {
+          ok: false,
+          error: unpublish.error,
+          ...(unpublish.committed ? { committed: unpublish.committed } : {}),
+        },
+        { status: unpublish.status },
+      ),
       current.value.setCookies,
     );
   }

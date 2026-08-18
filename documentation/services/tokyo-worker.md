@@ -174,6 +174,36 @@ that tag. Exact overlay writes/deletes purge the same tag after the overlay
 mutation when the instance is published. The tag covers HTML, CSS, JavaScript,
 locale queries, and tracking-query variants without enumerating URLs.
 
+Publication truth commits before the cache purge. If a Publish/Republish or
+Unpublish commit succeeds and the purge then fails, Tokyo does not claim full
+success and does not hide or roll back the committed truth. It returns the
+purge error together with the exact committed transition:
+
+```json
+{
+  "ok": false,
+  "error": {
+    "kind": "UPSTREAM_UNAVAILABLE",
+    "reasonKey": "tokyo.errors.publicCache.purgeFailed",
+    "detail": "[exact failure detail]"
+  },
+  "committed": {
+    "instanceId": "[instanceId]",
+    "status": "published",
+    "changed": true
+  }
+}
+```
+
+The response is HTTP `502` for a purge request failure and HTTP `503` with
+`tokyo.errors.publicCache.purgeConfigMissing` when purge configuration is
+missing. `status` is the exact committed `published` or `unpublished` value.
+Roma consumes that truth, reconciles the product surface to it, and presents
+the delivery-refresh failure. A retry uses the existing Republish or Unpublish
+command; Tokyo adds no rollback, queue, polling, or alternate retry route.
+This committed-result correction is implemented in the current local source;
+cloud-dev deployment and runtime proof remain pending in this reconciliation.
+
 Delete removes the instance subtree and then purges the same tag. A retry after
 truth was removed but purge failed still purges the tag and returns an
 idempotent successful result with `existed: false`. Save never depends on a
@@ -204,7 +234,10 @@ capacity denial.
 
 The Durable Object writes no persistent storage and holds no policy, count,
 package, or publication truth. Its lifecycle-fence read does not create a
-record. Per-instance `serve-state.json` remains the sole
+record. The returned value is intentionally unused and the reserved key is
+intentionally never written: performing the storage access is what activates
+Cloudflare's shutdown/replacement fencing for the in-flight command.
+Per-instance `serve-state.json` remains the sole
 publication truth; Tokyo creates no publication or capacity registry. There is
 no lease, timeout reclaim, polling, queue, or automatic retry. Coordination
 covers only the capacity-critical count/package/state command. It ends after
@@ -334,8 +367,8 @@ Current internal route families:
 | `/__internal/instances/{instanceId}/list-facts` | `GET` | exact minimal account instance row facts |
 | `/__internal/instances/{instanceId}` | `GET`, `PUT`, `DELETE` | open/save/delete one account instance |
 | `/__internal/instances/{instanceId}/rename` | `POST` | rename one account instance |
-| `/__internal/instances/{instanceId}/publish` | `POST` | store Roma's exact three-file package, publish, and purge the instance cache tag |
-| `/__internal/instances/{instanceId}/unpublish` | `POST` | change publication truth and purge the instance cache tag; retain source/package |
+| `/__internal/instances/{instanceId}/publish` | `POST` | store Roma's exact three-file package, publish, and purge the instance cache tag; a post-commit purge failure returns the exact committed transition with the explicit purge error |
+| `/__internal/instances/{instanceId}/unpublish` | `POST` | change publication truth and purge the instance cache tag while retaining source/package; a post-commit purge failure returns the exact committed transition with the explicit purge error |
 | `/__internal/instances/{instanceId}/translations` | `GET` | list saved translated locale value files |
 | `/__internal/instances/{instanceId}/translations/{locale}` | `GET`, `PUT`, `DELETE` | read/write/delete one translated value file |
 | `/__internal/accounts/{accountPublicId}/widget-defaults` | `GET`, `POST`, `PUT` | read/create/write account widget defaults |

@@ -267,8 +267,9 @@ capacity/lifecycle operation produces the exact publication result consumed by
 **Enable SEO/GEO** is a shared system control shown in the ToolDrawer for every
 applicable Widget.
 
-- Free and Tier 1 retain the Widget's Clickeen baseline.
-- Tier 2 and above may enable optimization from exact saved content.
+- Every tier retains the Widget's Clickeen baseline title and description.
+- Tier 2 and above may additionally enable optimization from exact saved
+  content.
 - the shared system owns the state coordinate, tier rule, and control;
 - `discovery.json` remains internal and is never shown as an editor; and
 - the user's exact toggle value is ordinary editable instance state.
@@ -498,6 +499,8 @@ stored public package use by Bob preview: removed from the deployed path
 stable overlay identity after repeated-content Save: present in cloud-dev
 positional overlay compatibility path: absent; explicit Generate/delete cutover required for previously stored positional overlays
 account product data: unchanged
+stored positional-overlay Generate/delete cutover: pending
+republish of affected pre-stable-slot public packages: pending
 product commit: e2ac3589
 main push: performed
 deploy: cloud-dev Worker/R2 run 32087699030 and Bob/Roma Pages deployments passed

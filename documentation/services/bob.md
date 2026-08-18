@@ -279,6 +279,14 @@ Roma replies to account commands with:
 }
 ```
 
+A Publish/Republish host intent whose publication truth committed before its
+cache purge failed is reconciled by Roma from the exact Tokyo
+`committed: { instanceId, status, changed }` transition. Roma reopens the exact
+instance, so Bob receives the authoritative publication status and public
+actions through the normal `ck:open-editor` envelope. Roma, not Bob or the
+ToolDrawer, shows the durable delivery-refresh banner and owns the existing
+Republish retry.
+
 When Bob's generic edit boundary denies a Widget-bound action, Bob sends only
 the exact denied system capability and Widget-owned message identity from the
 trusted compiled artifact:

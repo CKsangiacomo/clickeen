@@ -338,6 +338,11 @@ Current public-capacity values:
 | `tier3` | 25 |
 | `tier4` | 100 |
 
+This is deliberate product packaging, not a matrix accident. Tier 1 expands
+the product features available to the account while retaining one published
+instance; Tier 2 is the first tier that expands public capacity beyond one
+instance.
+
 The Widgets catalog is not tier-filtered. Every tier may use every Widget type,
 create editable instances, Duplicate them, edit them, and Save them. Public
 capacity is separate: Publish enforces `instances.published.max` at command
@@ -359,10 +364,11 @@ instance's `serve-state.json` remains publication truth.
 one exact decision; downstream services do not re-evaluate that decision.
 
 `embed.seoGeo.enabled` is also separate from Widget access.
-Free and Tier 1 receive the Clickeen Discovery baseline. Tier 2 and above may
-turn on the shared **Enable SEO/GEO** control; the exact saved value is consumed
-only by Publish materialization. Widget Core and public serving do not decide
-the tier.
+Every tier receives the Widget's Clickeen Discovery baseline title and
+description. Tier 2 and above may additionally turn on the shared **Enable
+SEO/GEO** control so Publish can emit the Widget's authored content-derived
+output from the exact saved content. The baseline is not removed when that
+capability is available. Widget Core and public serving do not decide the tier.
 
 Tier values are read from the matrix. Do not restate commercial package prose
 here unless it maps to exact entitlement keys.
@@ -379,6 +385,7 @@ here unless it maps to exact entitlement keys.
 | Entitlement limit exceeded | explicit product-policy failure |
 | Migrated Widget editing action exceeds a tier capability | no draft mutation, exact `{ capability, messageId, required }` denial, and one Roma-composed upsell Popup |
 | Existing content exceeds a newly lower tier | preserve exact content; do not delete, clamp, or heal it; gate only the next disallowed action at its owning boundary |
+| Publish/Unpublish truth commits but its cache purge fails | explicit HTTP `502`/`503` failure plus the exact `committed` publication transition; Roma reconciles the visible status and uses the existing command for retry |
 | Required Widget upsell message is absent | producing Widget contract/build failure; no generic runtime replacement |
 | Policy key exists but no runtime consumer | documented as `gap`, not claimed enforced |
 | Owner-produced account/package result handed to another Clickeen service | consumed exactly; no downstream semantic revalidation or filtering |

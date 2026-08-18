@@ -62,6 +62,9 @@ export class AccountPublicationCoordinator {
         instanceId: body.instanceId,
       });
     } catch (error) {
+      if (error instanceof AccountInstanceTransitionError) {
+        error.committed = transition;
+      }
       return transitionErrorResponse(error);
     }
 

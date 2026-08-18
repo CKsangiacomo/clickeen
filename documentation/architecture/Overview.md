@@ -67,6 +67,8 @@ Clickeen is a simple account product.
   `instances.published.max`; Free may publish and serve one instance. One
   account-scoped Tokyo transition makes overlapping Publish requests
   first-wins while Republish consumes no additional slot.
+- Tier 1 deliberately expands product features while retaining one published
+  instance; Tier 2 is intentionally the first multi-publish tier.
 - Bob is an editor. Open/edit work is browser memory. Save is the persistence
   boundary.
 - Roma is the account app. Roma routes the user to the current account,
@@ -313,6 +315,13 @@ unchanged in every Publish outcome. Before R2 work, the coordinator touches its
 own storage only to activate Cloudflare's shutdown/replacement fencing; it keeps
 no durable policy, count, or publication data. Per-instance `serve-state.json`
 remains publication truth.
+
+If publication commits but its following cache purge fails, Tokyo returns the
+explicit HTTP `502`/`503` delivery-refresh failure together with the exact
+committed publication transition. Roma reconciles Builder or Widgets to that
+truth and shows a status-specific account-shell banner. Republish or Unpublish
+again is the existing retry; the system adds no rollback, queue, or second
+publication state.
 
 ### Public Widget Serving
 

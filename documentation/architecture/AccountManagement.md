@@ -32,6 +32,10 @@ an operator needs account files, start at the Roma account route and
 Tokyo-worker account root. Do not derive account truth from public URLs, R2
 object listings, widget config, or browser-local state.
 
+The current capacity matrix deliberately keeps Tier 1 at one published
+instance while expanding product features. Tier 2 is intentionally the first
+multi-publish tier, with five published instances.
+
 ## Hard Invariant
 
 Clickeen uses a deliberately boring account model:
@@ -305,7 +309,9 @@ first await. It then reads its reserved lifecycle-fence storage key before any
 R2 work; it writes no coordinator record. That read gives the in-flight command
 Cloudflare's Durable Object shutdown uniqueness behavior, so an old execution
 is stopped rather than allowed to overlap a replacement object after a deploy
-or runtime restart. The coordinator holds the gate only across the exact
+or runtime restart. The returned value is intentionally unused and the key is
+intentionally never written; the storage access itself is the fence. The
+coordinator holds the gate only across the exact
 published-count decision and package/serve-state commit, then clears it before
 cache purge.
 
@@ -317,6 +323,14 @@ publication state. A later request after the winner committed reads the new
 published count and receives the existing `402 UPGRADE_REQUIRED` capacity
 result when full. There is no polling loop, automatic retry, second publication
 truth, or per-view capacity check.
+
+The coordinator ends before cache purge. If the package/publication transition
+commits and that following purge fails, Tokyo returns the explicit `502` purge
+failure, or `503` missing-purge-configuration failure, together with the exact
+`committed: { instanceId, status, changed }` transition. Roma reconciles its
+Builder or Widgets surface to that authoritative publication truth and shows a
+status-specific delivery-refresh banner. The existing Republish or Unpublish
+command is the retry; no rollback, queue, or alternate lifecycle is created.
 
 ### Bob
 

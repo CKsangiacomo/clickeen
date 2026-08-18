@@ -179,6 +179,14 @@ An allowed Publish:
 4. asks Tokyo-worker to store the generated files and publication truth; and
 5. makes that stored package the public truth for the instance.
 
+Publication truth commits before the instance cache-tag purge. If the commit
+succeeds and the purge then fails, the command is not reported as full success
+and the committed publication is not hidden as a failed Publish. Tokyo returns
+the explicit purge error with the exact
+`committed: { instanceId, status, changed }` transition. Roma reconciles the
+visible state, shows a status-specific account-shell banner, and the existing
+Republish or Unpublish command retries delivery refresh.
+
 A Publish denied by Roma's fast local capacity precheck performs no
 materialization. A request that reaches Tokyo-worker but loses the final
 account-atomic transition may already have materialized transient package
@@ -217,6 +225,10 @@ A Free user can:
 
 The system capability `instances.published.max` owns public capacity. Free is
 `1`; the system policy matrix owns every tier value.
+
+The current matrix deliberately keeps Tier 1 at one published instance because
+Tier 1 expands product features rather than public-instance capacity. Tier 2,
+at five published instances, is intentionally the first multi-publish tier.
 
 The prior `widgets.instances.max` Create-time gate conflicted with this model.
 The local implementation removes that capability and gate rather than renaming
@@ -258,8 +270,9 @@ editor from it.
 
 The existing shared account capability controls **Enable SEO/GEO**:
 
-- Free and Tier 1 receive the Widget's Clickeen baseline output;
-- Tier 2 and above may enable optimization from their exact saved content.
+- every tier receives the Widget's Clickeen baseline title and description;
+- Tier 2 and above may additionally enable optimization from their exact saved
+  content.
 
 The system owns tier truth and the shared control. The Widget owns its
 Discovery declaration and baseline defaults. Roma's materializer uses both
@@ -444,5 +457,9 @@ account coordinator: one lifecycle-fenced Tokyo Durable Object per account; no d
 stable scalar/repeated overlay identity: present in cloud-dev
 authored exact attribute localization: present in cloud-dev
 pre-GA positional-overlay compatibility path: absent; explicit Generate/delete cutover is required for previously stored positional overlays
+stored positional-overlay Generate/delete cutover: pending
+republish of affected pre-stable-slot public packages: pending
+cache-tag invalidation proof for base and locale variants: pending
+post-commit publication/purge result correction: implemented locally; cloud-dev deploy proof pending
 independent V1-V8 audits: Pass for all-Widget source/materialization, stable localization, atomic Publish, exact product-root cutover, and the cloud-dev deploy; owner QA pending
 ```

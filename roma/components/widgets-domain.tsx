@@ -5,7 +5,11 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
-import { resolveAccountShellErrorCopy, resolveAccountShellReason } from '../lib/account-shell-copy';
+import {
+  resolveAccountShellErrorCopy,
+  resolveAccountShellReason,
+  resolveCommittedPublicationFailureCopy,
+} from '../lib/account-shell-copy';
 import { buildWidgetPublicActions, type WidgetPublicActions } from '../lib/public-widget-actions';
 import { useRomaAccountApi } from './account-api';
 import { DieterDropdownActions } from './dieter-dropdown-actions';
@@ -102,6 +106,10 @@ export function WidgetsDomain({
 
   const [activeActionKey, setActiveActionKey] = useState<string | null>(null);
   const [mutationError, setMutationError] = useState<string | null>(null);
+  const [publicationRetry, setPublicationRetry] = useState<{
+    instance: WidgetInstance;
+    status: 'published' | 'unpublished';
+  } | null>(null);
   const [upsell, setUpsell] = useState<UpsellPresentation | null>(null);
   const [widgetInstances, setWidgetInstances] = useState<WidgetInstance[]>(() => cachedWidgets?.data.instances ?? []);
   const [catalog, setCatalog] = useState<WidgetCatalogOption[]>(() => cachedWidgets?.data.catalog ?? []);
@@ -345,6 +353,7 @@ export function WidgetsDomain({
       const actionKey = `create:${widgetType}`;
       setActiveActionKey(actionKey);
       setMutationError(null);
+      setPublicationRetry(null);
       try {
         const response = await accountApi.fetchRaw('/api/account/instances', {
           method: 'POST',
@@ -397,6 +406,7 @@ export function WidgetsDomain({
       const actionKey = `duplicate:${instance.instanceId}`;
       setActiveActionKey(actionKey);
       setMutationError(null);
+      setPublicationRetry(null);
       try {
         const response = await accountApi.fetchRaw(`/api/account/instances/${encodeURIComponent(instance.instanceId)}/duplicate`, {
           method: 'POST',
@@ -424,6 +434,7 @@ export function WidgetsDomain({
       const actionKey = `delete:${instance.instanceId}`;
       setActiveActionKey(actionKey);
       setMutationError(null);
+      setPublicationRetry(null);
       try {
         await accountApi.fetchJson<{ deleted?: boolean }>(`/api/account/instances/${encodeURIComponent(instance.instanceId)}`, {
           method: 'DELETE',
@@ -443,8 +454,11 @@ export function WidgetsDomain({
     async (instance: WidgetInstance, nextStatus: 'published' | 'unpublished') => {
       if (!productAccountId || !canMutateWidgets) return;
       const actionKey = `${nextStatus}:${instance.instanceId}`;
+      const isPublicationRetry = publicationRetry?.instance.instanceId === instance.instanceId
+        && publicationRetry.status === nextStatus;
       setActiveActionKey(actionKey);
       setMutationError(null);
+      if (!isPublicationRetry) setPublicationRetry(null);
       setUpsell(null);
       try {
         const response = await accountApi.fetchRaw(
@@ -459,9 +473,38 @@ export function WidgetsDomain({
           return;
         }
         if (!response.ok) {
-          const failed = await response.json() as { error: { reasonKey: string } };
+          const failed = await response.json() as {
+            error: { reasonKey: string };
+            committed?: {
+              instanceId: string;
+              status: 'published' | 'unpublished';
+              changed: boolean;
+            };
+          };
+          if (failed.committed) {
+            const committed = failed.committed;
+            setWidgetInstances((current) => current.map((entry) =>
+              entry.instanceId === committed.instanceId
+                ? { ...entry, status: committed.status }
+                : entry));
+            updateRomaWidgetsCache(productAccountId, (current) => ({
+              ...current,
+              instances: current.instances.map((entry) =>
+                entry.instanceId === committed.instanceId
+                  ? { ...entry, status: committed.status }
+                  : entry),
+            }));
+            setMutationError(resolveCommittedPublicationFailureCopy(
+              committed.status,
+              failed.error.reasonKey,
+              'The publication state changed, but public delivery could not be refreshed. Retry the publication action.',
+            ));
+            setPublicationRetry({ instance, status: committed.status });
+            return;
+          }
           throw new Error(failed.error.reasonKey);
         }
+        setPublicationRetry(null);
         await refreshWidgets({ force: true });
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
@@ -470,12 +513,13 @@ export function WidgetsDomain({
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
     },
-    [accountApi, accountPolicy, canMutateWidgets, productAccountId, refreshWidgets],
+    [accountApi, accountPolicy, canMutateWidgets, productAccountId, publicationRetry, refreshWidgets],
   );
 
   const startRename = useCallback((instance: WidgetInstance) => {
     if (!canMutateWidgets) return;
     setMutationError(null);
+    setPublicationRetry(null);
     setRenameError(null);
     setRenamingInstanceId(instance.instanceId);
     setRenameDraft(instance.displayName || DEFAULT_INSTANCE_DISPLAY_NAME);
@@ -502,6 +546,7 @@ export function WidgetsDomain({
       const actionKey = `rename:${instance.instanceId}`;
       setActiveActionKey(actionKey);
       setMutationError(null);
+      setPublicationRetry(null);
       setRenameError(null);
       try {
         const payload = await accountApi.fetchJson<{
@@ -543,7 +588,23 @@ export function WidgetsDomain({
               </button>
             </div>
           ) : null}
-          {mutationError ? <p className="body-m">{mutationError}</p> : null}
+          {mutationError ? (
+            <div className="roma-inline-stack">
+              <p className="body-m">{mutationError}</p>
+              {publicationRetry ? (
+                <button
+                  className="diet-button"
+                  data-size="medium"
+                  data-type="tertiary"
+                  type="button"
+                  onClick={() => void handleStatusChange(publicationRetry.instance, publicationRetry.status)}
+                  disabled={Boolean(activeActionKey)}
+                >
+                  <span className="diet-button__label">Retry public delivery</span>
+                </button>
+              ) : null}
+            </div>
+          ) : null}
           {renameError ? <p className="body-m">{renameError}</p> : null}
 
           {domainLoading && catalog.length === 0 && widgetInstances.length === 0 && !widgetDataError ? <p className="body-m">Loading widgets...</p> : null}

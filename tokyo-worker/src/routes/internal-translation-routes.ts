@@ -14,6 +14,7 @@ import {
   type TokyoRouteArgs,
 } from '../route-helpers';
 import {
+  authorizeRomaEditorTransition,
   authorizeTranslatedLocaleWriteTransition,
   normalizeAccountPublicId,
   readInternalProductJsonBody,
@@ -112,13 +113,8 @@ export async function tryHandleInternalTranslationRoutes(
     }
 
     if (req.method === 'DELETE') {
-      const authErr = await authorizeAccountInstanceControlRequest({
-        req,
-        env,
-        accountId,
-        minRole: 'admin',
-      });
-      if (authErr) return respond(authErr);
+      const auth = await authorizeRomaEditorTransition({ req, env, accountId });
+      if (!auth.ok) return respond(auth.response);
 
       try {
         const translation = await deleteAccountInstanceTranslatedLocaleValues({ env, accountId, instanceId, locale });

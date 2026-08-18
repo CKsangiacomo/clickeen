@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { AccountPublicationCoordinator } from '../src/domains/account-instances/publication-coordinator';
+import { unpublishAccountInstanceTransition } from '../src/domains/account-instances/operations';
 import {
   readAccountInstanceSourcePointer,
   writeAccountInstanceSource,
 } from '../src/domains/account-instances/source';
+import { transitionErrorResponse } from '../src/routes/internal-product-route-utils';
 import type { Env } from '../src/types';
 
 type StoredObject = {
@@ -166,7 +168,136 @@ async function readPayload(response: Response): Promise<Record<string, unknown>>
   return response.json() as Promise<Record<string, unknown>>;
 }
 
+async function assertPostCommitPurgeFailureTruth(): Promise<void> {
+  const r2 = new MemoryR2();
+  const env = {
+    TOKYO_R2: r2 as unknown as R2Bucket,
+    ACCOUNT_PUBLICATION_COORDINATOR: {} as DurableObjectNamespace,
+    CLOUDFLARE_ZONE_ID: 'zone',
+    CLOUDFLARE_CACHE_PURGE_TOKEN: 'token',
+  } satisfies Env;
+  await seedInstance(env, firstInstanceId);
+
+  const coordinator = new AccountPublicationCoordinator(
+    {
+      storage: {
+        async get() {
+          return undefined;
+        },
+      },
+    } as unknown as DurableObjectState,
+    env,
+  );
+  const originalFetch = globalThis.fetch;
+  let purgeSucceeds = false;
+  globalThis.fetch = async () => new Response(
+    JSON.stringify({ success: purgeSucceeds }),
+    {
+      status: purgeSucceeds ? 200 : 500,
+      headers: { 'content-type': 'application/json' },
+    },
+  );
+
+  try {
+    const failedPublish = await coordinator.fetch(
+      publishRequest(firstInstanceId, 'publish-committed-before-purge-failure'),
+    );
+    assert.equal(failedPublish.status, 502);
+    assert.deepEqual(await readPayload(failedPublish), {
+      ok: false,
+      error: {
+        kind: 'UPSTREAM_UNAVAILABLE',
+        reasonKey: 'tokyo.errors.publicCache.purgeFailed',
+        detail: 'cloudflare_purge_status_500',
+      },
+      committed: {
+        instanceId: firstInstanceId,
+        status: 'published',
+        changed: true,
+      },
+    });
+    const publishedPointer = await readAccountInstanceSourcePointer({
+      env,
+      accountId,
+      instanceId: firstInstanceId,
+    });
+    assert.ok(publishedPointer.ok);
+    assert.equal(publishedPointer.value.publishStatus, 'published');
+    assertPublicPackageStored(
+      r2,
+      firstInstanceId,
+      true,
+      'a purge failure must not erase the committed package',
+    );
+
+    purgeSucceeds = true;
+    const republish = await coordinator.fetch(
+      publishRequest(firstInstanceId, 'republish-retries-purge'),
+    );
+    assert.equal(republish.status, 200);
+    assert.deepEqual(await readPayload(republish), {
+      ok: true,
+      instanceId: firstInstanceId,
+      status: 'published',
+      changed: false,
+    });
+
+    purgeSucceeds = false;
+    let unpublishFailure: unknown;
+    try {
+      await unpublishAccountInstanceTransition({
+        env,
+        accountId,
+        instanceId: firstInstanceId,
+      });
+    } catch (error) {
+      unpublishFailure = error;
+    }
+    assert.ok(unpublishFailure);
+    const failedUnpublish = transitionErrorResponse(unpublishFailure);
+    assert.equal(failedUnpublish.status, 502);
+    assert.deepEqual(await readPayload(failedUnpublish), {
+      ok: false,
+      error: {
+        kind: 'UPSTREAM_UNAVAILABLE',
+        reasonKey: 'tokyo.errors.publicCache.purgeFailed',
+        detail: 'cloudflare_purge_status_500',
+      },
+      committed: {
+        instanceId: firstInstanceId,
+        status: 'unpublished',
+        changed: true,
+      },
+    });
+    const unpublishedPointer = await readAccountInstanceSourcePointer({
+      env,
+      accountId,
+      instanceId: firstInstanceId,
+    });
+    assert.ok(unpublishedPointer.ok);
+    assert.equal(unpublishedPointer.value.publishStatus, 'unpublished');
+
+    purgeSucceeds = true;
+    assert.deepEqual(
+      await unpublishAccountInstanceTransition({
+        env,
+        accountId,
+        instanceId: firstInstanceId,
+      }),
+      {
+        instanceId: firstInstanceId,
+        status: 'unpublished',
+        changed: false,
+      },
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+}
+
 async function run(): Promise<void> {
+  await assertPostCommitPurgeFailureTruth();
+
   const r2 = new MemoryR2();
   const env = {
     TOKYO_R2: r2 as unknown as R2Bucket,

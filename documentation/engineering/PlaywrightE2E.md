@@ -36,6 +36,14 @@ pnpm e2e:auth:roma-dev
 pnpm e2e:smoke:translation-agent-runtime
 ```
 
+If you need the opt-in PRD 129 lifecycle and cache proof after the exact code
+revision is deployed:
+
+```bash
+pnpm e2e:auth:roma-dev
+E2E_PRD129_LOCALE=[one active non-base locale] pnpm e2e:proof:prd129-lifecycle
+```
+
 If `pnpm e2e:auth:roma-dev` fails, fix the auth-state boundary:
 
 - confirm `CK_ADMIN_EMAIL` and `CK_ADMIN_PASSWORD` exist in root `.env.local`
@@ -71,15 +79,16 @@ cloud-dev product path that a real user or operator uses.
 
 ## Code Authority
 
-| Concern | File |
-| --- | --- |
-| Playwright config | `playwright.config.ts` |
-| Global auth-state setup | `e2e/global-setup.ts` |
-| Auth-state helper | `e2e/helpers/auth-state.ts` |
-| Roma dev-admin auth state writer | `scripts/e2e/roma-dev-auth.mjs` |
-| Product Copilot runtime smoke | `scripts/e2e/roma-copilot-runtime-smoke.mjs` |
-| Translation Agent runtime smoke | `scripts/e2e/roma-translation-agent-runtime-smoke.mjs` |
-| Browser specs | `e2e/**` |
+| Concern                          | File                                                   |
+| -------------------------------- | ------------------------------------------------------ |
+| Playwright config                | `playwright.config.ts`                                 |
+| Global auth-state setup          | `e2e/global-setup.ts`                                  |
+| Auth-state helper                | `e2e/helpers/auth-state.ts`                            |
+| Roma dev-admin auth state writer | `scripts/e2e/roma-dev-auth.mjs`                        |
+| Product Copilot runtime smoke    | `scripts/e2e/roma-copilot-runtime-smoke.mjs`           |
+| Translation Agent runtime smoke  | `scripts/e2e/roma-translation-agent-runtime-smoke.mjs` |
+| PRD 129 lifecycle/cache proof    | `e2e/widgets/prd129-cloud-dev-lifecycle.spec.ts`       |
+| Browser specs                    | `e2e/**`                                               |
 
 ## Default Mode
 
@@ -114,19 +123,22 @@ The Roma default is preserved when neither `E2E_ROMA_URL` nor `E2E_BASE_URL` is 
 
 Playwright config:
 
-| Setting | Current value |
-| --- | --- |
-| Test directory | `e2e/` |
-| Default base URL | `https://roma.dev.clickeen.com` |
-| Default auth state | `e2e/.auth/roma-dev.json` |
-| Browser project | Chromium / Desktop Chrome |
-| Workers | `1` |
-| Retry in CI | `1` |
-| Trace | retain on failure |
-| Screenshot | only on failure |
-| Video | retain on failure |
+| Setting            | Current value                   |
+| ------------------ | ------------------------------- |
+| Test directory     | `e2e/`                          |
+| Default base URL   | `https://roma.dev.clickeen.com` |
+| Default auth state | `e2e/.auth/roma-dev.json`       |
+| Browser project    | Chromium / Desktop Chrome       |
+| Workers            | `1`                             |
+| Retry in CI        | `1`                             |
+| Trace              | retain on failure               |
+| Screenshot         | only on failure                 |
+| Video              | retain on failure               |
 
 Remote e2e mutates shared account/widget state, so the config uses one worker.
+The PRD 129 lifecycle proof is additionally gated by
+`E2E_PRD129_LIFECYCLE=1`; the dedicated package command supplies that gate.
+An ordinary `pnpm e2e` run skips this mutation proof.
 
 ## Authenticated Product Flows
 
@@ -218,6 +230,14 @@ set. Without it, the script selects instance `QD1G068MX7` if present, then a
 translation instance, set `E2E_TRANSLATION_INSTANCE_ID` and include that value
 in the evidence.
 
+The PRD 129 lifecycle proof does not depend on a pre-existing Widget instance.
+It creates one uniquely named unpublished FAQ instance through Roma, mutates and
+Saves it through the hosted Bob session, and removes it through normal
+Unpublish/Delete account routes in cleanup. Translation generation follows the
+account's exact active-locale policy; `E2E_PRD129_LOCALE` selects the one active
+locale whose stable-identity behavior is inspected. It does not narrow or
+rewrite account locale settings.
+
 ## Current Specs
 
 - `e2e/smoke/roma-login.spec.ts`: verifies the public Roma login page.
@@ -226,6 +246,9 @@ in the evidence.
 - `e2e/widgets/widget-defaults.spec.ts`: verifies widget default behavior.
 - `e2e/widgets/prd106f-builder-certification.spec.ts`: certifies current
   Builder behavior for the named widget flow.
+- `e2e/widgets/prd129-cloud-dev-lifecycle.spec.ts`: opt-in deployed lifecycle,
+  stable-overlay, and instance cache-tag proof using a dedicated temporary
+  instance.
 - `e2e/devstudio/route-contract.spec.ts`: verifies DevStudio route shell,
   navigation, and policy read lane.
 
@@ -241,6 +264,7 @@ pnpm e2e:ui
 pnpm e2e:auth:roma-dev
 pnpm e2e:smoke:copilot-runtime
 pnpm e2e:smoke:translation-agent-runtime
+E2E_PRD129_LOCALE=[active locale] pnpm e2e:proof:prd129-lifecycle
 ```
 
 Required env for authenticated Roma tests:
@@ -265,7 +289,12 @@ E2E_BERLIN_URL=[Berlin base URL for auth-state writer]
 E2E_BASE_URL=[generic base URL]
 E2E_AUTH_STATE=[storage state path]
 E2E_TRANSLATION_INSTANCE_ID=[saved instance id for translation smoke]
+E2E_PRD129_LOCALE=[active non-base locale inspected by the PRD 129 proof]
+E2E_CLK_LIVE_URL=[public serving origin; default https://dev.clk.live]
 ```
+
+`E2E_PRD129_LIFECYCLE=1` is the explicit mutation gate used by the dedicated
+package command. Do not set it for an ordinary broad E2E run.
 
 ## Product Copilot Runtime Smoke
 
@@ -369,28 +398,76 @@ Failure means the deployed Bob -> Roma -> Translation Agent -> San Francisco ->
 Tokyo-worker path is not proven. Do not replace this with a direct Translation
 Agent call and call the product path verified.
 
+## PRD 129 Lifecycle And Cache Proof
+
+Run this only after the intended Roma, Bob, and Tokyo-worker revision is live:
+
+```bash
+pnpm e2e:auth:roma-dev
+E2E_PRD129_LOCALE=[one active non-base locale] pnpm e2e:proof:prd129-lifecycle
+```
+
+The proof uses the authenticated normal `CLICKEEN` account and performs this
+one direct lifecycle:
+
+```text
+Create dedicated FAQ source
+-> edit and Save through Bob
+-> Generate Translations through Roma
+-> Publish through Bob/Roma
+-> warm base, selected locale, tracking query, CSS, and runtime to HIT
+-> edit/reorder/add/delete and Save through Bob
+-> prove public bytes did not change
+-> Republish
+-> prove every warmed coordinate was evicted and serves new truth
+-> Unpublish and prove every variant is unavailable
+-> Delete the dedicated instance through Roma cleanup
+```
+
+Generate Translations still requests the account's complete active-locale set,
+as product law requires. The proof requires an exhaustive, disjoint partition
+of translated and exact failed locale outcomes and requires the selected
+`E2E_PRD129_LOCALE` to succeed. Translation reliability and presentation for
+other exact failed locales remain PRD 127/128 scope. The selected locale proves
+stable identity: a reordered item keeps its translation, a newly added identity
+remains exact base text, and a deleted identity has no rendered consumer. The
+proof never changes account locale settings, writes R2 directly, adds a test
+product mode, or changes account tier.
+
+Free-capacity runtime evidence requires a real cloud-dev Free account with a
+normal authenticated storage state. The current Berlin dev-admin writer is
+deliberately bound to the normal `CLICKEEN` admin account, so this proof must
+not downgrade it or fake Free policy. Until a real Free QA account and its
+normal auth path are provided, `one Publish succeeds; second Publish returns
+402 with no second package/state mutation` remains an explicit external QA
+prerequisite.
+
 ## Failure Semantics
 
-| Case | Result |
-| --- | --- |
-| Missing auth state | global setup writes empty state; authenticated specs skip |
-| Missing admin email/password for auth-state writer | `pnpm e2e:auth:roma-dev` fails |
-| Berlin dev-admin login fails | auth-state writer fails; no fake login substitute |
-| Roma session finish fails | auth-state writer fails |
-| Deployed app route fails | Playwright spec fails against owning deployed surface |
-| Copilot unmanaged model accepted | Copilot smoke fails; no-substitution law violated |
-| Translation generation partial/failed | Translation smoke fails |
+| Case                                               | Result                                                            |
+| -------------------------------------------------- | ----------------------------------------------------------------- |
+| Missing auth state                                 | global setup writes empty state; authenticated specs skip         |
+| Missing admin email/password for auth-state writer | `pnpm e2e:auth:roma-dev` fails                                    |
+| Berlin dev-admin login fails                       | auth-state writer fails; no fake login substitute                 |
+| Roma session finish fails                          | auth-state writer fails                                           |
+| Deployed app route fails                           | Playwright spec fails against owning deployed surface             |
+| Copilot unmanaged model accepted                   | Copilot smoke fails; no-substitution law violated                 |
+| Translation generation partial/failed              | Translation smoke fails                                           |
+| PRD 129 mutation gate absent                       | lifecycle/cache spec skips; no mutation occurs                    |
+| PRD 129 selected locale is not active              | lifecycle/cache proof fails before Create                         |
+| PRD 129 cleanup fails                              | lifecycle/cache proof fails and attaches the exact cleanup result |
 
 ## Verification Evidence
 
-| Concern | Evidence |
-| --- | --- |
-| Public Roma reachable | `e2e/smoke/roma-login.spec.ts` screenshot/output |
-| Authenticated Roma session | non-empty `e2e/.auth/roma-dev.json` created by `pnpm e2e:auth:roma-dev` |
-| Builder open product path | `e2e/widgets/builder-open.spec.ts` passes against deployed Roma/Bob |
-| Product Copilot path | `pnpm e2e:smoke:copilot-runtime` JSON output |
-| Translation Agent path | `pnpm e2e:smoke:translation-agent-runtime` JSON output |
-| DevStudio route shell | `e2e/devstudio/route-contract.spec.ts` passes against configured base URL/auth state |
+| Concern                      | Evidence                                                                                                    |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Public Roma reachable        | `e2e/smoke/roma-login.spec.ts` screenshot/output                                                            |
+| Authenticated Roma session   | non-empty `e2e/.auth/roma-dev.json` created by `pnpm e2e:auth:roma-dev`                                     |
+| Builder open product path    | `e2e/widgets/builder-open.spec.ts` passes against deployed Roma/Bob                                         |
+| Product Copilot path         | `pnpm e2e:smoke:copilot-runtime` JSON output                                                                |
+| Translation Agent path       | `pnpm e2e:smoke:translation-agent-runtime` JSON output                                                      |
+| PRD 129 lifecycle/cache path | `E2E_PRD129_LOCALE=[active locale] pnpm e2e:proof:prd129-lifecycle` output plus the attached cleanup result |
+| DevStudio route shell        | `e2e/devstudio/route-contract.spec.ts` passes against configured base URL/auth state                        |
 
 `pnpm e2e` is authenticated evidence only when the authenticated specs run and
 pass. A run where authenticated specs skip because `e2e/.auth/roma-dev.json`

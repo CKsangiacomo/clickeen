@@ -32,6 +32,7 @@
     "e2e:auth:roma-dev": "node scripts/e2e/roma-dev-auth.mjs",
     "e2e:smoke:copilot-runtime": "node scripts/e2e/roma-copilot-runtime-smoke.mjs",
     "e2e:smoke:translation-agent-runtime": "node scripts/e2e/roma-translation-agent-runtime-smoke.mjs",
+    "e2e:proof:prd129-lifecycle": "E2E_PRD129_LIFECYCLE=1 playwright test e2e/widgets/prd129-cloud-dev-lifecycle.spec.ts",
     "e2e:headed": "playwright test --headed",
     "e2e:ui": "playwright test --ui",
     "dev:prague": "pnpm --filter @clickeen/prague dev",

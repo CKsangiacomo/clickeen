@@ -111,6 +111,7 @@ export function transitionErrorResponse(error: unknown): Response {
   if (error instanceof AccountInstanceTransitionError) {
     return json(
       {
+        ...(error.committed ? { ok: false } : {}),
         error: {
           kind: error.kind,
           reasonKey: error.reasonKey,
@@ -118,6 +119,7 @@ export function transitionErrorResponse(error: unknown): Response {
           ...(error.paths?.length ? { paths: error.paths } : {}),
           ...(error.capacity ?? {}),
         },
+        ...(error.committed ? { committed: error.committed } : {}),
       },
       { status: error.status },
     );

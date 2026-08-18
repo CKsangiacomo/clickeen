@@ -121,6 +121,12 @@ complete value map at the owning browser ingress. After acceptance,
 Tokyo-worker stores the resulting Clickeen overlay exactly. No overlay operation
 materializes package files.
 
+An authenticated explicit cutover/deletion uses
+`DELETE /api/account/instances/{instanceId}/translations/{locale}` for that one
+account, instance, and locale. Roma resolves the current account and delegates
+the exact delete to Tokyo-worker. It is not a broad R2-prefix deletion or a
+visitor-time migration.
+
 Human-authored base text remains human source authority. Translation does not
 silently rewrite it.
 
@@ -234,20 +240,33 @@ relationship without a second SEO/Discovery renderer.
 - A coordinate for deleted content is inert because no current semantic node
   has that identity.
 - Public reads never write, heal, regenerate, or call an agent.
-- Cache-purge failure remains an explicit failure of the overlay mutation; it
-  is not reported as completed stale delivery.
+- An overlay file write/delete commits before its cache purge. If that purge
+  fails, the current operation returns an explicit failure even though the
+  exact overlay mutation may already be stored; it does not report completed
+  fresh delivery. Unlike the PRD 129 publication transition, the current
+  overlay result does not yet return a typed `committed` overlay outcome. That
+  result/feedback correction belongs to the named PRD 127/128 translation work
+  and is not claimed as PRD 129 closure.
 
 ## Current Repository And Deploy State
 
 - Big Bang, Cards, Countdown, FAQ, and Logo Showcase use the canonical Widget
-  source contract and materialize exact localization slots locally.
+  source contract and materialize exact localization slots in cloud-dev.
 - Overlay generation, Bob preview, materialized slots, and Edge expression use
-  stable `identityKey` coordinates locally.
-- Tokyo-worker's local public path uses `HTMLRewriter` and contains no browser
-  locale context.
-- Translation list/read/write paths locally trust exact overlay truth.
-- No commit, push, deploy, remote product-data change, or cloud-dev/live proof
-  has been performed for this all-Widget pass.
+  stable `identityKey` coordinates in the deployed implementation.
+- Tokyo-worker's deployed public path uses `HTMLRewriter` and contains no
+  browser locale context.
+- Translation list/read/write paths trust exact overlay truth.
+- Product commit `e2ac3589` was pushed and deployed through cloud-dev Worker/R2
+  run `32087699030` plus the Git-connected Bob/Roma Pages deploys. The later
+  shared-composition correction `03132e5f` and verification `2b13e7c1` are also
+  present on cloud-dev.
+- Remote account product data was not changed by those code deployments.
+  Previously stored positional overlays still require the documented explicit
+  Generate Translations or deletion cutover, and previously published packages
+  must be Republished when they predate the stable content slots.
+- Publish/overlay cache-tag invalidation still requires the documented
+  cloud-dev base-and-locale runtime proof. Owner QA remains pending.
 
 ## Verification
 

@@ -293,6 +293,9 @@ authored exact attribute localization: present in cloud-dev
 pre-GA positional-overlay compatibility path: absent; explicit Generate/delete cutover required for previously stored positional overlays
 account suspension lifecycle runner/full deletion: documented follow-on account work, not a PRD 129 blocker
 account product data: unchanged
+stored positional-overlay Generate/delete cutover: pending
+republish of affected pre-stable-slot public packages: pending
+cache-tag invalidation proof for base and locale variants: pending
 product commit: e2ac3589
 main push: performed
 deploy: cloud-dev Worker/R2 run 32087699030 and Bob/Roma Pages deployments passed

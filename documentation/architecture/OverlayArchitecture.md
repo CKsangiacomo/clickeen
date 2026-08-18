@@ -145,6 +145,11 @@ read fallback, migration-on-Serve, or alternate overlay schema.
 - Partial translation failure stays partial and names the exact failed locales.
 - Overlay deletion reports every completed and failed instance/locale
   coordinate.
+- An overlay write/delete commits its exact file before the cache purge. A
+  following purge failure is returned as failure even though the overlay may
+  already be stored; the current result has no typed `committed` overlay
+  outcome. Correcting that translation result/feedback contract remains named
+  PRD 127/128 work and is not a PRD 129 closure claim.
 - Missing requested overlay is absence; malformed stored overlay is corruption.
   They are not interchangeable.
 - A missing value for a newly added stable identity is explicit untranslated

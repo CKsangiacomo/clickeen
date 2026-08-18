@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
+  deleteAccountInstanceTranslationValues,
   readAccountInstanceTranslationValues,
   writeAccountInstanceTranslationValues,
 } from '@roma/lib/account-instance-translations';
@@ -125,6 +126,52 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     instanceId,
     locale,
     values,
+    accountCapsule: current.value.authzToken,
+    requestId: current.value.requestId,
+  });
+  if (!result.ok) {
+    return withSession(
+      request,
+      NextResponse.json({ error: result.error }, { status: result.status }),
+      current.value.setCookies,
+    );
+  }
+  return withSession(
+    request,
+    NextResponse.json({ ok: true, locale: result.value.locale }),
+    current.value.setCookies,
+  );
+}
+
+export async function DELETE(request: NextRequest, context: RouteContext) {
+  const current = await resolveCurrentAccountRouteContext({ request, minRole: 'editor' });
+  if (!current.ok) return current.response;
+
+  const accountId = current.value.authzPayload.accountPublicId;
+  const instanceId = await requireInstanceIdParam(context, { mode: 'normalized' });
+  if (typeof instanceId !== 'string') {
+    return withSession(
+      request,
+      NextResponse.json({ error: instanceId.error }, { status: instanceId.status }),
+      current.value.setCookies,
+    );
+  }
+  const locale = await requireLocaleParam(context);
+  if (!locale) {
+    return withSession(
+      request,
+      NextResponse.json(
+        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid', detail: 'locale_missing' } },
+        { status: 422 },
+      ),
+      current.value.setCookies,
+    );
+  }
+
+  const result = await deleteAccountInstanceTranslationValues({
+    accountId,
+    instanceId,
+    locale,
     accountCapsule: current.value.authzToken,
     requestId: current.value.requestId,
   });

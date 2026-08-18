@@ -169,7 +169,14 @@ export async function POST(request: NextRequest, context: RouteContext) {
     }
     return withSession(
       request,
-      NextResponse.json({ error: publish.error }, { status: publish.status }),
+      NextResponse.json(
+        {
+          ok: false,
+          error: publish.error,
+          ...(publish.committed ? { committed: publish.committed } : {}),
+        },
+        { status: publish.status },
+      ),
       current.value.setCookies,
     );
   }

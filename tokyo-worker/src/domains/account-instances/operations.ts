@@ -20,6 +20,7 @@ export class AccountInstanceTransitionError extends Error {
   reasonKey: string;
   paths?: string[];
   capacity?: { current: number; limit: number };
+  committed?: AccountInstancePublicationTransition;
 
   constructor(args: {
     status: number;
@@ -28,6 +29,7 @@ export class AccountInstanceTransitionError extends Error {
     detail?: string;
     issues?: Array<{ path: string }>;
     capacity?: { current: number; limit: number };
+    committed?: AccountInstancePublicationTransition;
   }) {
     super(args.detail ?? args.reasonKey);
     this.name = 'AccountInstanceTransitionError';
@@ -36,8 +38,15 @@ export class AccountInstanceTransitionError extends Error {
     this.reasonKey = args.reasonKey;
     this.paths = args.issues?.map((issue) => issue.path);
     this.capacity = args.capacity;
+    this.committed = args.committed;
   }
 }
+
+export type AccountInstancePublicationTransition = {
+  instanceId: string;
+  status: 'published' | 'unpublished';
+  changed: boolean;
+};
 
 function transitionFailureFromSavedRead(result: { kind: 'NOT_FOUND' | 'VALIDATION'; reasonKey: string }): never {
   if (result.kind === 'NOT_FOUND') {
@@ -69,16 +78,26 @@ export async function purgeClkLiveEntryCache(args: {
       reasonKey: 'tokyo.errors.publicCache.purgeConfigMissing',
     });
   }
-  const response = await fetch(`https://api.cloudflare.com/client/v4/zones/${encodeURIComponent(zoneId)}/purge_cache`, {
-    method: 'POST',
-    headers: {
-      authorization: `Bearer ${token}`,
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify({
-      tags: [accountInstanceCacheTag(args.accountId, args.instanceId)],
-    }),
-  });
+  let response: Response;
+  try {
+    response = await fetch(`https://api.cloudflare.com/client/v4/zones/${encodeURIComponent(zoneId)}/purge_cache`, {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${token}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        tags: [accountInstanceCacheTag(args.accountId, args.instanceId)],
+      }),
+    });
+  } catch (error) {
+    throw new AccountInstanceTransitionError({
+      status: 502,
+      kind: 'UPSTREAM_UNAVAILABLE',
+      reasonKey: 'tokyo.errors.publicCache.purgeFailed',
+      detail: error instanceof Error ? error.message : String(error),
+    });
+  }
   const payload = await response.json().catch(() => null) as { success?: unknown } | null;
   if (!response.ok || payload?.success !== true) {
     throw new AccountInstanceTransitionError({
@@ -255,8 +274,20 @@ export async function unpublishAccountInstanceTransition(args: {
       status: 'unpublished',
     });
   }
-  await purgeClkLiveEntryCache({ env: args.env, accountId, instanceId });
-  return { instanceId, status: 'unpublished', changed: liveStatus !== 'unpublished' };
+  const transition = {
+    instanceId,
+    status: 'unpublished' as const,
+    changed: liveStatus !== 'unpublished',
+  };
+  try {
+    await purgeClkLiveEntryCache({ env: args.env, accountId, instanceId });
+  } catch (error) {
+    if (error instanceof AccountInstanceTransitionError) {
+      error.committed = transition;
+    }
+    throw error;
+  }
+  return transition;
 }
 
 export async function deleteAccountInstanceTransition(args: {

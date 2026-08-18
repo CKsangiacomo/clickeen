@@ -404,6 +404,11 @@ saved-field value map at the external editor ingress and delegates the accepted
 Clickeen artifact to Tokyo-worker. Tokyo trusts and stores it; it does not
 revalidate the accepted field contract. The operation does not materialize
 runtime files.
+`DELETE /api/account/instances/{instanceId}/translations/{locale}` is the
+authenticated explicit deletion boundary for that one exact account-instance-
+locale overlay, including the pre-GA positional-coordinate cutover. It delegates
+the exact delete to Tokyo-worker and does not introduce a broad storage-prefix
+operation, Serve migration, or compatibility path.
 When the command is invoked through hosted Bob, Translation Agent may stream
 Agent Activity while it operates. Roma forwards that activity to Bob; Roma does
 not author it, summarize it, poll for it, persist it, or convert it into product
@@ -434,6 +439,18 @@ expose no live public action. Bob's `bob:host-action` message carries
 Publish, public-action, and unsaved-work authority. Publish never silently
 Saves a dirty draft. After successful Publish or Republish, Roma reopens the
 same instance so Bob receives exact current publication status and actions.
+If publication truth commits but the following cache purge fails, the same
+Roma route preserves the HTTP `502` purge failure, or HTTP `503` missing-cache-
+configuration failure, and returns `ok: false` together with Tokyo's exact
+`committed: { instanceId, status, changed }` transition. Builder reopens the
+exact instance so Bob receives the authoritative publication status and public
+actions, then Roma shows a durable account-shell banner with the exact
+delivery-refresh result and the existing command to retry. The message is not
+placed in the ToolDrawer or an upsell Popup, and it does not say the committed
+Publish or Unpublish failed.
+This committed-result reconciliation is implemented in the current local
+source; cloud-dev deployment and runtime proof remain pending in this
+reconciliation.
 The copied public URL is slashless:
 
 ```text
@@ -482,6 +499,12 @@ categories, badges, or preview media.
 Changing routes does not change the account command or storage authority.
 Publication remains a controlled command: the toggle changes only after the
 existing Roma command succeeds and the authoritative instance list refreshes.
+For the exact post-commit purge-failure result, the command itself is not a full
+success but the returned `committed` transition is authoritative publication
+truth. Roma updates the affected row and its Widgets cache from that transition
+and shows the same status-specific account-shell banner: Republish retries a
+committed Publish, and the Widgets banner's **Retry public delivery** action
+retries a committed Unpublish through the same idempotent Unpublish route.
 
 It owns:
 

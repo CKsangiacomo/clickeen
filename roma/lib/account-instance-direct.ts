@@ -21,6 +21,17 @@ type RouteFailure = {
   ok: false;
   status: number;
   error: DirectRouteError;
+  committed?: unknown;
+};
+
+export type AccountInstanceStatusTransition = {
+  instanceId: string;
+  status: AccountInstanceLiveStatus;
+  changed: boolean;
+};
+
+type AccountInstanceStatusTransitionFailure = Omit<RouteFailure, 'committed'> & {
+  committed?: AccountInstanceStatusTransition;
 };
 
 export type AccountInstanceCoreRow = {
@@ -223,8 +234,8 @@ async function postInstanceStatusTransition(args: {
   action: 'publish' | 'unpublish';
   body?: Record<string, unknown>;
 }): Promise<
-  | { ok: true; value: { instanceId: string; status: AccountInstanceLiveStatus; changed: boolean } }
-  | RouteFailure
+  | { ok: true; value: AccountInstanceStatusTransition }
+  | AccountInstanceStatusTransitionFailure
 > {
   const result = await callTokyo(tokyoCallContext(args), {
     path: `/__internal/instances/${encodeURIComponent(args.instanceId)}/${args.action}`,
@@ -239,7 +250,16 @@ async function postInstanceStatusTransition(args: {
     errorDetail: `tokyo_instance_${args.action}_http_error`,
     errorKey: 'roma.errors.proxy.tokyo_unavailable',
   });
-  if (!result.ok) return result;
+  if (!result.ok) {
+    return {
+      ok: false,
+      status: result.status,
+      error: result.error,
+      ...(result.committed === undefined
+        ? {}
+        : { committed: result.committed as AccountInstanceStatusTransition }),
+    };
+  }
   return { ok: true, value: result.value };
 }
 
@@ -252,7 +272,8 @@ export async function publishAccountInstanceInTokyo(args: {
   requestId?: string | null;
   publicPackage: AccountInstancePublicPackage;
 }): Promise<
-  { ok: true; value: { instanceId: string; status: 'published'; changed: boolean } } | RouteFailure
+  | { ok: true; value: { instanceId: string; status: 'published'; changed: boolean } }
+  | AccountInstanceStatusTransitionFailure
 > {
   const result = await postInstanceStatusTransition({
     ...args,
@@ -277,7 +298,7 @@ export async function unpublishAccountInstanceInTokyo(args: {
   requestId?: string | null;
 }): Promise<
   | { ok: true; value: { instanceId: string; status: 'unpublished'; changed: boolean } }
-  | RouteFailure
+  | AccountInstanceStatusTransitionFailure
 > {
   const result = await postInstanceStatusTransition({
     ...args,

@@ -189,6 +189,10 @@ ck.shared.socialSharePod      shared social-share placement fact
 These are system rendering facts, not Widget editable state. No Widget adds
 Bob session machinery or serving state to this object.
 
+Branches controlled by `ck.previewMode` may add preview metadata, editing
+affordances, or route preview interactions to Bob. They must never change
+Widget-authored content or Core structure.
+
 The HTML contract uses ordinary Mustache behavior:
 
 - `{{path}}` for escaped text or attribute values;
@@ -787,6 +791,8 @@ Template catalog model: normal listed CLICKEEN-admin saved instances
 Template cross-account Duplicate: not implemented
 retired flat Widget source paths: removed from git and cloud-dev R2; exact URLs return 404
 account product data: unchanged
+stored positional-overlay Generate/delete cutover: pending
+republish of affected pre-stable-slot public packages: pending
 product commit: e2ac3589
 main push: performed
 deploy: cloud-dev Worker/R2 run 32087699030 and Bob/Roma Pages deployments passed

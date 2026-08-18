@@ -36,6 +36,9 @@ async function testExplicitTranslationRouteSurvives(): Promise<void> {
   const translationValuesRouteSource = await readSource(
     'roma/app/api/account/instances/[instanceId]/translations/[locale]/route.ts',
   );
+  const tokyoTranslationRouteSource = await readSource(
+    'tokyo-worker/src/routes/internal-translation-routes.ts',
+  );
   const tokyoTranslationValuesSource = await readSource(
     'tokyo-worker/src/domains/account-translations/values.ts',
   );
@@ -50,6 +53,12 @@ async function testExplicitTranslationRouteSurvives(): Promise<void> {
   assert.doesNotMatch(panelSource, /localePackages|localized package|public package/i);
   assert.match(translationValuesRouteSource, /export async function PUT/);
   assert.match(translationValuesRouteSource, /writeAccountInstanceTranslationValues/);
+  assert.match(translationValuesRouteSource, /export async function DELETE/);
+  assert.match(translationValuesRouteSource, /deleteAccountInstanceTranslationValues/);
+  assert.match(
+    tokyoTranslationRouteSource,
+    /if \(req\.method === 'DELETE'\) \{\s+const auth = await authorizeRomaEditorTransition/,
+  );
   assert.match(tokyoTranslationValuesSource, /locale === stored\.baseLocale/);
   assert.match(tokyoTranslationValuesSource, /tokyo\.translation\.locale\.base_forbidden/);
 }
