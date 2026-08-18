@@ -360,13 +360,15 @@ accounts/{accountPublicId}/instances/{instanceId}/
       {locale}.json
 ```
 
-Tokyo-worker stores the three exact generated strings, writes published serve
-state, and purges the instance's one exact Cloudflare URL prefix after a
-successful Publish. The prefix is the configured public-serving host plus the
-exact encoded account and instance path. It covers base HTML, support-file
-paths, locale queries, and tracking-query variants without enumerating them. A
-republish replaces the same three package objects for the same instance. No
-second storage or release workflow exists.
+Tokyo-worker stores the three exact generated strings and writes published
+serve state. The account publication Durable Object then returns the committed
+transition to Tokyo's default Worker entrypoint. That owning entrypoint calls
+`ctx.cache.purge({ tags: [accountInstanceCacheTag] })` after a successful
+Publish. Every cacheable response for the exact account/instance carries that
+same deterministic tag, so one Worker-owned purge covers base HTML,
+support-file paths, locale queries, and tracking-query variants without
+enumerating URLs. A republish replaces the same three package objects for the
+same instance. No second storage or release workflow exists.
 
 For a first Publish, Tokyo-worker holds the coordinator's transient `active`
 gate only across the exact count/package/serve-state transition and clears it
@@ -528,8 +530,9 @@ those operations exist.
   committed publication truth, Roma reconciles its visible state to that truth,
   and the ordinary status command remains retryable;
 - Publish/Republish, Unpublish, Delete, and exact overlay mutation use the same
-  exact instance URL-prefix invalidation coordinate, covering package paths and
-  locale/tracking query variants;
+  Worker-owned default-entrypoint
+  `ctx.cache.purge({ tags: [accountInstanceCacheTag] })`, covering package paths
+  and locale/tracking query variants;
 - Save source remains unchanged by Publish;
 - repeated localized content follows stable identity across reorder/add/delete,
   and editable attributes use their exact authored target;
@@ -574,8 +577,10 @@ account suspension lifecycle runner/full deletion: documented follow-on account 
 account product data: unchanged
 stored positional-overlay Generate/delete cutover: pending
 republish of affected pre-stable-slot public packages: pending
-instance URL-prefix invalidation proof for base and locale variants: pending
-prior Cache-Tag purge runtime result: proved silent no-op after warm base/locale HIT responses and successful Republish; replaced locally, post-deploy proof pending
+Worker-owned account-instance Cache-Tag invalidation proof for base and locale variants: pending
+prior zone-API tag purge runtime result: proved silent no-op after warm base/locale HIT responses and successful Republish
+prior zone-API prefix purge runtime result: proved silent no-op because zone-level purge cannot invalidate Workers Caching
+current invalidation: default-entrypoint `ctx.cache.purge({ tags: [accountInstanceCacheTag] })` implemented locally; post-deploy proof pending
 post-commit publication/purge result correction: implemented locally; cloud-dev deploy proof pending
 product commit: e2ac3589
 main push: performed

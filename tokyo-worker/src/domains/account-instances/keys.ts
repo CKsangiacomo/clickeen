@@ -30,12 +30,3 @@ export function accountInstanceLocaleOverlaysPrefix(accountId: string, widgetCod
 export function accountInstanceCacheTag(accountId: string, instanceId: string): string {
   return `clk-instance-${accountId}-${instanceId}`;
 }
-
-export function accountInstanceCachePrefix(
-  publicServingBaseUrl: string,
-  accountId: string,
-  instanceId: string,
-): string {
-  const servingOrigin = new URL(publicServingBaseUrl);
-  return `${servingOrigin.host}/${encodeURIComponent(accountId)}/${encodeURIComponent(instanceId)}`;
-}

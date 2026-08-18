@@ -113,7 +113,9 @@ verification completed for product commit `e2ac3589`; owner QA remains pending.
 - Base runtime: base and locale response HTML contains semantic content before
   JavaScript and references identical support URLs.
 - Overlay behavior: changing one overlay changes that locale response HTML and
-  the exact switcher option set authored into every index response; one
-  exact instance URL-prefix purge covers every package path and query variant.
+  the exact switcher option set authored into every index response; Tokyo's
+  default Worker entrypoint calls
+  `ctx.cache.purge({ tags: [accountInstanceCacheTag] })`, and the shared exact
+  account-instance tag covers every package path and query variant.
 - R2: exactly one base artifact set and overlay JSON; no locale-derived runtime
   objects.

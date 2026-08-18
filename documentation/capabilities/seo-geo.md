@@ -139,10 +139,11 @@ semantic HTML and sets `<html lang>` before returning it. The response uses the
 existing public cache policy; the locale query is part of the request cache
 coordinate. Every index response also contains exact Edge-authored switcher
 options for the base locale and stored overlay coordinates. Publish,
-unpublish, Delete, and overlay changes purge the instance's one Cloudflare
-URL prefix after the owning truth mutation. The prefix is the exact public
-serving host plus account/instance path and covers every package path and
-locale/query variant.
+unpublish, Delete, and overlay changes cause Tokyo's default Worker entrypoint
+to purge its own Workers Cache after the owning truth mutation through
+`ctx.cache.purge({ tags: [accountInstanceCacheTag] })`. Every cacheable response
+for the exact account/instance carries that tag, covering every package path
+and locale/query variant.
 
 Tokyo-worker does not compare source/package fingerprints, validate Roma's
 semantic output, rebuild the Widget, derive metadata, or localize in client

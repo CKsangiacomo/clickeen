@@ -157,9 +157,10 @@ Successful base and selected-locale package responses use the existing public
 cache policy. The locale query is part of the request cache coordinate. Missing
 or unreadable locale truth uses explicit non-cacheable error responses. Publish,
 unpublish, overlay mutation, and Delete remain the owning cache-invalidation
-operations. Each purges the one exact configured public-host/account/instance
-URL prefix, covering support-file paths and locale/tracking query variants.
-Serve does not probe or rebuild state.
+operations. Each reaches Tokyo's default Worker entrypoint, which calls
+`ctx.cache.purge({ tags: [accountInstanceCacheTag] })`. The exact shared tag on
+every cacheable account-instance response covers support-file paths and
+locale/tracking query variants. Serve does not probe or rebuild state.
 
 ## 8. Why This Wins
 
@@ -261,8 +262,10 @@ a fallback label source.
 - no visitor request calls Bob, Roma, the materializer, a model, or Widget
   source;
 - missing locale truth does not silently fall back;
-- one exact instance URL-prefix purge invalidates base, support-file,
-  locale-query, and tracking-query cache coordinates;
+- one default-entrypoint
+  `ctx.cache.purge({ tags: [accountInstanceCacheTag] })` invalidates base,
+  support-file, locale-query, and tracking-query cache coordinates carrying the
+  exact account-instance tag;
 - no Widget-specific serving branch or alternate public route exists; and
 - focused and all-Widget implementation checks and cloud-dev deploy proof pass,
   while owner QA remains pending.
@@ -299,8 +302,10 @@ account suspension lifecycle runner/full deletion: documented follow-on account 
 account product data: unchanged
 stored positional-overlay Generate/delete cutover: pending
 republish of affected pre-stable-slot public packages: pending
-instance URL-prefix invalidation proof for base and locale variants: pending
-prior Cache-Tag purge runtime result: proved silent no-op after warm base/locale HIT responses and successful Republish; replaced locally, post-deploy proof pending
+Worker-owned account-instance Cache-Tag invalidation proof for base and locale variants: pending
+prior zone-API tag purge runtime result: proved silent no-op after warm base/locale HIT responses and successful Republish
+prior zone-API prefix purge runtime result: proved silent no-op because zone-level purge cannot invalidate Workers Caching
+current invalidation: default-entrypoint `ctx.cache.purge({ tags: [accountInstanceCacheTag] })` implemented locally; post-deploy proof pending
 product commit: e2ac3589
 main push: performed
 deploy: cloud-dev Worker/R2 run 32087699030 and Bob/Roma Pages deployments passed

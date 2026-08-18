@@ -4,7 +4,6 @@ import { transitionErrorResponse } from '../../routes/internal-product-route-uti
 import {
   AccountInstanceTransitionError,
   publishAccountInstanceTransition,
-  purgeClkLiveEntryCache,
 } from './operations';
 import type { SubmittedInstancePublicPackage } from './package-files';
 
@@ -37,38 +36,22 @@ export class AccountPublicationCoordinator {
     }
 
     this.active = true;
-    let body: AccountPublicationRequest;
-    let transition: { instanceId: string; status: 'published'; changed: boolean };
     try {
       await this.state.storage.get(COORDINATOR_LIFECYCLE_FENCE_KEY);
-      body = (await request.json()) as AccountPublicationRequest;
-      transition = await publishAccountInstanceTransition({
+      const body = (await request.json()) as AccountPublicationRequest;
+      const transition = await publishAccountInstanceTransition({
         env: this.env,
         accountId: body.accountId,
         instanceId: body.instanceId,
         publishedLimit: body.publishedLimit,
         publicPackage: body.publicPackage,
       });
+      return json({ ok: true, ...transition });
     } catch (error) {
       return transitionErrorResponse(error);
     } finally {
       this.active = false;
     }
-
-    try {
-      await purgeClkLiveEntryCache({
-        env: this.env,
-        accountId: body.accountId,
-        instanceId: body.instanceId,
-      });
-    } catch (error) {
-      if (error instanceof AccountInstanceTransitionError) {
-        error.committed = transition;
-      }
-      return transitionErrorResponse(error);
-    }
-
-    return json({ ok: true, ...transition });
   }
 
   async fetch(request: Request): Promise<Response> {

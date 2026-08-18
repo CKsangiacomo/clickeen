@@ -37,6 +37,13 @@ async function testPublishGateBeforeTransition(): Promise<void> {
     ),
     'utf8',
   );
+  const tokyoRoute = await readFile(
+    new URL(
+      '../../tokyo-worker/src/routes/internal-instance-routes.ts',
+      import.meta.url,
+    ),
+    'utf8',
+  );
   const gateBranch = 'if (!alreadyPublished && publishedTotal >= publishedLimit)';
   assert.match(source, /loadAccountWidgetInstanceFacts\(\{/);
   assert.match(source, /action: 'publish_instance'/);
@@ -54,13 +61,13 @@ async function testPublishGateBeforeTransition(): Promise<void> {
   assert.match(tokyoOperations, /publishedTotal >= args\.publishedLimit/);
   assert.match(tokyoCoordinator, /private active = false/);
   assert.match(tokyoCoordinator, /reasonKey: 'coreui\.errors\.instance\.publishInProgress'/);
+  assert.doesNotMatch(tokyoCoordinator, /purgeClkLiveEntryCache/);
   assertBefore(
-    tokyoCoordinator,
-    'this.active = false;',
-    'await purgeClkLiveEntryCache({',
+    tokyoRoute,
+    'coordinateAccountInstancePublish({',
+    'await purgeClkLiveEntryCache({ cache, accountId, instanceId });',
   );
-  assert.match(tokyoCoordinator, /error\.committed = transition/);
-  assert.match(tokyoOperations, /error\.committed = transition/);
+  assert.match(tokyoRoute, /error\.committed = transition/);
   assert.match(tokyoClientSource, /committed\?: unknown/);
   assert.match(directSource, /committed\?: AccountInstanceStatusTransition/);
   assert.match(source, /publish\.committed \? \{ committed: publish\.committed \} : \{\}/);

@@ -1,7 +1,9 @@
 import { normalizeStorageId } from '../asset-utils';
 import {
+  AccountInstanceTransitionError,
   createAccountInstanceFromSubmittedSource,
   deleteAccountInstanceTransition,
+  purgeClkLiveEntryCache,
   saveAccountInstanceSource,
   unpublishAccountInstanceTransition,
 } from '../domains/account-instances/operations';
@@ -33,7 +35,7 @@ import {
 export async function tryHandleInternalInstanceRoutes(
   args: TokyoRouteArgs,
 ): Promise<Response | null> {
-  const { req, env, pathname, respond } = args;
+  const { req, env, cache, pathname, respond } = args;
 
   const internalAccountInstancesListMatch = pathname.match(
     /^\/__internal\/accounts\/([^/]+)\/instances$/,
@@ -273,15 +275,35 @@ export async function tryHandleInternalInstanceRoutes(
           publishedLimit: number;
           publicPackage: SubmittedInstancePublicPackage;
         };
-        return respond(await coordinateAccountInstancePublish({
+        const coordinated = await coordinateAccountInstancePublish({
           env,
           accountId,
           instanceId,
           publishedLimit: body.publishedLimit,
           publicPackage: body.publicPackage,
-        }));
+        });
+        if (!coordinated.ok) return respond(coordinated);
+        const coordinatedPayload = (await coordinated.json()) as {
+          ok: true;
+          instanceId: string;
+          status: 'published';
+          changed: boolean;
+        };
+        transition = {
+          instanceId: coordinatedPayload.instanceId,
+          status: coordinatedPayload.status,
+          changed: coordinatedPayload.changed,
+        };
       } else {
         transition = await unpublishAccountInstanceTransition({ env, accountId, instanceId });
+      }
+      try {
+        await purgeClkLiveEntryCache({ cache, accountId, instanceId });
+      } catch (error) {
+        if (error instanceof AccountInstanceTransitionError) {
+          error.committed = transition;
+        }
+        return respond(transitionErrorResponse(error));
       }
       return respond(json({ ok: true, ...transition }));
     } catch (error) {
@@ -376,6 +398,7 @@ export async function tryHandleInternalInstanceRoutes(
       if (!auth.ok) return respond(auth.response);
       try {
         const deleted = await deleteAccountInstanceTransition({ env, instanceId, accountId });
+        await purgeClkLiveEntryCache({ cache, accountId, instanceId });
         return respond(json({ ok: true, existed: deleted.existed }));
       } catch (error) {
         return respond(transitionErrorResponse(error));

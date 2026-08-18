@@ -324,9 +324,12 @@ published count and receives the existing `402 UPGRADE_REQUIRED` capacity
 result when full. There is no polling loop, automatic retry, second publication
 truth, or per-view capacity check.
 
-The coordinator ends before cache purge. If the package/publication transition
-commits and that following purge fails, Tokyo returns the explicit `502` purge
-failure, or `503` missing-purge-configuration failure, together with the exact
+The coordinator ends before cache purge and returns committed truth to Tokyo's
+default Worker entrypoint. That entrypoint owns the cached public responses and
+calls `ctx.cache.purge({ tags: [accountInstanceCacheTag] })`. If the
+package/publication transition commits and that following purge fails, Tokyo
+returns the explicit `502` purge failure, or `503` missing Worker-cache-context
+failure, together with the exact
 `committed: { instanceId, status, changed }` transition. Roma reconciles its
 Builder or Widgets surface to that authoritative publication truth and shows a
 status-specific delivery-refresh banner. The existing Republish or Unpublish

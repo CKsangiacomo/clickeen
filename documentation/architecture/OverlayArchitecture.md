@@ -117,10 +117,12 @@ data invalid`. Neither condition falls back to another locale, and neither
 authorizes a second overlay schema/equality validator in the serving path.
 Those error responses are not cached. Because an overlay coordinate changes
 both one localized response and the switcher options in every index response,
-Publish, unpublish, Delete, and an exact overlay write/delete purge the
-instance's one exact Cloudflare URL prefix after the owning truth mutation.
-The prefix is the configured public-serving host plus account/instance path and
-covers every package path and locale/tracking query variant.
+Publish, unpublish, Delete, and an exact overlay write/delete cause Tokyo's
+default Worker entrypoint to purge its own Workers Cache after the owning truth
+mutation. It calls
+`ctx.cache.purge({ tags: [accountInstanceCacheTag] })`; every cacheable response
+for the exact account/instance carries that tag, covering every package path
+and locale/tracking query variant.
 
 This stable-coordinate format is a pre-GA cutover for scalar and repeated
 fields. Previously stored positional-key overlays are not compatibility input.

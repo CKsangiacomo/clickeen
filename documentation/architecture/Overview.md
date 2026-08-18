@@ -302,7 +302,9 @@ User explicitly Publishes an exact saved instance
 -> Tokyo-worker routes the final command to the account's one lifecycle-fenced Durable Object coordinator
 -> that coordinator reads exact publication truth and applies Roma's exact limit
 -> Republish proceeds without a new slot; the first allowed Publish stores the package and published state
--> Tokyo ends coordination and purges the exact instance URL prefix
+-> Tokyo ends coordination
+-> Tokyo's default Worker entrypoint purges its own cache through the exact
+   account-instance Cache-Tag
 ```
 
 The normal Roma capacity denial is HTTP 402 before materialization. In the rare

@@ -208,7 +208,8 @@ Rules:
 - `clk.live` is reserved for production public serving.
 - The path shape is identical across environments: `/{accountPublicId}/{instanceId}`.
 - Do not bind the cloud-dev Tokyo worker to `clk.live`.
-- Tokyo-worker owns the cloud-dev public route in Cloudflare zone infra: `dev.clk.live/*` routes to `tokyo-assets-dev`, with `PUBLIC_SERVING_BASE_URL=https://dev.clk.live`.
+- Tokyo-worker owns the cloud-dev public route in Cloudflare zone infra:
+  `dev.clk.live/*` routes to `tokyo-assets-dev`.
 - The cloud-dev worker deploy script uploads worker code with `wrangler deploy --routes ""`; route/DNS mutation is zone infrastructure and must not be retried blindly from the worker deploy token.
 - The public-serving hostname must host-gate Tokyo: `dev.clk.live` and `clk.live` may serve only generated public artifacts; `/healthz`, `/__internal/*`, `/widgets/*`, and other operational Tokyo routes must return 404 there.
 
@@ -348,9 +349,6 @@ Worker secrets:
 - San Francisco: `ROMA_AI_GRANT_PUBLIC_KEY_PEM` for Roma AI grant verification and `PRAGUE_L10N_HMAC_SECRET` for Prague request verification
 - Translation Agent: `ROMA_AI_GRANT_PUBLIC_KEY_PEM`
 - Tokyo-worker: `ROMA_AI_GRANT_PUBLIC_KEY_PEM` for Translation Agent overlay write grant verification
-- Tokyo-worker: `CLOUDFLARE_CACHE_PURGE_TOKEN` for exact public `clk.live`
-  cache purge after published package byte writes/deletes. Cloud-dev deploys
-  this as a Worker secret from the same-named GitHub Actions secret.
 
 Pages secrets:
 - Roma: `ROMA_AI_GRANT_PRIVATE_KEY_PEM` is required for account Copilot and Translation Agent grant minting and must not be installed on any verifier. `SUPABASE_SERVICE_ROLE_KEY` is required for Roma-owned account settings writes. Roma -> Tokyo/Tokyo-worker storage commands use service bindings. Account instance translation generation calls the Translation Agent Worker; that Worker calls San Francisco `/model/turn` in structured mode and writes translated locale values via Tokyo-worker.
@@ -359,9 +357,6 @@ Pages secrets:
 CI secrets/vars:
 - `CLOUDFLARE_API_TOKEN` for GitHub Actions/Wrangler Worker deployment. Do not
   reuse this ambiguous name for local repo Cloudflare helper commands.
-- `CLOUDFLARE_CACHE_PURGE_TOKEN` for the Tokyo-worker runtime. It needs only
-  public-zone cache-purge authority and is installed by the `cloud-dev workers
-  deploy` workflow.
 - `CLOUDFLARE_REST_API_TOKEN` for local Pages/DNS/config repo helper commands.
 - `CLOUDFLARE_ACCOUNT_ID`
 - `ROMA_AI_GRANT_PUBLIC_KEY_PEM` for the Worker grant verifiers; it is the public half of Roma's key pair

@@ -439,9 +439,10 @@ expose no live public action. Bob's `bob:host-action` message carries
 Publish, public-action, and unsaved-work authority. Publish never silently
 Saves a dirty draft. After successful Publish or Republish, Roma reopens the
 same instance so Bob receives exact current publication status and actions.
-If publication truth commits but the following cache purge fails, the same
-Roma route preserves the HTTP `502` purge failure, or HTTP `503` missing-cache-
-configuration failure, and returns `ok: false` together with Tokyo's exact
+If publication truth commits but the following Worker-owned cache purge fails,
+the same Roma route preserves the HTTP `502` purge failure, or HTTP `503`
+missing Worker-cache-context failure, and returns `ok: false` together with
+Tokyo's exact
 `committed: { instanceId, status, changed }` transition. Builder reopens the
 exact instance so Bob receives the authoritative publication status and public
 actions, then Roma shows a durable account-shell banner with the exact

@@ -23,7 +23,7 @@ import {
 export async function tryHandleInternalTranslationRoutes(
   args: TokyoRouteArgs,
 ): Promise<Response | null> {
-  const { req, env, pathname, respond } = args;
+  const { req, env, cache, pathname, respond } = args;
 
   const internalTranslationsListMatch = pathname.match(/^\/__internal\/instances\/([^/]+)\/translations$/);
   if (internalTranslationsListMatch) {
@@ -104,6 +104,7 @@ export async function tryHandleInternalTranslationRoutes(
           instanceId,
           locale,
           values: body.values,
+          cache,
         });
         return respond(json({ ok: true, locale: translation.locale }));
       } catch (error) {
@@ -117,7 +118,7 @@ export async function tryHandleInternalTranslationRoutes(
       if (!auth.ok) return respond(auth.response);
 
       try {
-        const translation = await deleteAccountInstanceTranslatedLocaleValues({ env, accountId, instanceId, locale });
+        const translation = await deleteAccountInstanceTranslatedLocaleValues({ env, accountId, instanceId, locale, cache });
         return respond(json({ ok: true, locale: translation.locale }));
       } catch (error) {
         const detail = error instanceof Error ? error.message : String(error);

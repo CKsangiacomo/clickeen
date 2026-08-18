@@ -195,10 +195,11 @@ For a selected non-base locale, Tokyo-worker:
 The response references the same stored CSS and JavaScript. No locale-derived
 package is stored. Successful base/locale responses use the existing public
 cache policy and the locale query is part of the request cache coordinate. An
-exact overlay write/delete purges the instance's one exact Cloudflare URL
-prefix after the mutation. That prefix is the configured public-serving host
-plus account/instance path and covers every package path and locale/query
-variant.
+exact overlay write/delete reaches Tokyo's default Worker entrypoint after the
+mutation and calls
+`ctx.cache.purge({ tags: [accountInstanceCacheTag] })`. Every cacheable response
+for the exact account/instance carries that tag, covering every package path
+and locale/query variant.
 
 Public serving does not inject `CK_LOCALE_CONTEXT`, run a client localizer,
 compare package fingerprints, compare overlay values with saved content, call a
@@ -267,11 +268,14 @@ relationship without a second SEO/Discovery renderer.
   Previously stored positional overlays still require the documented explicit
   Generate Translations or deletion cutover, and previously published packages
   must be Republished when they predate the stable content slots.
-- The prior deployed Cache-Tag purge was proved a silent no-op: after base and
-  French responses were warm cache `HIT`s, Republish returned `200` while both
-  variants remained `HIT`. The current local source replaces invalidation with
-  one exact instance URL-prefix purge. Its cloud-dev deployment and successful
-  base-and-locale freshness proof remain pending. Owner QA remains pending.
+- Both prior zone-API invalidation attempts were proved silent no-ops for
+  Workers Caching. The original zone `tags` request left warm base and French
+  responses at cache `HIT` after Republish returned `200`; the later accepted
+  zone `prefixes: [host/account/instance]` request cannot invalidate cache owned
+  by the Worker entrypoint. The current local source uses Tokyo's default
+  entrypoint `ctx.cache.purge({ tags: [accountInstanceCacheTag] })`. Its
+  cloud-dev deployment and successful base-and-locale freshness proof remain
+  pending. Owner QA remains pending.
 
 ## Verification
 

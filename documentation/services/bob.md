@@ -279,8 +279,9 @@ Roma replies to account commands with:
 }
 ```
 
-A Publish/Republish host intent whose publication truth committed before its
-cache purge failed is reconciled by Roma from the exact Tokyo
+A Publish/Republish host intent whose publication truth committed before
+Tokyo's Worker-owned cache purge failed is reconciled by Roma from the exact
+Tokyo
 `committed: { instanceId, status, changed }` transition. Roma reopens the exact
 instance, so Bob receives the authoritative publication status and public
 actions through the normal `ck:open-editor` envelope. Roma, not Bob or the

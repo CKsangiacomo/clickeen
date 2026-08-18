@@ -168,13 +168,16 @@ projecting them through saved content. Package writes continue to require all
 three files, including mandatory `runtime.js`.
 
 Save changes source only and performs no public purge. Publish/Republish stores
-the exact package, changes publication truth, and then purges the instance's
-one exact Cloudflare URL prefix. Unpublish changes publication truth and then
-purges that prefix. Exact overlay writes/deletes purge the same prefix after
-the overlay mutation when the instance is published. The prefix is the
-configured public-serving host plus the exact encoded account and instance
-path, covering base HTML, support-file paths, locale queries, and tracking-query
-variants without enumerating URLs.
+the exact package and changes publication truth inside the account coordinator,
+then returns the committed transition to Tokyo's default Worker entrypoint.
+That entrypoint calls
+`ctx.cache.purge({ tags: [accountInstanceCacheTag] })`. Unpublish and Delete use
+the same default-entrypoint purge after their owning truth mutation. Exact
+overlay writes/deletes use it after the overlay mutation when the instance is
+published. Every cacheable response for the exact account/instance carries the
+same deterministic tag, so one Worker-owned purge covers base HTML,
+support-file paths, locale queries, and tracking-query variants without
+enumerating URLs.
 
 Publication truth commits before the cache purge. If a Publish/Republish or
 Unpublish commit succeeds and the purge then fails, Tokyo does not claim full
@@ -198,33 +201,36 @@ purge error together with the exact committed transition:
 ```
 
 The response is HTTP `502` for a purge request failure and HTTP `503` with
-`tokyo.errors.publicCache.purgeConfigMissing` when purge configuration is
-missing. `status` is the exact committed `published` or `unpublished` value.
+`tokyo.errors.publicCache.purgeConfigMissing` when the owning Worker cache
+context is unavailable. `status` is the exact committed `published` or
+`unpublished` value.
 Roma consumes that truth, reconciles the product surface to it, and presents
 the delivery-refresh failure. A retry uses the existing Republish or Unpublish
 command; Tokyo adds no rollback, queue, polling, or alternate retry route.
 This committed-result correction is implemented in the current local source;
 cloud-dev deployment and runtime proof remain pending in this reconciliation.
 
-Delete removes the instance subtree and then purges the same prefix. A retry
-after truth was removed but purge failed still purges the prefix and returns an
-idempotent successful result with `existed: false`. Save never depends on a
-public purge. No release URL, version, or second cache identity is created.
+Delete removes the instance subtree and then purges the same exact
+account-instance tag from the default entrypoint. A retry after truth was
+removed but purge failed still purges the tag and returns an idempotent
+successful result with `existed: false`. Save never depends on a public purge.
+No release URL, version, or second cache identity is created.
 
 Workers Caching is enabled in `tokyo-worker/wrangler.toml`. Every cacheable 200
 package response carries the deterministic account-instance `Cache-Tag` and
 does not carry a per-request request id that could be replayed from cache.
-Missing/locale-error responses are `no-store`. `Cache-Tag` is retained as
-response metadata; invalidation does not depend on it.
+Missing/locale-error responses are `no-store`. The tag is the exact invalidation
+identity consumed by the owning default entrypoint's `ctx.cache.purge()` call.
 
-Cloud-dev runtime evidence proved the previous tag-based purge was a silent
-no-op: after base and French index responses were warmed to cache `HIT`, an
-otherwise successful Republish returned `200` and both variants remained
-`HIT`. The current local source therefore submits one Cloudflare
-`prefixes: [host/account/instance]` purge derived from
-`PUBLIC_SERVING_BASE_URL`, `accountPublicId`, and `instanceId`. The zone accepts
-that exact prefix form. Deployment and the successful post-deploy base/locale
-freshness proof remain pending in this reconciliation.
+Cloud-dev runtime evidence proved both prior zone-API mechanisms were silent
+no-ops for Workers Caching. The original zone `tags` request left warmed base
+and French responses at cache `HIT` after a successful Republish. The later
+zone `prefixes: [host/account/instance]` request was also accepted but cannot
+invalidate cache owned by the Worker entrypoint. The current local source uses
+the owning default entrypoint's
+`ctx.cache.purge({ tags: [accountInstanceCacheTag] })` instead. Deployment and
+the successful post-deploy base/locale freshness proof remain pending in this
+reconciliation.
 
 For the final Publish capacity transition, Tokyo-worker receives Roma's exact
 `instances.published.max` decision with the materialized package and routes the
@@ -253,7 +259,8 @@ Per-instance `serve-state.json` remains the sole
 publication truth; Tokyo creates no publication or capacity registry. There is
 no lease, timeout reclaim, polling, queue, or automatic retry. Coordination
 covers only the capacity-critical count/package/state command. It ends after
-the published state commits and before Tokyo purges the instance URL prefix.
+the published state commits and before Tokyo's default Worker entrypoint purges
+its own cache through the exact account-instance tag.
 Unpublish and Delete do not use the coordinator. A concurrent Unpublish or
 Delete can cause only a conservative temporary Publish denial, not excess
 capacity.
@@ -379,8 +386,8 @@ Current internal route families:
 | `/__internal/instances/{instanceId}/list-facts` | `GET` | exact minimal account instance row facts |
 | `/__internal/instances/{instanceId}` | `GET`, `PUT`, `DELETE` | open/save/delete one account instance |
 | `/__internal/instances/{instanceId}/rename` | `POST` | rename one account instance |
-| `/__internal/instances/{instanceId}/publish` | `POST` | store Roma's exact three-file package, publish, and purge the exact instance URL prefix; a post-commit purge failure returns the exact committed transition with the explicit purge error |
-| `/__internal/instances/{instanceId}/unpublish` | `POST` | change publication truth and purge the exact instance URL prefix while retaining source/package; a post-commit purge failure returns the exact committed transition with the explicit purge error |
+| `/__internal/instances/{instanceId}/publish` | `POST` | store Roma's exact three-file package, publish through the account coordinator, then purge the default entrypoint's exact account-instance Cache-Tag; a post-commit purge failure returns the exact committed transition with the explicit purge error |
+| `/__internal/instances/{instanceId}/unpublish` | `POST` | change publication truth and purge the default entrypoint's exact account-instance Cache-Tag while retaining source/package; a post-commit purge failure returns the exact committed transition with the explicit purge error |
 | `/__internal/instances/{instanceId}/translations` | `GET` | list saved translated locale value files |
 | `/__internal/instances/{instanceId}/translations/{locale}` | `GET`, `PUT`, `DELETE` | read/write/delete one translated value file |
 | `/__internal/accounts/{accountPublicId}/widget-defaults` | `GET`, `POST`, `PUT` | read/create/write account widget defaults |
@@ -513,18 +520,14 @@ Worker env and bindings:
 | `ACCOUNT_PUBLICATION_COORDINATOR` | yes | Durable Object namespace whose deterministic per-account object serializes the final first-Publish capacity transition. It stores no policy, count, package, or publication truth. |
 | `BERLIN_BASE_URL` | yes unless `BERLIN_JWKS_URL` is set | Berlin session/JWKS authority for private request verification. Missing both Berlin URL settings fails verification; Tokyo-worker does not select a cloud-dev default. |
 | `TOKYO_PUBLIC_BASE_URL` | yes | Public Tokyo static/resource origin. |
-| `PUBLIC_SERVING_BASE_URL` | yes | Public `clk.live`/`dev.clk.live` serving origin. |
 | `BERLIN_JWKS_URL` | no | Explicit JWKS URL override. When present, it is used instead of deriving JWKS from `BERLIN_BASE_URL`. |
 | `ROMA_AI_GRANT_PUBLIC_KEY_PEM` | yes for Translation Agent writes | Public key that verifies Roma-issued overlay-write grants. |
-| `CLOUDFLARE_ZONE_ID` | yes for published public-byte mutations | Cloudflare zone for public cache refresh. |
-| `CLOUDFLARE_CACHE_PURGE_TOKEN` | yes for published public-byte mutations | Least-privilege Cloudflare API token allowed to purge the public zone. |
 
 Current `tokyo-worker/wrangler.toml` binds `TOKYO_R2`, binds
 `ACCOUNT_PUBLICATION_COORDINATOR` to the exported
 `AccountPublicationCoordinator` Durable Object class, declares its SQLite-class
-migration, and configures `BERLIN_BASE_URL`, `TOKYO_PUBLIC_BASE_URL`,
-`PUBLIC_SERVING_BASE_URL`, and the cloud-dev `clk.live`
-`CLOUDFLARE_ZONE_ID`. The Cloudflare purge API token is
-deployed as the `CLOUDFLARE_CACHE_PURGE_TOKEN` Worker secret by the `cloud-dev
-workers deploy` workflow and is not stored in `wrangler.toml`. It is separate
-from the CI `CLOUDFLARE_API_TOKEN` used to deploy Workers.
+migration, enables Workers Caching, and configures `BERLIN_BASE_URL` plus
+`TOKYO_PUBLIC_BASE_URL`. Public-cache invalidation uses the owning default
+entrypoint's `ctx.cache.purge()` capability and therefore has no public-serving
+base URL, zone ID, or purge-token runtime dependency. The CI
+`CLOUDFLARE_API_TOKEN` remains only the Worker deployment credential.

@@ -5,7 +5,7 @@ import type { Env } from './types';
 export { AccountPublicationCoordinator } from './domains/account-instances/publication-coordinator';
 
 export default {
-  async fetch(req: Request, env: Env): Promise<Response> {
+  async fetch(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(req.url);
     const pathname = url.pathname.replace(/\/+$/, '') || '/';
     const requestContext = createTokyoRequestContext(req, env, pathname);
@@ -20,6 +20,7 @@ export default {
       return await dispatchTokyoRoute({
         req,
         env,
+        cache: ctx.cache,
         pathname,
         url,
         respond,

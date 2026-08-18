@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { AccountPublicationCoordinator } from '../src/domains/account-instances/publication-coordinator';
-import { unpublishAccountInstanceTransition } from '../src/domains/account-instances/operations';
+import {
+  AccountInstanceTransitionError,
+  purgeClkLiveEntryCache,
+  unpublishAccountInstanceTransition,
+} from '../src/domains/account-instances/operations';
 import {
   readAccountInstanceSourcePointer,
   writeAccountInstanceSource,
@@ -173,9 +177,6 @@ async function assertPostCommitPurgeFailureTruth(): Promise<void> {
   const env = {
     TOKYO_R2: r2 as unknown as R2Bucket,
     ACCOUNT_PUBLICATION_COORDINATOR: {} as DurableObjectNamespace,
-    CLOUDFLARE_ZONE_ID: 'zone',
-    CLOUDFLARE_CACHE_PURGE_TOKEN: 'token',
-    PUBLIC_SERVING_BASE_URL: 'https://dev.clk.live',
   } satisfies Env;
   await seedInstance(env, firstInstanceId);
 
@@ -189,31 +190,44 @@ async function assertPostCommitPurgeFailureTruth(): Promise<void> {
     } as unknown as DurableObjectState,
     env,
   );
-  const originalFetch = globalThis.fetch;
   let purgeSucceeds = false;
-  const purgeBodies: unknown[] = [];
-  globalThis.fetch = async (_input, init) => {
-    purgeBodies.push(JSON.parse(String(init?.body)));
-    return new Response(
-      JSON.stringify({ success: purgeSucceeds }),
-      {
-        status: purgeSucceeds ? 200 : 500,
-        headers: { 'content-type': 'application/json' },
-      },
-    );
+  const purgeBodies: CachePurgeOptions[] = [];
+  const cache = {
+    async purge(options: CachePurgeOptions): Promise<CachePurgeResult> {
+      purgeBodies.push(options);
+      return purgeSucceeds
+        ? { success: true, errors: [] }
+        : { success: false, errors: [{ code: 1001, message: 'purge rejected' }] };
+    },
   };
 
-  try {
-    const failedPublish = await coordinator.fetch(
+  const committedPublish = await coordinator.fetch(
       publishRequest(firstInstanceId, 'publish-committed-before-purge-failure'),
-    );
+  );
+  assert.equal(committedPublish.status, 200);
+  const publishPayload = await readPayload(committedPublish);
+  const publishTransition = {
+    instanceId: publishPayload.instanceId as string,
+    status: publishPayload.status as 'published',
+    changed: publishPayload.changed as boolean,
+  };
+  let publishPurgeFailure: unknown;
+  try {
+    await purgeClkLiveEntryCache({ cache, accountId, instanceId: firstInstanceId });
+  } catch (error) {
+    if (error instanceof AccountInstanceTransitionError) {
+      error.committed = publishTransition;
+    }
+    publishPurgeFailure = error;
+  }
+  const failedPublish = transitionErrorResponse(publishPurgeFailure);
     assert.equal(failedPublish.status, 502);
     assert.deepEqual(await readPayload(failedPublish), {
       ok: false,
       error: {
         kind: 'UPSTREAM_UNAVAILABLE',
         reasonKey: 'tokyo.errors.publicCache.purgeFailed',
-        detail: 'cloudflare_purge_status_500',
+        detail: '1001:purge rejected',
       },
       committed: {
         instanceId: firstInstanceId,
@@ -222,7 +236,7 @@ async function assertPostCommitPurgeFailureTruth(): Promise<void> {
       },
     });
     assert.deepEqual(purgeBodies[0], {
-      prefixes: [`dev.clk.live/${accountId}/${firstInstanceId}`],
+      tags: [`clk-instance-${accountId}-${firstInstanceId}`],
     });
     const publishedPointer = await readAccountInstanceSourcePointer({
       env,
@@ -249,16 +263,21 @@ async function assertPostCommitPurgeFailureTruth(): Promise<void> {
       status: 'published',
       changed: false,
     });
+    await purgeClkLiveEntryCache({ cache, accountId, instanceId: firstInstanceId });
 
     purgeSucceeds = false;
-    let unpublishFailure: unknown;
-    try {
-      await unpublishAccountInstanceTransition({
+    const unpublishTransition = await unpublishAccountInstanceTransition({
         env,
         accountId,
         instanceId: firstInstanceId,
-      });
+    });
+    let unpublishFailure: unknown;
+    try {
+      await purgeClkLiveEntryCache({ cache, accountId, instanceId: firstInstanceId });
     } catch (error) {
+      if (error instanceof AccountInstanceTransitionError) {
+        error.committed = unpublishTransition;
+      }
       unpublishFailure = error;
     }
     assert.ok(unpublishFailure);
@@ -269,7 +288,7 @@ async function assertPostCommitPurgeFailureTruth(): Promise<void> {
       error: {
         kind: 'UPSTREAM_UNAVAILABLE',
         reasonKey: 'tokyo.errors.publicCache.purgeFailed',
-        detail: 'cloudflare_purge_status_500',
+        detail: '1001:purge rejected',
       },
       committed: {
         instanceId: firstInstanceId,
@@ -298,9 +317,7 @@ async function assertPostCommitPurgeFailureTruth(): Promise<void> {
         changed: false,
       },
     );
-  } finally {
-    globalThis.fetch = originalFetch;
-  }
+    await purgeClkLiveEntryCache({ cache, accountId, instanceId: firstInstanceId });
 }
 
 async function run(): Promise<void> {
@@ -310,9 +327,6 @@ async function run(): Promise<void> {
   const env = {
     TOKYO_R2: r2 as unknown as R2Bucket,
     ACCOUNT_PUBLICATION_COORDINATOR: {} as DurableObjectNamespace,
-    CLOUDFLARE_ZONE_ID: 'zone',
-    CLOUDFLARE_CACHE_PURGE_TOKEN: 'token',
-    PUBLIC_SERVING_BASE_URL: 'https://dev.clk.live',
   } satisfies Env;
   await Promise.all([
     seedInstance(env, firstInstanceId),
@@ -332,30 +346,14 @@ async function run(): Promise<void> {
     env,
   );
   const listHold = r2.holdNextList();
-  let markFirstPurgeStarted!: () => void;
-  let releaseFirstPurge!: () => void;
-  const firstPurgeStarted = new Promise<void>((resolve) => {
-    markFirstPurgeStarted = resolve;
-  });
-  const firstPurgeReleased = new Promise<void>((resolve) => {
-    releaseFirstPurge = resolve;
-  });
-
-  const originalFetch = globalThis.fetch;
   let purgeCalls = 0;
-  globalThis.fetch = async () => {
-    purgeCalls += 1;
-    if (purgeCalls === 1) {
-      markFirstPurgeStarted();
-      await firstPurgeReleased;
-    }
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
-      headers: { 'content-type': 'application/json' },
-    });
+  const cache = {
+    async purge(): Promise<CachePurgeResult> {
+      purgeCalls += 1;
+      return { success: true, errors: [] };
+    },
   };
 
-  try {
     const winnerResponsePromise = coordinator.fetch(
       publishRequest(firstInstanceId, 'first'),
     );
@@ -388,7 +386,15 @@ async function run(): Promise<void> {
     assert.equal(purgeCalls, 0, 'the overlapping contender must not purge public cache');
 
     listHold.release();
-    await firstPurgeStarted;
+    const winnerResponse = await winnerResponsePromise;
+    assert.equal(winnerResponse.status, 200);
+    assert.deepEqual(await readPayload(winnerResponse), {
+      ok: true,
+      instanceId: firstInstanceId,
+      status: 'published',
+      changed: true,
+    });
+    await purgeClkLiveEntryCache({ cache, accountId, instanceId: firstInstanceId });
 
     const deniedResponse = await coordinator.fetch(
       publishRequest(secondInstanceId, 'second-later'),
@@ -416,16 +422,6 @@ async function run(): Promise<void> {
     assert.ok(deniedPointer.ok);
     assert.equal(deniedPointer.value.publishStatus, 'unpublished');
     assert.equal(purgeCalls, 1, 'the capacity loser must not purge public cache');
-
-    releaseFirstPurge();
-    const winnerResponse = await winnerResponsePromise;
-    assert.equal(winnerResponse.status, 200);
-    assert.deepEqual(await readPayload(winnerResponse), {
-      ok: true,
-      instanceId: firstInstanceId,
-      status: 'published',
-      changed: true,
-    });
     assertPublicPackageStored(r2, firstInstanceId, true, 'the winner must store its full package');
 
     const republishResponse = await coordinator.fetch(
@@ -438,11 +434,8 @@ async function run(): Promise<void> {
       status: 'published',
       changed: false,
     });
+    await purgeClkLiveEntryCache({ cache, accountId, instanceId: firstInstanceId });
     assert.equal(purgeCalls, 2);
-  } finally {
-    releaseFirstPurge();
-    globalThis.fetch = originalFetch;
-  }
 
   const [wrangler, indexSource, routeSource, coordinatorSource] = await Promise.all([
     readFile(new URL('../wrangler.toml', import.meta.url), 'utf8'),
@@ -464,6 +457,8 @@ async function run(): Promise<void> {
       coordinatorSource.indexOf('publishAccountInstanceTransition({'),
     'the Durable Object lifecycle fence must precede all R2 publication work',
   );
+  assert.doesNotMatch(coordinatorSource, /purgeClkLiveEntryCache/);
+  assert.match(routeSource, /await purgeClkLiveEntryCache\(\{ cache, accountId, instanceId \}\)/);
 
   console.log(
     'PASS Tokyo publication coordination is first-wins, preserves loser state, and permits Republish',

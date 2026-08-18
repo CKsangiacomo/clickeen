@@ -10,6 +10,7 @@ export { isValidScopedInstance } from './instance-identity';
 export type TokyoRouteArgs = {
   req: Request;
   env: Env;
+  cache: CacheContext | undefined;
   pathname: string;
   url: URL;
   respond: (response: Response) => Response;

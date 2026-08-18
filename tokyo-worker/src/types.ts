@@ -1,12 +1,9 @@
 export type Env = {
   ENV_STAGE?: string;
   TOKYO_PUBLIC_BASE_URL?: string;
-  PUBLIC_SERVING_BASE_URL?: string;
   TOKYO_R2: R2Bucket;
   ACCOUNT_PUBLICATION_COORDINATOR: DurableObjectNamespace;
   BERLIN_BASE_URL?: string;
   BERLIN_JWKS_URL?: string;
   ROMA_AI_GRANT_PUBLIC_KEY_PEM?: string;
-  CLOUDFLARE_ZONE_ID?: string;
-  CLOUDFLARE_CACHE_PURGE_TOKEN?: string;
 };

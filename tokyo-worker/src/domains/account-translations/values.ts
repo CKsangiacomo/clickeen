@@ -28,6 +28,7 @@ async function resolveStoredTranslationSource(args: {
 
 async function purgePublishedLocaleCache(args: {
   env: Env;
+  cache: CacheContext | undefined;
   configDoc: AccountInstanceConfigDocument;
 }): Promise<void> {
   const status = await readInstanceServeState({
@@ -38,7 +39,7 @@ async function purgePublishedLocaleCache(args: {
   });
   if (status !== 'published') return;
   await purgeClkLiveEntryCache({
-    env: args.env,
+    cache: args.cache,
     accountId: args.configDoc.accountId,
     instanceId: args.configDoc.id,
   });
@@ -75,6 +76,7 @@ export async function readAccountInstanceTranslatedLocaleValues(args: {
 
 export async function writeAccountInstanceTranslatedLocaleValues(args: {
   env: Env;
+  cache: CacheContext | undefined;
   instanceId: string;
   accountId: string;
   locale: string;
@@ -99,12 +101,13 @@ export async function writeAccountInstanceTranslatedLocaleValues(args: {
       values: args.values,
     },
   });
-  await purgePublishedLocaleCache({ env: args.env, configDoc: stored });
+  await purgePublishedLocaleCache({ env: args.env, cache: args.cache, configDoc: stored });
   return { locale: args.locale, values: args.values };
 }
 
 export async function deleteAccountInstanceTranslatedLocaleValues(args: {
   env: Env;
+  cache: CacheContext | undefined;
   instanceId: string;
   accountId: string;
   locale: string;
@@ -122,7 +125,7 @@ export async function deleteAccountInstanceTranslatedLocaleValues(args: {
     instanceId: stored.id,
     locale: args.locale,
   });
-  await purgePublishedLocaleCache({ env: args.env, configDoc: stored });
+  await purgePublishedLocaleCache({ env: args.env, cache: args.cache, configDoc: stored });
   return { locale: args.locale };
 }
 
