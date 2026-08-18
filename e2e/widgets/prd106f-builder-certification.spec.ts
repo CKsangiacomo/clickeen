@@ -386,6 +386,17 @@ async function setFieldValue(bobFrame: Frame, path: string, value: string) {
   }, value);
 }
 
+async function setSwitchValue(bobFrame: Frame, label: string, enabled: boolean) {
+  const input = bobFrame.getByRole('switch', { name: label }).first();
+  await input.waitFor({ state: 'attached', timeout: 10_000 });
+  if ((await input.isChecked()) !== enabled) {
+    if (enabled) await input.check();
+    else await input.uncheck();
+  }
+  if (enabled) await expect(input).toBeChecked();
+  else await expect(input).not.toBeChecked();
+}
+
 async function saveWidget(page: Page, bobFrame: Frame, instanceId: string) {
   const saveButton = bobFrame.getByRole('button', { name: 'Save' }).first();
   await expect(saveButton).toBeEnabled({ timeout: 10_000 });
@@ -506,6 +517,71 @@ test.describe('PRD106F authenticated Builder browser certification', () => {
 
       await expectPreviewNonblank(bobFrame);
       expectNoCollectedErrors(`${instance.widgetType}/${instance.instanceId}`, collector);
+    });
+  }
+
+  for (const instance of PRD106F_INSTANCES) {
+    test(`${instance.widgetType} honors shared Header and branding composition`, async ({
+      page,
+    }) => {
+      test.setTimeout(180_000);
+
+      const bobFrame = await openBuilderFrame(page, instance.instanceId);
+      const preview = bobFrame.frameLocator('iframe[title="Widget preview"]');
+
+      await bobFrame.getByRole('tab', { name: 'Content' }).click();
+      const originalHeaderEnabled = await bobFrame
+        .getByRole('switch', { name: 'Show header' })
+        .first()
+        .isChecked();
+
+      await setSwitchValue(bobFrame, 'Show header', false);
+      const header = preview.locator('.ck-header');
+      await expect(header).toHaveAttribute('hidden', '');
+      await expect(header).toHaveCSS('display', 'none');
+      await expect(header).toBeHidden();
+      await expect(preview.locator('[data-role="header-title"]')).toBeHidden();
+      await expect(preview.locator('[data-ck-core]')).toBeVisible();
+      expect(await header.evaluate((element) => element.getClientRects().length)).toBe(0);
+
+      await setSwitchValue(bobFrame, 'Show header', true);
+      await expect(header).not.toHaveAttribute('hidden', '');
+      await expect(header).toHaveCSS('display', 'grid');
+      await expect(header).toBeVisible();
+      expect(await header.evaluate((element) => element.getClientRects().length)).toBeGreaterThan(
+        0,
+      );
+
+      await bobFrame.getByRole('tab', { name: 'Settings' }).click();
+      const originalBrandingEnabled = await bobFrame
+        .getByRole('switch', { name: 'Show Made with Clickeen' })
+        .first()
+        .isChecked();
+      await setSwitchValue(bobFrame, 'Show Made with Clickeen', true);
+
+      const branding = preview.locator('.ck-branding');
+      await expect(branding).toHaveCount(1);
+      const brandingComposition = await branding.evaluate((element) => {
+        const style = getComputedStyle(element);
+        return {
+          position: style.position,
+          inlineEnd: style.right,
+          blockEnd: style.bottom,
+          zIndex: style.zIndex,
+          offsetParentClass: (element as HTMLElement).offsetParent?.className ?? '',
+        };
+      });
+      expect(brandingComposition).toEqual({
+        position: 'absolute',
+        inlineEnd: '24px',
+        blockEnd: '0px',
+        zIndex: '50',
+        offsetParentClass: 'pod',
+      });
+
+      await setSwitchValue(bobFrame, 'Show Made with Clickeen', originalBrandingEnabled);
+      await bobFrame.getByRole('tab', { name: 'Content' }).click();
+      await setSwitchValue(bobFrame, 'Show header', originalHeaderEnabled);
     });
   }
 

@@ -48,6 +48,10 @@
   gap: var(--ck-header-inner-gap, var(--space-4));
 }
 
+.ck-header[hidden] {
+  display: none;
+}
+
 .ck-header__text {
   display: flex;
   flex-direction: column;

@@ -73,14 +73,14 @@ body {
   z-index: 20;
 }
 
-.stage > :not(.ck-fill-layer),
-.pod > :not(.ck-fill-layer) {
+.stage > .pod,
+.pod > .ck-headerLayout {
   position: relative;
   z-index: 2;
 }
 
-.stage[data-inside-shadow-layer='above-content'] > :not(.ck-fill-layer),
-.pod[data-inside-shadow-layer='above-content'] > :not(.ck-fill-layer) {
+.stage[data-inside-shadow-layer='above-content'] > .pod,
+.pod[data-inside-shadow-layer='above-content'] > .ck-headerLayout {
   z-index: 10;
 }
 

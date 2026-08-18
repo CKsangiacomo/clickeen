@@ -211,9 +211,10 @@ body {
   min-height: 0;
 }
 
-.tdheader-mode-switch {
+.tdheader > .tdheader-mode-switch {
   display: flex;
-  width: 100%;
+  flex: 1 1 0;
+  inline-size: 100%;
 }
 
 .tdheader-mode-switch .diet-segment {
