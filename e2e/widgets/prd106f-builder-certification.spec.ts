@@ -390,8 +390,7 @@ async function setSwitchValue(bobFrame: Frame, label: string, enabled: boolean) 
   const input = bobFrame.getByRole('switch', { name: label }).first();
   await input.waitFor({ state: 'attached', timeout: 10_000 });
   if ((await input.isChecked()) !== enabled) {
-    if (enabled) await input.check();
-    else await input.uncheck();
+    await input.locator('..').click();
   }
   if (enabled) await expect(input).toBeChecked();
   else await expect(input).not.toBeChecked();
@@ -553,6 +552,10 @@ test.describe('PRD106F authenticated Builder browser certification', () => {
       );
 
       await bobFrame.getByRole('tab', { name: 'Settings' }).click();
+      await bobFrame
+        .locator('.tdmenucontent__cluster', { hasText: 'Clickeen branding' })
+        .getByRole('button', { name: 'Toggle section' })
+        .click();
       const originalBrandingEnabled = await bobFrame
         .getByRole('switch', { name: 'Show Made with Clickeen' })
         .first()
