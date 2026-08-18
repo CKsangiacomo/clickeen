@@ -164,9 +164,10 @@ compiled software for Bob preview and Roma Publish; New/Duplicate and Save
 write source only; one Bob edit decision feeds one Roma upsell Popup; Publish
 alone generates the package; and Tokyo-worker applies requested locale
 overlays to semantic HTML at the Edge. The retired flat sources have no
-compatibility path. These changes are local only and are not deployed
-cloud-dev truth. Direct selected-locale URLs and Edge-authored exact public
-switcher options are implemented locally.
+compatibility path. These changes are deployed to cloud-dev from product commit
+`e2ac3589`; Worker/R2 deployment, Pages deployment, surface reachability, and
+the authenticated Builder-open smoke passed. Direct selected-locale URLs and
+Edge-authored exact public switcher options are live for owner QA.
 
 The active cloud-dev admin account coordinate is:
 

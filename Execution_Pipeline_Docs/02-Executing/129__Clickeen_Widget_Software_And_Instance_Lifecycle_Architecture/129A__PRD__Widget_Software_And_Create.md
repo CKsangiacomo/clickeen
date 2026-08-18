@@ -1,6 +1,6 @@
 # PRD 129A — Widget Software And Create
 
-Status: **LOCAL IMPLEMENTATION COMPLETE — OWNER QA AND DEPLOY PROOF PENDING**
+Status: **CLOUD-DEV DEPLOYED — OWNER QA PENDING**
 
 Parent: `129__PRD__Clickeen_Widget_Software_And_Instance_Lifecycle_Architecture.md`
 

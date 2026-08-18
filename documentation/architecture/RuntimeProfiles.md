@@ -103,8 +103,8 @@ All five current Widget paths now use this profile locally:
 
 The public route coordinate, locale syntax, and publication state remain real
 external/product gates. The implementation does not use them to revalidate
-Roma's package or Translation Agent's overlay. No cloud-dev deploy or live
-verification has been performed for these local changes.
+Roma's package or Translation Agent's overlay. Cloud-dev deployment and live
+verification completed for product commit `e2ac3589`; owner QA remains pending.
 
 ## Verification
 

@@ -1,6 +1,6 @@
 # PRD 129D — Serve Published Package
 
-Status: **LOCAL IMPLEMENTATION COMPLETE — OWNER QA AND DEPLOY PROOF PENDING**
+Status: **CLOUD-DEV DEPLOYED — OWNER QA PENDING**
 
 Parent: `129__PRD__Clickeen_Widget_Software_And_Instance_Lifecycle_Architecture.md`
 
@@ -260,8 +260,8 @@ a fallback label source.
   source;
 - missing locale truth does not silently fall back;
 - no Widget-specific serving branch or alternate public route exists; and
-- focused and all-Widget local implementation checks pass, while owner QA and deploy proof
-  remain pending.
+- focused and all-Widget implementation checks and cloud-dev deploy proof pass,
+  while owner QA remains pending.
 
 ## 13. Required Final V1-V8 Audit
 

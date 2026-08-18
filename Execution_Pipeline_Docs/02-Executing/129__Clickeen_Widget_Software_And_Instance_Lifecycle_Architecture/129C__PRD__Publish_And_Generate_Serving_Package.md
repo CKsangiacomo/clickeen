@@ -1,6 +1,6 @@
 # PRD 129C — Publish And Generate Serving Package
 
-Status: **LOCAL IMPLEMENTATION COMPLETE — OWNER QA AND DEPLOY PROOF PENDING**
+Status: **CLOUD-DEV DEPLOYED — OWNER QA PENDING**
 
 Parent: `129__PRD__Clickeen_Widget_Software_And_Instance_Lifecycle_Architecture.md`
 
@@ -503,8 +503,8 @@ those operations exist.
   and editable attributes use their exact authored target;
 - no Widget-specific shared-service branch or alternate release workflow exists;
   and
-- focused local implementation checks pass, while owner QA and deploy proof
-  remain pending.
+- focused implementation checks and cloud-dev Worker/R2/Pages/reachability
+  deployment proof pass, while owner QA remains pending.
 
 ## 21. Required Final V1-V8 Audit
 

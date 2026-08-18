@@ -1,6 +1,6 @@
 # PRD 129 — Clickeen Widget Software And Instance Lifecycle
 
-Status: **LOCAL IMPLEMENTATION COMPLETE — OWNER QA AND DEPLOY PROOF PENDING**
+Status: **CLOUD-DEV DEPLOYED — OWNER QA PENDING**
 
 Owner: Clickeen product owner/architect
 
@@ -435,15 +435,15 @@ commit: created on agent/close-prd-129
 push: performed to github/agent/close-prd-129
 draft QA PR: #16 opened
 deploy: not performed
-live product: unchanged
-retired flat Widget source paths: removed locally
+live product: cloud-dev deployed from product commit `e2ac3589`; owner QA pending
+retired flat Widget source paths: removed and inactive in deployed code
 Template catalog: normal listed CLICKEEN-admin saved instances
 Template cross-account Duplicate: not implemented follow-on
 account suspension lifecycle runner/full deletion: documented follow-on account work, not a PRD 129 blocker
-atomic account publication-capacity transition: present locally
+atomic account publication-capacity transition: present in cloud-dev
 account coordinator: one lifecycle-fenced Tokyo Durable Object per account; no durable policy/count/publication truth
-stable scalar/repeated overlay identity: present locally
-authored exact attribute localization: present locally
-pre-GA positional-overlay compatibility path: absent; explicit Generate/delete cutover required after deploy
-independent V1-V8 audits: Pass locally for all-Widget source/materialization, stable localization, and atomic Publish; owner QA and deploy proof pending
+stable scalar/repeated overlay identity: present in cloud-dev
+authored exact attribute localization: present in cloud-dev
+pre-GA positional-overlay compatibility path: absent; explicit Generate/delete cutover is required for previously stored positional overlays
+independent V1-V8 audits: Pass for all-Widget source/materialization, stable localization, atomic Publish, and the cloud-dev deploy; owner QA pending
 ```
