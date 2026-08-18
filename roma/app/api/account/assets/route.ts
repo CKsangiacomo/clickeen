@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { parseAccountAssetRecord } from '@roma/lib/account-asset-record';
 import {
   finalizeAccountAssetResponse,
-  parseJsonOrNull,
   resolveCurrentAccountAssetGatewayContext,
 } from '@roma/lib/account-assets-gateway';
 import {
@@ -13,10 +11,9 @@ import {
 export const runtime = 'edge';
 
 type TokyoAccountAssetsPayload = {
-  accountId?: unknown;
-  storageBytesUsed?: unknown;
-  assets?: unknown;
-  error?: { kind?: unknown; reasonKey?: unknown; detail?: unknown };
+  accountId: string;
+  storageBytesUsed: number;
+  assets: import('@clickeen/ck-contracts').AccountAssetRecord[];
 };
 
 export async function GET(request: NextRequest) {
@@ -37,60 +34,10 @@ export async function GET(request: NextRequest) {
       }),
     });
 
-    const text = await upstream.text().catch(() => '');
-    const payload = parseJsonOrNull(text) as TokyoAccountAssetsPayload | null;
-    if (!upstream.ok) {
-      const body =
-        payload && typeof payload === 'object'
-          ? payload
-          : {
-              error: {
-                kind: 'INTERNAL',
-                reasonKey: `HTTP_${upstream.status}`,
-                ...(text ? { detail: text } : {}),
-              },
-            };
-      return finalizeAccountAssetResponse({
-        request,
-        response: NextResponse.json(body, { status: upstream.status }),
-        setCookies: gateway.value.sessionSetCookies,
-      });
-    }
-
-    const accountId = typeof payload?.accountId === 'string' ? payload.accountId : '';
-    const storageBytesUsed = typeof payload?.storageBytesUsed === 'number' ? payload.storageBytesUsed : NaN;
-    const assets = Array.isArray(payload?.assets)
-      ? payload.assets.map(parseAccountAssetRecord)
-      : null;
-    if (
-      accountId !== gateway.value.accountId ||
-      !Number.isFinite(storageBytesUsed) ||
-      storageBytesUsed < 0 ||
-      !assets ||
-      assets.some((asset) => !asset)
-    ) {
-      return finalizeAccountAssetResponse({
-        request,
-        response: NextResponse.json(
-          {
-            error: {
-              kind: 'UPSTREAM_UNAVAILABLE',
-              reasonKey: 'coreui.errors.assets.invalidPayload',
-            },
-          },
-          { status: 502 },
-        ),
-        setCookies: gateway.value.sessionSetCookies,
-      });
-    }
-    const body = {
-      accountId,
-      storageBytesUsed: Math.trunc(storageBytesUsed),
-      assets: assets as NonNullable<ReturnType<typeof parseAccountAssetRecord>>[],
-    };
+    const body = (await upstream.json()) as TokyoAccountAssetsPayload;
     return finalizeAccountAssetResponse({
       request,
-      response: NextResponse.json(body, { status: 200 }),
+      response: NextResponse.json(body, { status: upstream.status }),
       setCookies: gateway.value.sessionSetCookies,
     });
   } catch (error) {

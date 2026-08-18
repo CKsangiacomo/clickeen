@@ -1,4 +1,3 @@
-import { asTrimmedString, isRecord } from '@clickeen/ck-contracts';
 import {
   buildTokyoProductControlHeaders,
   fetchTokyoProductControl,
@@ -18,57 +17,14 @@ export type TokyoCallFailure = {
     kind: 'VALIDATION' | 'AUTH' | 'DENY' | 'NOT_FOUND' | 'UPSTREAM_UNAVAILABLE';
     reasonKey: string;
     detail?: string;
+    current?: number;
+    limit?: number;
   };
 };
 
 export type TokyoCallResult<T> =
   | { ok: true; value: T; status: number }
   | TokyoCallFailure;
-
-function resolveTokyoErrorDetail(payload: unknown, fallback: string): string {
-  if (isRecord(payload) && isRecord(payload.error)) {
-    return (
-      asTrimmedString(payload.error.detail) ??
-      asTrimmedString(payload.error.reasonKey) ??
-      fallback
-    );
-  }
-  return fallback;
-}
-
-function buildTokyoFailure(args: {
-  response: Response;
-  payload: unknown;
-  fallbackDetail: string;
-  fallbackReasonKey: string;
-}): TokyoCallFailure {
-  const upstreamError = isRecord(args.payload) && isRecord(args.payload.error) ? args.payload.error : null;
-  const detail = resolveTokyoErrorDetail(args.payload, args.fallbackDetail);
-  const upstreamReasonKey = upstreamError ? asTrimmedString(upstreamError.reasonKey) : null;
-  const mapped =
-    args.response.status === 401
-      ? { kind: 'AUTH' as const, status: 401 }
-      : args.response.status === 403
-        ? { kind: 'DENY' as const, status: 403 }
-        : args.response.status === 404
-          ? { kind: 'NOT_FOUND' as const, status: 404 }
-          : args.response.status === 422
-            ? { kind: 'VALIDATION' as const, status: 422 }
-            : { kind: 'UPSTREAM_UNAVAILABLE' as const, status: 502 };
-
-  return {
-    ok: false,
-    status: mapped.status,
-    error: {
-      kind: mapped.kind,
-      reasonKey:
-        mapped.kind === 'UPSTREAM_UNAVAILABLE'
-          ? (upstreamReasonKey ?? args.fallbackReasonKey)
-          : (upstreamReasonKey ?? detail),
-      detail,
-    },
-  };
-}
 
 export async function callTokyo<T>(
   context: TokyoCallContext,
@@ -114,14 +70,13 @@ export async function callTokyo<T>(
       },
     };
   }
-  const payload = await response.json().catch(() => null);
+  const payload = await response.json();
   if (!response.ok) {
-    return buildTokyoFailure({
-      response,
-      payload,
-      fallbackDetail: args.errorDetail,
-      fallbackReasonKey: args.errorKey,
-    });
+    return {
+      ok: false,
+      status: response.status,
+      error: (payload as { error: TokyoCallFailure['error'] }).error,
+    };
   }
   return { ok: true, value: args.decode(payload), status: response.status };
 }

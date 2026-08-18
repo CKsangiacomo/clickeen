@@ -1,0 +1,30 @@
+<main
+  class="ck-bigBang__core ck-headerLayout__body"
+  data-role="big-bang-core"
+  data-core-size-mode="{{coreSize.mode}}"
+  data-align="{{bigBang.alignment}}"
+  data-ck-core
+  {{#ck.discovery}}data-ck-discovery-kind="{{kind}}"{{/ck.discovery}}
+>
+  <div class="ck-bigBang__content">
+    <h2
+      class="ck-bigBang__statement"
+      data-role="big-bang-statement"
+      data-ck-content-path="{{bigBang.$ck.statement.path}}"
+      data-ck-content-mode="{{bigBang.$ck.statement.mode}}"
+      {{#bigBang.$ck.statement.discovery}}data-ck-discovery-part="{{id}}" data-ck-discovery-role="{{role}}"{{/bigBang.$ck.statement.discovery}}
+    >{{{bigBang.statement}}}</h2>
+    {{#bigBang.showSupportingCopy}}
+    {{#bigBang.supportingCopy}}
+    <div
+      class="ck-bigBang__support body-l"
+      data-role="big-bang-support"
+      data-ck-content-path="{{bigBang.$ck.supportingCopy.path}}"
+      data-ck-content-mode="{{bigBang.$ck.supportingCopy.mode}}"
+      {{#bigBang.$ck.supportingCopy.discovery}}data-ck-discovery-part="{{id}}" data-ck-discovery-role="{{role}}"{{/bigBang.$ck.supportingCopy.discovery}}
+      {{#bigBang.$ck.supportingCopy.discovery.relationship}}data-ck-discovery-relationship="{{kind}}"{{/bigBang.$ck.supportingCopy.discovery.relationship}}
+    >{{{bigBang.supportingCopy}}}</div>
+    {{/bigBang.supportingCopy}}
+    {{/bigBang.showSupportingCopy}}
+  </div>
+</main>

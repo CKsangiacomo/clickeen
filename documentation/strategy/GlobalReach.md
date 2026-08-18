@@ -26,7 +26,8 @@ Global-by-default means:
 - active locales express which translated locales the account wants generated
   and maintained;
 - agents create localized overlays from structured source;
-- public runtime serves stored artifacts close to the visitor;
+- public runtime serves complete localized HTML/CSS close to the visitor, with
+  mandatory JavaScript for Widget and shared visitor behavior;
 - missing localized content is visible as missing instead of hidden by fallback.
 
 Global operation must not introduce per-market source copies, regional product
@@ -64,6 +65,13 @@ Global reach is not only display language. Search and answer reach begins only
 after localized public artifacts exist at crawlable coordinates, with sitemap,
 hreflang, structured data, or equivalent exposure and measurable performance
 authority.
+
+The selected locale's content must be present in the returned semantic HTML
+before client JavaScript. Roma generates the complete base artifact once per
+explicit allowed Publish. The Tokyo Edge trusts that stored artifact
+and the exact Clickeen-produced locale overlay, applies the overlay before
+response, and does not ask the visitor runtime to create localized meaning or
+Roma to rebuild the package.
 
 That loop is strategic:
 

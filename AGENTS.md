@@ -128,45 +128,82 @@ document completely; this summary does not replace it.
    Michael/Supabase owns relational truth; San Francisco owns governed model
    execution; agent homes own their operational domains; Dieter owns the design
    system. Do not bypass or duplicate those authorities.
-3. **No silent substitution or fallback.** Missing, invalid, stale, or
+3. **Clickeen is a closed, trusted system.** Once a named Clickeen authority
+   produces an artifact or result, downstream Clickeen services consume it as
+   trusted system truth. Do not add guards, checks, validators, allowlists,
+   filters, repair passes, or schema re-interpretation to re-prove another
+   Clickeen authority's output. Authentication, authorization, and external
+   input acceptance remain at the boundary where non-Clickeen input enters or
+   authority is minted; they are not repeated as internal semantic validation.
+4. **No silent substitution or fallback.** Missing, invalid, stale, or
    unavailable truth fails visibly. Do not replace it with another account,
    locale, model, provider, storage path, compatibility shape, or invented
    default.
-4. **No silent healing.** Invalid persisted or user state may be rejected or
-   repaired only through an explicit authorized operation. Never coerce or
-   rewrite it while pretending the original operation succeeded.
-5. **Product commands stay boring.** User intent travels through the current
+5. **No silent healing.** Non-Clickeen input may be accepted or rejected by its
+   owning ingress boundary. Once accepted as Clickeen truth, downstream
+   services do not normalize, coerce, repair, filter, or revalidate it. An
+   explicit authorized operation may change authoritative truth; an internal
+   read or handoff may not.
+6. **Product commands stay boring.** User intent travels through the current
    account and the owning route/service to one explicit result. Do not add
    orchestration machinery, broad registries, runtime discovery, compatibility
    layers, or meta-frameworks around deterministic work.
-6. **Widget software is product truth.** Widget behavior lives in its
-   git-authored contract. Bob compiles editor controls, Roma saves/materializes
-   instances, and Tokyo-worker stores account runtime files; those systems do
-   not invent widget-specific semantics.
-7. **Bob edits in browser memory.** Draft edits, undo, preview, and Product
+7. **A Widget is software that uses Clickeen.** Its structured contract and
+   mandatory unique Core HTML/CSS/JavaScript own its product meaning and
+   behavior. Stage, Pod, Header,
+   Bob editing, Roma account operations, materialization, storage, localization,
+   assets, connectors, integrations, and future capabilities are shared
+   Clickeen services. Every Widget uses a shared service through the same
+   structured contract. If a shared service must grow, augment it generically
+   for every applicable Widget; never put Widget-specific meaning or branches
+   in Bob, Roma, Tokyo-worker, Dieter, or another shared service.
+   Each Widget's internal `discovery.json` declares what it is and which exact
+   customer-content parts and relationships matter to search and answer
+   systems. Users do not edit that file. Only Publish materialization turns it
+   into technical public output.
+8. **Bob edits in browser memory.** Draft edits, undo, preview, and Product
    Copilot changes remain local until the user saves through Roma. Bob and
-   Product Copilot do not independently persist or publish.
-8. **Storage follows ownership.** `accounts/` is runtime-managed account data;
+   Product Copilot do not independently persist or publish. Bob preview uses
+   deploy-built Widget software plus the one current draft; it never requires,
+   parses, or executes the instance's stored public package. Public
+   `runtime.js` contains no Bob editing protocol.
+9. **Storage follows ownership.** `accounts/` is runtime-managed account data;
    `dieter/`, `fonts/`, `product/`, and `prague/` are git-authored deploy
    roots. Global Clickeen fonts live under `fonts/`; do not turn them into one
    account's uploads or create alternate storage authorities.
-9. **Translation overlays are exact files.** Locale values live at the exact
+10. **Translation overlays are exact files.** Locale values live at the exact
    account/instance/locale coordinate. Translation Agent generates them;
    Tokyo-worker stores and serves them without inventing meaning.
-10. **Content source authority is preserved.** Human-generated content follows
+11. **Content source authority is preserved.** Human-generated content follows
     human intent, AI-generated content may be operated inside approved product
     rules, and integration-sourced truth changes only through an explicitly
     authorized integration write path.
-11. **Public runtime serves saved truth.** Tokyo-worker serves the stored base
-    package and exact saved locale overlay under publication policy. Visitor
-    requests do not call models, read Supabase, rebuild widgets, regenerate
-    translations, repair state, or fall back to another identity.
-12. **Dieter tokens and primitives come first.** Use the existing design-system
+12. **Publish generates; public runtime serves complete materialized truth.** One saved Widget
+    instance is one complete logical state containing its exact shared
+    Header/Stage/Pod/capability values and its exact Core values. Bob edits that
+    document in browser memory. Create writes the first editable source and
+    Save updates that source. Only explicit allowed Publish invokes Roma's one
+    generic Widget materializer; that materializer is the sole authority that
+    generates the served complete `index.html`, complete `styles.css`, and
+    complete `runtime.js`. Tokyo-worker does not generate those files: it
+    writes the canonical account source documents from Roma's exact semantic
+    source payloads, stores Roma's exact package bytes, and serves them.
+    Mandatory `runtime.js` owns Widget and shared visitor functionality; it
+    does not create the first meaningful page, materialize, localize, validate,
+    or host an instance so that Clickeen can serve it. Bob preview is an editing
+    concern built from Widget software plus browser-memory draft truth; it never
+    consumes or dictates the public package. Tokyo-worker serves the
+    stored base package or applies the trusted exact overlay into semantic HTML
+    for a selected non-base locale under publication policy; visitor requests
+    do not call models, read Supabase, rebuild Widgets, regenerate translations,
+    repair state, or fall back to another identity.
+13. **Dieter tokens and primitives come first.** Use the existing design-system
     contract before creating local UI styling or controls.
-13. **Documentation is operator truth.** `documentation/` describes the current
-    system. Planning and history live in `Execution_Pipeline_Docs/`. Confirmed
-    documentation/runtime mismatches are fixed with the change that exposes
-    them.
+14. **Documentation is operator truth.** `documentation/` describes canonical
+    product law and current implementation truth. When implementation has not
+    reached that law, the owning manual names the mismatch explicitly instead
+    of presenting either side falsely. Planning and history live in
+    `Execution_Pipeline_Docs/`.
 
 These tenets are product law, not suggestions. A fix that violates them is not
 a valid fix.
@@ -209,6 +246,37 @@ statement and plan, and only then continue.
   blast radius crosses systems.
 - Keep documentation current with behavior.
 
+For Widget work, apply this boundary gate before editing:
+
+1. If the behavior or presentation is unique to one Widget, it belongs to that
+   Widget's Core.
+2. If the state is editable or operable, it belongs to the Widget's structured
+   contract; Bob consumes that contract but does not become the Widget.
+3. If an existing shared Clickeen capability can perform the work, the Widget
+   uses it through its existing contract.
+4. If a shared capability is genuinely missing, prove the current need and
+   augment the shared service once, without a Widget-name branch, path-specific
+   semantic rule, or second consumer workflow.
+5. A downstream Clickeen service trusts artifacts produced by the owning
+   Clickeen authority. Do not add a validator or filter to reconstruct the
+   upstream contract.
+6. Published Widgets are static-first: only explicit allowed Publish
+   materializes complete semantic HTML, CSS, and JavaScript. Create writes the
+   first editable source; Save updates that source; neither generates public
+   files. Core JavaScript is mandatory and owns genuine Widget behavior; it is
+   never the instance renderer,
+   materializer, localizer, validator, preview host, or serving engine.
+   Explicit Save remains Bob's editable-source persistence boundary. Publish
+   remains the separate release boundary.
+7. Bob preview consumes deploy-built Widget software plus the current draft.
+   It does not read an account instance's stored `index.html`, `styles.css`, or
+   `runtime.js`, and public Widget JavaScript contains no Bob state-update
+   receiver.
+8. Keep Widget source, logical instance state, and stored public package
+   distinct. The Widget folder authors reusable software; the account instance
+   owns its customized shared and Core values; Roma's generic materializer
+   generates the public package; Tokyo-worker only persists and serves it.
+
 ## Core Violation Audit
 
 After every execution task, verify the result against these eight violations:
@@ -223,6 +291,11 @@ After every execution task, verify the result against these eight violations:
 | V6 | Partial-success masquerade | Did the product claim full success after some requested work was dropped, rejected, or filtered? |
 | V7 | Masquerade/redress | Did the same failing workflow continue under a different wrapper, name, path, retry, or log? |
 | V8 | Runtime test dependency | Did normal product work start depending on tests, probes, helper checks, or validation rituals? |
+
+These are implementation and reconciliation audit questions. They do not
+authorize runtime guards, validators, probes, equality checks, or repair paths.
+Correct the producing authority; downstream Clickeen consumers continue to
+trust its exact output.
 
 For product-path, cross-system, managed-service, deploy, remote-data, or shared
 architecture work, use an independent subagent for the post-implementation

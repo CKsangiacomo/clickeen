@@ -26,3 +26,7 @@ export function accountInstanceLocaleOverlayKey(accountId: string, widgetCode: s
 export function accountInstanceLocaleOverlaysPrefix(accountId: string, widgetCode: string, instanceId: string): string {
   return `${accountInstanceRoot(accountId, widgetCode, instanceId)}/overlays/locales/`;
 }
+
+export function accountInstanceCacheTag(accountId: string, instanceId: string): string {
+  return `clk-instance-${accountId}-${instanceId}`;
+}

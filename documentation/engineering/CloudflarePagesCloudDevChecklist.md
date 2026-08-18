@@ -353,7 +353,7 @@ Worker secrets:
   this as a Worker secret from the same-named GitHub Actions secret.
 
 Pages secrets:
-- Roma: `ROMA_AI_GRANT_PRIVATE_KEY_PEM` is required for account Copilot and Translation Agent grant minting and must not be installed on any verifier. `SUPABASE_SERVICE_ROLE_KEY` is required for Roma-owned account settings writes. Roma -> Tokyo/Tokyo-worker storage commands use service bindings. Account instance translation generation calls the Translation Agent Worker; that Worker calls San Francisco `/model/chat` and writes translated locale values via Tokyo-worker.
+- Roma: `ROMA_AI_GRANT_PRIVATE_KEY_PEM` is required for account Copilot and Translation Agent grant minting and must not be installed on any verifier. `SUPABASE_SERVICE_ROLE_KEY` is required for Roma-owned account settings writes. Roma -> Tokyo/Tokyo-worker storage commands use service bindings. Account instance translation generation calls the Translation Agent Worker; that Worker calls San Francisco `/model/turn` in structured mode and writes translated locale values via Tokyo-worker.
 - DevStudio: `DEVSTUDIO_GITHUB_TOKEN` is required for GitHub-backed policy writes.
 
 CI secrets/vars:

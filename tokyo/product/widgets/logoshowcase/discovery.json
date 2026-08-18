@@ -1,0 +1,42 @@
+{
+  "widgetType": "logoshowcase",
+  "kind": "logo-showcase",
+  "baseline": {
+    "title": "Logo Showcase by Clickeen",
+    "description": "A collection of logos published with Clickeen."
+  },
+  "parts": [
+    {
+      "id": "logo-name",
+      "path": "logoshowcase.strips[].logos[].name",
+      "role": "item-name",
+      "identityPaths": ["logoshowcase.strips[].id", "logoshowcase.strips[].logos[].id"]
+    },
+    {
+      "id": "logo-caption",
+      "path": "logoshowcase.strips[].logos[].caption",
+      "role": "item-description",
+      "identityPaths": ["logoshowcase.strips[].id", "logoshowcase.strips[].logos[].id"]
+    },
+    {
+      "id": "logo-alt",
+      "path": "logoshowcase.strips[].logos[].alt",
+      "role": "image-description",
+      "identityPaths": ["logoshowcase.strips[].id", "logoshowcase.strips[].logos[].id"]
+    },
+    {
+      "id": "logo-title",
+      "path": "logoshowcase.strips[].logos[].title",
+      "role": "tooltip",
+      "identityPaths": ["logoshowcase.strips[].id", "logoshowcase.strips[].logos[].id"]
+    }
+  ],
+  "relationships": [
+    {
+      "kind": "describes",
+      "from": "logo-caption",
+      "to": "logo-name",
+      "identityPaths": ["logoshowcase.strips[].id", "logoshowcase.strips[].logos[].id"]
+    }
+  ]
+}

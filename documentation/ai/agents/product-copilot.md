@@ -89,10 +89,6 @@ canonical agent id, capability, budget, and model policy.
 Roma route/operator requirements:
 
 - route requires current account role `editor`;
-- route `instanceId` must match envelope `instanceId` and
-  `context.instanceId`;
-- Roma loads the saved Tokyo instance before grant issuance;
-- `context.widgetType` must match the saved instance widget type;
 - selected model must be Product Copilot managed;
 - the grant is minted before usage reservation, so missing signing configuration
   cannot consume a turn;
@@ -102,6 +98,13 @@ Roma route/operator requirements:
 - grant budgets come from the runtime policy matrix;
 - Roma fails closed if `USAGE_KV` is unavailable or contains a malformed
   counter.
+
+Current implementation mismatch: the Roma route also reloads the saved Tokyo
+instance and cross-checks route, envelope, context, and Widget-type coordinates
+that Bob already supplied as one accepted Clickeen turn request. Those duplicate
+internal semantic checks are not the canonical closed-system boundary. Roma
+owns browser-request admission and authorization once; Product Copilot then
+trusts the exact Roma-issued request and grant.
 
 Roma env/bindings involved in the Copilot path:
 
@@ -171,7 +174,8 @@ is one `event: [type]\ndata: [json]\n\n` block. The exact event union is
 `agent_turn_started` is emitted only on the initial request, never on
 continuations. Every step-level event (`text_delta`, `tool_call`,
 `model_step_finished`) carries the `modelStepId` minted by San Francisco;
-frames missing it fail visibly as `agent_turn_error`.
+Product Copilot trusts that San-Francisco-produced coordinate and does not
+recheck its presence against a second event schema.
 
 Tool calls execute only after `model_step_finished`. Product Copilot rejects
 more than one tool call in a single step as a visible `agent_turn_error`; Bob
@@ -180,10 +184,18 @@ sees the first `tool_call` followed by the error and does not execute. On a
 executes the tool and opens a continuation. On a `stop` finish reason
 `agent_turn_finished` follows.
 
-The Product Copilot SSE parser uses one streaming `TextDecoder` (preserving
-multibyte state across chunks), normalizes CRLF, and fails visibly on malformed
-JSON or unknown event types rather than silently dropping them. The SSE event
-name must agree with the payload `type`.
+SSE framing is transport serialization. Product Copilot decodes it with one
+streaming `TextDecoder` and consumes San Francisco's exact event union; it does
+not semantically revalidate event names, payload types, or `modelStepId` values.
+
+Current implementation mismatch: the Product Copilot SSE parser normalizes
+CRLF and contains malformed-JSON, unknown-event, event-name equality, and
+missing-`modelStepId` guards over San Francisco-produced output. Those are
+duplicate internal transport/schema checks to remove. They are distinct from
+Product Copilot enforcing the governed one-tool-call model-step boundary.
+Product Copilot transports the model's `apply_widget_ops` request; Bob accepts
+or rejects that external edit request against the exact compiled controls and
+current draft.
 
 Provider usage is not invented by Product Copilot. `model_step_finished`
 forwards the San Francisco reported model and token counts verbatim.
@@ -214,15 +226,17 @@ Optional context field:
 
 - `currentDraftContext.selectedControlPath`
 
-Roma and Product Copilot share one parser, `parseCopilotTurnRequest` in
-`@clickeen/ck-contracts/ai`, so request validation does not drift between them.
-The route instance id must match `currentDraftContext.instanceId`, and the
-context `widgetType` must match the loaded Tokyo instance row.
+Roma accepts the browser-originated turn request once through
+`parseCopilotTurnRequest` in `@clickeen/ck-contracts/ai`, binds it to the
+authorized route instance, and sends one exact Clickeen request with its signed
+grant. Product Copilot trusts that Roma-produced request; it does not parse the
+same semantic contract again. The deploy-built control capsule is exact system
+truth and is not treated as a possibly malformed optional edit context.
 
-The shared TypeScript contract requires `currentDraftContext.controls`. Missing,
-empty, or invalid controls degrade the edit context and may make
-`apply_widget_ops` unavailable for that step, but a conversational answer can
-still be a valid turn.
+Current implementation mismatch: Product Copilot currently calls the shared
+turn parser again, and the Bob/agent path contains degraded-context behavior for
+missing or invalid compiled controls. Those are duplicate closed-system guards,
+not the target agent contract.
 
 Current input limits:
 
@@ -248,9 +262,10 @@ The capsule must not include hidden controls, unrelated account data, cross
 account data, widget package source, saved-product mutation authority, or other
 product domains.
 
-If required widget/session context is invalid, the turn fails. If edit controls
-are unavailable or invalid, the `apply_widget_ops` tool is unavailable for that
-step; the agent may still return a conversational text answer.
+Roma owns the authorized Widget/session coordinate and sends its exact capsule.
+Product Copilot uses that capsule directly. A genuine Roma operation failure
+ends before agent invocation; the agent does not invent a degraded substitute
+for a Clickeen-produced control surface.
 
 ## Tool Agent And Draft Ops
 
@@ -270,11 +285,11 @@ applied atomically. Allowed op types:
 - `remove`
 - `move`
 
-Each op targets a `path` from the provided editable controls. The model emits at
-most one `apply_widget_ops` call per model step; more than one is rejected as a
-visible `agent_turn_error`. Bob validates and applies the batch only after
-`model_step_finished` (see Bob Apply And Persistence Boundary). Product Copilot
-does not apply ops itself.
+Each op targets a `path` from the provided editable controls. Product Copilot
+enforces at most one `apply_widget_ops` call per model step; more than one model
+call is rejected as a visible `agent_turn_error`. It transports that external
+tool request to Bob after `model_step_finished`. Product Copilot does not apply
+or accept the edit operations itself.
 
 ## Bob Apply And Persistence Boundary
 
@@ -285,6 +300,14 @@ requires:
 - the current draft signature still matches the request signature;
 - inverse undo ops can be built;
 - `session.applyOps(ops)` succeeds.
+
+The draft-signature comparison is Bob's real concurrency coordinate: a human
+may have changed Bob's browser-memory draft while the turn was running. Bob is
+also the first edit-operation acceptance boundary: it accepts the external
+tool request against the exact compiled controls and current draft, including
+the authored collection minimum/maximum, then applies the accepted batch
+atomically. This is not a second Product Copilot allowlist; Product Copilot
+only owns the model-step/tool-call envelope.
 
 On success Bob opens a continuation with `priorModelStepId`, sending the tool
 result back so the agent can finish or request another step. Undo ops accumulate
@@ -311,8 +334,13 @@ Apply and Undo remain local editor operations.
 | Product Copilot Worker | `404 BAD_REQUEST` | unknown worker path |
 | Product Copilot Worker | upstream status | San Francisco non-OK response is propagated |
 | Product Copilot Worker | `500 PROVIDER_ERROR` | missing San Francisco config or unexpected failure |
-| Product Copilot stream | `agent_turn_error` event | multiple tool calls in one step, missing modelStepId, malformed SSE, unknown event, `model_step_error`, or stream ended without a terminal event |
-| Bob | assistant message, no apply | stale draft signature, invalid ops, failed undo construction, failed apply |
+| Product Copilot stream | `agent_turn_error` event | multiple model tool calls or `model_step_error`; current code also reports duplicate San Francisco stream-shape guards as transition debt |
+| Bob | assistant message, no apply | stale draft signature, failed undo construction, or failed local apply |
+
+Current implementation mismatch: Product Copilot still reparses Roma's request
+and San Francisco event stream. The error branches for those imagined malformed
+internal artifacts are transition debt. Bob remains the first edit-operation
+acceptance boundary for the external model's tool request.
 
 ## Runtime Config And Deploy
 

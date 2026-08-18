@@ -5,26 +5,23 @@ import {
   serializeInstanceDataSignature,
   type SessionMeta,
   type SessionState,
-  type SessionUpsell,
 } from './sessionTypes';
 import type { ExecuteAccountCommand } from './sessionTransport';
-import { assertSessionConfigContract } from './sessionConfig';
 
 export function useSessionSaving(args: {
   stateRef: MutableRefObject<SessionState>;
   metaRef: MutableRefObject<SessionMeta>;
-  setUpsell: Dispatch<SetStateAction<SessionUpsell>>;
   setState: Dispatch<SetStateAction<SessionState>>;
   executeAccountCommand: ExecuteAccountCommand;
 }) {
-  const { executeAccountCommand, metaRef, setState, setUpsell, stateRef } = args;
+  const { executeAccountCommand, metaRef, setState, stateRef } = args;
 
   const save = useCallback(async () => {
     // Save persists the one widget the customer is actively editing.
     const snapshot = stateRef.current;
     const meta = metaRef.current;
-    const instanceId = meta?.instanceId ? String(meta.instanceId) : '';
-    const widgetType = meta?.widgetname ? String(meta.widgetname).trim() : '';
+    const instanceId = meta?.instanceId ?? '';
+    const widgetType = meta?.widgetname ?? '';
     if (!instanceId) {
       setState((prev) => ({
         ...prev,
@@ -51,15 +48,11 @@ export function useSessionSaving(args: {
     setState(savingState);
 
     try {
-      if (!snapshot.compiled) throw new Error('coreui.errors.builder.save.missingContract');
       const config = snapshot.instanceData;
-      assertSessionConfigContract(config, snapshot.compiled);
       const submittedInstanceDataSignature = serializeInstanceDataSignature(config);
       const saveBody: Record<string, unknown> = {
         widgetType,
         config,
-        baseLocale: meta?.baseLocale ?? null,
-        displayName: meta?.label ?? null,
       };
       const { ok, json } = await executeAccountCommand({
         command: 'update-instance',
@@ -67,18 +60,23 @@ export function useSessionSaving(args: {
         body: saveBody,
       });
       if (!ok) {
-        const err = json?.error;
-        if (err?.kind === 'VALIDATION') {
+        const err = (json as {
+          error: {
+            kind: string;
+            reasonKey: string;
+            detail?: string;
+            paths?: string[];
+          };
+        }).error;
+        if (err.kind === 'VALIDATION') {
           const nextState: SessionState = {
             ...stateRef.current,
             isSaving: false,
             error: {
               source: 'save',
-              message: err.reasonKey || 'Save failed.',
-              detail: typeof err.detail === 'string' ? err.detail : undefined,
-              paths: Array.isArray(err.paths)
-                ? err.paths.filter((path: unknown): path is string => typeof path === 'string')
-                : undefined,
+              message: err.reasonKey,
+              detail: err.detail,
+              paths: err.paths,
             },
           };
           stateRef.current = nextState;
@@ -90,8 +88,8 @@ export function useSessionSaving(args: {
           isSaving: false,
           error: {
             source: 'save',
-            message: err?.reasonKey || 'Save failed.',
-            detail: typeof err?.detail === 'string' ? err.detail : undefined,
+            message: err.reasonKey,
+            detail: err.detail,
           },
         };
         stateRef.current = nextState;
@@ -111,7 +109,6 @@ export function useSessionSaving(args: {
         isSaving: false,
         error: null,
       };
-      setUpsell(null);
       stateRef.current = nextState;
       setState(nextState);
     } catch (err) {
@@ -128,7 +125,6 @@ export function useSessionSaving(args: {
     executeAccountCommand,
     metaRef,
     setState,
-    setUpsell,
     stateRef,
   ]);
 

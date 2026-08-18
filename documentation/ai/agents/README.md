@@ -10,8 +10,8 @@ is not documented here.
 
 | Agent | Agent id | Worker | Wrangler | Inbound caller | Outbound dependencies | Mutation boundary | Verification |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Product Copilot | `product.copilot` | `agents/product-copilot/src/worker.ts` | `agents/product-copilot/wrangler.toml` | Roma account Builder route | San Francisco `/model/chat` | Bob live draft only; save/publish remains Roma | `pnpm --filter @clickeen/product-copilot test:copilot-contract`, `pnpm --filter @clickeen/product-copilot eval:copilot` |
-| Translation Agent | `widget.instance.translator` | `agents/translation-agent/src/worker.ts` | `agents/translation-agent/wrangler.toml` | Roma translation routes/service binding | San Francisco `/model/chat`, Tokyo-worker internal product route | account instance locale overlay files in Tokyo/R2 | `pnpm --filter @clickeen/translation-agent eval:translation-agent`, `pnpm e2e:smoke:translation-agent-runtime` |
+| Product Copilot | `product.copilot` | `agents/product-copilot/src/worker.ts` | `agents/product-copilot/wrangler.toml` | Roma account Builder route | San Francisco `/model/turn` | Bob live draft only; save/publish remains Roma | `pnpm --filter @clickeen/product-copilot test:copilot-contract`, `pnpm --filter @clickeen/product-copilot eval:copilot` |
+| Translation Agent | `widget.instance.translator` | `agents/translation-agent/src/worker.ts` | `agents/translation-agent/wrangler.toml` | Roma translation routes/service binding | San Francisco `/model/turn` structured mode, Tokyo-worker internal product route | account instance locale overlay files in Tokyo/R2 | `pnpm --filter @clickeen/translation-agent eval:translation-agent`, `pnpm e2e:smoke:translation-agent-runtime` |
 
 ## Worker Binding Inventory
 
@@ -38,6 +38,18 @@ A current Clickeen agent home:
 - does not bypass the product authority that owns persistence;
 - returns explicit errors instead of falling back to another agent/model/path.
 
+The agent owns admission of external provider/model output and emits one exact
+Clickeen artifact or operation result. Downstream Clickeen services trust that
+accepted result completely. They do not add another semantic parser, op
+allowlist, field filter, normalizer, or repair pass. Grant verification remains
+the real authority boundary; offline evals remain verification, not runtime
+machinery.
+
+Product Copilot's agent-home result is the governed model-step/tool-call
+envelope, not an accepted Widget edit batch. Bob is the first authority that
+accepts that external `apply_widget_ops` request against the exact compiled
+controls and current draft.
+
 ## Invocation And Mutation Boundaries
 
 | Agent | Invocation authority | Runtime mutation |
@@ -50,7 +62,7 @@ A current Clickeen agent home:
 | Dependency | Owner | Agent behavior |
 | --- | --- | --- |
 | Current account/session/tier | Roma | agents receive only the signed authority they need |
-| Model/provider execution | San Francisco | agents call `/model/chat`; agents do not own provider keys |
+| Model/provider execution | San Francisco | agents call the governed `/model/turn` contract; agents do not own provider keys |
 | Saved widget instance source | Roma/Tokyo-worker | Translation Agent receives items built from saved source |
 | Browser draft | Bob | Product Copilot returns draft ops; Bob applies them locally |
 | Overlay storage | Tokyo-worker | Translation Agent writes through internal Tokyo-worker route |
@@ -60,10 +72,10 @@ A current Clickeen agent home:
 | Symptom | Check first | Owning doc |
 | --- | --- | --- |
 | Copilot returns model/provider error | San Francisco health, grant/model policy, provider secret | `sanfrancisco.md`, `product-copilot.md` |
-| Copilot edit not applied | Bob draft signature, ops validation, undo construction | `product-copilot.md` |
+| Copilot edit not applied | Bob draft concurrency coordinate, atomic local apply, undo construction | `product-copilot.md` |
 | Translation generation fails before model call | Roma active locales, grant trace, Roma grant signing/verification keys | `translation-agent.md` |
 | Translation model output rejected | Translation Agent parse/path validation | `translation-agent.md` |
-| Translation write rejected | Tokyo-worker internal translation route and grant trace | `translation-agent.md` |
+| Translation write fails | Tokyo-worker grant boundary or exact R2 operation result | `translation-agent.md` |
 | Evals pass but runtime fails | Cloud-dev bindings/secrets/deploy workflow | agent doc plus `sanfrancisco.md` |
 
 ## Verification Matrix

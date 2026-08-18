@@ -1,17 +1,23 @@
 'use client';
 
+import { evaluateEditLimits, type Policy } from '@clickeen/ck-policy';
 import { useCallback, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
 import type { ApplyWidgetOpsResult, WidgetOp } from '../ops';
 import { applyWidgetOps } from '../ops';
-import { assertSessionConfigContract } from './sessionConfig';
 import { serializeInstanceDataSignature, type SessionMeta, type SessionState } from './sessionTypes';
 
 export function useSessionEditing(args: {
   stateRef: MutableRefObject<SessionState>;
+  policyRef: MutableRefObject<Policy | null>;
   setState: Dispatch<SetStateAction<SessionState>>;
   setMeta: Dispatch<SetStateAction<SessionMeta>>;
+  requestWidgetUpsell: (
+    capability: string,
+    messageId: string,
+    required: boolean | number,
+  ) => void;
 }) {
-  const { stateRef, setMeta, setState } = args;
+  const { policyRef, requestWidgetUpsell, stateRef, setMeta, setState } = args;
 
   const applyOps = useCallback(
     (ops: WidgetOp[]): ApplyWidgetOpsResult => {
@@ -45,16 +51,25 @@ export function useSessionEditing(args: {
         setState(nextState);
         return applied;
       }
-      if (applied.requiresDocumentValidation) {
-        try {
-          assertSessionConfigContract(applied.data, compiled);
-        } catch (err) {
-          const message = err instanceof Error ? err.message : String(err);
-          const result: ApplyWidgetOpsResult = { ok: false, errors: [{ opIndex: 0, message }] };
-          stateRef.current = { ...stateRef.current, error: { source: 'ops', errors: result.errors } };
-          setState(stateRef.current);
-          return result;
-        }
+
+      const denied = evaluateEditLimits({
+        before: current.instanceData,
+        candidate: applied.data,
+        limits: compiled.limits,
+        policy: policyRef.current!,
+      })[0];
+      if (denied) {
+        requestWidgetUpsell(denied.key, denied.messageId, denied.required);
+        return {
+          ok: false,
+          errors: [
+            {
+              opIndex: 0,
+              path: denied.path,
+              message: 'This edit is not available on the current plan.',
+            },
+          ],
+        };
       }
 
       const latest = stateRef.current;
@@ -75,7 +90,7 @@ export function useSessionEditing(args: {
 
       return applied;
     },
-    [setState, stateRef],
+    [policyRef, requestWidgetUpsell, setState, stateRef],
   );
 
   const setInstanceLabel = useCallback((label: string) => {

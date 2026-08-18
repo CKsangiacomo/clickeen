@@ -1,10 +1,8 @@
-import { isRecord } from '@clickeen/ck-contracts';
 import {
   resolveWidgetOverlayCode,
   resolveWidgetTypeForOverlayCode,
 } from '@clickeen/ck-contracts/overlay-codebooks';
 import type { WidgetEditableFieldsContract } from '@clickeen/ck-contracts/translated-value-primitives';
-import { readWidgetEditableFieldsContract } from '@clickeen/ck-contracts/translated-value-primitives';
 import {
   WIDGET_DEFINITION_SOURCES,
   type WidgetDefinitionSource,
@@ -18,48 +16,18 @@ export type WidgetDefinition = {
   editableFields: WidgetEditableFieldsContract;
 };
 
-function asNonEmptyString(value: unknown): string | null {
-  const normalized = typeof value === 'string' ? value.trim() : '';
-  return normalized || null;
-}
-
-function asExactString(value: unknown): string | null {
-  return typeof value === 'string' ? value : null;
-}
-
 function readWidgetDefinitionSource(source: WidgetDefinitionSource): WidgetDefinition {
-  const spec = isRecord(source.spec) ? source.spec : null;
-  if (!spec) {
-    throw new Error(`widget_definition_source_invalid:${source.widgetType}`);
-  }
-  const widgetType = asNonEmptyString(spec.widgetname);
-  if (widgetType !== source.widgetType) {
-    throw new Error(`widget_definition_widget_type_mismatch:${source.widgetType}`);
-  }
-  const displayName = asNonEmptyString(spec.displayName);
-  if (!displayName) {
-    throw new Error(`widget_definition_display_name_missing:${source.widgetType}`);
-  }
-  const description = asExactString(spec.description);
-  if (description == null) {
-    throw new Error(`widget_definition_description_missing:${source.widgetType}`);
-  }
-  const widgetCode = resolveWidgetOverlayCode(widgetType);
-  if (!widgetCode) {
-    throw new Error(`widget_definition_widget_code_missing:${widgetType}`);
-  }
-
-  const editableFields = readWidgetEditableFieldsContract(source.editableFields);
-  if (editableFields.widgetType !== widgetType) {
-    throw new Error(`widget_definition_editable_fields_mismatch:${widgetType}`);
-  }
+  const spec = source.spec as {
+    displayName: string;
+    description: string;
+  };
 
   return {
-    widgetType,
-    widgetCode,
-    displayName,
-    description,
-    editableFields,
+    widgetType: source.widgetType,
+    widgetCode: resolveWidgetOverlayCode(source.widgetType)!,
+    displayName: spec.displayName,
+    description: spec.description,
+    editableFields: source.editableFields as WidgetEditableFieldsContract,
   };
 }
 
@@ -67,28 +35,16 @@ const WIDGET_DEFINITIONS: WidgetDefinition[] = WIDGET_DEFINITION_SOURCES.map(
   readWidgetDefinitionSource,
 ).sort((a, b) => a.widgetType.localeCompare(b.widgetType));
 
-function publicEntry(entry: WidgetDefinition): WidgetDefinition {
-  return {
-    widgetType: entry.widgetType,
-    widgetCode: entry.widgetCode,
-    displayName: entry.displayName,
-    description: entry.description,
-    editableFields: entry.editableFields,
-  };
-}
-
 function resolveDefinitionInternal(widgetType: string): WidgetDefinition | null {
-  const normalized = String(widgetType || '').trim();
-  return WIDGET_DEFINITIONS.find((candidate) => candidate.widgetType === normalized) || null;
+  return WIDGET_DEFINITIONS.find((candidate) => candidate.widgetType === widgetType) || null;
 }
 
 export function listWidgetDefinitions(): WidgetDefinition[] {
-  return WIDGET_DEFINITIONS.map(publicEntry);
+  return WIDGET_DEFINITIONS;
 }
 
 export function getWidgetDefinition(widgetType: string): WidgetDefinition | null {
-  const entry = resolveDefinitionInternal(widgetType);
-  return entry ? publicEntry(entry) : null;
+  return resolveDefinitionInternal(widgetType);
 }
 
 export function resolveWidgetCode(widgetType: string): string | null {
@@ -96,8 +52,5 @@ export function resolveWidgetCode(widgetType: string): string | null {
 }
 
 export function resolveWidgetTypeFromCode(widgetCode: string): string | null {
-  const normalized = String(widgetCode || '')
-    .trim()
-    .toUpperCase();
-  return resolveWidgetTypeForOverlayCode(normalized);
+  return resolveWidgetTypeForOverlayCode(widgetCode);
 }

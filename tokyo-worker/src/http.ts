@@ -104,7 +104,9 @@ export function finalizeTokyoObservedResponse(args: {
   errorDetail?: string | null;
 }): Response {
   const headers = new Headers(args.response.headers);
-  headers.set(CK_REQUEST_ID_HEADER, args.context.requestId);
+  if (!headers.has('cache-tag')) {
+    headers.set(CK_REQUEST_ID_HEADER, args.context.requestId);
+  }
   if (args.context.visibility === 'public') {
     applyPublicCors(headers);
   }

@@ -1,18 +1,13 @@
-import { isRecord } from '@clickeen/ck-contracts';
-import { normalizeLocale, normalizeStorageId } from '../asset-utils';
+import { normalizeStorageId } from '../asset-utils';
 import {
-  AccountInstanceTransitionError,
   createAccountInstanceFromSubmittedSource,
   deleteAccountInstanceTransition,
-  publishAccountInstanceTransition,
-  saveAccountInstanceTransition,
+  saveAccountInstanceSource,
   unpublishAccountInstanceTransition,
 } from '../domains/account-instances/operations';
-import {
-  readInstancePublicPackage,
-  readSubmittedInstancePublicPackage,
-  verifyInstancePublicPackageReady,
-} from '../domains/account-instances/package-files';
+import { coordinateAccountInstancePublish } from '../domains/account-instances/publication-coordinator';
+import type { SubmittedInstancePublicPackage } from '../domains/account-instances/package-files';
+import type { AccountInstanceContentDocument } from '../domains/account-instances/types';
 import {
   AccountInstanceCoordinateError,
   listAccountInstanceIds,
@@ -20,7 +15,6 @@ import {
   readAccountInstanceSourcePointer,
   renameAccountInstanceDisplay,
 } from '../domains/account-instances/source';
-import { normalizeAccountInstanceContentDocument } from '../domains/account-instances/normalize';
 import { json } from '../http';
 import {
   authorizeAccountInstanceControlRequest,
@@ -159,36 +153,27 @@ export async function tryHandleInternalInstanceRoutes(
     const auth = await authorizeRomaEditorTransition({ req, env, accountId });
     if (!auth.ok) return respond(auth.response);
 
-    const rawBody = await readInternalProductJsonBody({
-      req,
-      env,
-      boundary: 'internal.instance.create.body',
-      accountId,
-    });
-    if (!isRecord(rawBody))
-      return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
-    const widgetType = typeof rawBody.widgetType === 'string' ? rawBody.widgetType.trim() : '';
-    if (!widgetType) return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
-    const source = isRecord(rawBody.source) ? rawBody.source : null;
-    const config = isRecord(source?.config) ? source.config : null;
-    const content = normalizeAccountInstanceContentDocument(source?.content);
-    const instanceId = normalizeStorageId(rawBody.instanceId);
-    const publicPackage = readSubmittedInstancePublicPackage(rawBody.publicPackage);
-    const baseLocale = normalizeLocale(rawBody.baseLocale);
-    if (!instanceId || !config || !content || !publicPackage || !baseLocale)
-      return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
+    const body = (await req.json()) as {
+      instanceId: string;
+      widgetType: string;
+      displayName: string | null;
+      source: {
+        config: Record<string, unknown>;
+        content: AccountInstanceContentDocument;
+      };
+      baseLocale: string;
+    };
 
     try {
       const created = await createAccountInstanceFromSubmittedSource({
         env,
         accountId,
-        instanceId,
-        widgetType,
-        displayName: rawBody.displayName,
-        config,
-        content,
-        baseLocale,
-        publicPackage,
+        instanceId: body.instanceId,
+        widgetType: body.widgetType,
+        displayName: body.displayName,
+        config: body.source.config,
+        content: body.source.content,
+        baseLocale: body.baseLocale,
       });
       return respond(
         json(
@@ -201,7 +186,6 @@ export async function tryHandleInternalInstanceRoutes(
             displayName: created.pointer.displayName,
             publishStatus: created.pointer.publishStatus,
             updatedAt: created.pointer.updatedAt,
-            publicPackageFingerprint: created.pointer.publicPackageFingerprint,
             source: {
               config: created.config,
               content: created.content,
@@ -230,21 +214,13 @@ export async function tryHandleInternalInstanceRoutes(
     const auth = await authorizeRomaEditorTransition({ req, env, accountId });
     if (!auth.ok) return respond(auth.response);
 
-    const body = (await readInternalProductJsonBody({
-      req,
-      env,
-      boundary: 'internal.instance.rename.body',
-      accountId,
-      instanceId,
-    })) as Record<string, unknown> | null;
-    const displayName = typeof body?.displayName === 'string' ? body.displayName.trim() : '';
-    if (!displayName) return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
+    const body = (await req.json()) as { displayName: string };
     try {
       const renamed = await renameAccountInstanceDisplay({
         env,
         accountId,
         instanceId,
-        displayName,
+        displayName: body.displayName,
       });
       return respond(json({ ok: true, ...renamed }));
     } catch (error) {
@@ -285,116 +261,31 @@ export async function tryHandleInternalInstanceRoutes(
     if (!auth.ok) return respond(auth.response);
 
     try {
-      const transition =
-        action === 'publish'
-          ? await publishAccountInstanceTransition({
-              env,
-              accountId,
-              instanceId,
-            })
-          : await unpublishAccountInstanceTransition({ env, accountId, instanceId });
+      let transition;
+      if (action === 'publish') {
+        const body = (await readInternalProductJsonBody({
+          req,
+          env,
+          boundary: 'internal.instance.publish.body',
+          accountId,
+          instanceId,
+        })) as {
+          publishedLimit: number;
+          publicPackage: SubmittedInstancePublicPackage;
+        };
+        return respond(await coordinateAccountInstancePublish({
+          env,
+          accountId,
+          instanceId,
+          publishedLimit: body.publishedLimit,
+          publicPackage: body.publicPackage,
+        }));
+      } else {
+        transition = await unpublishAccountInstanceTransition({ env, accountId, instanceId });
+      }
       return respond(json({ ok: true, ...transition }));
     } catch (error) {
       return respond(transitionErrorResponse(error));
-    }
-  }
-
-  const internalInstancePackageMatch = pathname.match(
-    /^\/__internal\/instances\/([^/]+)\/package$/,
-  );
-  if (internalInstancePackageMatch) {
-    const instanceId = normalizeStorageId(
-      decodeURIComponent(internalInstancePackageMatch[1] || ''),
-    );
-    const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
-    if (!accountId || !instanceId || !isValidScopedInstance(instanceId, accountId)) {
-      return respondValidation(
-        respond,
-        'coreui.errors.instance.invalidPayload',
-        accountId ? 403 : 422,
-      );
-    }
-    if (req.method !== 'GET') return respondMethodNotAllowed(respond);
-    const authErr = await authorizeAccountInstanceControlRequest({
-      req,
-      env,
-      accountId,
-      minRole: 'viewer',
-    });
-    if (authErr) return respond(authErr);
-
-    try {
-      const pointer = await readAccountInstanceSourcePointer({ env, accountId, instanceId });
-      if (!pointer.ok) {
-        return respond(
-          json(
-            { error: { kind: pointer.kind, reasonKey: pointer.reasonKey } },
-            { status: pointer.kind === 'NOT_FOUND' ? 404 : 422 },
-          ),
-        );
-      }
-      const packageReady = await verifyInstancePublicPackageReady({
-        env,
-        accountId,
-        instanceId,
-        expectedFingerprint: pointer.value.publicPackageFingerprint ?? null,
-      });
-      if (!packageReady.ok) {
-        return respond(
-          json(
-            {
-              error: {
-                kind: 'VALIDATION',
-                reasonKey: 'coreui.errors.instance.embedNotReady',
-                detail: packageReady.detail,
-              },
-            },
-            { status: 409 },
-          ),
-        );
-      }
-      const publicPackage = await readInstancePublicPackage({
-        env,
-        accountId,
-        instanceId,
-        expectedFingerprint: pointer.value.publicPackageFingerprint ?? null,
-      });
-      if (!publicPackage) {
-        return respond(
-          json(
-            {
-              error: {
-                kind: 'NOT_FOUND',
-                reasonKey: 'coreui.errors.instance.publicPackageNotFound',
-              },
-            },
-            { status: 404 },
-          ),
-        );
-      }
-      return respond(
-        json({
-          ok: true,
-          accountId,
-          instanceId,
-          publicPackageFingerprint: pointer.value.publicPackageFingerprint,
-          publicPackage,
-        }),
-      );
-    } catch (error) {
-      const detail = error instanceof Error ? error.message : String(error);
-      return respond(
-        json(
-          {
-            error: {
-              kind: 'VALIDATION',
-              reasonKey: 'coreui.errors.instance.embedNotReady',
-              detail,
-            },
-          },
-          { status: 409 },
-        ),
-      );
     }
   }
 
@@ -439,7 +330,6 @@ export async function tryHandleInternalInstanceRoutes(
           publishStatus: pointer.publishStatus,
           updatedAt: pointer.updatedAt,
           baseLocale: pointer.baseLocale,
-          publicPackageFingerprint: pointer.publicPackageFingerprint,
           source: {
             config: source.value.config,
             content: source.value.content,
@@ -452,41 +342,19 @@ export async function tryHandleInternalInstanceRoutes(
       const auth = await authorizeRomaEditorTransition({ req, env, accountId });
       if (!auth.ok) return respond(auth.response);
 
-      const body = (await readInternalProductJsonBody({
-        req,
-        env,
-        boundary: 'internal.instance.save.body',
-        instanceId,
-        accountId,
-      })) as Record<string, unknown> | null;
-      const source = isRecord(body?.source) ? body.source : null;
-      const config = isRecord(source?.config) ? source.config : null;
-      const content = normalizeAccountInstanceContentDocument(source?.content);
-      const publicPackage = isRecord(body)
-        ? readSubmittedInstancePublicPackage(body.publicPackage)
-        : null;
-      const baseLocale = normalizeLocale(body?.baseLocale);
-      if (
-        !isRecord(body) ||
-        !config ||
-        !content ||
-        !publicPackage ||
-        !baseLocale
-      ) {
-        return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
-      }
+      const body = (await req.json()) as {
+        source: {
+          config: Record<string, unknown>;
+          content: AccountInstanceContentDocument;
+        };
+      };
       try {
-        const result = await saveAccountInstanceTransition({
+        const result = await saveAccountInstanceSource({
           env,
           accountId,
           instanceId,
-          submittedWidgetType: body.widgetType as string,
-          config,
-          content,
-          publicPackage,
-          baseLocale,
-          displayName: body.displayName,
-          hasDisplayName: Object.prototype.hasOwnProperty.call(body, 'displayName'),
+          config: body.source.config,
+          content: body.source.content,
         });
         return respond(
           json({
@@ -496,7 +364,6 @@ export async function tryHandleInternalInstanceRoutes(
             displayName: result.pointer.displayName,
             publishStatus: result.pointer.publishStatus,
             updatedAt: result.pointer.updatedAt,
-            live: result.live,
           }),
         );
       } catch (error) {
@@ -509,15 +376,7 @@ export async function tryHandleInternalInstanceRoutes(
       if (!auth.ok) return respond(auth.response);
       try {
         const deleted = await deleteAccountInstanceTransition({ env, instanceId, accountId });
-        if (!deleted.existed) {
-          return respond(
-            json(
-              { error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' } },
-              { status: 404 },
-            ),
-          );
-        }
-        return respond(json({ ok: true, deleted: deleted.existed, existed: deleted.existed }));
+        return respond(json({ ok: true, existed: deleted.existed }));
       } catch (error) {
         return respond(transitionErrorResponse(error));
       }

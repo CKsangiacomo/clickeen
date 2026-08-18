@@ -38,6 +38,13 @@ The architecture exists to protect that model:
   pipelines;
 - invalid or unavailable truth fails explicitly.
 
+Named Clickeen authorities form a closed, trusted system. The authority that
+produces a structured artifact owns its correctness; downstream Clickeen
+services consume that artifact directly instead of adding another semantic
+guard, validator, allowlist, filter, or repair layer. Authentication,
+authorization, and raw external-input acceptance remain at their ingress
+boundaries.
+
 Content exists inside this model. Widgets, pages, emails, reports, feeds,
 locale overlays, and public runtime surfaces carry content, but Clickeen is not
 defined as a CMS or a generic content host. Clickeen structures content and the
@@ -51,7 +58,15 @@ Clickeen is a simple account product.
 - `accounts.id` is the compact account product/storage coordinate.
 - `accountPublicId` is the API/embed/authz field name for that same value.
 - Widgets are software and live in the system.
+- A Widget's unique software is its structured contract plus mandatory Core
+  HTML/CSS/JavaScript. It uses shared Clickeen services through uniform contracts;
+  those services do not absorb Widget meaning.
 - Users create widget instances in Roma/Bob and save them in their account.
+- Every tier may use every Widget and retain editable instances. Publication
+  capacity is separate and enforced only on Publish through
+  `instances.published.max`; Free may publish and serve one instance. One
+  account-scoped Tokyo transition makes overlapping Publish requests
+  first-wins while Republish consumes no additional slot.
 - Bob is an editor. Open/edit work is browser memory. Save is the persistence
   boundary.
 - Roma is the account app. Roma routes the user to the current account,
@@ -61,6 +76,97 @@ Clickeen is a simple account product.
 - San Francisco owns governed model execution.
 - Built agents live under `agents/<name>` and operate their product boundary.
 - Clickeen admin work uses the normal admin account.
+
+### Widget Software And Shared Services
+
+```text
+Widget software
+├── structured contract
+├── Core HTML
+├── Core CSS
+├── mandatory Core JavaScript for Widget behavior
+└── declared shared-capability use
+         │
+         ▼
+Clickeen shared system
+├── Stage / Pod / Header
+├── Bob editing
+├── Roma account commands and materialization
+├── localization, assets, connectors, and integrations
+└── Tokyo storage and Edge serving
+```
+
+Bob is one shared editing service for every Widget. Roma is one shared
+current-account and materialization service for every Widget. The same service
+contract is used regardless of the Widget's purpose. A missing capability is
+added generically for every applicable Widget; a shared service never branches
+on Widget identity or interprets Widget-specific paths.
+
+Tier limits and upsells are one such shared capability. The system owns the
+account's current plan, entitlement values, eligible target plan, and CTA. The
+Widget contract contributes only the mapping from a generic entitlement to its
+unique coordinate plus a complete localized contextual message:
+
+```text
+Widget limits.json binding -> Bob generic edit gate
+                                  │
+                                  └-> denied { capability, messageId } ─┐
+Widget upsell/{locale}.json exact template ────────────────────────────┼─> Roma shared Popup composition
+system current/target plan ────────────────────────────────────────────┘              │
+                                                                         system-owned CTA scaffold
+```
+
+For Bob-local editing, the generic edit boundary blocks the denied mutation
+before changing browser-memory state and carries the exact context to Roma.
+For Roma-native commands, Roma applies account policy at the command boundary.
+There is one Roma-hosted upsell surface using Dieter Popup mechanics. Core,
+Save, materialization, and Tokyo-worker have no tier/upsell responsibility and
+do not recheck the decision.
+
+The surface is multi-source while each datum has one owner. Bob and Roma do not
+invent Widget copy or generic fallback reasons, and Widgets do not provide
+plan names, pricing, CTAs, Popup behavior, or billing destinations.
+
+Create writes the first editable source and Save updates it. Only explicit
+allowed Publish performs the expensive package-generation work once:
+
+```text
+exact saved logical instance state + explicit allowed Publish
+  shared Header/Stage/Pod/capability values
+  + exact Widget Core values
++ shared Widget frame
++ Core HTML/CSS/JavaScript
+-> Roma generic materializer
+-> complete semantic index.html
+-> complete styles.css
+-> mandatory runtime.js with Widget and shared visitor behavior
+-> Tokyo-worker exact R2 write
+```
+
+Tokyo-worker then serves the exact stored base artifacts at the Edge. For a
+non-base request it expresses the trusted exact overlay into that semantic
+HTML before returning it. Initial selected-locale content is therefore complete
+before JavaScript. Mandatory Widget-owned JavaScript adds behavior; it does not
+construct the first meaningful page, host, or serve the
+Widget or orchestrate the shared system.
+
+The authority boundary is deliberate: Widget and shared source define the
+product software; Bob owns the complete unsaved instance document;
+Roma's Widget-neutral materializer is the sole generator of the served package
+contents; Tokyo-worker only stores and serves those bytes. The physical
+instance source is split into `instance.config.json` and
+`instance.content.json` for localization ownership, but Bob and materialization
+operate on one complete logical instance.
+
+Local implementation state: all five current Widgets now implement the four
+PRD 129 lifecycle actions locally. Their canonical Core sources produce
+compiled software for Bob preview and Roma Publish; New/Duplicate and Save
+write source only; one Bob edit decision feeds one Roma upsell Popup; Publish
+alone generates the package; and Tokyo-worker applies requested locale
+overlays to semantic HTML at the Edge. The retired flat sources have no
+compatibility path. These changes are local only and are not deployed
+cloud-dev truth. Direct selected-locale URLs and Edge-authored exact public
+switcher options are implemented locally.
 
 The active cloud-dev admin account coordinate is:
 
@@ -75,8 +181,9 @@ CLICKEEN
 | Authentication and session bootstrap | Berlin | `berlin/` |
 | Current account and account product routes | Roma | `roma/` |
 | Builder editing state | Bob | `bob/` browser-memory session |
+| Public package generation | Roma generic Widget materializer | `@clickeen/ck-runtime-materializer` invoked only on explicit allowed Publish |
 | Account runtime storage | Tokyo-worker | `tokyo-worker/` over Tokyo R2 |
-| Product widget software | Git-authored Tokyo product root | `tokyo/product/widgets/`, including adjacent English ToolDrawer labels, deployed to `product/widgets/` |
+| Product widget software | Git-authored Tokyo product root | `tokyo/product/widgets/`, including Core, structured contracts, ToolDrawer labels, and Widget-owned upsell messages, deployed to `product/widgets/` |
 | Public widget serving | Tokyo-worker public serving | generated instance files under `accounts/{accountPublicId}/...` |
 | Relational account/support data | Michael/Supabase | `supabase/migrations/` and service-owned routes |
 | Model execution | San Francisco | `sanfrancisco/` |
@@ -90,6 +197,10 @@ CLICKEEN
 No service should rediscover an authority already minted by the owner for a
 normal product flow. When a boundary needs proof, it uses the named product
 token/capsule/grant for that boundary.
+
+An authority token proves that an external caller may enter a boundary. It is
+not permission for downstream Clickeen services to re-check the semantic shape
+of system-produced artifacts.
 
 ## System Map
 
@@ -159,15 +270,48 @@ authorities.
 ```text
 Roma resolves current account/session
 -> Roma opens one account instance through Tokyo-worker
--> Roma sends Bob one ck:open-editor payload
--> Bob edits in browser memory
+-> Roma sends Bob one ck:open-editor payload containing source plus
+   deploy-built Widget software, not a stored public package
+-> Bob edits and previews one complete logical instance in browser memory
 -> User saves
--> Roma submits the saved instance/package through Tokyo-worker
--> Tokyo-worker stores the exact submitted account files
+-> Roma recomposes source/content and submits editable source through
+   Tokyo-worker
+-> Tokyo-worker writes the canonical source documents
 ```
 
 Bob does not own persistence. Tokyo-worker does not infer widget meaning from
-saved source. Roma does not mutate widget semantics.
+saved source or generate Widget code. Roma does not mutate Widget semantics.
+Workspace preview is temporary Bob editing output from Widget software plus the
+current draft. It neither reads nor defines the published package, and public
+`runtime.js` has no Bob editing role.
+Roma trusts Bob's exact browser-memory state. Save does not materialize a
+public package. On a later explicit allowed Publish, Roma is the sole authority
+that materializes the complete static package; Tokyo-worker trusts and
+physically stores the result.
+
+### Widget Publish
+
+```text
+User explicitly Publishes an exact saved instance
+-> Roma fast-prechecks instances.published.max from current list facts
+-> a request that passes invokes Roma's Widget-neutral materializer once
+-> materializer generates index.html + styles.css + runtime.js
+-> Tokyo-worker routes the final command to the account's one lifecycle-fenced Durable Object coordinator
+-> that coordinator reads exact publication truth and applies Roma's exact limit
+-> Republish proceeds without a new slot; the first allowed Publish stores the package and published state
+-> Tokyo ends coordination and purges the instance cache tag
+```
+
+The normal Roma capacity denial is HTTP 402 before materialization. In the rare
+overlap after that fast precheck, the contender may finish transient in-memory
+materialization, but the active per-account Tokyo coordinator returns HTTP 409
+`PUBLISH_IN_PROGRESS` before any contender package, publication state, or cache
+mutation. After the winner commits, a later attempt reads the new published
+count and receives the existing HTTP 402 capacity denial. Editable source is
+unchanged in every Publish outcome. Before R2 work, the coordinator touches its
+own storage only to activate Cloudflare's shutdown/replacement fencing; it keeps
+no durable policy, count, or publication data. Per-instance `serve-state.json`
+remains publication truth.
 
 ### Public Widget Serving
 
@@ -179,7 +323,12 @@ Visitor requests https://clk.live/{accountPublicId}/{instanceId}
 ```
 
 Visitor requests do not call models, read Supabase, compose widgets from
-authoring source, or repair missing artifacts.
+authoring source, or repair missing artifacts. The stored `index.html` already
+contains complete semantic base-locale content. A non-base response applies
+the exact stored overlay at the Edge and therefore contains complete semantic
+selected-locale content. Mandatory `runtime.js` owns Widget and shared visitor
+behavior and is not required to create initial content, localize, host, or serve the
+instance.
 
 Cloud-dev public serving uses:
 
@@ -232,7 +381,7 @@ Product Copilot:
 Bob CopilotPane
 -> Roma account Copilot route
 -> Product Copilot Worker
--> San Francisco /model/chat
+-> San Francisco /model/turn (stream mode)
 -> provider selected by signed grant
 ```
 
@@ -241,7 +390,7 @@ Translation Agent:
 ```text
 Roma translation operation
 -> Translation Agent Worker
--> San Francisco /model/chat
+-> San Francisco /model/turn (structured mode)
 -> Tokyo-worker overlay write
 ```
 
@@ -326,6 +475,8 @@ See:
 | Built agents | `documentation/ai/agents/` |
 | Product strategy | `documentation/strategy/WhyClickeen.md` |
 
-When code and docs disagree, runtime code, migrations, deployed Cloudflare
-configuration, and service docs win over this overview. Fix the stale doc with
-the behavior change or immediately after verifying the behavior.
+Runtime code, migrations, stored data, and deployed Cloudflare configuration
+prove what is implemented now. The architecture tenets define canonical product
+law. When those differ, this overview and the owning service manual name the
+implementation mismatch explicitly; current code does not silently redefine
+the architecture, and documentation does not pretend the correction is live.

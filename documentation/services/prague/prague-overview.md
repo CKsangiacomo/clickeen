@@ -88,7 +88,9 @@ The loader is:
 prague/src/lib/markdown.ts
 ```
 
-The loader name is historical code naming; it loads JSON page specs, applies sidecars, validates section copy/meta, and returns page blocks to Astro pages.
+The loader name is historical code naming; it loads JSON page specs, applies
+sidecars, and returns page blocks to Astro pages. Source/build verification
+proves the git-authored page and sidecar contract outside visitor runtime.
 
 Registered section types:
 
@@ -158,16 +160,18 @@ Rules:
 | --- | --- |
 | `PUBLIC_TOKYO_URL` | Required by Prague base layout for Dieter token CSS and product static resources. |
 | `PUBLIC_ROMA_URL` | Create route redirect into Roma. |
-| `PUBLIC_CLK_LIVE_URL` | Optional base URL for public widget artifact validation and embeds. Defaults to `https://clk.live` where code allows. |
-| `PRAGUE_VALIDATE_ACCOUNT_INSTANCE` | Enables account instance availability check during Prague page loading. |
-| `PRAGUE_VALIDATE_ACCOUNT_INSTANCE_STRICT` | Makes availability check failures fatal where code enables validation. |
+| `PUBLIC_CLK_LIVE_URL` | Optional base URL for exact public Widget embeds. Defaults to `https://clk.live` where code allows. |
+| `PRAGUE_VALIDATE_ACCOUNT_INSTANCE` | Current legacy availability probe during Prague page loading; architecture debt, not a target runtime contract. |
+| `PRAGUE_VALIDATE_ACCOUNT_INSTANCE_STRICT` | Current legacy fatal mode for that probe; architecture debt, not a target runtime contract. |
 
 Do not document secret values. Prague does not need account-write secrets.
 
-Validation defaults:
-
-- In development, account-instance validation is on unless `PRAGUE_VALIDATE_ACCOUNT_INSTANCE=0`.
-- Strict validation is on in production only when validation is explicitly enabled.
+Current implementation mismatch: Prague currently probes a Tokyo-owned public
+account-instance artifact during page loading and can make that probe fatal
+through these variables. In the closed system Prague consumes the exact public
+embed coordinate and trusts Tokyo's published result; normal page work must
+not depend on a second availability-validation ritual. Preserve the variables
+only while the current code still ships them, and do not extend this path.
 
 ## Operator Commands
 

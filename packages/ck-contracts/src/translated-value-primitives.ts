@@ -204,20 +204,6 @@ function identityKeyForField(args: {
   return [args.contract.widgetType, args.field.role, args.field.path, ...parts].join('|');
 }
 
-function assertConcretePath(path: string): string[] {
-  if (!path || path.includes('*') || path.includes('[') || path.includes(']')) {
-    throw new Error(`translated_value_path_invalid:${path}`);
-  }
-  const parts = path
-    .split('.')
-    .map((part) => part.trim())
-    .filter(Boolean);
-  if (!parts.length || parts.some((part) => PROHIBITED_SEGMENTS.has(part))) {
-    throw new Error(`translated_value_path_invalid:${path}`);
-  }
-  return parts;
-}
-
 export function readWidgetEditableFieldsContract(content: unknown): WidgetEditableFieldsContract {
   if (!isRecord(content) || !Array.isArray(content.fields)) {
     throw new Error('widget_editable_fields_contract_invalid');
@@ -486,39 +472,15 @@ export function validateTranslatedValuesForProducerItems(
   return { ok: true };
 }
 
-function setExistingStringAtPath(root: Record<string, unknown>, path: string, value: string): void {
-  const parts = assertConcretePath(path);
-  let current: unknown = root;
-
-  for (let index = 0; index < parts.length; index += 1) {
+function setTranslatedValueAtPath(root: Record<string, unknown>, path: string, value: string): void {
+  const parts = path.split('.');
+  let current: any = root;
+  for (let index = 0; index < parts.length - 1; index += 1) {
     const part = parts[index]!;
-    const last = index === parts.length - 1;
-    const numeric = /^\d+$/.test(part);
-
-    if (numeric) {
-      if (!Array.isArray(current)) throw new Error(`translated_value_path_invalid:${path}`);
-      const offset = Number(part);
-      if (offset < 0 || offset >= current.length) throw new Error(`translated_value_path_invalid:${path}`);
-      if (last) {
-        if (typeof current[offset] !== 'string') throw new Error(`translated_value_path_invalid:${path}`);
-        current[offset] = value;
-        return;
-      }
-      current = current[offset];
-      continue;
-    }
-
-    if (!isRecord(current)) throw new Error(`translated_value_path_invalid:${path}`);
-    if (!Object.prototype.hasOwnProperty.call(current, part)) {
-      throw new Error(`translated_value_path_invalid:${path}`);
-    }
-    if (last) {
-      if (typeof current[part] !== 'string') throw new Error(`translated_value_path_invalid:${path}`);
-      current[part] = value;
-      return;
-    }
-    current = current[part];
+    current = current[Array.isArray(current) ? Number(part) : part];
   }
+  const last = parts.at(-1)!;
+  current[Array.isArray(current) ? Number(last) : last] = value;
 }
 
 export function resolveTranslatedValues<T extends Record<string, unknown>>(
@@ -527,8 +489,7 @@ export function resolveTranslatedValues<T extends Record<string, unknown>>(
 ): T {
   const next = structuredClone(baseConfig) as T;
   for (const [path, value] of Object.entries(translatedValues)) {
-    if (typeof value !== 'string') throw new Error(`translated_value_invalid:${path}`);
-    setExistingStringAtPath(next, path, value);
+    setTranslatedValueAtPath(next, path, value);
   }
   return next;
 }

@@ -1,11 +1,28 @@
 # Logo Showcase Widget
 
-STATUS: CURRENT SYSTEM OPERATOR SPEC
+STATUS: CURRENT LOCAL CANONICAL IMPLEMENTATION — PRODUCT QA/DEPLOY PENDING
 
 ## Purpose
 
-Logo Showcase renders logo strips for grid or motion presentation inside the
-shared widget Shell.
+Logo Showcase renders one or more stable logo collections as a grid, paged
+carousel, or continuous carousel inside the shared Widget Shell.
+
+## Architecture Status
+
+Logo Showcase now uses the canonical Widget contract locally. `widget.html`
+composes shared Stage, Pod, Header, and shared capabilities with one Logo
+Showcase Core. `core/core.html` owns complete semantic strip/logo content,
+`core/core.css` owns its presentation, and `core/core.js` owns only
+deterministic order and carousel visitor behavior.
+
+Bob preview and explicit allowed Publish use the same compiled Widget
+software. The materializer writes every saved strip and logo in its current
+order before JavaScript runs. Core JavaScript does not reconstruct saved state,
+localize content, invoke shared utilities, or receive Bob state updates. There
+is no flat-source compatibility path or Widget-specific shared-service branch.
+
+The local source and generated artifacts are complete. Product QA, deploy,
+stored-package verification, and live cloud-dev proof remain pending.
 
 ## Source
 
@@ -18,12 +35,17 @@ Files:
 ```text
 spec.json
 editable-fields.json
+discovery.json
 limits.json
-logoshowcase_tooldrawer_l10n_labels/
+labels/
+  en.json
+upsell/
   en.json
 widget.html
-widget.css
-widget.client.js
+core/
+  core.html
+  core.css
+  core.js
 ```
 
 ## Contract
@@ -42,8 +64,6 @@ logoshowcase
 uiLabels
 ```
 
-`spec.json` includes widget-local normalization for Logo Showcase Core state.
-
 Core state families:
 
 ```text
@@ -55,7 +75,22 @@ logoshowcase.type
 logoshowcase.typeConfig
 ```
 
-## Editable Fields
+Operator control map:
+
+```text
+logoshowcase.type -> grid|carousel
+logoshowcase.typeConfig.carousel.mode -> paged|continuous
+logoshowcase.spacing -> logo height and gaps
+logoshowcase.appearance -> logo look, opacity, item background, cardwrapper
+logoshowcase.behavior.randomOrder -> deterministic shuffle
+```
+
+`spec.json` declares stable strip/logo identity coordinates through the
+currently named `normalization.idRules` compiler field. This is structural
+source metadata for the authoring boundary; it does not authorize downstream
+repair or revalidation of accepted Widget state.
+
+## Editable Fields And Stable Items
 
 ```text
 header.title
@@ -67,130 +102,110 @@ logoshowcase.strips[].logos[].alt
 logoshowcase.strips[].logos[].title
 ```
 
-`logoshowcase.strips[]` and `logoshowcase.strips[].logos[]` entries carry
-stable `id` values in widget Core state.
+Every strip and logo carries a stable `id`. Together those ids anchor exact
+localization and discovery identity across reorder, insert, and delete. The
+generic source renderer separately supplies a render-only positional path for
+authored repeated-item CSS. Stable content identity and positional style paths
+are different coordinates.
+
+Image alt text and logo tooltip text are exact authored attribute slots. Logo
+name and alt text are also materialized as semantic accessible text so a
+localized overlay updates the visible/assistive meaning rather than relying on
+visitor JavaScript.
 
 ## ToolDrawer Composition
 
-Logo Showcase follows the canonical panel order and keeps only shared Header
-and the primary Content section open initially.
+Logo Showcase follows canonical panel order and keeps only shared Header and
+the primary Content section open initially.
 
-- Content owns shared Header content plus the exact strip/logo collections.
-  Object Manager owns strips, each strip owns one Repeater of logos, each logo
-  owns its image Fill, and Bulk Edit owns the existing name, caption, link,
-  target, nofollow, alt, and tooltip columns.
+- Content owns shared Header content plus exact strip/logo collections. Object
+  Manager owns strips, each strip owns one Repeater of logos, each logo owns
+  its image Fill, and Bulk Edit owns name, caption, link, target, nofollow, alt,
+  and tooltip values.
 - Layout owns shared Header geometry, shared Core size, Grid versus Carousel,
-  logo height and gaps, the existing Carousel controls, and shared Stage/Pod
-  geometry. Pause on hover is shown for Continuous Carousel or for Paged
-  Carousel only when Autoplay is enabled.
-- Appearance owns shared Header appearance first, followed by logo treatment,
-  logo opacity, logo-tile surface, and shared Stage/Pod appearance.
+  logo height/gaps, current Carousel controls, and shared Stage/Pod geometry.
+- Appearance owns shared Header appearance, logo treatment/opacity, logo-tile
+  surface, and shared Stage/Pod appearance.
 - Typography uses the shared Widget typography contract.
-- Settings owns deterministic logo shuffling followed by shared behavior.
+- Settings owns deterministic logo shuffling followed by shared SEO/GEO,
+  branding, and social-share behavior.
 
-All Widget-owned ToolDrawer words come from the adjacent English label file.
-The Widget source owns paths, options, component inputs, and visibility rules;
-Bob compiles them without inventing Logo Showcase semantics.
+Widget-owned ToolDrawer words come from `labels/en.json`. The source owns
+paths, options, component inputs, and visibility rules; Bob compiles them
+without inventing Logo Showcase semantics.
+
+## Discovery
+
+`discovery.json` identifies Logo Showcase as a `logo-showcase`. For each stable
+logo it declares name, caption, image alt text, and tooltip as important
+customer-content parts, and declares that the caption describes the name.
+
+This file is internal Widget software; users do not edit it. Free and Tier 1
+use its system baseline, including Clickeen identification. When a Tier 2+
+account enables SEO/GEO, Publish may optimize technical discovery output from
+the exact saved logo content. Only Publish materialization writes public
+files.
 
 ## Limits
 
 ```text
-branding.remove -> behavior.showBacklink
-widget.socialShare.enabled -> behavior.socialShare.enabled
-items.group.small.max -> logoshowcase.strips[]
-items.group.medium.max -> logoshowcase.strips[].logos[]
-items.group.large.max -> logoshowcase.strips[].logos[]
+branding.remove -> behavior.showBacklink -> branding.remove
+widget.socialShare.enabled -> behavior.socialShare.enabled -> social-share.enable
+embed.seoGeo.enabled -> behavior.seoGeo.enabled -> seo-geo.enable
+items.group.small.max -> logoshowcase.strips[] -> strips.max
+items.group.medium.max -> logoshowcase.strips[].logos[] -> logos-per-strip.max
+items.group.large.max -> logoshowcase.strips[].logos[] -> logos-total.max
 ```
 
-## Shared Widget Utilities
+The final value on each line is the exact message identity in
+`upsell/en.json`. The three item messages separately explain adding strips,
+adding logos to one strip, and exceeding the Widget-wide logo count. Account
+policy supplies the decision and current/target plans; Roma supplies the
+system CTA and Popup. Core and public runtime consume none of this product UI
+contract.
 
-Logo Showcase uses the presentation frame for Stage/Pod, the Shell for
-Header/Core composition, and shared utilities for Core sizing, typography,
-branding, social share, and locale switching. Logo strips and logo items belong
-to `logoshowcase.*`.
+## Materialized Core And Visitor Behavior
 
-Runtime requires these Core DOM hooks:
+Core HTML contains all strips as semantic sections and all logos as semantic
+lists. Each logo keeps its saved id, media, name, caption, alt text, tooltip,
+link, target, and nofollow state. Exact accepted asset/link values are
+materialized unchanged; downstream Core behavior does not normalize or
+revalidate them. Core CSS owns responsive grid/tile geometry, logo treatment,
+item surfaces, caption presentation, and carousel geometry.
 
-```text
-[data-role="logoshowcase"]
-[data-role="logoshowcase-core"]
-```
+Core JavaScript performs only behavior that requires a live visitor document:
 
-`widget.client.js` registers as `logoshowcase`, validates `logoshowcase.*`,
-renders strips/logos into `logoshowcase-core`, applies shared widget utilities,
-and binds `ck:state-update` for the current instance id.
+- optional random order is deterministic from the exact strip/logo ids;
+- Paged Carousel binds current arrows, swipe/scroll geometry, transition, and
+  optional autoplay;
+- Continuous Carousel clones the already-localized materialized list for
+  motion, hides the clone from accessibility, removes its links from keyboard
+  traversal, and measures the rendered seam gap.
 
-Runtime invariants:
+The Core keeps asynchronous behavior scoped to the current rendered preview
+body. On the next initialization it cancels any prior pager animation frame,
+autoplay interval, and ResizeObservers before binding the replacement body.
+Removed-root event listeners require no separate lifecycle machinery.
 
-- `logoshowcase.type` is `grid` or `carousel`.
-- Carousel mode is `paged` or `continuous`.
-- Carousel state owns step, arrows, swipe, autoplay delay, transition, speed,
-  direction, and pause-on-hover behavior.
-- `logoshowcase.strips[]` ids must be stable and unique.
-- `logoshowcase.strips[].logos[]` ids must be stable and unique inside each
-  strip.
-- Logo state includes logo fill, `href`, `targetBlank`, `nofollow`, `alt`,
-  `title`, `caption`, and `name`.
-- Logo media must use resolved account asset media or a valid relative,
-  absolute-path, or `http(s)` URL accepted by runtime validation.
-- Logo media rejects malformed URLs, `javascript:` URLs, and product-local
-  `/widgets/logoshowcase/media/` references.
-- Logo links are normalized as `http(s)` URLs.
-- Card wrapper styling uses shared `CKSurface.applyCardWrapper`.
-- Keyboard focus uses Dieter's shared `--focus-ring-color`.
-- `logoshowcase.behavior.randomOrder` is deterministic from strip/logo ids; it
-  is not nondeterministic shuffle.
-- Logo-grid, strip-gap, tile-size, and Carousel-gap presentation respond to the
-  available Pod inline size through the existing Pod container, not the browser
-  viewport. Paged movement reads that rendered gap, so motion and presentation
-  share one geometry truth.
-- Continuous Carousel preserves the configured gap both inside a ticker copy
-  and across the seam between its two copies. Its animation distance includes
-  that seam gap.
-- The static package contains no invented Header title, CTA label, or CTA URL.
-  Shared Header runtime reveals exact saved/localized Header state.
+Current behavior boundaries preserved by the migration:
 
-Operator control map:
+- a final partial Paged Carousel page follows the existing page-index/step
+  calculation;
+- continuous speed keeps its existing editor contract;
+- Paged arrow accessible names remain the Core-authored English `Previous` and
+  `Next`;
+- caption reveal remains hover/focus based;
+- the shared Header and shared Object Manager keep their existing system
+  behavior rather than gaining Logo-Showcase-specific substitutes.
 
-```text
-logoshowcase.type -> grid|carousel
-logoshowcase.typeConfig.carousel.mode -> paged|continuous
-logoshowcase.spacing -> logo height and gaps
-logoshowcase.appearance -> logo look, opacity, item background, cardwrapper
-logoshowcase.behavior.randomOrder -> deterministic shuffle
-```
-
-## Frozen Current Behavior
-
-The Widget-system presentation pass does not alter product functionality,
-state, defaults, validation, limits, save behavior, or shared component law.
-The following reachable concerns therefore remain explicit for later product
-decisions:
-
-- a final partial Paged Carousel page can remain unreachable in the current
-  page-index calculation;
-- a malformed nonempty logo `href` currently becomes a non-link instead of an
-  explicit validation failure;
-- Continuous Carousel duplicates its interactive logo copy without suppressing
-  the second copy from accessibility traversal;
-- Continuous speed is runtime-positive but has no exact positive editor bound;
-- Paged arrow accessible names are runtime-owned English `Previous` and `Next`;
-- caption reveal depends on hover or focus, so a non-linked logo has no reliable
-  touch reveal;
-- the shared Header still changes left/right composition by viewport rather
-  than Pod size, so a left/right Header can consume a very narrow Pod on a wide
-  page; that correction belongs to the shared Header owner;
-- Object Manager's relative `logos.0.name` display label is currently emitted
-  by Bob as a phantom global compiled control and can reach Product Copilot.
-  The systemic correction belongs to Bob's derived-control compiler, not to
-  Logo Showcase state.
-
-These are not repaired, hidden behind Widget-local substitutes, or described as
-complete by this pass.
+Shared Header, Stage, Pod, branding, social share, and locale switching remain
+generic shared services. Core neither invokes nor revalidates them.
 
 ## Verification
 
 ```bash
 pnpm validate:widgets
+pnpm --filter @clickeen/widget-foundation typecheck
 pnpm --filter @clickeen/bob test:editor-contract
+node --check tokyo/product/widgets/logoshowcase/core/core.js
 ```

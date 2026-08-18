@@ -1,0 +1,12 @@
+{
+  "widgetType": "logoshowcase",
+  "locale": "en",
+  "messages": {
+    "branding.remove": "Your current plan is {currentPlan}. Upgrade to {targetPlan} to remove Clickeen branding from this Logo Showcase.",
+    "social-share.enable": "Your current plan is {currentPlan}. Upgrade to {targetPlan} to enable social sharing for this Logo Showcase.",
+    "seo-geo.enable": "Your current plan is {currentPlan}. Upgrade to {targetPlan} to enable SEO/GEO optimization for this Logo Showcase.",
+    "strips.max": "Your current plan is {currentPlan}. Upgrade to {targetPlan} to add more strips to this Logo Showcase.",
+    "logos-per-strip.max": "Your current plan is {currentPlan}. Upgrade to {targetPlan} to add more logos to this strip.",
+    "logos-total.max": "Your current plan is {currentPlan}. Upgrade to {targetPlan} to add more logos to this Logo Showcase."
+  }
+}

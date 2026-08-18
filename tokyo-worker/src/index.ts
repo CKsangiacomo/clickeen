@@ -2,6 +2,8 @@ import { dispatchTokyoRoute } from './route-dispatch';
 import { createTokyoRequestContext, finalizeTokyoObservedResponse, json } from './http';
 import type { Env } from './types';
 
+export { AccountPublicationCoordinator } from './domains/account-instances/publication-coordinator';
+
 export default {
   async fetch(req: Request, env: Env): Promise<Response> {
     const url = new URL(req.url);

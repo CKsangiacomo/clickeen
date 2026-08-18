@@ -1,0 +1,36 @@
+{
+  "widgetType": "faq",
+  "kind": "faq",
+  "baseline": {
+    "title": "FAQ by Clickeen",
+    "description": "Questions and answers published with Clickeen."
+  },
+  "parts": [
+    {
+      "id": "section-title",
+      "path": "faq.sections[].title",
+      "role": "grouping-heading",
+      "identityPaths": ["faq.sections[].id"]
+    },
+    {
+      "id": "question",
+      "path": "faq.sections[].faqs[].question",
+      "role": "question",
+      "identityPaths": ["faq.sections[].id", "faq.sections[].faqs[].id"]
+    },
+    {
+      "id": "answer",
+      "path": "faq.sections[].faqs[].answer",
+      "role": "answer",
+      "identityPaths": ["faq.sections[].id", "faq.sections[].faqs[].id"]
+    }
+  ],
+  "relationships": [
+    {
+      "kind": "answers",
+      "from": "question",
+      "to": "answer",
+      "identityPaths": ["faq.sections[].id", "faq.sections[].faqs[].id"]
+    }
+  ]
+}

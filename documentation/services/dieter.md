@@ -275,6 +275,15 @@ accessible naming, workflow, persistence, and dismissal policy through the
 existing dialog lifecycle. Dieter never adds a dismiss path merely because the
 surface can render one.
 
+The shared account upsell is a caller composition of this same Popup, not an
+upsell component or Dieter policy variant. For a Widget-bound denial, the
+Widget artifact owns the exact localized contextual body template; Roma/system
+policy owns current and target plan truth; Roma/system UI owns the title, CTA
+labels, and behavior; and Roma hosts the composition. Dieter owns only the
+slots, presentation, and dialog mechanics. It never reads `limits.json`,
+selects a message, interpolates a plan, chooses an Upgrade destination, or
+supplies fallback copy.
+
 Dropdown Actions owns the compact immediate-choice row and its attached
 Popover composition. The closed row shows caller-supplied label and current
 value, hover discloses interaction without a resting chevron, and choosing a
@@ -284,9 +293,9 @@ Menu Action updates the value and closes immediately. Its root
 The attached Popover inherits the row's size-specific radius. Opening the
 control does not add a separate blue border or tint to the covered row.
 All visible wording remains caller input. Its selected checkmark inherits the
-Menu Actions `sm|md|lg` Icon size instead of carrying a fixed size. Bob owns
-the separate typography-family capability filter; the Dieter component does
-not inspect typography paths, weights, or styles.
+Menu Actions `sm|md|lg` Icon size instead of carrying a fixed size. Bob
+projects the exact Roma-owned account-font library into its family choices;
+the Dieter component does not inspect typography paths, weights, or styles.
 
 Dropdown Shadow owns one exact shadow object:
 `{enabled,inset,x,y,blur,spread,color,alpha}`. It uses the same property-row,
@@ -310,8 +319,8 @@ complete caller label with either the caller placeholder or the exact filename
 on the trailing rail. Its row-width Popover repeats the caller label and shows
 one preview plus Upload when empty or Replace and Remove when selected. It uses
 the caller-supplied account-assets client for upload and exact asset resolution;
-that caller-owned client validates host responses and classifies an exact
-upload upsell reason when applicable. Dieter may dispatch the supplied generic
+that caller-owned client consumes the exact owning-host response and presents
+its exact upload upsell reason when applicable. Dieter may dispatch the supplied generic
 reason, but it does not parse Roma responses or own account-plan reason keys.
 It does not own account identity, route policy, file limits, storage, or Widget
 meaning. The component emits only the one JSON field, owns no second metadata
@@ -404,7 +413,12 @@ link action is not a per-Widget capability. The URL field, contextual action,
 and caller-labelled close action are one internal Dropdown Edit sheet, not a
 second Popover or standalone component. Added href text is applied exactly as
 entered; Dropdown Edit does not trim, prefix, normalize, validate, or silently
-rewrite it. Public Widget rendering keeps its existing URL-safety authority.
+rewrite it. URL/protocol acceptance belongs once at the raw human-edit ingress
+declared by the consuming Widget contract and hosted generically by Bob. After
+that accepted href becomes Clickeen draft truth, materialization and public Core
+consume it exactly without another URL guard, filter, normalization, or silent
+omission. Current public Widget URL-safety checks are downstream-validation debt,
+not the canonical authority.
 Toolbar actions use the existing
 medium Button geometry with the existing 1.25rem Icon size. The separate
 link-sheet close action keeps the medium Button's default 1rem Icon.

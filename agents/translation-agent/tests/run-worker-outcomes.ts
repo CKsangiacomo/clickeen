@@ -3,6 +3,8 @@ import { mintRomaAiGrant } from '@clickeen/ck-policy';
 import worker from '../src/worker';
 
 const REQUESTED_LOCALES = ['fr', 'de', 'it'];
+const CONTENT_COORDINATE =
+  'faq|faq-question|faq.sections[].faqs[].question|faq.sections[].id=s1|faq.sections[].faqs[].id=q1';
 
 async function createGrant(privateKeyPem: string): Promise<string> {
   return await mintRomaAiGrant({
@@ -31,6 +33,7 @@ async function run(): Promise<void> {
   const privateKeyPem = `-----BEGIN PRIVATE KEY-----\n${privateKeyBody}\n-----END PRIVATE KEY-----`;
   const publicKeyPem = `-----BEGIN PUBLIC KEY-----\n${publicKeyBody}\n-----END PUBLIC KEY-----`;
   const writtenLocales: string[] = [];
+  const writtenValues: Record<string, Record<string, string>> = {};
   const response = await worker.fetch(
     new Request('https://translation-agent.test/translate-instance', {
       method: 'POST',
@@ -46,7 +49,7 @@ async function run(): Promise<void> {
         widgetType: 'faq',
         baseLocale: 'en',
         requestedLocales: REQUESTED_LOCALES,
-        items: [{ path: 'header.title', type: 'string', value: 'Frequently asked questions' }],
+        items: [{ path: CONTENT_COORDINATE, type: 'string', value: 'What is Clickeen?' }],
       }),
     }),
     {
@@ -98,9 +101,12 @@ async function run(): Promise<void> {
         },
       },
       TOKYO_PRODUCT_CONTROL: {
-        async fetch(input: RequestInfo | URL) {
+        async fetch(input: RequestInfo | URL, init?: RequestInit) {
           const locale = decodeURIComponent(new URL(String(input)).pathname.split('/').at(-1) ?? '');
           writtenLocales.push(locale);
+          writtenValues[locale] = (JSON.parse(String(init?.body)) as {
+            values: Record<string, string>;
+          }).values;
           return Response.json({ ok: true, locale });
         },
       },
@@ -145,6 +151,8 @@ async function run(): Promise<void> {
     'coreui.errors.translation.providerFailed',
   );
   assert.deepEqual(writtenLocales.sort(), ['fr', 'it']);
+  assert.deepEqual(writtenValues.fr, { [CONTENT_COORDINATE]: 'What is Clickeen? fr' });
+  assert.deepEqual(writtenValues.it, { [CONTENT_COORDINATE]: 'What is Clickeen? it' });
 
   console.log('translation-agent worker outcomes: ok');
 }

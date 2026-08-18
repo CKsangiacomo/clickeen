@@ -1,11 +1,29 @@
 # Big Bang Widget
 
-STATUS: CURRENT SYSTEM OPERATOR SPEC
+STATUS: CURRENT LOCAL CANONICAL IMPLEMENTATION — PRODUCT QA/DEPLOY PENDING
 
 ## Purpose
 
-Big Bang renders a high-impact statement block with supporting copy inside the
-shared widget Shell.
+Big Bang renders a high-impact statement with optional supporting copy inside
+the shared Widget Shell.
+
+## Architecture Status
+
+Big Bang now uses the canonical Widget contract locally. `widget.html`
+composes the shared Stage, Pod, Header, branding, locale-switcher, and
+social-share services with one Big Bang Core. `core/core.html` owns the unique
+semantic statement structure, `core/core.css` owns its presentation and
+typography role, and mandatory `core/core.js` registers the Core. Big Bang has
+no visitor interaction, so its Core initializer intentionally does no work.
+
+Bob preview and explicit allowed Publish use the same compiled Widget
+software. Publish materializes the complete saved statement and supporting
+copy into semantic HTML; public JavaScript does not render or localize the
+initial content. There is no flat-source compatibility path or Widget-specific
+branch in Bob, Roma, the materializer, or Tokyo-worker.
+
+The local source and generated artifacts are complete. Product QA, deploy,
+stored-package verification, and live cloud-dev proof remain pending.
 
 ## Source
 
@@ -18,12 +36,17 @@ Files:
 ```text
 spec.json
 editable-fields.json
+discovery.json
 limits.json
-big-bang_tooldrawer_l10n_labels/
+labels/
+  en.json
+upsell/
   en.json
 widget.html
-widget.css
-widget.client.js
+core/
+  core.html
+  core.css
+  core.js
 ```
 
 ## Contract
@@ -66,7 +89,9 @@ bigBang.gap
 ```
 
 Alignment and text width apply to the complete statement/supporting-copy
-content column. The gap is the vertical space between those two values.
+column. Gap is the vertical space between the two values. Core CSS consumes
+those exact saved values and owns the Big Bang typography role; shared
+composition continues to own only shared/common typography roles.
 
 ## Editable Fields
 
@@ -83,47 +108,57 @@ bigBang.supportingCopy
 HTML supports emphasis, `br`, and `http(s)` links. Statement and supporting-copy
 links inherit the color of their configured typography role.
 
+## Discovery
+
+`discovery.json` identifies Big Bang as a `statement` Widget. Its important
+customer-content parts are the statement headline and supporting copy, with a
+`supports` relationship from the copy to the statement.
+
+This is internal Widget software, not user-editable SEO copy. Free and Tier 1
+use its system baseline, including Clickeen identification. When a Tier 2+
+account enables SEO/GEO, Publish may optimize technical discovery output from
+the exact saved customer content. Only Publish materialization writes public
+HTML/CSS/JavaScript.
+
 ## Limits
 
 ```text
-branding.remove -> behavior.showBacklink
-widget.socialShare.enabled -> behavior.socialShare.enabled
+branding.remove -> behavior.showBacklink -> branding.remove
+widget.socialShare.enabled -> behavior.socialShare.enabled -> social-share.enable
+embed.seoGeo.enabled -> behavior.seoGeo.enabled -> seo-geo.enable
 ```
 
-## Shared Widget Utilities
+The final value on each line is the exact message identity in
+`upsell/en.json`. That file owns the complete Big-Bang-specific denial context;
+account policy owns the entitlement decision and current/target plans, and
+Roma owns the system CTA and Popup. Core and public runtime consume none of
+this product UI contract.
 
-Big Bang uses the presentation frame for Stage/Pod, the Shell for Header/Core
-composition, and shared utilities for Core sizing, typography, branding,
-social share, and locale switching.
+## Materialized Core And Visitor Behavior
 
-Runtime requires these Core DOM hooks:
+Core HTML contains these stable operator hooks:
 
 ```text
-[data-role="big-bang"]
 [data-role="big-bang-core"]
 [data-role="big-bang-statement"]
 [data-role="big-bang-support"]
 ```
 
-`widget.client.js` registers as `big-bang`, validates `bigBang.*`, requires a
-non-empty `bigBang.statement`, applies shared widget utilities, and binds
-`ck:state-update` for the current instance id.
+The materializer writes the exact saved statement and, when enabled and
+nonempty, supporting copy into those semantic elements. It also writes stable
+content/discovery coordinates for localization and SEO/GEO output. Core CSS
+owns alignment, width, gap, and Core typography. Mandatory Core JavaScript
+registers through `CKWidgetRuntime` but performs no work because Big Bang has
+no visitor behavior.
 
-Runtime constraints:
-
-```text
-bigBang.statement -> non-empty
-bigBang.alignment -> left|center
-bigBang.textWidth -> 480..1280
-bigBang.gap -> 8..80
-```
-
-Do not add a local Header, typography, branding, share, or locale switcher
-path. Missing shared helpers or missing required DOM hooks must remain explicit
-runtime errors.
+Shared Header, Stage, Pod, branding, social share, and locale switching remain
+generic shared services. Core neither invokes them nor revalidates their
+trusted output.
 
 ## Verification
 
 ```bash
 pnpm validate:widgets
+pnpm --filter @clickeen/widget-foundation typecheck
+node --check tokyo/product/widgets/big-bang/core/core.js
 ```

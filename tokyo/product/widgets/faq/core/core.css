@@ -1,5 +1,26 @@
 .ck-faq-widget {
-  --faq-item-bg: var(--color-system-white);
+  {{#ck.css.typographyRole}}section{{/ck.css.typographyRole}}
+  {{#ck.css.typographyRole}}question{{/ck.css.typographyRole}}
+  {{#ck.css.typographyRole}}answer{{/ck.css.typographyRole}}
+  --layout-gap: {{faq.layout.gap}}px;
+  --faq-columns-desktop: {{faq.layout.columns.desktop}};
+  --faq-columns-mobile: {{faq.layout.columns.mobile}};
+  --faq-item-padding: {{faq.layout.itemPadding}}px;
+  --faq-item-pad-top-custom: {{faq.layout.itemPaddingTop}}px;
+  --faq-item-pad-right-custom: {{faq.layout.itemPaddingRight}}px;
+  --faq-item-pad-bottom-custom: {{faq.layout.itemPaddingBottom}}px;
+  --faq-item-pad-left-custom: {{faq.layout.itemPaddingLeft}}px;
+  --faq-item-qa-gap-custom: {{faq.layout.itemQaGapCustom}}px;
+  --faq-item-bg: {{#ck.css.background}}faq.appearance.itemBackground{{/ck.css.background}};
+  --faq-link-underline-color: {{#ck.css.color}}faq.appearance.linkUnderlineColor{{/ck.css.color}};
+  --faq-link-highlight-color: {{#ck.css.background}}faq.appearance.linkHighlightColor{{/ck.css.background}};
+  --faq-link-text-color: {{#ck.css.color}}faq.appearance.linkTextColor{{/ck.css.color}};
+  --faq-icon-color: {{#ck.css.color}}faq.appearance.iconColor{{/ck.css.color}};
+  --ck-cardwrapper-border-width: {{#ck.css.borderWidth}}faq.appearance.cardwrapper.border{{/ck.css.borderWidth}};
+  --ck-cardwrapper-border-color: {{#ck.css.borderColor}}faq.appearance.cardwrapper.border{{/ck.css.borderColor}};
+  --ck-cardwrapper-radius: {{#ck.css.radii}}faq.appearance.cardwrapper{{/ck.css.radii}};
+  --ck-cardwrapper-shadow: {{#ck.css.shadow}}faq.appearance.cardwrapper.shadow{{/ck.css.shadow}};
+  --ck-cardwrapper-inside-shadow: {{#ck.css.insideShadow}}faq.appearance.cardwrapper.insideShadow{{/ck.css.insideShadow}};
 }
 
 .ck-faq {
@@ -9,8 +30,47 @@
   padding: 0;
   background: transparent;
   box-sizing: border-box;
-  --ck-cardwrapper-border-width: 1px;
-  --ck-cardwrapper-border-color: var(--color-system-gray-5);
+}
+
+.ck-faq[data-item-qa-gap-preset='xs'] { --faq-qa-gap: var(--space-1); }
+.ck-faq[data-item-qa-gap-preset='s'] { --faq-qa-gap: var(--space-2); }
+.ck-faq[data-item-qa-gap-preset='m'] { --faq-qa-gap: var(--space-3); }
+.ck-faq[data-item-qa-gap-preset='l'] { --faq-qa-gap: var(--space-4); }
+.ck-faq[data-item-qa-gap-preset='xl'] { --faq-qa-gap: var(--space-5); }
+.ck-faq[data-item-qa-gap-preset='custom'] { --faq-qa-gap: var(--faq-item-qa-gap-custom); }
+
+.ck-faq[data-item-padding-linked='true'] {
+  --faq-item-pad-top: var(--faq-item-padding);
+  --faq-item-pad-right: var(--faq-item-padding);
+  --faq-item-pad-bottom: var(--faq-item-padding);
+  --faq-item-pad-left: var(--faq-item-padding);
+}
+
+.ck-faq[data-item-padding-linked='false'] {
+  --faq-item-pad-top: var(--faq-item-pad-top-custom);
+  --faq-item-pad-right: var(--faq-item-pad-right-custom);
+  --faq-item-pad-bottom: var(--faq-item-pad-bottom-custom);
+  --faq-item-pad-left: var(--faq-item-pad-left-custom);
+}
+
+.ck-faq[data-icon-style='plus'] {
+  --faq-icon-expand: url('/dieter/icons/svg/plus.svg');
+  --faq-icon-collapse: url('/dieter/icons/svg/minus.svg');
+}
+
+.ck-faq[data-icon-style='chevron'] {
+  --faq-icon-expand: url('/dieter/icons/svg/chevron.down.svg');
+  --faq-icon-collapse: url('/dieter/icons/svg/chevron.up.svg');
+}
+
+.ck-faq[data-icon-style='arrow'] {
+  --faq-icon-expand: url('/dieter/icons/svg/arrow.down.svg');
+  --faq-icon-collapse: url('/dieter/icons/svg/arrow.up.svg');
+}
+
+.ck-faq[data-icon-style='arrowshape'] {
+  --faq-icon-expand: url('/dieter/icons/svg/arrowshape.down.svg');
+  --faq-icon-collapse: url('/dieter/icons/svg/arrowshape.up.svg');
 }
 
 .ck-faq__body,
@@ -48,10 +108,11 @@
 }
 
 .ck-faq__category {
+  margin: 0;
   min-width: 0;
   max-width: 100%;
   overflow-wrap: anywhere;
-  font-family: var(--typo-section-family, "Inter", sans-serif);
+  font-family: var(--typo-section-family, 'Inter', sans-serif);
   font-style: var(--typo-section-style, normal);
   font-weight: var(--typo-section-weight, 600);
   font-size: var(--typo-section-size, var(--fs-14));
@@ -96,13 +157,14 @@
 }
 
 .ck-faq__q {
+  margin: 0;
   width: 100%;
   text-align: left;
   padding: 0;
   background: none;
   border: 0;
   cursor: pointer;
-  font-family: var(--typo-question-family, "Inter", sans-serif);
+  font-family: var(--typo-question-family, 'Inter', sans-serif);
   font-style: var(--typo-question-style, normal);
   font-size: var(--typo-question-size, var(--faq-question-size, var(--fs-14)));
   font-weight: var(--typo-question-weight, 500);
@@ -119,7 +181,7 @@
   min-width: 0;
   max-width: 100%;
   overflow-wrap: anywhere;
-  font-family: var(--typo-question-family, "Inter", sans-serif);
+  font-family: var(--typo-question-family, 'Inter', sans-serif);
   font-style: var(--typo-question-style, normal);
   font-size: var(--typo-question-size, var(--faq-question-size, var(--fs-14)));
   font-weight: var(--typo-question-weight, 500);
@@ -145,8 +207,8 @@
 .ck-faq__q-icon {
   background-color: currentColor;
   /* Default to same-origin Dieter icons. Runtime may override via --faq-icon-expand/--faq-icon-collapse. */
-  -webkit-mask-image: var(--faq-icon-expand, url("/dieter/icons/svg/plus.svg"));
-  mask-image: var(--faq-icon-expand, url("/dieter/icons/svg/plus.svg"));
+  -webkit-mask-image: var(--faq-icon-expand, url('/dieter/icons/svg/plus.svg'));
+  mask-image: var(--faq-icon-expand, url('/dieter/icons/svg/plus.svg'));
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
   -webkit-mask-position: center;
@@ -156,8 +218,8 @@
 }
 
 .ck-faq__q[data-expanded='true'] .ck-faq__q-icon {
-  -webkit-mask-image: var(--faq-icon-collapse, url("/dieter/icons/svg/minus.svg"));
-  mask-image: var(--faq-icon-collapse, url("/dieter/icons/svg/minus.svg"));
+  -webkit-mask-image: var(--faq-icon-collapse, url('/dieter/icons/svg/minus.svg'));
+  mask-image: var(--faq-icon-collapse, url('/dieter/icons/svg/minus.svg'));
 }
 
 .ck-faq[data-layout='list'] .ck-faq__q,
@@ -167,8 +229,8 @@
   background: transparent;
 }
 
-.ck-faq[data-layout='list'] .ck-faq__q-icon,
-.ck-faq[data-layout='multicolumn'] .ck-faq__q-icon {
+.ck-faq[data-layout='list'] .ck-faq__q-toggle,
+.ck-faq[data-layout='multicolumn'] .ck-faq__q-toggle {
   display: none;
 }
 
@@ -183,9 +245,8 @@
   max-width: 100%;
   overflow-wrap: anywhere;
   font: var(--typo-answer-weight, 400)
-    var(--typo-answer-size, var(--faq-answer-size, var(--fs-14)))
-    / var(--typo-answer-line-height, var(--lh-body))
-    var(--typo-answer-family, "Inter", sans-serif);
+    var(--typo-answer-size, var(--faq-answer-size, var(--fs-14))) /
+    var(--typo-answer-line-height, var(--lh-body)) var(--typo-answer-family, 'Inter', sans-serif);
   font-style: var(--typo-answer-style, normal);
   letter-spacing: var(--typo-answer-tracking, 0em);
 }
@@ -193,14 +254,6 @@
 .ck-faq[data-layout='multicolumn'] .ck-faq__q {
   border-bottom: 0;
   padding-bottom: 0;
-}
-
-.ck-faq[data-layout='list'] {
-  --ck-cardwrapper-border-color: var(--color-system-gray-5);
-}
-
-.ck-faq[data-layout='multicolumn'] {
-  --ck-cardwrapper-border-color: color-mix(in oklab, var(--color-system-gray-4), transparent 20%);
 }
 
 .ck-faq[data-layout='list'] .ck-faq__item {
@@ -276,7 +329,9 @@
   border-radius: var(--control-radius-md);
   background: var(--color-system-gray-6-step5);
   color: var(--color-system-gray-2);
-  font: 500 var(--fs-13)/var(--lh-body) "Inter", sans-serif;
+  font:
+    500 var(--fs-13) / var(--lh-body) 'Inter',
+    sans-serif;
 }
 
 .ck-faq[data-layout='multicolumn'] .ck-faq__list {

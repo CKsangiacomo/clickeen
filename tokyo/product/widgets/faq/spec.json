@@ -136,7 +136,7 @@
             },
             {
               "id": "q3",
-              "answer": "Create your widget, copy the embed code, and paste it right before the closing </body> tag on your website. Changes you make in Clickeen update instantly.",
+              "answer": "Create your widget, copy the embed code, and paste it right before the closing &lt;/body&gt; tag on your website. Changes you make in Clickeen update instantly.",
               "question": "How do I install a widget on my site?"
             },
             {

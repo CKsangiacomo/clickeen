@@ -1,5 +1,12 @@
-import { CK_REQUEST_ID_HEADER, parseAccountLocaleListStrict, parseAccountLocalePolicyStrict } from '@clickeen/ck-contracts';
+import { CK_REQUEST_ID_HEADER, type AccountLocalePolicy } from '@clickeen/ck-contracts';
 import { resolveBerlinBaseUrl } from './env/berlin';
+
+type BerlinAccountLocalesPayload = {
+  account: {
+    activeLocales: string[];
+    localePolicy: AccountLocalePolicy;
+  };
+};
 
 // Berlin supplies read-only account context through authenticated bootstrap.
 // Roma owns account-settings mutation and passes locale intent downstream.
@@ -11,13 +18,12 @@ export async function loadCurrentAccountLocalesState(args: {
   | {
       ok: true;
       activeLocales: string[];
-      localePolicy: ReturnType<typeof parseAccountLocalePolicyStrict>;
+      localePolicy: AccountLocalePolicy;
     }
   | {
       ok: false;
       status: number;
       payload: unknown;
-      detail?: string;
     }
 > {
   const berlinBase = resolveBerlinBaseUrl().replace(/\/+$/, '');
@@ -33,28 +39,20 @@ export async function loadCurrentAccountLocalesState(args: {
       cache: 'no-store',
     },
   );
-  const payload = (await upstream.json().catch(() => null)) as
-    | {
-      account?: {
-          activeLocales?: unknown;
-          localePolicy?: unknown;
-        } | null;
-        error?: unknown;
-      }
-    | null;
-
   if (!upstream.ok) {
+    const payload = await upstream.json();
     return {
       ok: false,
       status: upstream.status,
       payload,
-      detail: `berlin_account_http_${upstream.status}`,
     };
   }
 
+  const payload = await upstream.json() as BerlinAccountLocalesPayload;
+
   return {
     ok: true,
-    activeLocales: parseAccountLocaleListStrict(payload?.account?.activeLocales),
-    localePolicy: parseAccountLocalePolicyStrict(payload?.account?.localePolicy),
+    activeLocales: payload.account.activeLocales,
+    localePolicy: payload.account.localePolicy,
   };
 }

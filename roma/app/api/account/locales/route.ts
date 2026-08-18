@@ -146,18 +146,7 @@ export async function GET(request: NextRequest) {
     if (!accountState.ok) {
       return withSession(
         request,
-        NextResponse.json(
-          accountState.payload ?? {
-            error: {
-              kind: accountState.status === 401 ? 'AUTH' : 'UPSTREAM_UNAVAILABLE',
-              reasonKey:
-                accountState.status === 401
-                  ? 'coreui.errors.auth.required'
-                  : 'coreui.errors.auth.contextUnavailable',
-            },
-          },
-          { status: accountState.status },
-        ),
+        NextResponse.json(accountState.payload, { status: accountState.status }),
         current.value.setCookies,
       );
     }
@@ -281,18 +270,7 @@ export async function PUT(request: NextRequest) {
     if (!accountState.ok) {
       return withSession(
         request,
-        NextResponse.json(
-          accountState.payload ?? {
-            error: {
-              kind: accountState.status === 401 ? 'AUTH' : 'UPSTREAM_UNAVAILABLE',
-              reasonKey:
-                accountState.status === 401
-                  ? 'coreui.errors.auth.required'
-                  : 'coreui.errors.auth.contextUnavailable',
-            },
-          },
-          { status: accountState.status },
-        ),
+        NextResponse.json(accountState.payload, { status: accountState.status }),
         current.value.setCookies,
       );
     }

@@ -1,34 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { resolvePolicyFromEntitlementsSnapshot } from '@clickeen/ck-policy';
+import type { Policy } from '@clickeen/ck-policy';
 import {
   loadAccountWidgetInstanceFacts,
+  loadTokyoAccountInstanceDocument,
   publishAccountInstanceInTokyo,
 } from '@roma/lib/account-instance-direct';
+import {
+  materializeAccountInstancePublicPackage,
+  readWidgetForInstancePackage,
+} from '@roma/lib/account-instance-public-package';
 import { requireInstanceIdParam } from '@roma/lib/route-helpers';
 import { resolveCurrentAccountRouteContext, withSession } from '../../../_lib/current-account-route';
 
 export const runtime = 'edge';
 
 type RouteContext = { params: Promise<{ instanceId: string }> };
-
-function readFinitePolicyLimit(limits: Record<string, unknown>, key: string): number | null {
-  const value = limits[key];
-  if (typeof value !== 'number' || !Number.isFinite(value)) return null;
-  return Math.max(0, Math.floor(value));
-}
-
-function policyContractFailure(key: string): NextResponse {
-  return NextResponse.json(
-    {
-      error: {
-        kind: 'UPSTREAM_UNAVAILABLE',
-        reasonKey: 'roma.errors.policy.invalidEntitlement',
-        detail: key,
-      },
-    },
-    { status: 500 },
-  );
-}
 
 function upgradeRequired(args: {
   gate: 'instances.published.max';
@@ -84,19 +70,13 @@ export async function POST(request: NextRequest, context: RouteContext) {
     );
   }
   const alreadyPublished = currentInstance?.publishStatus === 'published';
-  const policy = resolvePolicyFromEntitlementsSnapshot({
+  const policy: Policy = {
     profile: current.value.authzPayload.profile,
     role: current.value.authzPayload.role,
-    entitlements: current.value.authzPayload.entitlements ?? null,
-  });
-  const publishedLimit = readFinitePolicyLimit(policy.limits, 'instances.published.max');
-  if (publishedLimit == null) {
-    return withSession(
-      request,
-      policyContractFailure('instances.published.max'),
-      current.value.setCookies,
-    );
-  }
+    flags: current.value.authzPayload.entitlements!.flags!,
+    limits: current.value.authzPayload.entitlements!.limits!,
+  };
+  const publishedLimit = policy.limits['instances.published.max']!;
   const publishedTotal = instances.value.instances.filter((entry) => entry.publishStatus === 'published').length;
   if (!alreadyPublished && publishedTotal >= publishedLimit) {
     return withSession(
@@ -111,13 +91,82 @@ export async function POST(request: NextRequest, context: RouteContext) {
     );
   }
 
-  const publish = await publishAccountInstanceInTokyo({
+  const saved = await loadTokyoAccountInstanceDocument({
     accountId: productAccountId,
     instanceId,
     accountCapsule: current.value.authzToken,
     requestId: current.value.requestId,
   });
+  if (!saved.ok) {
+    return withSession(
+      request,
+      NextResponse.json({ error: saved.error }, { status: saved.status }),
+      current.value.setCookies,
+    );
+  }
+
+  const compiled = readWidgetForInstancePackage(saved.value.row.widgetType);
+
+  const materialized = await materializeAccountInstancePublicPackage({
+    compiled,
+    accountId: productAccountId,
+    accountCapsule: current.value.authzToken,
+    requestId: current.value.requestId,
+    instanceId,
+    baseLocale: saved.value.row.baseLocale,
+    config: saved.value.config,
+    discoveryPolicyEnabled: policy.flags['embed.seoGeo.enabled']!,
+  });
+  if (!materialized.ok) {
+    return withSession(
+      request,
+      NextResponse.json({ error: materialized.error }, { status: materialized.status }),
+      current.value.setCookies,
+    );
+  }
+
+  const publish = await publishAccountInstanceInTokyo({
+    accountId: productAccountId,
+    instanceId,
+    publishedLimit,
+    accountCapsule: current.value.authzToken,
+    requestId: current.value.requestId,
+    publicPackage: {
+      indexHtml: materialized.value.indexHtml,
+      stylesCss: materialized.value.stylesCss,
+      runtimeJs: materialized.value.runtimeJs,
+    },
+  });
   if (!publish.ok) {
+    if (publish.status === 402) {
+      return withSession(
+        request,
+        upgradeRequired({
+          gate: 'instances.published.max',
+          action: 'publish_instance',
+          current: publish.error.current!,
+          limit: publish.error.limit!,
+        }),
+        current.value.setCookies,
+      );
+    }
+    if (
+      publish.status === 409 &&
+      publish.error.reasonKey === 'coreui.errors.instance.publishInProgress'
+    ) {
+      return withSession(
+        request,
+        NextResponse.json(
+          {
+            ok: false,
+            kind: 'PUBLISH_IN_PROGRESS',
+            error: publish.error,
+          },
+          { status: 409 },
+        ),
+        current.value.setCookies,
+      );
+    }
     return withSession(
       request,
       NextResponse.json({ error: publish.error }, { status: publish.status }),

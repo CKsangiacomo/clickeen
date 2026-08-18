@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
-import { createDialogLifecycle, type DialogLifecycle } from '../../dieter/components/shared/dialog-lifecycle';
 import { resolveAccountShellErrorCopy, resolveAccountShellReason } from '../lib/account-shell-copy';
 import { buildWidgetPublicActions, type WidgetPublicActions } from '../lib/public-widget-actions';
 import { useRomaAccountApi } from './account-api';
@@ -16,7 +15,12 @@ import { RomaAccountNoticeModal } from './roma-account-notice-modal';
 import { useRomaAccountContext } from './roma-account-context';
 import { RomaDomainErrorBoundary } from './roma-domain-error-boundary';
 import { RomaShell } from './roma-shell';
-import { RomaUpsellDialog } from './roma-upsell-dialog';
+import {
+  buildPublicationCapacityUpsell,
+  RomaUpsellDialog,
+  type PublicationCapacityUpgrade,
+  type UpsellPresentation,
+} from './roma-upsell-dialog';
 import { WidgetCopyCodeDialog } from './widget-copy-code-dialog';
 import {
   buildBuilderRoute,
@@ -37,124 +41,6 @@ type WidgetSortDirection = 'ascending' | 'descending';
 type WidgetSort = { key: WidgetSortKey; direction: WidgetSortDirection };
 
 const DEFAULT_WIDGET_SORT: WidgetSort = { key: 'name', direction: 'ascending' };
-
-type WidgetUpgradePrompt = {
-  message: string;
-  current: number;
-  limit: number;
-};
-
-function WidgetUpgradePromptDialog({
-  prompt,
-  onClose,
-  onUpgrade,
-}: {
-  prompt: WidgetUpgradePrompt | null;
-  onClose: () => void;
-  onUpgrade: (reason: string) => void;
-}) {
-  const dialogRef = useRef<HTMLDialogElement>(null);
-  const closeButtonRef = useRef<HTMLButtonElement>(null);
-  const lifecycleRef = useRef<DialogLifecycle | null>(null);
-  const onCloseRef = useRef(onClose);
-
-  useEffect(() => {
-    onCloseRef.current = onClose;
-  }, [onClose]);
-
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog) return;
-    const lifecycle = createDialogLifecycle({
-      dialog,
-      initialFocus: () => closeButtonRef.current,
-      requestDismiss: () => onCloseRef.current(),
-    });
-    lifecycleRef.current = lifecycle;
-    return () => lifecycle.destroy();
-  }, []);
-
-  useEffect(() => {
-    const lifecycle = lifecycleRef.current;
-    if (!lifecycle) return;
-    if (prompt) lifecycle.open();
-    else lifecycle.close();
-  }, [prompt]);
-
-  return (
-    <dialog ref={dialogRef} className="diet-popup" data-size="medium" aria-labelledby="roma-widgets-upgrade-title">
-      <header className="diet-popup__header">
-        <h2 id="roma-widgets-upgrade-title" className="heading-4">
-          {prompt?.message}
-        </h2>
-        <button
-          className="diet-button diet-popup__dismiss"
-          data-size="medium"
-          data-type="quaternary"
-          type="button"
-          aria-label="Close"
-          onClick={onClose}
-        >
-          <span className="diet-icon" data-icon="multiply" aria-hidden="true" />
-        </button>
-      </header>
-      <div className="diet-popup__body">
-        {prompt ? (
-          <p className="body-m">
-            You are using {prompt.current} of {prompt.limit} widget instances.
-          </p>
-        ) : null}
-      </div>
-      <footer className="diet-popup__footer">
-        <div className="diet-popup__actions">
-          <button
-            ref={closeButtonRef}
-            className="diet-button"
-            data-size="medium"
-            data-type="quaternary"
-            type="button"
-            onClick={onClose}
-          >
-            <span className="diet-button__label">Close</span>
-          </button>
-          <button
-            className="diet-button"
-            data-size="medium"
-            data-type="primary"
-            type="button"
-            onClick={() => prompt && onUpgrade(prompt.message)}
-          >
-            <span className="diet-button__label">Upgrade</span>
-          </button>
-        </div>
-      </footer>
-    </dialog>
-  );
-}
-
-function normalizeUpgradePrompt(payload: unknown): WidgetUpgradePrompt | null {
-  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null;
-  const record = payload as Record<string, unknown>;
-  if (record.kind !== 'UPGRADE_REQUIRED') return null;
-  const upgrade = record.upgrade;
-  if (!upgrade || typeof upgrade !== 'object' || Array.isArray(upgrade)) return null;
-  const upgradeRecord = upgrade as Record<string, unknown>;
-  const action = typeof upgradeRecord.action === 'string' ? upgradeRecord.action : '';
-  const current = typeof upgradeRecord.current === 'number' && Number.isFinite(upgradeRecord.current)
-    ? Math.max(0, Math.floor(upgradeRecord.current))
-    : null;
-  const limit = typeof upgradeRecord.limit === 'number' && Number.isFinite(upgradeRecord.limit)
-    ? Math.max(0, Math.floor(upgradeRecord.limit))
-    : null;
-  if (current == null || limit == null) return null;
-  if (action === 'create_instance' || action === 'duplicate_instance') {
-    return { message: 'Upgrade to create more widget instances.', current, limit };
-  }
-  if (action === 'publish_instance') {
-    return { message: 'Upgrade to publish more widget instances.', current, limit };
-  }
-  return null;
-}
 
 async function readJsonOrNull(response: Response): Promise<unknown> {
   try {
@@ -216,8 +102,7 @@ export function WidgetsDomain({
 
   const [activeActionKey, setActiveActionKey] = useState<string | null>(null);
   const [mutationError, setMutationError] = useState<string | null>(null);
-  const [upgradePrompt, setUpgradePrompt] = useState<WidgetUpgradePrompt | null>(null);
-  const [upsellReason, setUpsellReason] = useState<string | null>(null);
+  const [upsell, setUpsell] = useState<UpsellPresentation | null>(null);
   const [widgetInstances, setWidgetInstances] = useState<WidgetInstance[]>(() => cachedWidgets?.data.instances ?? []);
   const [catalog, setCatalog] = useState<WidgetCatalogOption[]>(() => cachedWidgets?.data.catalog ?? []);
   const [domainLoading, setDomainLoading] = useState(() => !cachedWidgets);
@@ -460,30 +345,18 @@ export function WidgetsDomain({
       const actionKey = `create:${widgetType}`;
       setActiveActionKey(actionKey);
       setMutationError(null);
-      setUpgradePrompt(null);
       try {
         const response = await accountApi.fetchRaw('/api/account/instances', {
           method: 'POST',
           headers: accountApi.buildHeaders({ contentType: 'application/json' }),
           body: JSON.stringify({ widgetType }),
         });
-        const payload = await readJsonOrNull(response);
-        if (response.status === 402) {
-          const prompt = normalizeUpgradePrompt(payload);
-          if (prompt) {
-            setUpgradePrompt(prompt);
-            return;
-          }
-        }
         if (!response.ok) {
+          const payload = await readJsonOrNull(response);
           throw new Error(resolveAccountShellReason(payload, 'Creating the widget failed. Please try again.'));
         }
-        const payloadRecord = payload && typeof payload === 'object' && !Array.isArray(payload) ? payload as Record<string, unknown> : null;
-        const createdInstanceId = typeof payloadRecord?.instanceId === 'string' ? payloadRecord.instanceId.trim() : '';
-        if (!createdInstanceId) {
-          throw new Error('coreui.errors.payload.invalid');
-        }
-        await refreshWidgets({ force: true });
+        const { instanceId: createdInstanceId } = await response.json() as { instanceId: string };
+        void refreshWidgets({ force: true });
         router.push(buildBuilderRoute({ instanceId: createdInstanceId, widgetType }));
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
@@ -524,31 +397,17 @@ export function WidgetsDomain({
       const actionKey = `duplicate:${instance.instanceId}`;
       setActiveActionKey(actionKey);
       setMutationError(null);
-      setUpgradePrompt(null);
       try {
         const response = await accountApi.fetchRaw(`/api/account/instances/${encodeURIComponent(instance.instanceId)}/duplicate`, {
           method: 'POST',
         });
-        const payload = await readJsonOrNull(response);
-        if (response.status === 402) {
-          const prompt = normalizeUpgradePrompt(payload);
-          if (prompt) {
-            setUpgradePrompt(prompt);
-            return;
-          }
-        }
         if (!response.ok) {
+          const payload = await readJsonOrNull(response);
           throw new Error(resolveAccountShellReason(payload, 'Duplicating the widget failed. Please try again.'));
         }
-        const payloadRecord = payload && typeof payload === 'object' && !Array.isArray(payload) ? payload as Record<string, unknown> : null;
-        const duplicatedInstanceId =
-          typeof payloadRecord?.instanceId === 'string' && payloadRecord.instanceId.trim()
-            ? payloadRecord.instanceId.trim()
-            : '';
-        if (!duplicatedInstanceId) {
-          throw new Error('coreui.errors.payload.invalid');
-        }
-        await refreshWidgets({ force: true });
+        const { instanceId: duplicatedInstanceId } = await response.json() as { instanceId: string };
+        void refreshWidgets({ force: true });
+        router.push(buildBuilderRoute({ instanceId: duplicatedInstanceId }));
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         setMutationError(resolveAccountShellErrorCopy(message, 'Duplicating the widget failed. Please try again.'));
@@ -556,7 +415,7 @@ export function WidgetsDomain({
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
     },
-    [accountApi, canMutateWidgets, productAccountId, refreshWidgets],
+    [accountApi, canMutateWidgets, productAccountId, refreshWidgets, router],
   );
 
   const handleDeleteInstance = useCallback(
@@ -586,7 +445,7 @@ export function WidgetsDomain({
       const actionKey = `${nextStatus}:${instance.instanceId}`;
       setActiveActionKey(actionKey);
       setMutationError(null);
-      setUpgradePrompt(null);
+      setUpsell(null);
       try {
         const response = await accountApi.fetchRaw(
           `/api/account/instances/${encodeURIComponent(instance.instanceId)}/${nextStatus === 'published' ? 'publish' : 'unpublish'}`,
@@ -594,16 +453,14 @@ export function WidgetsDomain({
             method: 'POST',
           },
         );
-        const payload = await readJsonOrNull(response);
         if (response.status === 402) {
-          const prompt = normalizeUpgradePrompt(payload);
-          if (prompt) {
-            setUpgradePrompt(prompt);
-            return;
-          }
+          const denied = await response.json() as { upgrade: PublicationCapacityUpgrade };
+          setUpsell(buildPublicationCapacityUpsell(denied.upgrade, accountPolicy));
+          return;
         }
         if (!response.ok) {
-          throw new Error(resolveAccountShellReason(payload, 'Updating widget status failed. Please try again.'));
+          const failed = await response.json() as { error: { reasonKey: string } };
+          throw new Error(failed.error.reasonKey);
         }
         await refreshWidgets({ force: true });
       } catch (err) {
@@ -613,7 +470,7 @@ export function WidgetsDomain({
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
     },
-    [accountApi, canMutateWidgets, productAccountId, refreshWidgets],
+    [accountApi, accountPolicy, canMutateWidgets, productAccountId, refreshWidgets],
   );
 
   const startRename = useCallback((instance: WidgetInstance) => {
@@ -638,7 +495,7 @@ export function WidgetsDomain({
         setRenameError('Instance name cannot be empty.');
         return;
       }
-      if (nextDisplayName === instance.displayName.trim()) {
+      if (nextDisplayName === instance.displayName) {
         cancelRename();
         return;
       }
@@ -648,8 +505,8 @@ export function WidgetsDomain({
       setRenameError(null);
       try {
         const payload = await accountApi.fetchJson<{
-          instanceId?: string;
-          displayName?: string;
+          instanceId: string;
+          displayName: string;
         }>(`/api/account/instances/${encodeURIComponent(instance.instanceId)}/rename`, {
           method: 'POST',
           headers: accountApi.buildHeaders({
@@ -657,7 +514,7 @@ export function WidgetsDomain({
           }),
           body: JSON.stringify({ displayName: nextDisplayName }),
         });
-        const resolvedDisplayName = typeof payload.displayName === 'string' && payload.displayName.trim() ? payload.displayName.trim() : nextDisplayName;
+        const resolvedDisplayName = payload.displayName;
         setWidgetInstances((prev) => prev.map((entry) => (entry.instanceId === instance.instanceId ? { ...entry, displayName: resolvedDisplayName } : entry)));
         updateRomaWidgetsCache(productAccountId, (current) => ({
           ...current,
@@ -1042,18 +899,11 @@ export function WidgetsDomain({
             document.body,
           )
         : null}
-      <WidgetUpgradePromptDialog
-        prompt={upgradePrompt}
-        onClose={() => setUpgradePrompt(null)}
-        onUpgrade={(reason) => {
-          setUpgradePrompt(null);
-          setUpsellReason(reason);
-        }}
-      />
       <RomaUpsellDialog
-        open={Boolean(upsellReason)}
-        reason={upsellReason ?? undefined}
-        onClose={() => setUpsellReason(null)}
+        open={Boolean(upsell)}
+        reason={upsell?.body}
+        upgradeAvailable={upsell?.upgradeAvailable}
+        onClose={() => setUpsell(null)}
       />
       <WidgetCopyCodeDialog
         open={Boolean(copyCodeContext)}

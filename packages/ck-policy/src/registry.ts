@@ -8,7 +8,6 @@ export const ENTITLEMENT_KEYS = [
   'storage.bytes.max',
   'views.monthly.max',
   'instances.published.max',
-  'widgets.instances.max',
   'uploads.size.max',
   'items.group.small.max',
   'items.group.medium.max',
@@ -29,7 +28,6 @@ export const PLAN_LIMIT_KEYS = [
   'storage.bytes.max',
   'views.monthly.max',
   'instances.published.max',
-  'widgets.instances.max',
   'uploads.size.max',
   'items.group.small.max',
   'items.group.medium.max',
@@ -62,17 +60,17 @@ export const ENTITLEMENT_META: Record<EntitlementKey, EntitlementMeta> = {
     description: 'Allow removing Clickeen branding.',
     enforcement: {
       status: 'enforced',
-      owner: 'Bob widget editor ops and Roma save policy',
-      note: 'Widget limits map the backlink path to this policy key. Bob rejects editor ops when the account cannot remove branding, and Roma rejects non-entitled saves before submitted package bytes reach Tokyo-worker.',
+      owner: 'Bob Widget edit boundary',
+      note: 'Widget limits map the backlink path to this policy key. Bob rejects an edit that removes branding when the account is not entitled; Save trusts the accepted draft.',
     },
   },
   'embed.seoGeo.enabled': {
-    label: 'SEO/GEO embed',
-    description: 'Allow generating and serving SEO/GEO optimized embed artifacts (Iframe++).',
+    label: 'SEO/GEO optimization',
+    description: 'Allow Publish to optimize technical discovery output from exact saved Widget content.',
     enforcement: {
       status: 'enforced',
-      owner: 'Roma product save/publish and public code flow',
-      note: 'Product policy belongs to Roma/account flow; Tokyo stores and serves submitted artifact files.',
+      owner: 'Bob Widget edit boundary and Roma Publish materialization',
+      note: 'Bob rejects an edit that enables SEO/GEO when the account is not entitled. Publish consumes the exact saved value; Save does not repeat the decision.',
     },
   },
   'widget.socialShare.enabled': {
@@ -80,8 +78,8 @@ export const ENTITLEMENT_META: Record<EntitlementKey, EntitlementMeta> = {
     description: 'Allow generated widget packages to include the paid social share overlay.',
     enforcement: {
       status: 'enforced',
-      owner: 'Bob widget editor ops and Roma save policy',
-      note: 'Widget limits map behavior.socialShare.enabled to this policy key. Bob rejects non-entitled edits, and Roma rejects non-entitled saves before submitted package bytes reach Tokyo-worker.',
+      owner: 'Bob Widget edit boundary',
+      note: 'Widget limits map behavior.socialShare.enabled to this policy key. Bob rejects an edit that enables social sharing when the account is not entitled; Save trusts the accepted draft.',
     },
   },
   'copilot.turns.monthly.max': {
@@ -120,15 +118,6 @@ export const ENTITLEMENT_META: Record<EntitlementKey, EntitlementMeta> = {
       note: 'Roma rejects publish when the account is already at the plan limit.',
     },
   },
-  'widgets.instances.max': {
-    label: 'Widget instances',
-    description: 'Maximum widget instances the account can create through create-like actions.',
-    enforcement: {
-      status: 'enforced',
-      owner: 'Roma create and duplicate command routes',
-      note: 'Roma create and duplicate enforce this before minting a new instance id, materializing package bytes, or calling Tokyo create/write routes.',
-    },
-  },
   'uploads.size.max': {
     label: 'Upload size max',
     description: 'Maximum upload size per file (bytes).',
@@ -143,8 +132,8 @@ export const ENTITLEMENT_META: Record<EntitlementKey, EntitlementMeta> = {
     description: 'Shared max items limit for small list-style widgets.',
     enforcement: {
       status: 'enforced',
-      owner: 'Bob widget editor ops and Roma save policy',
-      note: 'Widget limits map widget paths to this policy key. Bob rejects editor ops above the plan limit, and Roma rejects over-limit saves before submitted package bytes reach Tokyo-worker.',
+      owner: 'Bob Widget edit boundary',
+      note: 'Bob rejects an edit that increases the bound Widget collection beyond the account limit; Save trusts the accepted draft.',
     },
   },
   'items.group.medium.max': {
@@ -152,8 +141,8 @@ export const ENTITLEMENT_META: Record<EntitlementKey, EntitlementMeta> = {
     description: 'Shared max items limit for medium list-style widgets.',
     enforcement: {
       status: 'enforced',
-      owner: 'Bob widget editor ops and Roma save policy',
-      note: 'Widget limits map widget paths to this policy key. Bob rejects editor ops above the plan limit, and Roma rejects over-limit saves before submitted package bytes reach Tokyo-worker.',
+      owner: 'Bob Widget edit boundary',
+      note: 'Bob rejects an edit that increases a bound Widget collection beyond the account limit; Save trusts the accepted draft.',
     },
   },
   'items.group.large.max': {
@@ -161,8 +150,8 @@ export const ENTITLEMENT_META: Record<EntitlementKey, EntitlementMeta> = {
     description: 'Shared max items limit for large list-style widgets.',
     enforcement: {
       status: 'enforced',
-      owner: 'Bob widget editor ops and Roma save policy',
-      note: 'Widget limits map aggregate widget paths to this policy key. Bob rejects editor ops above the plan limit, and Roma rejects over-limit saves before submitted package bytes reach Tokyo-worker.',
+      owner: 'Bob Widget edit boundary',
+      note: 'Bob rejects an edit that increases aggregate bound Widget usage beyond the account limit; Save trusts the accepted draft.',
     },
   },
 };

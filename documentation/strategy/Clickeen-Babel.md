@@ -31,7 +31,9 @@ Babel is the product principle that:
 - active locales are the account's selected translated locales, capped by
   account policy, not ad hoc request fields;
 - generated localized content remains tied to the original source;
-- public serving reads stored artifacts instead of inventing localized truth.
+- public serving reads trusted stored artifacts and applies the exact selected
+  overlay into semantic HTML before response instead of inventing localized
+  truth or depending on client JavaScript.
 
 Babel can extend beyond widgets only when the surface declares source fields,
 overlay paths, write boundaries, and serving semantics. Do not imply that a new
@@ -52,6 +54,8 @@ Clickeen treats localization as an agent-operated overlay system:
 - the user or system owns one source;
 - the Translation Agent operates the declared content;
 - the overlay is stored beside the account artifact;
+- Tokyo trusts and stores the exact overlay produced through that named
+  Clickeen authority; it does not revalidate its semantic field contract;
 - serving must not pretend a missing localized artifact exists;
 - no fallback pretends missing localized content exists.
 

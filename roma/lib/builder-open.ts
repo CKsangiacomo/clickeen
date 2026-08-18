@@ -1,8 +1,4 @@
-import {
-  loadTokyoAccountInstanceDocument,
-  loadTokyoAccountInstancePublicPackage,
-  type AccountInstancePublicPackage,
-} from './account-instance-direct';
+import { loadTokyoAccountInstanceDocument } from './account-instance-direct';
 import {
   loadAccountWidgetDefaultsInTokyo,
   type AccountWidgetDefaultsDocument,
@@ -12,10 +8,10 @@ export type BuilderOpenEnvelope = {
   instanceId: string;
   displayName: string;
   widgetType: string;
+  baseLocale: string;
   config: Record<string, unknown>;
-  publicPackage: AccountInstancePublicPackage;
   fontLibrary: AccountWidgetDefaultsDocument['fontLibrary'];
-  publishStatus?: 'published' | 'unpublished';
+  publishStatus: 'published' | 'unpublished';
 };
 
 export async function loadBuilderOpenEnvelope(args: {
@@ -35,14 +31,8 @@ export async function loadBuilderOpenEnvelope(args: {
       };
     }
 > {
-  const [instance, publicPackage, widgetDefaults] = await Promise.all([
+  const [instance, widgetDefaults] = await Promise.all([
     loadTokyoAccountInstanceDocument({
-      accountId: args.accountId,
-      instanceId: args.instanceId,
-      accountCapsule: args.accountCapsule,
-      requestId: args.requestId,
-    }),
-    loadTokyoAccountInstancePublicPackage({
       accountId: args.accountId,
       instanceId: args.instanceId,
       accountCapsule: args.accountCapsule,
@@ -67,34 +57,6 @@ export async function loadBuilderOpenEnvelope(args: {
     return instance;
   }
 
-  if (!publicPackage.ok) {
-    console.error(
-      JSON.stringify({
-        event: 'builder.open.public_package_read_failed',
-        accountId: args.accountId,
-        instanceId: args.instanceId,
-        status: publicPackage.status,
-        error: publicPackage.error,
-      }),
-    );
-    return publicPackage;
-  }
-
-  if (
-    instance.value.row.publicPackageFingerprint !==
-    publicPackage.value.publicPackageFingerprint
-  ) {
-    return {
-      ok: false,
-      status: 409,
-      error: {
-        kind: 'VALIDATION',
-        reasonKey: 'coreui.errors.instance.embedNotReady',
-        detail: 'saved source and public package fingerprints do not match',
-      },
-    };
-  }
-
   if (!widgetDefaults.ok) {
     console.error(
       JSON.stringify({
@@ -114,8 +76,8 @@ export async function loadBuilderOpenEnvelope(args: {
       instanceId: instance.value.row.instanceId,
       displayName: instance.value.row.displayName || 'Untitled widget',
       widgetType: instance.value.row.widgetType,
+      baseLocale: instance.value.row.baseLocale,
       config: instance.value.config,
-      publicPackage: publicPackage.value.publicPackage,
       fontLibrary: widgetDefaults.value.widgetDefaults.fontLibrary,
       publishStatus: instance.value.row.publishStatus,
     },

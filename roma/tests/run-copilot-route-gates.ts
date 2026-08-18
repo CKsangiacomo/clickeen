@@ -1,7 +1,7 @@
 /**
  * PRD 128 Phase 3 gate tests — Roma route validation + grant boundary.
  *
- * Gate 3.1: widgetType mismatch → 422
+ * Gate 3.1: shared external request parser, without an internal coordinate re-proof
  * Gate 3.2: Grant authoritative — caller cannot overwrite
  * Gate 3.3: Reservation only after validation
  *
@@ -25,7 +25,7 @@ const ROUTE_PATH = '/Users/piero_macpro/code/VS/clickeen/roma/app/api/account/in
 const LIB_PATH = '/Users/piero_macpro/code/VS/clickeen/roma/lib/ai/account-copilot.ts';
 
 // ---------------------------------------------------------------------------
-// Gate 3.1: Shared parser used; widgetType verified
+// Gate 3.1: Shared external parser used; trusted Bob context is not re-proved
 // ---------------------------------------------------------------------------
 
 function testSharedParserInRoute() {
@@ -41,11 +41,8 @@ function testSharedParserInRoute() {
     assert.ok(source.includes('routeInstanceId'), 'routeInstanceId passed');
   });
 
-  assertPass('route validates widgetType against loaded Tokyo instance', () => {
-    assert.ok(
-      source.includes('widgetType !== widgetType') || source.includes('widgetType must match'),
-      'widgetType mismatch check exists',
-    );
+  assertPass('route trusts Bob widgetType after external request acceptance', () => {
+    assert.ok(!source.includes('widgetType must match'), 'no downstream widgetType cross-check');
   });
 
   assertPass('route does NOT have its own inline kind validation (uses shared parser)', () => {

@@ -74,6 +74,9 @@ export function buildLocaleSwitcherSettingsPanelFields(
 
 export function buildSettingsBehaviorPanelFields(): string[] {
   return [
+    "  <tooldrawer-cluster label='SEO/GEO'>",
+    "    <tooldrawer-field-settingsbehavior group-label='' type='toggle' size='md' path='behavior.seoGeo.enabled' label='Enable SEO/GEO' />",
+    '  </tooldrawer-cluster>',
     "  <tooldrawer-cluster label='Clickeen branding'>",
     "    <tooldrawer-field-settingsbehavior group-label='' type='toggle' size='md' path='behavior.showBacklink' label='Show Made with Clickeen' />",
     '  </tooldrawer-cluster>',

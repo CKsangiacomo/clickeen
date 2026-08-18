@@ -59,5 +59,9 @@ assert.equal(
   resolveAccountShellErrorCopy('tokyo.errors.publicCache.purgeFailed', 'fallback'),
   'Public delivery could not be refreshed. Please try again.',
 );
+assert.equal(
+  resolveAccountShellErrorCopy('coreui.errors.instance.publishInProgress', 'fallback'),
+  'Another Publish is finishing. Please try again in a moment.',
+);
 
-console.log('PASS account plan, role, and locale cleanup display labels');
+console.log('PASS account plan, role, locale cleanup, and Publish contention display labels');

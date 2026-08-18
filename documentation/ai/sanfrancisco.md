@@ -30,6 +30,18 @@ enforcement, provider credential checks, provider execution, typed responses,
 and Prague translation logs. It does not own agent reasoning, account or locale
 truth, product mutations, provider fallback, or a learning/outcome event plane.
 
+After signed-grant authorization, San Francisco trusts the exact model request
+produced by the registered Clickeen agent home. It does not reinterpret the
+agent's messages, tools, mode, or product context through a second semantic
+contract. San Francisco does own acceptance of the external provider response
+before returning one typed Clickeen result.
+
+Current implementation mismatch: the model endpoints still parse and reject
+parts of the internal agent-home request as though an untrusted caller supplied
+them. Those duplicate request-shape guards are closed-system debt. Removing them
+does not remove grant/capability/budget enforcement, provider credential checks,
+or provider-output acceptance.
+
 ## Endpoints
 
 | Method | Path | Behavior |
@@ -45,11 +57,13 @@ truth, product mutations, provider fallback, or a learning/outcome event plane.
 Request and response authority: `ModelChatRequest` and `ModelChatResponse` in
 `sanfrancisco/src/types.ts`.
 
-Requests contain a signed grant, registered `agentId`, one to 24 non-empty chat
-messages, and an optional finite temperature. Each message is at most `80_000`
-characters. Successful responses contain `requestId`, canonical `agentId`,
-model `content`, and provider `usage` (`provider`, `model`, prompt/completion
-tokens, and latency).
+The current request shape contains a signed grant, registered `agentId`, one to
+24 non-empty chat messages, and an optional finite temperature. Each message is
+currently bounded to `80_000` characters. Those shape limits describe the
+shipped parser; they are not permission for San Francisco to revalidate a
+registered agent home's Clickeen-produced semantics. Successful responses
+contain `requestId`, canonical `agentId`, model `content`, and provider `usage`
+(`provider`, `model`, prompt/completion tokens, and latency).
 
 Provider usage is returned to the caller; San Francisco does not persist a
 second interaction or outcome record.
@@ -172,7 +186,8 @@ Empty item lists are logged as skipped and return an empty result.
 
 ## Failure Semantics
 
-Malformed inputs fail with `400`; invalid or expired grants with `401`; denied
+The current duplicate internal request parser can fail with `400`; this is the
+implementation debt named above. Invalid or expired grants fail with `401`; denied
 capabilities, policies, signatures, or routes with `403`; concurrency/timeouts
 with `429`; provider failures with `502`; unhandled configuration/runtime
 errors with `500`; and `/execute` with `410`. A failed selected route is never
@@ -183,7 +198,7 @@ silently retried through another provider or model.
 | Caller | Path |
 | --- | --- |
 | Product Copilot Worker | `SANFRANCISCO_AI_ENGINE` service binding to `/model/turn` |
-| Translation Agent Worker | `SANFRANCISCO_AI_ENGINE` service binding to `/model/chat` |
+| Translation Agent Worker | `SANFRANCISCO_AI_ENGINE` service binding to `/model/turn` structured mode |
 | Prague translation script | signed HTTP request to `/l10n/translate` |
 
 ## Deploy And Verification

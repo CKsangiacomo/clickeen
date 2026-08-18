@@ -30,9 +30,6 @@ async function run() {
   const { shouldBlockSavedTranslationPreview } = await import(
     "../components/Workspace"
   );
-  const { normalizeTranslatedLocales } = await import(
-    "../lib/translations-preview"
-  );
 
   const saveLines = resolveSessionErrorLines({
     source: "save",
@@ -85,11 +82,6 @@ async function run() {
     resolveSavedTranslationReadFailure({ ok: true, status: 200 }),
     null,
   );
-  assert.deepEqual(
-    normalizeTranslatedLocales({ baseLocale: "en", translations: [] }),
-    { baseLocale: "en", translations: [] },
-  );
-
   assert.deepEqual(
     resolveSavedTranslationReadState({
       list: { loading: true, error: null },

@@ -7,7 +7,7 @@ import {
   type CkLogEvent,
   type CkLogLevel,
 } from '@clickeen/ck-contracts';
-import type { AIError, Env } from './types';
+import type { AIError, AIErrorInput, Env } from './types';
 
 export { asTrimmedString, isRecord };
 
@@ -15,10 +15,10 @@ export class HttpError extends Error {
   readonly status: number;
   readonly error: AIError;
 
-  constructor(status: number, error: AIError) {
+  constructor(status: number, error: AIErrorInput) {
     super(error.message);
     this.status = status;
-    this.error = error;
+    this.error = { ...error, reasonKey: error.reasonKey ?? error.code } as AIError;
   }
 }
 

@@ -1,0 +1,76 @@
+<main
+  class="ck-cards__core ck-headerLayout__body"
+  data-role="cards-core"
+  data-core-size-mode="{{coreSize.mode}}"
+  data-ck-core
+  {{#ck.discovery}}data-ck-discovery-kind="{{kind}}"{{/ck.discovery}}
+>
+  <ol
+    class="ck-cards__grid"
+    data-role="cards-list"
+    data-treatment="{{cards.treatment}}"
+    data-columns="{{cards.columns}}"
+  >
+    {{#cards.items}}
+    <li class="ck-cards__slot" data-role="cards-item">
+      <article
+        class="ck-cards__card"
+        data-role="card"
+        data-item-id="{{id}}"
+        data-link-enabled="{{link.enabled}}"
+        {{#cards.customCardStyles.enabled}}data-tone="{{style.textTone}}"{{/cards.customCardStyles.enabled}}
+      >
+        <div class="ck-cards__media" data-kind="{{media.kind}}">
+          <span
+            class="ck-cards__icon"
+            aria-hidden="true"
+            style="--ck-cards-icon: url('/dieter/icons/svg/{{media.iconName}}.svg')"
+          ></span>
+          {{#media.image.image}}
+          <img
+            class="ck-cards__image"
+            src="{{src}}"
+            alt="{{media.imageAlt}}"
+            loading="lazy"
+            data-ck-content-path="{{media.$ck.imageAlt.path}}"
+            data-ck-content-mode="{{media.$ck.imageAlt.mode}}"
+            data-ck-content-attribute="alt"
+            {{#media.$ck.imageAlt.discovery}}data-ck-discovery-part="{{id}}" data-ck-discovery-role="{{role}}"{{/media.$ck.imageAlt.discovery}}
+          />
+          {{/media.image.image}}
+        </div>
+        <h2
+          class="ck-cards__title heading-3"
+          data-ck-content-path="{{$ck.title.path}}"
+          data-ck-content-mode="{{$ck.title.mode}}"
+          {{#$ck.title.discovery}}data-ck-discovery-part="{{id}}" data-ck-discovery-role="{{role}}"{{/$ck.title.discovery}}
+        >{{{title}}}</h2>
+        <div
+          class="ck-cards__copy body-l"
+          data-ck-content-path="{{$ck.copy.path}}"
+          data-ck-content-mode="{{$ck.copy.mode}}"
+          {{#$ck.copy.discovery}}data-ck-discovery-part="{{id}}" data-ck-discovery-role="{{role}}"{{/$ck.copy.discovery}}
+          {{#$ck.copy.discovery.relationship}}data-ck-discovery-relationship="{{kind}}"{{/$ck.copy.discovery.relationship}}
+        >{{{copy}}}</div>
+        <a
+          class="ck-cards__linkLabel label-s"
+          href="{{link.href}}"
+          data-enabled="{{link.enabled}}"
+          data-ck-content-path="{{link.$ck.label.path}}"
+          data-ck-content-mode="{{link.$ck.label.mode}}"
+          {{#link.$ck.label.discovery}}data-ck-discovery-part="{{id}}" data-ck-discovery-role="{{role}}"{{/link.$ck.label.discovery}}
+          {{#link.$ck.label.discovery.relationship}}data-ck-discovery-relationship="{{kind}}"{{/link.$ck.label.discovery.relationship}}
+          {{^link.enabled}}tabindex="-1" aria-hidden="true"{{/link.enabled}}
+        >{{link.label}}</a>
+      </article>
+      {{#cards.betweenCards.enabled}}
+      <span
+        class="ck-cards__between"
+        data-kind="{{cards.betweenCards.kind}}"
+        aria-hidden="true"
+      ></span>
+      {{/cards.betweenCards.enabled}}
+    </li>
+    {{/cards.items}}
+  </ol>
+</main>

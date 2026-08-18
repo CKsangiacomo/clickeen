@@ -1,6 +1,12 @@
 .ck-countdown-widget {
-  --countdown-text-color: var(--color-system-black);
-  --countdown-item-bg: var(--color-system-gray-6-step5);
+  --countdown-text-color: {{#ck.css.color}}countdown.appearance.textColor{{/ck.css.color}};
+  --countdown-item-bg: {{#ck.css.background}}countdown.appearance.itemBackground{{/ck.css.background}};
+  --ck-cardwrapper-border-width: {{#ck.css.borderWidth}}countdown.appearance.cardwrapper.border{{/ck.css.borderWidth}};
+  --ck-cardwrapper-border-color: {{#ck.css.borderColor}}countdown.appearance.cardwrapper.border{{/ck.css.borderColor}};
+  --ck-cardwrapper-radius: {{#ck.css.radii}}countdown.appearance.cardwrapper{{/ck.css.radii}};
+  --ck-cardwrapper-shadow: {{#ck.css.shadow}}countdown.appearance.cardwrapper.shadow{{/ck.css.shadow}};
+  {{#ck.css.typographyRole}}timer{{/ck.css.typographyRole}}
+  {{#ck.css.typographyRole}}label{{/ck.css.typographyRole}}
   --countdown-cta-bg: var(--color-system-blue);
   --countdown-cta-bg-hover: color-mix(
     in oklab,
@@ -52,7 +58,7 @@
 }
 
 .ck-countdown__number {
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
   padding: var(--space-4) var(--space-5);
@@ -63,6 +69,14 @@
   min-width: 120px;
   max-inline-size: 100%;
   box-sizing: border-box;
+}
+
+.ck-countdown[data-mode='number'] .ck-countdown__number {
+  display: flex;
+}
+
+.ck-countdown[data-mode='number'] .ck-countdown__units {
+  display: none;
 }
 
 .ck-countdown__units {

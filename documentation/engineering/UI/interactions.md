@@ -37,10 +37,11 @@ states to static pages. They must also not collapse different product meanings:
 user can act or the reason matters.
 
 Roma account shell is the account-boundary reference. Its navigation and page
-frame remain visible while the first validated account context resolves; only
-the page content shows a skeleton. Reconciliation keeps validated content
+frame remain visible while the Berlin-owned account context resolves; only
+the page content shows a skeleton. Roma trusts that accepted account result.
+Reconciliation keeps current content
 mounted while the owning command shows pending feedback. Terminal auth or
-invalid context fails closed, and a recoverable account error stays in the page
+an unavailable account result fails closed, and a recoverable account error stays in the page
 content with Retry. Roma domains may be simpler only when their product work is
 actually simpler.
 
@@ -100,34 +101,71 @@ surface.
 
 ## Monetization
 
-Product policy and routes enforce entitlement. UI prechecks can guide the user,
-but they are not the control.
+Entitlements are system capabilities governed by account tier. They are not
+Widget-specific policy. A Widget declares only which generic entitlement a
+unique state/action coordinate consumes and which exact localized contextual
+body message describes that denial. Tier values, the current plan, selection of
+the next eligible plan, and the Upgrade action remain system truth.
 
-Entitlement failures must be visible, actionable, and consistent with the
-command surface. Legitimate user-triggered monetization gates keep clear Upgrade
-copy and an Upgrade action. Roma widget 402 responses, Bob upsell events, and
-asset limit/upsell inline copy share one product meaning: the account tried an
-action the current tier does not allow.
+The entitlement decision happens once at the user-intent boundary that owns the
+action:
 
-During pre-GA, every legitimate Upgrade entry point opens or transitions to one
-coherent upsell dialog scaffold. This is a stable product surface for developing
-plan comparison, benefits, pricing, and future checkout. It is not a billing
-operation: it does not navigate to inactive Billing, mutate a plan, call a
-provider, claim success, or invent a sales/contact destination. A plan-limit
-prompt transitions into the scaffold instead of stacking another modal.
-The transition is in-place and preserves unsaved Builder work; it does not run
-a discard guard intended for navigation away from Builder.
+- Bob's shared editing boundary consumes Roma's exact policy snapshot before a
+  governed manual or Copilot edit changes the browser-memory draft.
+- Roma gates Create, Duplicate, Publish, account locale changes, uploads, and
+  other Roma-native commands when that command is attempted.
+- A direct Roma Widget-editing host such as Widget Defaults uses the same
+  compiled capability binding before mutating its local draft.
 
-Roma owns one small reusable account upsell scaffold component. Roma-native
-Upgrade entry points open it; Bob keeps the typed `bob:upsell` intent and Roma
-opens the same component. Do not add a global upsell store or duplicate the
-scaffold in Bob. Ordinary navigation to Billing remains valid for inspecting
-the current plan; Upgrade must not masquerade that read-only surface as a
-plan-change flow.
+An allowed action proceeds. A denied action does not mutate the draft or claim
+success; its owning boundary emits one exact denial. Save, materialization,
+Tokyo storage, and public serving trust accepted Clickeen truth and do not
+repeat the same Widget-bound limit check.
 
-Inline monetization copy is allowed only when the product situation is genuinely
-inline and the user has a clear next action. Dieter owns dialog mechanics; the
-upsell surface owns its content/state; future billing owns commercial execution.
+Every legitimate denial opens one Roma-hosted account upsell Popup. Its content
+is assembled without collapsing ownership:
+
+```text
+system policy      -> current plan + target eligible plan + capability
+Widget artifact    -> exact localized contextual body template/message id
+Roma/system UI     -> Popup title/composition + Upgrade/dismiss labels and behavior
+Dieter             -> Popup presentation and lifecycle only
+```
+
+For example, a Widget template may produce “Your current plan is Free. Upgrade
+to Starter to add more questions.” The Widget owns only the contextual sentence
+template, including “add more questions.” Roma interpolates exact system-owned
+`{currentPlan}` and `{targetPlan}` values. The Widget never owns tier values,
+plan selection, CTA labels, CTA destinations, or popup behavior. A denial for a
+purely account-level action with no Widget meaning uses system-owned contextual
+copy instead.
+
+Bob sends the denied system capability and compiled Widget message identity to
+Roma; it does not render a local plan-limit dialog or send raw implementation
+detail. Roma uses the trusted compiled Widget message association it already
+owns and opens the same Popup used for Roma-native denials. Missing Widget copy
+does not become generic fallback copy: it is an artifact-production failure.
+There is no global upsell store, Widget-name copy switch in Roma, or duplicated
+Bob/Roma modal sequence.
+
+During pre-GA, Upgrade remains a system-owned scaffold. It does not navigate to
+inactive Billing, mutate a plan, call a provider, claim success, or invent a
+sales/contact destination. Ordinary Billing navigation may still inspect the
+current plan. Opening or dismissing the Popup preserves unsaved Builder work
+and does not invoke a discard guard because the denied edit was never applied.
+Future billing owns commercial execution.
+
+Inline monetization copy remains appropriate only when the product situation is
+genuinely inline and the user has a clear next action. It does not replace the
+ownership or one-decision rules above.
+
+Current local implementation: all five current Widget artifacts carry their
+exact bound English message maps. Bob's common pre-mutation Widget-limit gate
+leaves a denied draft unchanged and sends the exact denial identity to Roma.
+Bob's local upsell Popup is removed; Roma hosts the one shared Popup and
+combines exact Widget context with system plan/action truth. Save persists
+editable source only and does not re-evaluate the Widget limit. Owner QA and
+deploy proof remain pending.
 
 ## Agent Activity
 

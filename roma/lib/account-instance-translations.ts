@@ -1,7 +1,4 @@
-import {
-  asTrimmedString,
-  isRecord,
-} from '@clickeen/ck-contracts';
+import { isRecord } from '@clickeen/ck-contracts';
 import {
   resolveAiRuntimeBudget,
   resolveAiRuntimePolicy,
@@ -17,6 +14,7 @@ import {
   resolveEnvStage,
   type RomaAIGrant,
 } from './ai/grants';
+import { readWidgetMaterializerArtifact } from '../generated/widget-materializer-artifacts';
 import { callTokyo } from './tokyo-client';
 import { fetchTranslationAgent } from './translation-agent-control';
 
@@ -32,14 +30,28 @@ type RouteFailure = {
   };
 };
 
+type TranslationAgentRouteFailure = {
+  ok: false;
+  status: number;
+  error: {
+    code: string;
+    message: string;
+    provider?: string;
+  };
+};
+
 type SavedInstanceSourcePayload = {
   widgetType: string;
   source: {
     content: {
-      fields: Record<string, { value: string; identityKey?: string; fieldPattern?: string }>;
+      fields: Record<string, { value: string; identityKey: string; fieldPattern: string }>;
     };
   };
 };
+
+type TokyoTranslationsPayload = InstanceTranslationsPayload & { ok: true };
+type TokyoTranslationValuesPayload = InstanceTranslationValuesPayload & { ok: true };
+type TokyoTranslationMutationPayload = { ok: true; locale: string };
 
 type TranslationAgentItem = {
   path: string;
@@ -94,143 +106,22 @@ export type InstanceTranslationsGeneratePayload = {
   };
 };
 
-function invalidPayload(detail: string): RouteFailure {
-  return {
-    ok: false,
-    status: 422,
-    error: {
-      kind: 'VALIDATION',
-      reasonKey: 'coreui.errors.payload.invalid',
-      detail,
-    },
-  };
-}
-
-function normalizeValueMap(raw: unknown): Record<string, string> | null {
-  if (!isRecord(raw)) return null;
-  const values: Record<string, string> = {};
-  for (const [path, value] of Object.entries(raw)) {
-    if (!path || typeof value !== 'string') return null;
-    values[path] = value;
-  }
-  return values;
-}
-
-function normalizeTranslationSummary(raw: unknown): InstanceTranslationSummary | null {
-  if (!isRecord(raw)) return null;
-  const locale = asTrimmedString(raw.locale);
-  return locale ? { locale } : null;
-}
-
-function normalizeTranslationsPayload(payload: unknown): InstanceTranslationsPayload | null {
-  if (!isRecord(payload)) return null;
-  const baseLocale = asTrimmedString(payload.baseLocale);
-  if (!baseLocale || !Array.isArray(payload.translations)) return null;
-  const translations = payload.translations
-    .map((entry) => normalizeTranslationSummary(entry))
-    .filter((entry): entry is InstanceTranslationSummary => Boolean(entry));
-  if (translations.length !== payload.translations.length) return null;
-  return {
-    baseLocale,
-    translations,
-  };
-}
-
-function normalizeTranslationValuesPayload(payload: unknown): InstanceTranslationValuesPayload | null {
-  if (!isRecord(payload)) return null;
-  const locale = asTrimmedString(payload.locale);
-  const values = normalizeValueMap(payload.values);
-  return locale && values ? { locale, values } : null;
-}
-
-function normalizeStringArray(raw: unknown): string[] | null {
-  if (!Array.isArray(raw)) return null;
-  if (raw.some((entry) => typeof entry !== 'string' || !entry || entry !== entry.trim())) return null;
-  const values = raw as string[];
-  return new Set(values).size === values.length ? values : null;
-}
-
-function normalizeSavedInstanceSourcePayload(raw: unknown): SavedInstanceSourcePayload | null {
-  if (!isRecord(raw)) return null;
-  const widgetType = asTrimmedString(raw.widgetType);
-  const source = isRecord(raw.source) ? raw.source : null;
-  const content = isRecord(source?.content) ? source.content : null;
-  const fields = isRecord(content?.fields) ? content.fields : null;
-  if (!widgetType || !fields) return null;
-  const normalizedFields: SavedInstanceSourcePayload['source']['content']['fields'] = {};
-  for (const [path, field] of Object.entries(fields)) {
-    if (!path || !isRecord(field) || typeof field.value !== 'string') return null;
-    normalizedFields[path] = {
+function buildTranslationAgentItems(args: {
+  widgetType: string;
+  content: SavedInstanceSourcePayload['source']['content'];
+}): TranslationAgentItem[] {
+  const editableFields = readWidgetMaterializerArtifact(args.widgetType)!.editableFields.fields;
+  const editableFieldsByPattern = new Map(editableFields.map((field) => [field.path, field]));
+  return Object.values(args.content.fields).map((field) => {
+    const editableField = editableFieldsByPattern.get(field.fieldPattern)!;
+    return {
+      path: field.identityKey,
+      type: editableField.type,
       value: field.value,
-      ...(typeof field.identityKey === 'string' && field.identityKey ? { identityKey: field.identityKey } : {}),
-      ...(typeof field.fieldPattern === 'string' && field.fieldPattern ? { fieldPattern: field.fieldPattern } : {}),
+      label: editableField.label,
+      role: editableField.role,
     };
-  }
-  return { widgetType, source: { content: { fields: normalizedFields } } };
-}
-
-function isRichtextValue(value: string): boolean {
-  return /<\/?[a-z][\s\S]*>/i.test(value);
-}
-
-function buildTranslationAgentItems(content: SavedInstanceSourcePayload['source']['content']): TranslationAgentItem[] {
-  return Object.entries(content.fields).map(([path, field]) => ({
-    path,
-    type: isRichtextValue(field.value) ? 'richtext' : 'string',
-    value: field.value,
-    ...(field.identityKey ? { label: field.identityKey } : {}),
-    ...(field.fieldPattern ? { role: field.fieldPattern } : {}),
-  }));
-}
-
-function normalizeLocaleResult(raw: unknown): TranslationAgentLocaleResult | null {
-  if (!isRecord(raw)) return null;
-  const locale = typeof raw.locale === 'string' && raw.locale && raw.locale === raw.locale.trim()
-    ? raw.locale
-    : null;
-  if (!locale || typeof raw.ok !== 'boolean') return null;
-  if (raw.ok) {
-    return typeof raw.count === 'number' && Number.isInteger(raw.count) && raw.count >= 0
-      ? { locale, ok: true, count: raw.count }
-      : null;
-  }
-  const reasonKey = asTrimmedString(raw.reasonKey);
-  if (!reasonKey) return null;
-  const detail = asTrimmedString(raw.detail);
-  return { locale, ok: false, reasonKey, ...(detail ? { detail } : {}) };
-}
-
-function normalizeTranslationAgentResponse(raw: unknown): TranslationAgentResponse | null {
-  if (!isRecord(raw)) return null;
-  const requestId = asTrimmedString(raw.requestId);
-  const agentId = asTrimmedString(raw.agentId);
-  const translation = isRecord(raw.translation) ? raw.translation : null;
-  const requestedLocales = normalizeStringArray(translation?.requestedLocales);
-  const resultsRaw = Array.isArray(translation?.results) ? translation.results : null;
-  const results = resultsRaw
-    ? resultsRaw.map((entry) => normalizeLocaleResult(entry)).filter((entry): entry is TranslationAgentLocaleResult => Boolean(entry))
-    : null;
-  if (
-    !requestId ||
-    agentId !== TRANSLATION_AGENT_ID ||
-    !translation ||
-    typeof translation.ok !== 'boolean' ||
-    !requestedLocales ||
-    !results ||
-    results.length !== resultsRaw?.length
-  ) {
-    return null;
-  }
-  return {
-    requestId,
-    agentId: TRANSLATION_AGENT_ID,
-    translation: {
-      ok: translation.ok,
-      baseLocale: asTrimmedString(translation.baseLocale),
-      requestedLocales,
-      results,
-    },
-  };
+  });
 }
 
 function safeJsonParse(text: string): unknown {
@@ -242,18 +133,14 @@ function safeJsonParse(text: string): unknown {
   }
 }
 
-function isStreamedTranslationAgentResult(value: unknown): value is { status: number; payload: unknown } {
-  return isRecord(value) && typeof value.status === 'number' && Number.isFinite(value.status) && 'payload' in value;
-}
-
 async function readTranslationAgentResponse(args: {
   response: Response;
   onActivity?: (event: TranslationAgentActivityEvent) => void;
-}): Promise<{ status: number; payload: unknown; text: string }> {
+}): Promise<{ status: number; payload: unknown }> {
   const contentType = args.response.headers.get('content-type') ?? '';
   if (!contentType.includes('text/event-stream') || !args.response.body) {
-    const text = await args.response.text().catch(() => '');
-    return { status: args.response.status, payload: safeJsonParse(text), text };
+    const text = await args.response.text();
+    return { status: args.response.status, payload: JSON.parse(text) as unknown };
   }
 
   const reader = args.response.body.getReader();
@@ -275,8 +162,10 @@ async function readTranslationAgentResponse(args: {
       }
     }
     if (!dataLines.length) return;
-    const parsed = safeJsonParse(dataLines.join('\n'));
-    if (eventName === 'activity' && isRecord(parsed)) {
+    const data = dataLines.join('\n');
+    if (eventName === 'activity') {
+      const parsed = safeJsonParse(data);
+      if (!isRecord(parsed)) return;
       const message = parsed.message;
       if (typeof message === 'string') {
         try {
@@ -287,7 +176,7 @@ async function readTranslationAgentResponse(args: {
       }
       return;
     }
-    if (eventName === 'result') finalPayload = parsed;
+    if (eventName === 'result') finalPayload = JSON.parse(data) as unknown;
   };
 
   while (true) {
@@ -303,14 +192,8 @@ async function readTranslationAgentResponse(args: {
   }
   const tail = `${buffer}${decoder.decode()}`.trim();
   if (tail) consumeEvent(tail);
-  if (!isStreamedTranslationAgentResult(finalPayload)) {
-    return { status: 502, payload: null, text: 'translation_agent_stream_missing_result' };
-  }
-  return { status: finalPayload.status, payload: finalPayload.payload, text: JSON.stringify(finalPayload.payload) };
-}
-
-function sameStringArray(left: string[], right: string[]): boolean {
-  return left.length === right.length && left.every((value, index) => value === right[index]);
+  const result = finalPayload as { status: number; payload: unknown };
+  return { status: result.status, payload: result.payload };
 }
 
 async function loadSavedInstanceSource(args: {
@@ -319,7 +202,7 @@ async function loadSavedInstanceSource(args: {
   accountCapsule?: string | null;
   requestId?: string | null;
 }): Promise<{ ok: true; value: SavedInstanceSourcePayload } | RouteFailure> {
-  const result = await callTokyo<unknown>(
+  const result = await callTokyo<SavedInstanceSourcePayload>(
     {
       accountId: args.accountId,
       accountCapsule: args.accountCapsule,
@@ -328,15 +211,13 @@ async function loadSavedInstanceSource(args: {
     {
       path: `/__internal/instances/${encodeURIComponent(args.instanceId)}`,
       method: 'GET',
-      decode: (payload) => payload,
+      decode: (payload) => payload as SavedInstanceSourcePayload,
       errorKey: 'coreui.errors.db.readFailed',
       errorDetail: 'tokyo_instance_open_http_error',
     },
   );
   if (!result.ok) return result;
-  const value = normalizeSavedInstanceSourcePayload(result.value);
-  if (!value) return invalidPayload('tokyo_instance_source_invalid_payload');
-  return { ok: true, value };
+  return { ok: true, value: result.value };
 }
 
 function resolveTranslationAgentPolicy(authz: RomaAccountAuthzCapsulePayload): AiGrantPolicy {
@@ -382,18 +263,17 @@ async function issueTranslationAgentGrant(args: {
   };
 }
 
-function routeFailureFromTranslationAgentError(status: number, payload: unknown, fallback: string): RouteFailure {
-  const error = isRecord(payload) && isRecord(payload.error) ? payload.error : null;
-  const reasonKey = asTrimmedString(error?.reasonKey) ?? asTrimmedString(error?.code) ?? 'coreui.errors.translation.failed';
-  const detail = asTrimmedString(error?.message) ?? asTrimmedString(error?.detail) ?? fallback;
+function routeFailureFromTranslationAgentError(
+  status: number,
+  payload: unknown,
+): TranslationAgentRouteFailure {
+  const error = (payload as {
+    error: { code: string; message: string; provider?: string };
+  }).error;
   return {
     ok: false,
-    status: status === 400 || status === 401 || status === 403 || status === 422 ? status : 502,
-    error: {
-      kind: status === 401 ? 'AUTH' : status === 403 ? 'DENY' : status === 400 || status === 422 ? 'VALIDATION' : 'UPSTREAM_UNAVAILABLE',
-      reasonKey,
-      detail,
-    },
+    status,
+    error,
   };
 }
 
@@ -403,7 +283,7 @@ export async function loadAccountInstanceTranslations(args: {
   accountCapsule?: string | null;
   requestId?: string | null;
 }): Promise<{ ok: true; value: InstanceTranslationsPayload } | RouteFailure> {
-  const result = await callTokyo<unknown>(
+  const result = await callTokyo<TokyoTranslationsPayload>(
     {
       accountId: args.accountId,
       accountCapsule: args.accountCapsule,
@@ -412,15 +292,19 @@ export async function loadAccountInstanceTranslations(args: {
     {
       path: `/__internal/instances/${encodeURIComponent(args.instanceId)}/translations`,
       method: 'GET',
-      decode: (payload) => payload,
+      decode: (payload) => payload as TokyoTranslationsPayload,
       errorKey: 'tokyo.errors.translation.invalid',
       errorDetail: 'tokyo_instance_translations_http_error',
     },
   );
   if (!result.ok) return result;
-  const value = normalizeTranslationsPayload(result.value);
-  if (!value) return invalidPayload('tokyo_instance_translations_invalid_payload');
-  return { ok: true, value };
+  return {
+    ok: true,
+    value: {
+      baseLocale: result.value.baseLocale,
+      translations: result.value.translations,
+    },
+  };
 }
 
 export async function generateAccountInstanceTranslations(args: {
@@ -432,11 +316,13 @@ export async function generateAccountInstanceTranslations(args: {
   accountCapsule?: string | null;
   requestId?: string | null;
   onActivity?: (event: TranslationAgentActivityEvent) => void;
-}): Promise<{ ok: true; value: InstanceTranslationsGeneratePayload; status: number } | RouteFailure> {
-  const baseLocale = asTrimmedString(args.baseLocale);
-  const activeLocales = normalizeStringArray(args.activeLocales);
-  if (!baseLocale) return invalidPayload('baseLocale_missing');
-  if (!activeLocales) return invalidPayload('activeLocales_invalid');
+}): Promise<
+  | { ok: true; value: InstanceTranslationsGeneratePayload; status: number }
+  | RouteFailure
+  | TranslationAgentRouteFailure
+> {
+  const baseLocale = args.baseLocale;
+  const activeLocales = args.activeLocales;
   if (activeLocales.length === 0) {
     return {
       ok: true,
@@ -461,8 +347,10 @@ export async function generateAccountInstanceTranslations(args: {
     requestId: args.requestId,
   });
   if (!saved.ok) return saved;
-  const items = buildTranslationAgentItems(saved.value.source.content);
-  if (items.length === 0) return invalidPayload('saved_instance_has_no_translatable_fields');
+  const items = buildTranslationAgentItems({
+    widgetType: saved.value.widgetType,
+    content: saved.value.source.content,
+  });
 
   let issued: { grant: string; agentId: typeof TRANSLATION_AGENT_ID };
   try {
@@ -522,22 +410,9 @@ export async function generateAccountInstanceTranslations(args: {
     return routeFailureFromTranslationAgentError(
       agentResult.status,
       agentResult.payload,
-      agentResult.text || `translation_agent_http_${agentResult.status}`,
     );
   }
-  const translated = normalizeTranslationAgentResponse(agentResult.payload);
-  if (!translated) {
-    return invalidPayload('translation_agent_invalid_payload');
-  }
-  const resultLocales = translated.translation.results.map((result) => result.locale);
-  const allResultsSucceeded = translated.translation.results.every((result) => result.ok);
-  if (
-    !sameStringArray(translated.translation.requestedLocales, activeLocales) ||
-    !sameStringArray(resultLocales, activeLocales) ||
-    translated.translation.ok !== allResultsSucceeded
-  ) {
-    return invalidPayload('translation_agent_invalid_payload');
-  }
+  const translated = agentResult.payload as TranslationAgentResponse;
   const translatedLocales = translated.translation.results.flatMap((result) => (result.ok ? [result.locale] : []));
   const failedLocales = translated.translation.results.flatMap((result) =>
     result.ok
@@ -552,9 +427,9 @@ export async function generateAccountInstanceTranslations(args: {
     ok: true,
     status: 200,
     value: {
-      ok: failedLocales.length === 0,
+      ok: translated.translation.ok,
       translation: {
-        ok: failedLocales.length === 0,
+        ok: translated.translation.ok,
         accepted: true,
         baseLocale,
         requestedLocales: translated.translation.requestedLocales,
@@ -572,9 +447,8 @@ export async function readAccountInstanceTranslationValues(args: {
   accountCapsule?: string | null;
   requestId?: string | null;
 }): Promise<{ ok: true; value: InstanceTranslationValuesPayload } | RouteFailure> {
-  const locale = asTrimmedString(args.locale);
-  if (!locale) return invalidPayload('locale_missing');
-  const result = await callTokyo<unknown>(
+  const locale = args.locale;
+  const result = await callTokyo<TokyoTranslationValuesPayload>(
     {
       accountId: args.accountId,
       accountCapsule: args.accountCapsule,
@@ -583,15 +457,16 @@ export async function readAccountInstanceTranslationValues(args: {
     {
       path: `/__internal/instances/${encodeURIComponent(args.instanceId)}/translations/${encodeURIComponent(locale)}`,
       method: 'GET',
-      decode: (payload) => payload,
+      decode: (payload) => payload as TokyoTranslationValuesPayload,
       errorKey: 'tokyo.errors.translation.invalid',
       errorDetail: 'tokyo_instance_translation_read_http_error',
     },
   );
   if (!result.ok) return result;
-  const value = normalizeTranslationValuesPayload(result.value);
-  if (!value || value.locale !== locale) return invalidPayload('tokyo_instance_translation_invalid_payload');
-  return { ok: true, value };
+  return {
+    ok: true,
+    value: { locale: result.value.locale, values: result.value.values },
+  };
 }
 
 export async function deleteAccountInstanceTranslationValues(args: {
@@ -601,9 +476,8 @@ export async function deleteAccountInstanceTranslationValues(args: {
   accountCapsule?: string | null;
   requestId?: string | null;
 }): Promise<{ ok: true; value: { locale: string } } | RouteFailure> {
-  const locale = asTrimmedString(args.locale);
-  if (!locale) return invalidPayload('locale_missing');
-  const result = await callTokyo<unknown>(
+  const locale = args.locale;
+  const result = await callTokyo<TokyoTranslationMutationPayload>(
     {
       accountId: args.accountId,
       accountCapsule: args.accountCapsule,
@@ -612,18 +486,13 @@ export async function deleteAccountInstanceTranslationValues(args: {
     {
       path: `/__internal/instances/${encodeURIComponent(args.instanceId)}/translations/${encodeURIComponent(locale)}`,
       method: 'DELETE',
-      decode: (payload) => payload,
+      decode: (payload) => payload as TokyoTranslationMutationPayload,
       errorKey: 'tokyo.errors.translation.invalid',
       errorDetail: 'tokyo_instance_translation_delete_http_error',
     },
   );
   if (!result.ok) return result;
-  const payload = isRecord(result.value) ? result.value : null;
-  const deletedLocale = asTrimmedString(payload?.locale);
-  if (payload?.ok !== true || deletedLocale !== locale) {
-    return invalidPayload('tokyo_instance_translation_delete_invalid_payload');
-  }
-  return { ok: true, value: { locale } };
+  return { ok: true, value: { locale: result.value.locale } };
 }
 
 export async function writeAccountInstanceTranslationValues(args: {
@@ -634,11 +503,8 @@ export async function writeAccountInstanceTranslationValues(args: {
   accountCapsule?: string | null;
   requestId?: string | null;
 }): Promise<{ ok: true; value: { locale: string } } | RouteFailure> {
-  const locale = asTrimmedString(args.locale);
-  const values = normalizeValueMap(args.values);
-  if (!locale) return invalidPayload('locale_missing');
-  if (!values) return invalidPayload('values_invalid');
-  const result = await callTokyo<unknown>(
+  const locale = args.locale;
+  const result = await callTokyo<TokyoTranslationMutationPayload>(
     {
       accountId: args.accountId,
       accountCapsule: args.accountCapsule,
@@ -647,15 +513,12 @@ export async function writeAccountInstanceTranslationValues(args: {
     {
       path: `/__internal/instances/${encodeURIComponent(args.instanceId)}/translations/${encodeURIComponent(locale)}`,
       method: 'PUT',
-      body: { values },
-      decode: (payload) => payload,
+      body: { values: args.values },
+      decode: (payload) => payload as TokyoTranslationMutationPayload,
       errorKey: 'tokyo.errors.translation.invalid',
       errorDetail: 'tokyo_instance_translation_write_http_error',
     },
   );
   if (!result.ok) return result;
-  const payload = isRecord(result.value) ? result.value : null;
-  const storedLocale = asTrimmedString(payload?.locale);
-  if (storedLocale !== locale) return invalidPayload('tokyo_instance_translation_write_invalid_payload');
-  return { ok: true, value: { locale } };
+  return { ok: true, value: { locale: result.value.locale } };
 }

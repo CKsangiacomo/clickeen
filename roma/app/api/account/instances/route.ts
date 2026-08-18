@@ -1,19 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { isRecord } from '@clickeen/ck-contracts';
 import { createCompactInstanceId } from '@clickeen/ck-contracts/overlay-identity';
-import { resolvePolicyFromEntitlementsSnapshot } from '@clickeen/ck-policy';
 import {
   createAccountInstanceInTokyo,
-  listAccountWidgetInstanceIds,
   listTokyoWidgetDefinitions,
 } from '@roma/lib/account-instance-direct';
 import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
 import { loadAccountWidgetDefaultsInTokyo } from '@roma/lib/account-widget-defaults-direct';
-import {
-  readWidgetForInstancePackage,
-  materializeAccountInstancePublicPackage,
-} from '@roma/lib/account-instance-public-package';
-import { materializeAccountInstanceSourceArtifacts } from '@roma/lib/account-instance-source-artifacts';
+import { prepareAccountInstanceSourceArtifacts } from '@roma/lib/account-instance-source-artifacts';
 import { readJsonPayloadOrValidation } from '@roma/lib/route-helpers';
 import { resolveCurrentAccountRouteContext, withSession } from '../_lib/current-account-route';
 
@@ -29,73 +22,37 @@ function normalizeDisplayName(value: unknown): string | null | undefined {
 }
 
 function cloneValue<T>(value: T): T {
-  return JSON.parse(JSON.stringify(value)) as T;
-}
-
-function readFinitePolicyLimit(limits: Record<string, unknown>, key: string): number | null {
-  const value = limits[key];
-  if (typeof value !== 'number' || !Number.isFinite(value)) return null;
-  return Math.max(0, Math.floor(value));
-}
-
-function policyContractFailure(key: string): NextResponse {
-  return NextResponse.json(
-    {
-      error: {
-        kind: 'UPSTREAM_UNAVAILABLE',
-        reasonKey: 'roma.errors.policy.invalidEntitlement',
-        detail: key,
-      },
-    },
-    { status: 500 },
-  );
-}
-
-function upgradeRequired(args: {
-  gate: 'widgets.instances.max';
-  action: 'create_instance';
-  current: number;
-  limit: number;
-}): NextResponse {
-  return NextResponse.json(
-    {
-      ok: false,
-      kind: 'UPGRADE_REQUIRED',
-      upgrade: args,
-    },
-    { status: 402 },
-  );
+  return structuredClone(value);
 }
 
 function mergeDefaultsInto(
   target: Record<string, unknown>,
   source: Record<string, unknown>,
-  path: string,
-  conflicts: string[],
 ): void {
   for (const [key, value] of Object.entries(source)) {
-    const nextPath = path ? `${path}.${key}` : key;
     const existing = target[key];
-    if (typeof existing === 'undefined') {
-      target[key] = cloneValue(value);
+    if (
+      existing &&
+      typeof existing === 'object' &&
+      !Array.isArray(existing) &&
+      value &&
+      typeof value === 'object' &&
+      !Array.isArray(value)
+    ) {
+      mergeDefaultsInto(existing as Record<string, unknown>, value as Record<string, unknown>);
       continue;
     }
-    if (isRecord(existing) && isRecord(value)) {
-      mergeDefaultsInto(existing, value, nextPath, conflicts);
-      continue;
-    }
-    conflicts.push(nextPath);
+    target[key] = cloneValue(value);
   }
 }
 
-function materializeInstanceConfigFromAccountDefaults(args: {
+function composeInstanceConfigFromAccountDefaults(args: {
   common: Record<string, unknown>;
   core: Record<string, unknown>;
-}): { ok: true; config: Record<string, unknown> } | { ok: false; conflicts: string[] } {
+}): Record<string, unknown> {
   const config = cloneValue(args.common);
-  const conflicts: string[] = [];
-  mergeDefaultsInto(config, args.core, '', conflicts);
-  return conflicts.length > 0 ? { ok: false, conflicts } : { ok: true, config };
+  mergeDefaultsInto(config, args.core);
+  return config;
 }
 
 export async function POST(request: NextRequest) {
@@ -129,43 +86,6 @@ export async function POST(request: NextRequest) {
     );
   }
   const accountId = current.value.authzPayload.accountPublicId;
-  const widgetInstanceIds = await listAccountWidgetInstanceIds({
-    accountId,
-    accountCapsule: current.value.authzToken,
-    requestId: current.value.requestId,
-  });
-  if (!widgetInstanceIds.ok) {
-    return withSession(
-      request,
-      NextResponse.json({ error: widgetInstanceIds.error }, { status: widgetInstanceIds.status }),
-      current.value.setCookies,
-    );
-  }
-  const policy = resolvePolicyFromEntitlementsSnapshot({
-    profile: current.value.authzPayload.profile,
-    role: current.value.authzPayload.role,
-    entitlements: current.value.authzPayload.entitlements ?? null,
-  });
-  const widgetInstancesLimit = readFinitePolicyLimit(policy.limits, 'widgets.instances.max');
-  if (widgetInstancesLimit == null) {
-    return withSession(
-      request,
-      policyContractFailure('widgets.instances.max'),
-      current.value.setCookies,
-    );
-  }
-  if (widgetInstanceIds.value.instanceIds.length >= widgetInstancesLimit) {
-    return withSession(
-      request,
-      upgradeRequired({
-        gate: 'widgets.instances.max',
-        action: 'create_instance',
-        current: widgetInstanceIds.value.instanceIds.length,
-        limit: widgetInstancesLimit,
-      }),
-      current.value.setCookies,
-    );
-  }
   const widgetDefinitions = await listTokyoWidgetDefinitions({
     accountId,
     accountCapsule: current.value.authzToken,
@@ -178,7 +98,10 @@ export async function POST(request: NextRequest) {
       current.value.setCookies,
     );
   }
-  if (!widgetDefinitions.value.widgetDefinitions.some((entry) => entry.widgetType === widgetType)) {
+  const widgetDefinition = widgetDefinitions.value.widgetDefinitions.find(
+    (entry) => entry.widgetType === widgetType,
+  );
+  if (!widgetDefinition) {
     return withSession(
       request,
       NextResponse.json(
@@ -203,43 +126,11 @@ export async function POST(request: NextRequest) {
       current.value.setCookies,
     );
   }
-  const widgetDefaults = accountWidgetDefaults.value.widgetDefaults.widgets[widgetType];
-  if (!widgetDefaults) {
-    return withSession(
-      request,
-      NextResponse.json(
-        {
-          error: {
-            kind: 'VALIDATION',
-            reasonKey: 'coreui.errors.widgetDefaults.widgetMissing',
-            detail: `missing account defaults for widgetType "${widgetType}"`,
-          },
-        },
-        { status: 422 },
-      ),
-      current.value.setCookies,
-    );
-  }
-  const materialized = materializeInstanceConfigFromAccountDefaults({
+  const widgetDefaults = accountWidgetDefaults.value.widgetDefaults.widgets[widgetType]!;
+  const config = composeInstanceConfigFromAccountDefaults({
     common: accountWidgetDefaults.value.widgetDefaults.common,
     core: widgetDefaults.core,
   });
-  if (!materialized.ok) {
-    return withSession(
-      request,
-      NextResponse.json(
-        {
-          error: {
-            kind: 'VALIDATION',
-            reasonKey: 'coreui.errors.widgetDefaults.commonCoreConflict',
-            paths: materialized.conflicts,
-          },
-        },
-        { status: 422 },
-      ),
-      current.value.setCookies,
-    );
-  }
   const accountLocales = await loadCurrentAccountLocalesState({
     accessToken: current.value.accessToken,
     accountId: current.value.authzPayload.accountId,
@@ -248,73 +139,28 @@ export async function POST(request: NextRequest) {
   if (!accountLocales.ok) {
     return withSession(
       request,
-      NextResponse.json(
-        accountLocales.payload ?? {
-          error: {
-            kind: accountLocales.status === 401 ? 'AUTH' : 'UPSTREAM_UNAVAILABLE',
-            reasonKey:
-              accountLocales.status === 401
-                ? 'coreui.errors.auth.required'
-                : 'coreui.errors.auth.contextUnavailable',
-            detail: accountLocales.detail,
-          },
-        },
-        { status: accountLocales.status },
-      ),
+      NextResponse.json(accountLocales.payload, { status: accountLocales.status }),
       current.value.setCookies,
     );
   }
   const baseLocale = accountLocales.localePolicy.baseLocale;
   const instanceId = createCompactInstanceId();
-  const compiled = readWidgetForInstancePackage(widgetType);
-  if (!compiled.ok) {
-    return withSession(
-      request,
-      NextResponse.json({ error: compiled.error }, { status: compiled.status }),
-      current.value.setCookies,
-    );
-  }
-  const publicPackage = await materializeAccountInstancePublicPackage({
-    compiled: compiled.value,
-    accountId,
-    accountCapsule: current.value.authzToken,
-    requestId: current.value.requestId,
-    instanceId,
-    baseLocale,
-    displayName: displayName ?? null,
-    config: materialized.config,
-  });
-  if (!publicPackage.ok) {
-    return withSession(
-      request,
-      NextResponse.json({ error: publicPackage.error }, { status: publicPackage.status }),
-      current.value.setCookies,
-    );
-  }
-  const sourceArtifacts = materializeAccountInstanceSourceArtifacts({
+  const sourceArtifacts = prepareAccountInstanceSourceArtifacts({
     accountId,
     instanceId,
     widgetType,
-    config: materialized.config,
-    editableFields: compiled.value.editableFields ?? null,
+    config,
+    editableFields: widgetDefinition.editableFields,
     initialStatus: 'ok',
   });
-  if (!sourceArtifacts.ok) {
-    return withSession(
-      request,
-      NextResponse.json({ error: sourceArtifacts.error }, { status: sourceArtifacts.status }),
-      current.value.setCookies,
-    );
-  }
   const created = await createAccountInstanceInTokyo({
     accountId,
     accountCapsule: current.value.authzToken,
     instanceId,
     widgetType,
     displayName,
-    config: sourceArtifacts.value.config,
-    content: sourceArtifacts.value.content,
-    publicPackage: publicPackage.value,
+    config: sourceArtifacts.config,
+    content: sourceArtifacts.content,
     baseLocale,
     requestId: current.value.requestId,
   });
@@ -334,7 +180,7 @@ export async function POST(request: NextRequest) {
         instanceId: created.value.row.instanceId,
         widgetType: created.value.row.widgetType,
         displayName: created.value.row.displayName,
-        status: 'unpublished',
+        status: created.value.row.publishStatus,
       },
       { status: 201 },
     ),

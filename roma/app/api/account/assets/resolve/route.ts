@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { isAccountAssetRef, parseResolvedAccountAsset } from '@roma/lib/account-asset-record';
+import { isAccountAssetRef } from '@roma/lib/account-asset-record';
 import {
   finalizeAccountAssetResponse,
   parseJsonOrNull,
@@ -30,8 +30,6 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  const requestedAssetRefs = assetRefs as string[];
-  const requested = new Set(requestedAssetRefs);
   return proxyAccountAssetJson({
     request,
     context: gateway.value,
@@ -39,15 +37,5 @@ export async function POST(request: NextRequest) {
     path: `/__internal/assets/account/${encodeURIComponent(gateway.value.accountId)}/resolve`,
     contentType: 'application/json',
     body,
-    validateSuccessPayload: (payload) => {
-      if (!payload || typeof payload !== 'object' || Array.isArray(payload) || Object.keys(payload).length !== 1 || !Object.prototype.hasOwnProperty.call(payload, 'assets')) return false;
-      const assets = payload && typeof payload === 'object' && !Array.isArray(payload) && Array.isArray((payload as { assets?: unknown }).assets) ? (payload as { assets: unknown[] }).assets : null;
-      if (!assets || assets.length !== requestedAssetRefs.length) return false;
-      const returned = new Set<string>();
-      return assets.every((raw) => {
-        const asset = parseResolvedAccountAsset(raw);
-        return Boolean(asset && requested.has(asset.assetRef) && !returned.has(asset.assetRef) && returned.add(asset.assetRef));
-      });
-    },
   });
 }

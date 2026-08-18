@@ -2,27 +2,22 @@
 
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 import type { Policy } from '@clickeen/ck-policy';
-import { DEFAULT_PREVIEW, type CopilotRuntimeUi, type SessionMeta, type SessionUpsell } from './sessionTypes';
+import { DEFAULT_PREVIEW, type CopilotRuntimeUi, type SessionMeta } from './sessionTypes';
 
 export type WidgetSessionChromeValue = {
   policy: Policy | null;
   copilot: CopilotRuntimeUi;
-  upsell: SessionUpsell;
   preview: typeof DEFAULT_PREVIEW;
   meta: SessionMeta;
-  dismissUpsell: () => void;
-  requestUpsell: (reasonKey: string, detail?: string) => void;
   setPreview: (updates: Partial<typeof DEFAULT_PREVIEW>) => void;
 };
 
 type WidgetSessionChromeControllerValue = {
   meta: SessionMeta;
   policy: Policy | null;
-  requestUpsell: (reasonKey: string, detail?: string) => void;
   setMeta: React.Dispatch<React.SetStateAction<SessionMeta>>;
   setPolicy: React.Dispatch<React.SetStateAction<Policy | null>>;
   setCopilot: React.Dispatch<React.SetStateAction<CopilotRuntimeUi>>;
-  setUpsell: React.Dispatch<React.SetStateAction<SessionUpsell>>;
 };
 
 const WidgetSessionChromeContext = createContext<WidgetSessionChromeValue | null>(null);
@@ -32,21 +27,7 @@ export function WidgetSessionChromeProvider({ children }: { children: ReactNode 
   const [meta, setMeta] = useState<SessionMeta>(null);
   const [policy, setPolicy] = useState<Policy | null>(null);
   const [copilot, setCopilot] = useState<CopilotRuntimeUi>(null);
-  const [upsell, setUpsell] = useState<SessionUpsell>(null);
   const [preview, setPreviewState] = useState(() => structuredClone(DEFAULT_PREVIEW));
-
-  const dismissUpsell = useCallback(() => {
-    setUpsell(null);
-  }, []);
-
-  const requestUpsell = useCallback((reasonKey: string, detail?: string) => {
-    if (!reasonKey) return;
-    setUpsell({
-      reasonKey,
-      detail,
-      cta: 'upgrade',
-    });
-  }, []);
 
   const setPreview = useCallback((updates: Partial<typeof DEFAULT_PREVIEW>) => {
     setPreviewState((prev) => ({ ...prev, ...updates }));
@@ -56,27 +37,22 @@ export function WidgetSessionChromeProvider({ children }: { children: ReactNode 
     () => ({
       policy,
       copilot,
-      upsell,
       preview,
       meta,
-      dismissUpsell,
-      requestUpsell,
       setPreview,
     }),
-    [copilot, dismissUpsell, meta, policy, preview, requestUpsell, setPreview, upsell],
+    [copilot, meta, policy, preview, setPreview],
   );
 
   const controllerValue = useMemo<WidgetSessionChromeControllerValue>(
     () => ({
       meta,
       policy,
-      requestUpsell,
       setMeta,
       setPolicy,
       setCopilot,
-      setUpsell,
     }),
-    [meta, policy, requestUpsell],
+    [meta, policy],
   );
 
   return (

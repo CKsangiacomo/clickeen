@@ -3,7 +3,6 @@ import { normalizePublicServingBaseUrl, resolvePublicServingBaseUrl } from './en
 export type WidgetPublicActions = {
   publicUrl: string;
   iframeSnippet: string;
-  scriptSnippet: string;
 };
 
 export function buildWidgetPublicActions({
@@ -15,14 +14,10 @@ export function buildWidgetPublicActions({
   instanceId: string;
   baseUrl?: string;
 }): WidgetPublicActions {
-  const account = accountPublicId.trim();
-  const instance = instanceId.trim();
-  if (!account || !instance) throw new Error('coreui.errors.payload.invalid');
-
   const origin = typeof baseUrl === 'string'
     ? normalizePublicServingBaseUrl(baseUrl)
     : resolvePublicServingBaseUrl();
-  const publicUrl = `${origin}/${encodeURIComponent(account)}/${encodeURIComponent(instance)}`;
+  const publicUrl = `${origin}/${encodeURIComponent(accountPublicId)}/${encodeURIComponent(instanceId)}`;
 
   return {
     publicUrl,
@@ -35,6 +30,5 @@ export function buildWidgetPublicActions({
   sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
   style="width:100%;border:0;min-height:420px;"
 ></iframe>`,
-    scriptSnippet: `<script src="${publicUrl}/runtime.js" async></script>`,
   };
 }

@@ -6,7 +6,7 @@
   position: absolute;
   z-index: 80;
   color: var(--color-system-black, #111);
-  font-family: "Inter", sans-serif;
+  font-family: 'Inter', sans-serif;
 }
 
 .ck-socialShare[data-host='pod'] {
@@ -110,7 +110,7 @@
 }
 
 .ck-socialShare:hover .ck-socialShare__topbar,
-.ck-socialShare[data-ck-preview="true"] .ck-socialShare__topbar,
+.ck-socialShare[data-ck-preview='true'] .ck-socialShare__topbar,
 .ck-socialShare:focus-within .ck-socialShare__topbar {
   opacity: 1;
 }
@@ -143,7 +143,9 @@
   border: 1px solid color-mix(in oklab, var(--color-system-white, #fff), transparent 84%);
   background: color-mix(in oklab, var(--color-system-black, #000) 80%, transparent);
   color: var(--color-system-white, #fff);
-  font: 600 var(--fs-13, 13px)/1.1 "Inter", sans-serif;
+  font:
+    600 var(--fs-13, 13px) / 1.1 'Inter',
+    sans-serif;
   cursor: pointer;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -154,7 +156,7 @@
 }
 
 .ck-socialShare__button::marker {
-  content: "";
+  content: '';
 }
 
 .ck-socialShare__button:hover {
@@ -174,6 +176,18 @@
   align-items: center;
   justify-content: center;
   color: currentColor;
+}
+
+.ck-socialShare__icon:empty {
+  background: currentColor;
+  -webkit-mask: var(--ck-social-share-icon, url('/dieter/icons/svg/square.and.arrow.up.svg'))
+    center / contain no-repeat;
+  mask: var(--ck-social-share-icon, url('/dieter/icons/svg/square.and.arrow.up.svg')) center /
+    contain no-repeat;
+}
+
+.ck-socialShare__card[data-share-kind='message'] .ck-socialShare__icon {
+  --ck-social-share-icon: url('/dieter/icons/svg/document.on.document.svg');
 }
 
 .ck-socialShare__icon svg {
@@ -223,7 +237,9 @@
 .ck-socialShare__sectionTitle {
   margin: 10px 6px var(--space-3, 12px);
   color: var(--color-system-black, #111);
-  font: 700 var(--fs-13, 13px)/1.1 "Inter", sans-serif;
+  font:
+    700 var(--fs-13, 13px) / 1.1 'Inter',
+    sans-serif;
   text-transform: uppercase;
   white-space: nowrap;
 }
@@ -246,7 +262,10 @@
   padding: 16px 10px;
   border: 0;
   border-radius: var(--control-radius-xl, 16px);
-  background: var(--color-system-gray-5-step4, color-mix(in oklab, var(--color-system-black, #000) 6%, transparent));
+  background: var(
+    --color-system-gray-5-step4,
+    color-mix(in oklab, var(--color-system-black, #000) 6%, transparent)
+  );
   color: var(--color-system-black, #111);
   cursor: pointer;
   text-align: center;
@@ -260,7 +279,10 @@
   color: var(--color-system-blue, #1c7cff);
   background: color-mix(
     in oklab,
-    var(--color-system-gray-5-step4, color-mix(in oklab, var(--color-system-black, #000) 6%, transparent)),
+    var(
+      --color-system-gray-5-step4,
+      color-mix(in oklab, var(--color-system-black, #000) 6%, transparent)
+    ),
     var(--color-system-black, #000) 8%
   );
 }
@@ -272,7 +294,9 @@
 .ck-socialShare__cardLabel {
   display: block;
   color: inherit;
-  font: 500 var(--fs-13, 13px)/1.05 "Inter", sans-serif;
+  font:
+    500 var(--fs-13, 13px) / 1.05 'Inter',
+    sans-serif;
   text-wrap: balance;
 }
 
@@ -286,7 +310,9 @@
   border-radius: var(--control-radius-lg, 12px);
   background: color-mix(in oklab, var(--color-system-white, #fff), transparent 25%);
   color: color-mix(in oklab, var(--color-system-black, #000), transparent 25%);
-  font: 500 var(--fs-13, 13px)/1.2 "Inter", sans-serif;
+  font:
+    500 var(--fs-13, 13px) / 1.2 'Inter',
+    sans-serif;
   pointer-events: none;
   box-shadow: 0 20px 60px color-mix(in oklab, var(--color-system-black, #000), transparent 92%);
   backdrop-filter: blur(10px);

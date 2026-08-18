@@ -27,10 +27,10 @@ Canonical account-management architecture:
 | Roma tier-drop dismiss route | `roma/app/api/account/lifecycle/tier-drop/dismiss/route.ts` |
 | Roma account asset upload | `roma/app/api/account/assets/upload/route.ts` |
 | Roma instance create/save/publish routes | `roma/app/api/account/instances/**` |
-| Roma instance save policy | `roma/lib/account-instance-save-policy.ts` |
 | Policy resolver | `packages/ck-policy/src/policy.ts` |
 | Policy registry/matrix | `packages/ck-policy/src/registry.ts`, `packages/ck-policy/entitlements.matrix.json` |
-| Tokyo asset limit enforcement | `tokyo-worker/src/domains/assets-handlers.ts` |
+| Widget entitlement binding and contextual copy | `tokyo/product/widgets/{widgetType}/limits.json` and `upsell/{locale}.json` |
+| Current duplicate Tokyo asset entitlement gate (architecture mismatch) | `tokyo-worker/src/domains/assets-handlers.ts` |
 | Current DB foundation | `supabase/migrations/20260522090000__prd103_db_core_foundation.sql` |
 
 ## Product Law
@@ -73,8 +73,11 @@ users.role -> role inside that account
 | Current account shell and product routes | Roma |
 | Relational account/user/team data | Michael/Supabase |
 | Account asset and instance files | Tokyo-worker over Tokyo R2 |
-| Account product policy | Roma using `@clickeen/ck-policy` |
-| Public widget serving | Tokyo-worker generated package serving |
+| Account tier, entitlement values, current/target plan truth | System policy; Roma consumes Berlin authority through `@clickeen/ck-policy` |
+| Widget-specific denial message | Git-authored Widget `upsell/{locale}.json` |
+| Upsell composition, hosting, and system CTA | Roma |
+| Upsell Popup mechanics | Dieter |
+| Public widget serving | Tokyo-worker serving Roma-materialized packages |
 
 Account-scoped product work follows:
 
@@ -85,6 +88,37 @@ Roma current account
 -> owning service
 -> accounts/{accountPublicId}/...
 ```
+
+A Widget is software that uses this account service through the same
+`accountPublicId` and current-account command lifecycle as every other Widget.
+Its Core never implements membership, role, tier, or storage-coordinate logic,
+and Roma never gains a Widget-specific account path. If an account capability
+must grow, Roma augments the shared account contract once for every applicable
+Widget.
+
+## Closed-System Trust
+
+Multitenancy preserves security boundaries without turning every internal
+handoff into another schema or authority check.
+
+- Berlin accepts external authentication input and mints the exact current
+  user/account/role authority.
+- Roma trusts that Berlin authority and owns current-account product routing
+  and product-policy decisions.
+- An owning account route accepts raw browser input once, performs the command,
+  and emits one exact Clickeen result.
+- Tokyo-worker trusts the account coordinate and exact artifact submitted by
+  the owning Clickeen route; it does not reconstruct account policy or Widget
+  meaning.
+- Michael/Supabase persists exact relational operations from its owning
+  service; downstream product services do not rediscover membership truth.
+
+Authentication, authorization, invitation-token acceptance, upload-byte
+acceptance, and other raw external inputs remain legitimate boundaries. Once
+their owner has produced Clickeen truth, downstream services do not add guards,
+validators, allowlists, filters, normalization, repair, schema projection, or
+fallback. A missing authority/result cannot become another account, unlimited
+policy, or partial success.
 
 ## Roles
 
@@ -101,8 +135,11 @@ Effective capability is:
 user role + account tier/status/policy
 ```
 
-Role checks happen at the Roma account route and/or the Berlin backing route.
-Do not infer role permission from UI visibility alone.
+Berlin owns identity and its relational account-management commands; Roma owns
+current-account product commands. Each enforces the authorization boundary it
+owns and trusts authority already minted by the other service. A downstream
+storage or Widget service does not repeat the role decision. Do not infer role
+permission from UI visibility alone.
 
 ## Current Account And Team Routes
 
@@ -141,7 +178,8 @@ GET /api/bootstrap
 2. Roma proxies to Berlin `GET /session/bootstrap`.
 3. Berlin returns the current user, account, role, account public id, account
    authz capsule, and entitlement snapshot.
-4. Roma uses that account context for subsequent account routes.
+4. Roma trusts and uses that exact account context for subsequent account
+   routes; it does not rediscover or reinterpret the account relationship.
 
 ### List Or Change Team Access
 
@@ -163,8 +201,9 @@ state through Supabase service-role access.
 ### Enforce Account Product Policy
 
 Berlin mints the current account role, profile, and entitlement snapshot into
-session/bootstrap/account authz. Roma product routes resolve policy from the
-current authz payload and entitlement snapshot. The resolver is:
+session/bootstrap/account authz. Roma trusts that authority. Roma product
+routes use the shared policy resolver to make the product decision they own
+from the exact entitlement snapshot. The resolver is:
 
 ```text
 resolvePolicyFromEntitlementsSnapshot(...)
@@ -173,15 +212,84 @@ resolvePolicyFromEntitlementsSnapshot(...)
 Operational examples:
 
 - account locale settings enforce `l10n.locales.max`;
-- instance save/duplicate applies widget `limits.json` through Roma save
-  policy;
-- instance publish enforces `instances.published.max`;
-- Create and duplicate enforce `widgets.instances.max` at command time;
-- Publish enforces `instances.published.max` at command time;
-- asset upload checks `uploads.size.max` and `storage.bytes.max` in Roma and
-  Tokyo-worker;
-- Copilot grant issuance enforces `copilot.turns.monthly.max`; missing or
-  malformed `USAGE_KV` counters fail closed.
+- Bob-local Widget edits use the exact system policy plus the compiled Widget
+  entitlement binding at Bob's one generic editing boundary; a denied edit is
+  not applied to browser-memory state and its exact capability/message identity
+  is carried to Roma;
+- Roma trusts a Bob draft already produced through that boundary when Save is
+  requested; Save does not repeat the same Widget entitlement decision;
+- Publish enforces `instances.published.max` at command time: Roma performs the
+  fast precheck and Tokyo-worker uses Roma's exact limit inside one
+  account-scoped, lifecycle-fenced Durable Object coordinator for the final
+  first-wins transition;
+- Create and Duplicate have no editable-instance quota; every tier may retain
+  multiple editable instances;
+- asset upload currently checks `uploads.size.max` and `storage.bytes.max` in
+  both Roma and Tokyo-worker; that duplicated internal entitlement enforcement
+  is an architecture gap, not the target trust contract;
+- Copilot grant issuance enforces `copilot.turns.monthly.max` at its owning
+  product-policy boundary; no downstream service repeats that decision.
+
+The target rule is one decision per owned concern. Roma owns account product
+policy, including upload and storage entitlements. Tokyo-worker owns the
+byte-safety ingress for files entering account storage. Those are different
+decisions. After they produce an authorized Clickeen asset write, internal
+storage consumes it without another entitlement interpretation or
+response-shape validation.
+
+Local implementation: Bob applies every current Widget's `limits.json` at its
+common operation boundary before manual, Product Copilot, or undo mutation. A
+denial leaves the draft unchanged and sends
+`{ capability, messageId, required }`. Roma uses the exact Boolean/numeric
+demand to select the first higher system tier that permits the edit, resolves
+that Widget's `upsell/en.json`, and opens one Popup. Save does not repeat the
+decision.
+
+If no higher configured tier permits that exact demand, Roma does not invent
+one. It presents system-owned maximum-capacity copy with Close only and omits
+the Upgrade action.
+
+### Widget Entitlement Binding And Composed Upsell
+
+Commercial limits are generic tier capabilities. `items.group.small.max`, for
+example, is one system limit with system-owned values for every tier; it is not
+a FAQ, Cards, or Logo Showcase limit. A Widget's `limits.json` only declares:
+
+- the generic system entitlement key;
+- the unique Widget coordinate/action and metric that consume it;
+- the exact Widget upsell message identity for that denied action.
+
+It does not declare whether policy is enforced on edit, load, Save, publish,
+or serve. Those are system command/editing boundaries, not Widget policy.
+
+The referenced `upsell/{locale}.json` entry is a complete translatable message,
+not a fragment. It may interpolate exact system placeholders such as
+`{currentPlan}` and `{targetPlan}`. The Widget does not author plan names,
+target-plan selection, eligibility, pricing, CTA copy/action/destination,
+Popup behavior, or billing. Widget Core and the public package have no
+entitlement or upsell role.
+
+The assembled surface is intentionally multi-source with atomic ownership:
+
+```text
+system current plan + eligible target plan
++ Widget complete localized contextual message
++ system CTA
+-> Roma assembly and one shared upsell Popup
+-> Dieter presentation/lifecycle
+```
+
+The Upgrade CTA is system scaffolding until the commercial destination exists.
+It must not invent a Billing route, provider operation, plan mutation, contact
+destination, or success result. Future Billing work replaces that one
+system-owned action without changing Widget message catalogs.
+
+Bob carries the exact denied editing context; it does not hardcode FAQ/Cards/
+Logo Showcase copy or render a second commercial surface. Roma-native commands
+use system-owned contextual copy when no unique Widget meaning is involved.
+There is no generic fallback for missing required Widget copy: that is a
+Widget source/build defect, not a runtime invitation to substitute another
+message.
 
 ### Verify Account-Owned Files
 
@@ -208,49 +316,56 @@ Current entitlement keys:
 | Key | Kind | Enforcement owner | Status |
 | --- | --- | --- | --- |
 | `l10n.locales.max` | limit | Roma account locale settings | enforced |
-| `branding.remove` | flag | Roma save policy | enforced |
-| `embed.seoGeo.enabled` | flag | no proven active runtime owner outside policy metadata | gap |
-| `widget.socialShare.enabled` | flag | Roma save policy | enforced |
+| `branding.remove` | flag | Bob generic edit boundary for canonical Widget bindings | locally implemented for all five current Widgets |
+| `embed.seoGeo.enabled` | flag | Bob generic **Enable SEO/GEO** edit boundary; Publish materializer consumes the exact saved result | locally implemented for all five current Widgets |
+| `widget.socialShare.enabled` | flag | Bob generic edit boundary for canonical Widget bindings | locally implemented for all five current Widgets |
 | `copilot.turns.monthly.max` | limit | Roma copilot grant issuance | enforced |
-| `storage.bytes.max` | limit | Roma upload route and Tokyo-worker assets | enforced |
+| `storage.bytes.max` | limit | Roma upload route and Tokyo-worker assets | enforced with current duplicate internal check; architecture gap |
 | `views.monthly.max` | limit | clk.live public-serving telemetry | gap |
-| `instances.published.max` | limit | Roma publish route | enforced |
-| `widgets.instances.max` | limit | Roma create and duplicate command routes | enforced |
-| `uploads.size.max` | limit | Roma upload route and Tokyo-worker assets | enforced |
-| `items.group.small.max` | limit | Roma save policy | enforced |
-| `items.group.medium.max` | limit | Roma save policy | enforced |
-| `items.group.large.max` | limit | Roma save policy | enforced |
+| `instances.published.max` | limit | Roma publish policy; Tokyo-worker final account transition | locally enforced first-wins for overlapping Publish; Republish consumes no slot |
+| `uploads.size.max` | limit | Roma upload route and Tokyo-worker assets | enforced with current duplicate internal check; architecture gap |
+| `items.group.small.max` | limit | Bob generic edit boundary for applicable canonical Widget bindings | locally implemented for Cards, FAQ, and Logo Showcase |
+| `items.group.medium.max` | limit | Bob generic edit boundary for applicable canonical Widget bindings | locally implemented for FAQ and Logo Showcase |
+| `items.group.large.max` | limit | Bob generic edit boundary for applicable canonical Widget bindings | locally implemented for FAQ and Logo Showcase |
 
-Current finite instance limits:
+Current public-capacity values:
 
-| Tier | `widgets.instances.max` | `instances.published.max` |
-| --- | ---: | ---: |
-| `free` | 3 | 1 |
-| `tier1` | 10 | 1 |
-| `tier2` | 25 | 5 |
-| `tier3` | 100 | 25 |
-| `tier4` | 250 | 100 |
+| Tier | `instances.published.max` |
+| --- | ---: |
+| `free` | 1 |
+| `tier1` | 1 |
+| `tier2` | 5 |
+| `tier3` | 25 |
+| `tier4` | 100 |
 
-Invariant:
+The Widgets catalog is not tier-filtered. Every tier may use every Widget type,
+create editable instances, Duplicate them, edit them, and Save them. Public
+capacity is separate: Publish enforces `instances.published.max` at command
+time, with Free able to publish and serve one instance.
+Roma first performs a fast list-facts precheck before materialization. A request
+that passes sends Roma's exact limit and exact materialized package to
+Tokyo-worker. Tokyo routes that final command to the account's one Durable
+Object coordinator, which reads the exact per-instance publication states,
+permits Republish without another slot, and otherwise compares the current published
+count with that passed limit before writing package or published state. The
+first allowed Publish wins. An overlapping contender while that command is
+active gets HTTP 409 `PUBLISH_IN_PROGRESS` and persists nothing; after the winner
+commits, a later attempt gets the existing HTTP 402 `UPGRADE_REQUIRED`
+capacity result. Before R2 work, the coordinator touches its own storage only
+to activate Cloudflare's shutdown/replacement fencing. It stores no durable
+policy, count, or publication data and is not a publication registry: each
+instance's `serve-state.json` remains publication truth.
+`widgets.instances.max` has been removed rather than renamed or repurposed. The policy authority emits
+one exact decision; downstream services do not re-evaluate that decision.
 
-```text
-widgets.instances.max >= instances.published.max
-```
-
-The Widgets catalog is not tier-filtered. Tier limits do not hide widget types
-and do not create disabled Create/Duplicate controls in the Widgets list.
-Create and duplicate instance-count limits are enforced at command time. Publish
-limits are enforced at command time. Over-tier Create, Duplicate, and Publish
-return HTTP 402 `UPGRADE_REQUIRED`; missing or malformed policy limits are Roma
-policy contract failures, not unlimited usage.
+`embed.seoGeo.enabled` is also separate from Widget access.
+Free and Tier 1 receive the Clickeen Discovery baseline. Tier 2 and above may
+turn on the shared **Enable SEO/GEO** control; the exact saved value is consumed
+only by Publish materialization. Widget Core and public serving do not decide
+the tier.
 
 Tier values are read from the matrix. Do not restate commercial package prose
 here unless it maps to exact entitlement keys.
-
-Operator warning: `packages/ck-policy/src/registry.ts` currently marks
-`embed.seoGeo.enabled` as `enforced`, but runtime evidence does not prove an
-active consumer in Roma save, Roma publish, or Tokyo-worker public serving.
-Treat this row as conflicting policy metadata until code and registry agree.
 
 ## Failure Semantics
 
@@ -262,7 +377,11 @@ Treat this row as conflicting policy metadata until code and registry agree.
 | Duplicate invitation email/user conflict | explicit conflict; no silent attach |
 | Account deletion | explicit conflict; no account-root delete |
 | Entitlement limit exceeded | explicit product-policy failure |
+| Migrated Widget editing action exceeds a tier capability | no draft mutation, exact `{ capability, messageId, required }` denial, and one Roma-composed upsell Popup |
+| Existing content exceeds a newly lower tier | preserve exact content; do not delete, clamp, or heal it; gate only the next disallowed action at its owning boundary |
+| Required Widget upsell message is absent | producing Widget contract/build failure; no generic runtime replacement |
 | Policy key exists but no runtime consumer | documented as `gap`, not claimed enforced |
+| Owner-produced account/package result handed to another Clickeen service | consumed exactly; no downstream semantic revalidation or filtering |
 
 ## Known Current Gaps
 
@@ -274,6 +393,8 @@ These are not active runtime truth:
 - customer account switching;
 - core `account_members` role authority;
 - public monthly view denial/upsell behavior for `views.monthly.max`;
+- a product account-downgrade operation that resolves published overage and
+  already-published tier-dependent output.
 
 ## Verification
 
@@ -284,8 +405,12 @@ These are not active runtime truth:
 | Relational account schema | Supabase migrations and `documentation/services/michael.md` |
 | Role/account invariant | `users.account_id` and `users.role` current truth |
 | Entitlement keys/values | `packages/ck-policy/entitlements.matrix.json` |
-| Entitlement metadata/enforcement status | runtime owner evidence plus `packages/ck-policy/src/registry.ts`; `embed.seoGeo.enabled` currently conflicts |
+| Entitlement metadata/enforcement status | runtime owner evidence plus `packages/ck-policy/src/registry.ts`; all five current Widgets are the local proof |
 | Account files | Roma routes first; raw bytes require `pnpm cf:preflight` and R2 evidence |
+
+Verification proves the owning boundary and stored result outside the normal
+product path. It must not add a runtime probe, duplicate validator, or second
+policy decision between trusted Clickeen services.
 
 ## Not Current Product Truth
 

@@ -1,6 +1,8 @@
 # Localization Capability
 
-Last updated: 2026-08-09
+STATUS: ALL CURRENT WIDGETS IMPLEMENTED LOCALLY — OWNER QA AND DEPLOY PROOF PENDING
+
+Last updated: 2026-08-17
 
 ## Product Contract
 
@@ -9,95 +11,129 @@ Clickeen localization is overlay-native:
 ```text
 one saved base source
 + one exact overlay per translated locale
-+ one published base runtime
-= localized public widget
++ one complete published base package
++ exact Edge locale expression
+= localized semantic HTML before JavaScript
 ```
 
-Translation is content work. It does not create another widget artifact,
-publication state, delivery file, or cache lifecycle.
+Translation changes content truth only. It does not create another Widget
+package, another publication state, stored locale-derived HTML/CSS/JavaScript,
+or a second lifecycle.
 
-Product UI language is a separate concern from saved widget-content overlays.
-The current product UI remains English. Current source scaffolding exists for
-widget-authored ToolDrawer labels only:
+A Widget uses this shared capability by declaring exact editable customer
+content. Translation Agent produces exact overlay values. Roma materializes one
+base package only on explicit allowed Publish. Tokyo-worker stores and serves
+the exact source, package, and overlay artifacts without learning Widget
+meaning.
 
-```text
-tokyo/product/widgets/{widgetType}/
-  {widgetType}_tooldrawer_l10n_labels/
-    en.json
-```
-
-The Bob compiler resolves that exact English file at build time into the
-existing `/widget-editors/{widgetType}.json` artifact. English users perform no
-UI-locale lookup or runtime label fetch. There are no non-English ToolDrawer
-files, Roma/Bob chrome locale files, UI-language dropdown, or active UI-locale
-selection in the current product.
-
-Michael's person row has a dormant `use_primary_language_for_ui` boolean whose
-default is `false`; Berlin/Roma expose it only as profile data. It does not
-currently affect Roma, Bob, Dieter, widget content, account base locale, public
-widget locale selection, or an open Builder session.
-
-## Code Authority
+## Authorities
 
 | Concern | Authority |
 | --- | --- |
-| Account locale policy | Roma account locale routes and account storage |
-| Translation command | Bob `TranslationsPanel` -> Roma translation route |
+| Account locale policy | Roma account locale routes/settings |
+| Editable/translatable identities | Widget `editable-fields.json` |
+| Translation command | Bob Translations panel -> Roma |
 | Translation operation | Translation Agent -> San Francisco |
-| Saved text extraction and exact overlay validation | Tokyo-worker account translation domain |
-| Overlay storage | Tokyo R2 `overlays/locales/{locale}.json` |
-| Bob translated preview | translated-value primitives over saved base state |
-| Public localized serving | Tokyo-worker base index response plus base runtime |
-| Base package construction | `@clickeen/ck-runtime-materializer` |
-| English widget-authored ToolDrawer labels | Adjacent widget `en.json`, resolved by the Bob compiler at build time |
+| Exact overlay | Translation Agent; Tokyo-worker exact storage |
+| Bob translated preview | Bob over saved source plus exact overlay |
+| Base package generation | Roma materializer during explicit allowed Publish |
+| Public localized HTML | Tokyo-worker Edge expression over exact materialized content slots |
+| Product UI copy | Widget `labels/en.json`, Widget `upsell/en.json`, and system Chrome owners |
 
-## Authority Chain
+Clickeen authorities trust one another. Once an owning ingress or agent has
+produced exact Clickeen truth, downstream services do not filter, normalize,
+repair, compare, project, or revalidate it against another schema. Missing
+owner truth fails at its exact coordinate and never becomes base copy, another
+locale, or an invented value.
 
-```text
-Roma current account/session
--> accountPublicId
--> saved account instance
--> exact locale coordinate
--> Tokyo-worker
--> accounts/{accountPublicId}/instances/{instanceId}/overlays/locales/{locale}.json
-```
+## Product UI Language Is Separate
 
-Public serving adds the single publication coordinate:
+The current product UI is English. Widget-authored product copy has two
+different adjacent contracts:
 
 ```text
-serve-state.json
--> base index/styles/runtime fingerprint
--> exact requested overlay
--> injected locale context
+tokyo/product/widgets/{widgetType}/
+  labels/en.json       ToolDrawer control copy
+  upsell/en.json       complete Widget-context denial messages
 ```
+
+Neither is customer Widget content. Neither enters `editable-fields.json`, an
+instance overlay, or the public Widget package.
+
+Every current Widget has both contracts locally, and each compiler artifact
+contains its exact limit/message associations. There is no runtime English
+fallback, generic Widget message, or substitution from ToolDrawer copy.
+
+Michael's dormant `use_primary_language_for_ui` value does not currently choose
+Roma/Bob UI language, account base locale, public locale, or an open Builder
+session.
 
 ## Locale Policy
 
 - The account base locale is source authority.
 - Active non-base locales are translation targets allowed by account policy.
-- Generate Translations requests every currently active non-base locale.
+- Generate Translations requests every active non-base locale.
 - Removing an active locale deletes its exact overlay from every account
-  instance. Each completed and failed deletion coordinate remains visible.
-- Changing locale settings never creates or rebuilds public runtime files.
+  instance and reports exact completed/failed coordinates.
+- Changing locale settings never creates or rebuilds public package files.
+- Public locale selection uses the explicit `?locale={locale}` coordinate.
 
-## Source Text
+## Saved Source And Overlay
 
-`instance.content.json` owns the current saved translatable field set. Fields
-are concrete saved paths, including concrete array indexes. Translation
-responses must return one string for every current path and no other path.
+`instance.content.json` owns the current saved translatable field set. Its keys
+are physical concrete paths. Each field also carries its field pattern and
+stable `identityKey`. The overlay uses `identityKey`, not the physical map key:
 
-Human-authored base text remains human source authority. Agents translate it;
-they do not silently rewrite the base source.
+```text
+scalar:
+{widgetType}|{role}|{fieldPattern}
+
+repeated:
+{widgetType}|{role}|{fieldPattern}|{arrayItemIdentityPath}={stableId}...
+```
+
+Repeated identity components come from the Widget's exact
+`arrayItemIdentity` declarations. Array indexes are never overlay identity.
+
+Overlay storage is exact:
+
+```text
+accounts/{accountPublicId}/instances/{instanceId}/overlays/locales/{locale}.json
+```
+
+```json
+{
+  "values": {
+    "faq|header-title|header.title": "Translated title"
+  }
+}
+```
+
+The Translation Agent owns a complete exact value map for the current saved
+identity set at Generate time.
+Tokyo-worker trusts, stores, reads, lists, and deletes that artifact without
+projecting it through saved content or applying a second saved-field equality
+check.
+
+An external editor-authorized write through
+`PUT /api/account/instances/{instanceId}/translations/{locale}` accepts the
+complete value map at the owning browser ingress. After acceptance,
+Tokyo-worker stores the resulting Clickeen overlay exactly. No overlay operation
+materializes package files.
+
+Human-authored base text remains human source authority. Translation does not
+silently rewrite it.
 
 ## Generate Translations
 
-1. Bob requires a saved, clean instance and at least one active non-base locale.
-2. Roma resolves current account/session and entitlement truth.
-3. Roma asks the Translation Agent for exact requested locale results.
-4. San Francisco translates the supplied saved text items.
-5. Tokyo-worker accepts only complete exact overlay value maps and writes each
-   overlay.
-6. Roma returns:
+1. Bob requires the open instance to be saved and clean and sends its exact
+   `instanceId`.
+2. Roma resolves account, active locales, tier, saved source, and the
+   Translation Agent authority.
+3. Translation Agent asks San Francisco for the exact translations.
+4. Translation Agent writes one exact overlay for each successful locale
+   through Tokyo-worker.
+5. Roma returns exhaustive result truth:
 
    ```text
    requestedLocales
@@ -105,43 +141,23 @@ they do not silently rewrite the base source.
    failedLocales
    ```
 
-7. Bob reports those outcomes and refreshes translated preview state.
+6. Bob reports that result and refreshes translated preview only when at least
+   one locale succeeded.
 
-No later artifact step exists.
-
-## Overlay Contract
-
-Storage:
-
-```text
-accounts/{accountPublicId}/instances/{instanceId}/overlays/locales/{locale}.json
-```
-
-Body:
-
-```json
-{
-  "values": {
-    "header.title": "Translated title"
-  }
-}
-```
-
-An editor-authorized exact-value write uses
-`PUT /api/account/instances/{instanceId}/translations/{locale}`. The body must
-contain the complete `values` map for current saved text fields. Base-locale
-overlays, missing paths, and extra paths fail; the write has no runtime-artifact
-side effect.
-
-Validation is exact against current saved content. Missing paths, unexpected
-paths, non-string values, malformed documents, and invalid locale coordinates
-fail. Stored corruption is not normalized or treated as missing.
+Translation generation never publishes, stores a locale package, or changes
+public files.
 
 ## Bob Preview
 
-Bob reads saved overlays through Roma and resolves them over the current saved
-base state with `resolveTranslatedValues`. Preview state is not public artifact
-truth and never writes storage.
+Bob preview is editing output, not public artifact truth. It combines
+deploy-built Widget software, the one current browser-memory draft, and the
+exact selected saved overlay. Bob maps each stable overlay coordinate to that
+identity's current draft path, so reordering follows the item rather than the
+array position. A newly added identity with no value stays explicit
+untranslated source content until Generate Translations; a deleted identity is
+absent from the current draft and therefore absent from preview. Bob does not
+read or rewrite the instance's stored `index.html`, `styles.css`, or
+`runtime.js`, and it writes no storage.
 
 ## Public Serving
 
@@ -152,58 +168,100 @@ https://clk.live/{accountPublicId}/{instanceId}
 https://clk.live/{accountPublicId}/{instanceId}?locale={locale}
 ```
 
-For an index request, Tokyo-worker verifies the published instance and one base
-artifact. It lists overlay coordinates, reads and validates the exact requested
-overlay, injects a locale context into the stored base index, and returns HTML
-with `no-store`. That HTML references only the package `styles.css` and `runtime.js`.
+Explicit allowed Publish generates one complete base `index.html`, complete
+`styles.css`, and mandatory visitor-behavior `runtime.js`. Materialized
+customer-content nodes carry exact `data-ck-content-path` and
+`data-ck-content-mode` coordinates. A Widget whose editable content belongs in
+an HTML attribute also authors the exact `data-ck-content-attribute` target.
 
-The base runtime applies injected values synchronously before widget modules
-initialize. A missing requested overlay returns `404 Locale not available`. A
-corrupt overlay returns `500 Locale data invalid`. Base content is never
-presented as a requested non-base locale.
+For a selected non-base locale, Tokyo-worker:
 
-## Operator Recipes
+1. resolves the public route and exact published state;
+2. reads the stored base `index.html`;
+3. lists the exact stored overlay coordinates and authors the base locale plus
+   those coordinates as the public switcher's options;
+4. reads the exact requested overlay;
+5. uses Cloudflare `HTMLRewriter` to apply every present stable-coordinate
+   value to its authored semantic content body or exact authored attribute;
+6. sets `<html lang>` to the selected locale; and
+7. returns complete localized HTML before JavaScript.
 
-### Generate one instance
+The response references the same stored CSS and JavaScript. No locale-derived
+package is stored. Successful base/locale responses use the existing public
+cache policy and the locale query is part of the request cache coordinate. An
+exact overlay write/delete purges the instance's one Cloudflare cache tag after
+the mutation; that tag covers every package file and locale/query variant.
 
-Use Bob’s Generate Translations command or the authenticated Roma instance
-translation route. Confirm the returned requested/translated/failed sets
-reconcile exactly.
+Public serving does not inject `CK_LOCALE_CONTEXT`, run a client localizer,
+compare package fingerprints, compare overlay values with saved content, call a
+model/agent, or rebuild Widget software.
 
-### Inspect overlay truth
+Save preserves overlay files. Stable identity gives that preservation exact
+structural behavior: reorder follows identity; a new identity remains
+intentional untranslated base-source content until Generate Translations; and
+a deleted identity's older value is inert because no authored node consumes
+it. The next Generate Translations operation replaces the overlay with the
+complete current identity set.
 
-1. Run `pnpm cf:preflight`.
-2. Read the exact `overlays/locales/{locale}.json` object.
-3. Compare its path set with `instance.content.json`.
-4. Confirm no base source or package object changed unless a separate instance
-   save occurred.
+This is a pre-GA coordinate cutover for scalar and repeated fields. Previously
+stored positional overlays are not compatibility input. After deployment,
+they require explicit Generate Translations or explicit deletion. Bob and
+Serve contain no old-key fallback, migration-on-read, or second overlay
+schema.
 
-### Verify public localization
+Bob preview supplies the exact locale policy to the shared switcher. Public
+index responses instead author `<option>` elements from the exact base locale
+and stored overlay coordinates at the Edge. The shared runtime reads those
+options; no public locale-policy global, `<html lang>` substitution, or client
+localization pass is used. Missing public options fail visibly. Preview option
+text uses the exact delivered locale coordinate because no separate preview
+locale-label authority exists.
 
-1. Confirm the instance is published.
-2. Open the base URL and the same URL with `?locale={locale}`.
-3. Confirm translated text and `<html lang>` on the locale response.
-4. Confirm both responses reference identical package stylesheet/runtime URLs.
-5. Confirm missing and corrupt overlays fail explicitly.
+FAQ Discovery microdata wraps the same visible question/answer content slots.
+Edge replacement therefore localizes the visible content inside the authored
+relationship without a second SEO/Discovery renderer.
 
 ## Failure Semantics
 
 - Requested locale outcomes are exhaustive.
-- Partial translation success is reported as partial.
-- Activity transport is never result truth.
-- Missing overlay and corrupt overlay are distinct.
-- No generated value substitutes for missing source truth.
+- Partial translation success stays partial and names exact failed locales.
+- Activity transport is not result truth.
+- Missing requested overlay returns `404 Locale not available`.
+- An unreadable overlay returns `500 Locale data invalid`.
+- Neither case serves base or another locale.
+- A missing coordinate for content added after the last Generate operation is
+  intentional untranslated source content, not a missing-overlay fallback.
+- A coordinate for deleted content is inert because no current semantic node
+  has that identity.
 - Public reads never write, heal, regenerate, or call an agent.
+- Cache-purge failure remains an explicit failure of the overlay mutation; it
+  is not reported as completed stale delivery.
 
-## Verification Matrix
+## Current Repository And Deploy State
 
-| Concern | Proof |
+- Big Bang, Cards, Countdown, FAQ, and Logo Showcase use the canonical Widget
+  source contract and materialize exact localization slots locally.
+- Overlay generation, Bob preview, materialized slots, and Edge expression use
+  stable `identityKey` coordinates locally.
+- Tokyo-worker's local public path uses `HTMLRewriter` and contains no browser
+  locale context.
+- Translation list/read/write paths locally trust exact overlay truth.
+- No commit, push, deploy, remote product-data change, or cloud-dev/live proof
+  has been performed for this all-Widget pass.
+
+## Verification
+
+| Concern | Owner-of-truth proof |
 | --- | --- |
-| Account policy | Roma locale route response |
-| Saved text set | Tokyo instance content |
-| Overlay bytes | exact R2 read after `pnpm cf:preflight` |
-| Translation outcome | Roma requested/translated/failed sets |
-| Bob preview | exact overlay values displayed over saved source |
-| Base package | base R2 index/styles/runtime fingerprint |
-| Localized runtime | public instance URL with `?locale=` and translated output |
-| Negative storage invariant | no instance locale-derived HTML/CSS/JS objects |
+| Account locale policy | Roma locale route response |
+| Saved text | exact Tokyo instance content |
+| Overlay bytes | exact R2 object after `pnpm cf:preflight` |
+| Translation result | Roma requested/translated/failed sets |
+| Bob preview | exact overlay values over the one current draft |
+| Base package | exact stored `index.html`, `styles.css`, and `runtime.js` |
+| Static base meaning | response HTML contains saved content before JavaScript |
+| Localized meaning | `?locale=` response HTML contains translated content and exact `<html lang>` before JavaScript |
+| Storage invariant | no locale-derived HTML/CSS/JavaScript objects |
+
+Cloud-dev public proof requires an authorized deploy. Local code and generated
+artifacts are not deployed-product evidence.

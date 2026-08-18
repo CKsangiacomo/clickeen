@@ -45,6 +45,12 @@ one:
 - Shared presentation is fixed in the existing Dieter primitive or shared
   Dieter source. Different product jobs remain separate consumer composition;
   visual consistency is not permission to merge their behavior.
+- The account upsell Popup is one multi-owner composition, not a component that
+  owns all of its copy. A Widget-bound denial contributes its exact localized
+  contextual body through the compiled Widget contract; system policy
+  contributes current/target plan truth; Roma contributes the system CTA and
+  hosts the Popup; Dieter contributes mechanics only. No layer substitutes a
+  missing Widget message or duplicates the Popup in Bob.
 
 [`components.md`](components.md) owns exact component APIs and
 [`dieter.md`](dieter.md) owns the system mechanics. A source violation is a
@@ -67,7 +73,7 @@ exception.
 - [`typography.md`](typography.md) — Google fonts, account-uploaded fonts,
   typography tokens, and text rendering rules *(126D)*
 - [`interactions.md`](interactions.md) — states, command flows, feedback, save,
-  Agent Activity, the pre-GA upsell scaffold, and bulk progress patterns *(126E)*
+  Agent Activity, the composed pre-GA upsell Popup, and bulk progress patterns *(126E)*
 - [`motion.md`](motion.md) — small system motion law, duration/easing tokens,
   and reduced-motion behavior for Dieter/system UI *(126F)*
 - [`ops.md`](ops.md) — current UI build/serve/govern runbook *(126G)*

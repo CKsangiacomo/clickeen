@@ -26,7 +26,6 @@ export type PreviewSettings = {
 export type SessionState = {
   compiled: CompiledWidget | null;
   instanceData: Record<string, unknown>;
-  publicPackage: InstancePublicPackage | null;
   savedInstanceDataSignature: string;
   isDirty: boolean;
   isSaving: boolean;
@@ -34,34 +33,21 @@ export type SessionState = {
   error: SessionError | null;
 };
 
-export type InstancePublicPackage = {
-  indexHtml: string;
-  stylesCss: string;
-  runtimeJs: string;
-};
-
 type PublicActions = {
   publicUrl: string;
   iframeSnippet: string;
-  scriptSnippet: string;
 };
 
 export type SessionMeta = {
-  accountPublicId?: string;
-  instanceId?: string;
-  baseLocale?: string;
-  widgetname?: string;
-  publishStatus?: 'published' | 'unpublished';
-  label?: string;
+  accountPublicId: string;
+  instanceId: string;
+  baseLocale: string;
+  widgetname: string;
+  publishStatus: 'published' | 'unpublished';
+  label: string;
   publicActions: PublicActions | null;
   fontLibrary: AccountFontLibrary;
-  translationSetup?: TranslationSetup | null;
-} | null;
-
-export type SessionUpsell = {
-  reasonKey: string;
-  detail?: string;
-  cta: 'upgrade';
+  translationSetup: TranslationSetup;
 } | null;
 
 export type CopilotModelRef = {
@@ -78,21 +64,20 @@ export type CopilotRuntimeUi = {
 
 export type EditorOpenMessage = {
   type: 'ck:open-editor';
-  requestId?: string;
+  requestId: string;
   widgetname: string;
   baseLocale: string;
   compiled: CompiledWidget;
-  instanceData?: Record<string, unknown> | null;
-  publicPackage?: InstancePublicPackage | null;
-  fontLibrary?: AccountFontLibrary | null;
-  policy?: Policy;
-  accountPublicId?: string;
-  instanceId?: string;
-  publishStatus?: 'published' | 'unpublished';
-  label?: string;
-  publicActions?: PublicActions | null;
-  copilot?: CopilotRuntimeUi;
-  translationSetup?: TranslationSetup | null;
+  instanceData: Record<string, unknown>;
+  fontLibrary: AccountFontLibrary;
+  policy: Policy;
+  accountPublicId: string;
+  instanceId: string;
+  publishStatus: 'published' | 'unpublished';
+  label: string;
+  publicActions: PublicActions | null;
+  copilot: CopilotRuntimeUi;
+  translationSetup: TranslationSetup;
 };
 
 export type BobSessionReadyMessage = {
@@ -106,7 +91,20 @@ export type BobDirtyStateChangedMessage = {
 
 export type BobHostActionMessage = {
   type: 'bob:host-action';
-  action: 'open-navigation' | 'copy-code';
+  action: 'open-navigation' | 'copy-code' | 'publish';
+};
+
+export type BobWidgetUpsellMessage = {
+  type: 'bob:upsell';
+  capability: string;
+  messageId: string;
+  required: boolean | number;
+};
+
+export type BobSystemUpsellMessage = {
+  type: 'bob:upsell';
+  reasonKey: string;
+  detail?: string;
 };
 
 export type BobOpenEditorAppliedMessage = {
@@ -118,7 +116,7 @@ export type BobOpenEditorAppliedMessage = {
 
 export type BobOpenEditorFailedMessage = {
   type: 'bob:open-editor-failed';
-  requestId?: string;
+  requestId: string;
   reasonKey: string;
   message?: string;
 };
@@ -179,7 +177,6 @@ export function createInitialSessionState(): SessionState {
   return {
     compiled: null,
     instanceData: {},
-    publicPackage: null,
     savedInstanceDataSignature: serializeInstanceDataSignature({}),
     isDirty: false,
     isSaving: false,

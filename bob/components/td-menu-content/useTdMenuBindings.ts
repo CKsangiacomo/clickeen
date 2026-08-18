@@ -94,11 +94,8 @@ export function useTdMenuBindings(args: {
 
     const handleUpsellEvent = (event: Event) => {
       const detail = (event as any).detail;
-      const reasonKey =
-        detail && typeof detail.reasonKey === 'string' ? detail.reasonKey : 'coreui.upsell.reason.flagBlocked';
-      const detailText = detail && typeof detail.detail === 'string' ? detail.detail : undefined;
       event.stopPropagation();
-      requestUpsell(reasonKey, detailText);
+      requestUpsell(detail.reasonKey, detail.detail);
     };
 
     const handleContainerEvent = (event: Event) => {

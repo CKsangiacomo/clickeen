@@ -2,6 +2,7 @@
 
 import type { LimitsSpec } from '@clickeen/ck-policy';
 import type { WidgetEditableFieldsContract } from '@clickeen/ck-contracts/translated-value-primitives';
+import type { WidgetSoftware } from '@clickeen/widget-foundation';
 
 export const BOB_PANEL_LABELS = {
   content: 'Content',
@@ -96,23 +97,36 @@ export interface WidgetNormalizationSpec {
   idRules?: WidgetNormalizationIdRule[];
 }
 
-export type WidgetPackageFileName =
-  | 'editable-fields.json'
-  | 'spec.json'
-  | 'widget.html'
-  | 'widget.css'
-  | 'widget.client.js'
-  | string;
-
-export interface WidgetPackageFileContext {
-  mediaType: 'application/json' | 'text/html' | 'text/css' | 'text/javascript';
-  source: string;
-}
-
-export interface WidgetPackageContext {
+export type WidgetUpsellCatalog = {
   widgetType: string;
-  files: Partial<Record<WidgetPackageFileName, WidgetPackageFileContext>>;
-}
+  locale: 'en';
+  messages: Record<string, string>;
+};
+
+export type WidgetDiscoveryPart = {
+  id: string;
+  path: string;
+  role: string;
+  identityPaths: string[];
+};
+
+export type WidgetDiscoveryRelationship = {
+  kind: string;
+  from: string;
+  to: string;
+  identityPaths: string[];
+};
+
+export type WidgetDiscoveryContract = {
+  widgetType: string;
+  kind: string;
+  baseline: {
+    title: string;
+    description: string;
+  };
+  parts: WidgetDiscoveryPart[];
+  relationships: WidgetDiscoveryRelationship[];
+};
 
 export interface CompiledWidgetCore {
   widgetname: string;
@@ -128,4 +142,7 @@ export interface CompiledWidgetCore {
 
 export interface CompiledWidget extends CompiledWidgetCore {
   limits: LimitsSpec;
+  upsell: WidgetUpsellCatalog;
+  editableFields: WidgetEditableFieldsContract;
+  widgetSoftware: WidgetSoftware;
 }

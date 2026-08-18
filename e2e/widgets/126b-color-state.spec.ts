@@ -171,7 +171,7 @@ test("PRD 126B.2 Logo Showcase uses the shared keyboard focus color", async ({
 }) => {
   const [tokensCss, widgetCss] = await Promise.all([
     readFile(resolve("dieter/tokens/dieter-color-tokens.css"), "utf8"),
-    readFile(resolve("tokyo/product/widgets/logoshowcase/widget.css"), "utf8"),
+    readFile(resolve("tokyo/product/widgets/logoshowcase/core/core.css"), "utf8"),
   ]);
   const networkRequests: string[] = [];
 

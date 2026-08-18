@@ -64,12 +64,23 @@ Roma current account
   -> accounts/{accountPublicId}/assets/{filename}
 ```
 
-Roma owns the current-account policy result. Bob's existing Builder session
-adapter validates the exact Roma asset response and maps the current upload
-plan-denial reason keys into the existing generic upsell request. Dieter
-receives only the resolved account-assets client. That caller-owned client
-classifies an upload failure as an exact upsell reason or an ordinary failure;
-Dieter does not parse Roma payloads or decide which plan reasons qualify.
+Roma owns the current-account policy result. Bob and Tokyo-worker consume that
+result as trusted Clickeen truth; they do not reconstruct or revalidate Roma's
+account or policy decision. Tokyo-worker owns each exact asset-operation result,
+and Roma and Bob consume that result completely without a second result-shape
+guard, filter, or semantic interpretation.
+
+Upload size/storage denial is a generic account capability, not unique Widget
+meaning. Its contextual message, current/target plan values, and CTA are
+system-owned; it does not use a Widget `upsell/{locale}.json` entry even when
+the upload begins inside Bob. The exact denial opens the same one
+Roma-composed upsell surface used by Widget capability denials. Dieter owns
+Popup and control mechanics only, while Tokyo-worker trusts Roma's entitlement
+decision and retains only its distinct raw-byte/storage-operation authority.
+
+Dieter receives only the resolved account-assets client. That caller-owned
+client presents the exact Roma result; Dieter does not parse Roma payloads or
+decide which plan reasons qualify.
 
 ## Operations
 
@@ -110,7 +121,11 @@ without exposing private storage object identity as product truth.
 
 ## Upload Boundary
 
-Validation happens before a file becomes an account asset.
+Raw upload bytes and browser-supplied filename/MIME metadata are non-Clickeen
+input. The asset owner accepts or rejects them once, before they become an
+account asset. This admission boundary is not permission for downstream
+Clickeen services to revalidate an accepted asset or another authority's
+result.
 
 Accepted files satisfy:
 
@@ -148,8 +163,6 @@ path as other account assets.
 | Upload asset | `POST /api/account/assets/upload` | `editor` | `POST /__internal/assets/upload` | `AccountAssetRecord` |
 | Delete asset | `DELETE /api/account/assets/{assetRef}` | `editor` | `DELETE /__internal/assets/account/{accountPublicId}/asset/{assetRef}` | `{ accountId, assetRef, deleted: true }` |
 | Public asset read | generated/public asset URL | public read | account asset public route | asset bytes or `404` |
-
-Upload also rejects disabled accounts at the Tokyo-worker boundary.
 
 ## Upload Contract
 
@@ -224,10 +237,9 @@ returns:
 }
 ```
 
-Roma accepts delete success only when Tokyo-worker returns the current account
-public id, the exact asset reference, and `deleted: true`. Missing, malformed,
-wrong-account, wrong-asset, or error-shaped `2xx` responses fail as upstream
-contract failures.
+Tokyo-worker owns that exact delete result. Roma trusts it and returns it to the
+caller without independently proving the account coordinate, asset reference,
+or success shape again.
 
 References from existing widget instances remain saved widget data. A user can
 repair or replace those references by editing the instance in Bob and saving
@@ -235,11 +247,28 @@ through Roma.
 
 ## Failure Semantics
 
-- Malformed Tokyo success payloads become Roma `502`.
 - Missing resolved assets return `422`.
-- Corrupt asset metadata or invalid asset keys return validation errors.
-- Corrupt metadata/key state is not treated as absence.
+- If Tokyo-worker cannot complete an exact storage operation, that operation
+  fails visibly. Roma does not substitute, filter, repair, or reinterpret the
+  result.
+- Unreadable stored asset truth is not treated as a missing/new asset and is
+  never overwritten as recovery.
 - Asset delete of a missing object returns `404`; Roma must not report success.
+
+## Current Implementation Mismatch
+
+The current implementation still contains inherited internal distrust that is
+not part of this architecture contract:
+
+- Bob's Builder session adapter revalidates the Roma asset response;
+- Roma revalidates fields in Tokyo-worker's delete-success result;
+- Tokyo-worker repeats an account-status rejection after Roma has already
+  supplied the current-account policy result.
+
+Those checks are implementation debt. They must be removed at their owning
+code surfaces rather than documented as required safety. The external upload
+admission checks above remain required because raw user bytes have not yet
+become Clickeen-owned truth.
 
 ## Verification
 

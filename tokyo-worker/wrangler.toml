@@ -1,6 +1,6 @@
 name = "tokyo-assets-dev"
 main = "src/index.ts"
-compatibility_date = "2025-12-28"
+compatibility_date = "2026-08-17"
 compatibility_flags = ["global_fetch_strictly_public"]
 workers_dev = false
 routes = [
@@ -18,6 +18,9 @@ routes = [
 enabled = true
 head_sampling_rate = 1
 
+[cache]
+enabled = true
+
 [vars]
 BERLIN_BASE_URL = "https://berlin-dev.clickeen.workers.dev"
 TOKYO_PUBLIC_BASE_URL = "https://tokyo.dev.clickeen.com"
@@ -27,3 +30,11 @@ CLOUDFLARE_ZONE_ID = "baceb66ba550ebfb73dc4003a6f5ec5b"
 [[r2_buckets]]
 binding = "TOKYO_R2"
 bucket_name = "tokyo-assets-dev"
+
+[[durable_objects.bindings]]
+name = "ACCOUNT_PUBLICATION_COORDINATOR"
+class_name = "AccountPublicationCoordinator"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["AccountPublicationCoordinator"]

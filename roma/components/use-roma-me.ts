@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { isCompactAccountPublicId, isRecord } from '@clickeen/ck-contracts';
+import { isCompactAccountPublicId, isRecord, type AccountLocalePolicy } from '@clickeen/ck-contracts';
 import { assertPolicyEntitlementsSnapshot } from '@clickeen/ck-policy';
 
 export type RomaLifecycleNotice = {
@@ -24,8 +24,8 @@ export type RomaAccountSummary = {
 
 export type RomaActiveAccount = RomaAccountSummary & {
   status: string;
-  activeLocales?: unknown;
-  localePolicy?: unknown;
+  activeLocales: string[];
+  localePolicy: AccountLocalePolicy;
 };
 
 export type RomaMeResponse = {
@@ -252,8 +252,8 @@ export function resolveActiveRomaAccount(data: RomaMeResponse | null): RomaActiv
     membershipVersion: normalizeOptionalString(activeAccount.membershipVersion),
     lifecycleNotice: normalizeLifecycleNotice(activeAccount.lifecycleNotice),
     status,
-    activeLocales: activeAccount.activeLocales,
-    localePolicy: activeAccount.localePolicy,
+    activeLocales: activeAccount.activeLocales as string[],
+    localePolicy: activeAccount.localePolicy as AccountLocalePolicy,
   };
 }
 

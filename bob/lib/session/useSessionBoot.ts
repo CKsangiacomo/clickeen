@@ -3,9 +3,6 @@
 import { useCallback, useEffect, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
 import type { Policy } from '@clickeen/ck-policy';
 import {
-  normalizeAccountFontLibrary,
-} from '@clickeen/widget-foundation';
-import {
   type BobOpenEditorAppliedMessage,
   type BobOpenEditorFailedMessage,
   type BobSessionReadyMessage,
@@ -15,11 +12,7 @@ import {
   type CopilotRuntimeUi,
   serializeInstanceDataSignature,
 } from './sessionTypes';
-import {
-  assertCompiledEditorContract,
-  assertSessionConfigContract,
-  bindSessionTypographyControls,
-} from './sessionConfig';
+import { bindSessionTypographyControls } from './sessionConfig';
 
 export function useSessionBoot(args: {
   stateRef: MutableRefObject<SessionState>;
@@ -44,74 +37,15 @@ export function useSessionBoot(args: {
           };
         }
 
-        const rawCompiled = message.compiled;
-        const baseLocale = typeof message.baseLocale === 'string' ? message.baseLocale.trim() : '';
-        let nextLabel = typeof message.label === 'string' && message.label.trim() ? message.label.trim() : '';
-        const rawInstanceData = message.instanceData;
-        const publicPackage = message.publicPackage;
-        const publicActions = message.publicActions ?? null;
-        if (!baseLocale) {
-          return {
-            ok: false,
-            error: 'coreui.errors.builder.open.invalidRequest',
-          };
-        }
-        if (!rawInstanceData || typeof rawInstanceData !== 'object' || Array.isArray(rawInstanceData)) {
-          return {
-            ok: false,
-            error: 'coreui.errors.instance.config.invalid',
-          };
-        }
-        if (
-          !publicPackage ||
-          typeof publicPackage.indexHtml !== 'string' ||
-          typeof publicPackage.stylesCss !== 'string' ||
-          typeof publicPackage.runtimeJs !== 'string'
-        ) {
-          return {
-            ok: false,
-            error: 'coreui.errors.instance.publicPackageNotFound',
-          };
-        }
-        if (
-          message.publishStatus === 'published' &&
-          (!publicActions ||
-            typeof publicActions.publicUrl !== 'string' ||
-            !publicActions.publicUrl.trim() ||
-            typeof publicActions.iframeSnippet !== 'string' ||
-            !publicActions.iframeSnippet.trim() ||
-            typeof publicActions.scriptSnippet !== 'string' ||
-            !publicActions.scriptSnippet.trim())
-        ) {
-          return {
-            ok: false,
-            error: 'coreui.errors.builder.publicActions.invalid',
-          };
-        }
-        if (message.publishStatus !== 'published' && publicActions !== null) {
-          return {
-            ok: false,
-            error: 'coreui.errors.builder.publicActions.invalid',
-          };
-        }
-        const fontLibrary = normalizeAccountFontLibrary(message.fontLibrary);
-        if (!fontLibrary) {
-          return {
-            ok: false,
-            error: 'coreui.errors.typography.fontLibrary.invalid',
-          };
-        }
-        assertCompiledEditorContract(rawCompiled);
-        const compiled = bindSessionTypographyControls(rawCompiled, fontLibrary);
-        const instanceData = rawInstanceData as Record<string, unknown>;
-        assertSessionConfigContract(instanceData, compiled);
+        const baseLocale = message.baseLocale;
+        const nextLabel = message.label;
+        const publicActions = message.publicActions;
+        const fontLibrary = message.fontLibrary;
+        const compiled = bindSessionTypographyControls(message.compiled, fontLibrary);
+        const instanceData = message.instanceData;
         const savedInstanceDataSignature = serializeInstanceDataSignature(instanceData);
-        const nextPolicy = (message.policy as Policy | null | undefined) ?? null;
-        const nextCopilot = (message.copilot as CopilotRuntimeUi | undefined) ?? null;
-
-        if (!nextLabel) {
-          nextLabel = String(message.instanceId || '').trim() || 'Untitled widget';
-        }
+        const nextPolicy = message.policy;
+        const nextCopilot = message.copilot;
 
         const nextMeta: SessionMeta = {
           accountPublicId: message.accountPublicId,
@@ -122,13 +56,12 @@ export function useSessionBoot(args: {
           label: nextLabel,
           publicActions,
           fontLibrary,
-          translationSetup: message.translationSetup ?? null,
+          translationSetup: message.translationSetup,
         };
         const nextState: SessionState = {
           ...current,
           compiled,
           instanceData,
-          publicPackage,
           savedInstanceDataSignature,
           isDirty: false,
           error: null,
@@ -156,17 +89,8 @@ export function useSessionBoot(args: {
           console.error('[useWidgetSession] Failed to load instance', err, message);
         }
         const messageText = err instanceof Error ? err.message : String(err);
-        setPolicy(null);
-        setCopilot(null);
-        metaRef.current = null;
-        setMeta(null);
         const nextState: SessionState = {
           ...stateRef.current,
-          compiled: null,
-          instanceData: {},
-          publicPackage: null,
-          savedInstanceDataSignature: serializeInstanceDataSignature({}),
-          isDirty: false,
           error: { source: 'load', message: messageText },
         };
         stateRef.current = nextState;
@@ -196,19 +120,8 @@ export function useSessionBoot(args: {
 
       if (data.type === 'ck:open-editor') {
         if (event.source !== window.parent) return;
-        const requestId = typeof data.requestId === 'string' ? data.requestId.trim() : '';
+        const requestId = data.requestId;
         const targetOrigin = event.origin && event.origin !== 'null' ? event.origin : '*';
-        if (!requestId) {
-          postToParent(
-            {
-              type: 'bob:open-editor-failed',
-              reasonKey: 'coreui.errors.builder.open.invalidRequest',
-              message: 'Missing requestId',
-            },
-            targetOrigin,
-          );
-          return;
-        }
 
         void loadInstance(data).then((result) => {
           if (result.ok) {
@@ -230,7 +143,7 @@ export function useSessionBoot(args: {
             {
               type: 'bob:open-editor-failed',
               requestId,
-              reasonKey: result.error || 'coreui.errors.builder.open.failed',
+              reasonKey: result.error,
               message: result.error,
             },
             targetOrigin,

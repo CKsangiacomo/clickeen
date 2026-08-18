@@ -47,6 +47,7 @@ export default class SanFranciscoWorker extends WorkerEntrypoint<Env> {
           response: noStore(json({
             error: {
               code: 'BAD_REQUEST',
+              reasonKey: 'BAD_REQUEST',
               message: 'San Francisco no longer executes agent brains. Call the agent home and use /model/turn only for governed model execution.',
             },
           }, { status: 410 })),
@@ -74,7 +75,7 @@ export default class SanFranciscoWorker extends WorkerEntrypoint<Env> {
       console.error('[sanfrancisco] Unhandled error', err);
       return finalizeSanFranciscoObservedResponse({
         context: requestContext,
-        response: noStore(json({ error: { code: 'PROVIDER_ERROR', provider: 'sanfrancisco', message: 'Unhandled error' } }, { status: 500 })),
+        response: noStore(json({ error: { code: 'PROVIDER_ERROR', reasonKey: 'PROVIDER_ERROR', provider: 'sanfrancisco', message: 'Unhandled error' } }, { status: 500 })),
         boundary: 'http.error',
         reasonKey: 'PROVIDER_ERROR',
         detail: err instanceof Error ? err.message : String(err),

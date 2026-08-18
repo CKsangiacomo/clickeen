@@ -80,25 +80,43 @@ a dialog seems low-risk.
 | Dieter Object Manager | Close if unchanged; dirty opens discard confirmation | Never | Cancel follows the dirty rule; Save applies reorder/delete to Bob's working state |
 | Roma Bulk Upload | Disabled while an upload is active; close after terminal | Never | Close exists only after terminal state |
 | Roma account tier-drop notice | Never | Never | Open settings or persisted Dismiss resolves it |
-| Roma plan-limit prompt | Close | Close | No work is lost; enforcement and Upgrade meaning are separate concerns |
+| Roma shared plan-limit/upsell Popup | Close | Close | Denied action was not applied; system-owned Upgrade scaffold or dismiss |
 | Roma widget public code | Close | Close | Close; read/copy only, no work is mutated |
-| Bob plan-limit/upsell prompt | Close | Close | No work is lost; enforcement and Upgrade meaning are separate concerns |
-| Roma upsell scaffold | Close | Close | No work is lost; no commercial operation has started |
 | DevStudio token editor | Close if unchanged; dirty opens discard confirmation | Never | Cancel follows the dirty rule; Confirm Commit persists |
 | Roma unsaved Builder/defaults confirmation | Keep editing | Never | Keep editing is safe; Discard is explicit |
 
-## Upsell Transition
+## Shared Upsell Popup Composition
 
-Legitimate Upgrade entry points remain during pre-GA development. When Upgrade
-starts inside a plan-limit prompt, that prompt transitions to the shared upsell
-dialog scaffold in the same dialog layer. Do not stack two modals.
+Legitimate entitlement denials use one Roma-hosted Popup. There is no Bob
+plan-limit dialog that transitions to, or stacks beneath, a second Roma upsell
+dialog. Bob reports the denied capability and exact compiled Widget message
+identity; Roma opens the one account surface directly.
 
-The scaffold has real dialog semantics and a stable content region, but it does
-not imply a working commercial operation. Until billing is separately
-implemented, it must not mutate a plan, call a billing provider, claim purchase
-success, or invent a sales/contact destination. Opening it is an in-place UI
-transition that preserves unsaved Builder work; it must not invoke a discard
-confirmation.
+The Popup has multiple content authorities without becoming multiply hosted:
+
+- the Widget's compiled upsell locale artifact supplies the exact contextual
+  body template for a Widget-bound denial;
+- Roma/system policy supplies the current plan, target eligible plan, and denied
+  system capability;
+- Roma/system UI supplies the Popup title, CTA labels, dismissal labels, and
+  behavior;
+- Dieter supplies only the Popup structure, presentation, and lifecycle.
+
+Roma interpolates exact system plan values into the Widget template. It never
+invents Widget wording, chooses another message, or falls back to generic copy
+when the bound message is missing. The Widget never supplies plan values or CTA
+behavior, and Dieter never reads policy or copy artifacts.
+
+Until billing is separately implemented, Upgrade is scaffolding: it must not
+mutate a plan, call a billing provider, claim purchase success, navigate to
+inactive Billing, or invent a sales/contact destination. Opening or dismissing
+the Popup preserves unsaved Builder work; it must not invoke a discard
+confirmation because the denied action did not mutate the draft.
+
+Current local implementation: Bob's local generic upsell Popup and the second
+Upgrade-intent scaffold are removed. Bob sends the exact denied capability and
+compiled Widget message identity; Roma directly opens the one shared
+Roma/Dieter Popup described above. Owner QA and deploy proof remain pending.
 
 ## Execution Rule
 

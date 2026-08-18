@@ -271,13 +271,6 @@ export async function GET(request: NextRequest) {
       accountId: bootstrap.accountId,
       widgetTypes: widgetDefinitions.value.widgetDefinitions.map((entry) => entry.widgetType),
     });
-    if (!widgetDefaults.ok) {
-      return applySession(
-        NextResponse.redirect(buildRecoveryUrl(request, widgetDefaults.error.reasonKey), {
-          headers: CACHE_HEADERS,
-        }),
-      );
-    }
     const initialized = await createInitialAccountWidgetDefaultsInTokyo({
       accountId: bootstrap.accountId,
       accountCapsule,

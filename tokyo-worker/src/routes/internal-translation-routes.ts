@@ -1,11 +1,10 @@
-import { normalizeStorageId } from '../asset-utils';
+import { normalizeLocale, normalizeStorageId } from '../asset-utils';
 import {
   deleteAccountInstanceTranslatedLocaleValues,
   listAccountInstanceTranslatedLocaleValues,
   readAccountInstanceTranslatedLocaleValues,
   writeAccountInstanceTranslatedLocaleValues,
 } from '../domains/account-translations/values';
-import { readAccountInstanceDocument } from '../domains/account-instances/source';
 import { json } from '../http';
 import {
   authorizeAccountInstanceControlRequest,
@@ -17,7 +16,6 @@ import {
 import {
   authorizeTranslatedLocaleWriteTransition,
   normalizeAccountPublicId,
-  normalizeTranslatedValues,
   readInternalProductJsonBody,
 } from './internal-product-route-utils';
 
@@ -42,27 +40,25 @@ export async function tryHandleInternalTranslationRoutes(
     });
     if (authErr) return respond(authErr);
 
-    const instance = await readAccountInstanceDocument({ env, accountId, instanceId });
-    if (!instance.ok) {
+    const translations = await listAccountInstanceTranslatedLocaleValues({ env, accountId, instanceId });
+    if (!translations.ok) {
       return respond(
         json(
-          { error: { kind: instance.kind, reasonKey: instance.reasonKey } },
-          { status: instance.kind === 'NOT_FOUND' ? 404 : 422 },
+          { error: { kind: translations.kind, reasonKey: translations.reasonKey } },
+          { status: translations.kind === 'NOT_FOUND' ? 404 : 422 },
         ),
       );
     }
-    const translations = await listAccountInstanceTranslatedLocaleValues({ env, accountId, instanceId });
     return respond(json({
       ok: true,
-            baseLocale: instance.value.baseLocale,
-      translations,
+      ...translations.value,
     }));
   }
 
   const internalTranslationValuesMatch = pathname.match(/^\/__internal\/instances\/([^/]+)\/translations\/([^/]+)$/);
   if (internalTranslationValuesMatch) {
     const instanceId = normalizeStorageId(decodeURIComponent(internalTranslationValuesMatch[1] || ''));
-    const locale = String(decodeURIComponent(internalTranslationValuesMatch[2] || '')).trim();
+    const locale = normalizeLocale(decodeURIComponent(internalTranslationValuesMatch[2] || ''));
     const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
     if (!accountId || !instanceId || !locale || !isValidScopedInstance(instanceId, accountId)) {
       return respondValidation(respond, 'coreui.errors.instance.invalidPayload', accountId ? 403 : 422);
@@ -79,7 +75,12 @@ export async function tryHandleInternalTranslationRoutes(
 
       const translation = await readAccountInstanceTranslatedLocaleValues({ env, accountId, instanceId, locale });
       if (!translation.ok) {
-        return respond(json({ error: { kind: 'NOT_FOUND', reasonKey: 'tokyo.translation.notFound' } }, { status: 404 }));
+        return respond(
+          json(
+            { error: { kind: translation.kind, reasonKey: translation.reasonKey } },
+            { status: translation.kind === 'NOT_FOUND' ? 404 : 422 },
+          ),
+        );
       }
       return respond(json({ ok: true, ...translation.value }));
     }
@@ -93,12 +94,16 @@ export async function tryHandleInternalTranslationRoutes(
         env,
         boundary: 'internal.instance.translationValues.body',
         accountId,
-      })) as Record<string, unknown> | null;
-      const values = normalizeTranslatedValues(body?.values);
-      if (!values) return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
+      })) as { values: Record<string, string> };
 
       try {
-        const translation = await writeAccountInstanceTranslatedLocaleValues({ env, accountId, instanceId, locale, values });
+        const translation = await writeAccountInstanceTranslatedLocaleValues({
+          env,
+          accountId,
+          instanceId,
+          locale,
+          values: body.values,
+        });
         return respond(json({ ok: true, locale: translation.locale }));
       } catch (error) {
         const detail = error instanceof Error ? error.message : String(error);

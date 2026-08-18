@@ -87,16 +87,6 @@
         "tier4": 100
       }
     },
-    "widgets.instances.max": {
-      "kind": "limit",
-      "values": {
-        "free": 3,
-        "tier1": 10,
-        "tier2": 25,
-        "tier3": 100,
-        "tier4": 250
-      }
-    },
     "uploads.size.max": {
       "kind": "limit",
       "values": {

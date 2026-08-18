@@ -100,6 +100,11 @@ layering are owned by their own UI docs.
   callers use `$label:{key}` plus the adjacent Widget label file; application
   Chrome uses its owning application copy source while preserving the same
   component input boundary.
+- **Upsell composition boundary.** Roma composes the one shared account Popup.
+  A compiled Widget artifact may supply its localized contextual body while
+  system policy supplies plan truth and Roma/system UI supplies actions. Popup
+  receives those resolved inputs; Dieter never reads limits, selects a message,
+  interpolates plans, owns an Upgrade CTA, or substitutes missing copy.
 - **Stencil + spec where the component is field-rendered.** Rendered editor
   components normally pair an `.html` stencil with a `.spec.json` binding
   model. CSS-only primitives and specialized components may intentionally have
@@ -129,9 +134,10 @@ used only for committed SVG icon bytes.
 
 For account-font controls, Dieter owns generic dropdown presentation and emits
 the selected value as raw control intent. It does not inspect typography paths
-or font metadata and does not filter available weights or styles. Bob owns the
-account-font capability filter used by Builder; Bob and Roma own their product
-state transitions through the shared account-font product law.
+or font metadata and does not narrow available weights or styles. Bob projects
+the exact Roma-owned account-font library into Builder choices; Bob and Roma
+own their product state transitions through the shared account-font product
+law.
 
 `@ck/dieter` is a source/typecheck task package, not a separately shipped
 runtime. Consumers use the source entrypoints named above. Do not invent a

@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { asTrimmedString, isRecord } from '@clickeen/ck-contracts';
-import {
-  parseCopilotTurnRequest,
-  type CopilotTurnRequest,
-} from '@clickeen/ck-contracts/ai';
+import { parseCopilotTurnRequest } from '@clickeen/ck-contracts/ai';
 import {
   issueAccountCopilotGrant,
   streamCopilotTurn,
@@ -112,25 +109,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
       return withSession(
         request,
         NextResponse.json({ error: currentInstance.error }, { status: currentInstance.status }),
-        current.value.setCookies,
-      );
-    }
-
-    // PRD 128D: context widgetType must match the loaded Tokyo instance row.
-    const widgetType = currentInstance.value.row.widgetType;
-    if (turnRequest.currentDraftContext.widgetType !== widgetType) {
-      return withSession(
-        request,
-        NextResponse.json(
-          {
-            error: {
-              kind: 'UPSTREAM_UNAVAILABLE',
-              reasonKey: 'coreui.errors.copilot.invalidRequest',
-              detail: 'Draft context widgetType must match the instance widget type.',
-            },
-          },
-          { status: 422 },
-        ),
         current.value.setCookies,
       );
     }

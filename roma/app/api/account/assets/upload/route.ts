@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolvePolicyFromEntitlementsSnapshot } from '@clickeen/ck-policy';
-import { parseAccountAssetRecord } from '@roma/lib/account-asset-record';
+import type { AccountAssetRecord } from '@clickeen/ck-contracts';
 import {
   accountAssetUploadOptionsResponse,
   finalizeAccountAssetResponse,
-  parseJsonOrNull,
   resolveCurrentAccountAssetGatewayContext,
 } from '@roma/lib/account-assets-gateway';
 import { isTokyoAssetUsageError, readAccountStorageBytesUsed } from '@roma/lib/account-storage-usage';
@@ -201,31 +200,7 @@ export async function POST(request: NextRequest) {
       body: bodyStream,
     });
 
-    const text = await upstream.text().catch(() => '');
-    const payload = parseJsonOrNull(text);
-    const assetRecord = upstream.ok ? parseAccountAssetRecord(payload) : null;
-    const body = upstream.ok
-      ? assetRecord
-      : payload && typeof payload === 'object'
-        ? payload
-        : {
-            error: {
-              kind: 'INTERNAL',
-              reasonKey: 'coreui.errors.assets.uploadFailed',
-              detail: text || `tokyo upload failed (HTTP ${upstream.status})`,
-            },
-          };
-
-    if (upstream.ok && !body) {
-      return finalizeAccountAssetResponse({
-        request,
-        response: NextResponse.json(
-          { error: { kind: 'INTERNAL', reasonKey: 'coreui.errors.assets.uploadFailed' } },
-          { status: 502 },
-        ),
-        setCookies: gateway.value.sessionSetCookies,
-      });
-    }
+    const body = (await upstream.json()) as AccountAssetRecord | { error: unknown };
 
     return finalizeAccountAssetResponse({
       request,

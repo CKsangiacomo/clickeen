@@ -1,19 +1,28 @@
 'use client';
 
-import { parseAccountLocaleListStrict, parseAccountLocalePolicyStrict } from '@clickeen/ck-contracts';
+import type { CompiledWidget } from '@clickeen/bob/types';
 import type { AccountAssetHostCommand } from '@clickeen/ck-contracts';
 import { isProductCopilotTurnEvent, type ProductCopilotTurnEvent } from '@clickeen/ck-contracts/ai';
+import type { Policy } from '@clickeen/ck-policy';
 import type { AccountFontLibrary } from '@clickeen/widget-foundation';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { resolveAccountShellErrorCopy } from '../lib/account-shell-copy';
 import { resolveBobBaseUrl } from '../lib/env/bob';
+import { formatAccountTierLabel } from '../lib/format';
 import { buildWidgetPublicActions, type WidgetPublicActions } from '../lib/public-widget-actions';
 import { useRomaAccountApi } from './account-api';
 import { getWidgetEditorArtifact } from './widget-editor-artifact';
 import { useRomaAccountContext } from './roma-account-context';
 import { RomaUnsavedChangesDialog } from './roma-unsaved-changes-dialog';
-import { RomaUpsellDialog } from './roma-upsell-dialog';
+import {
+  buildPublicationCapacityUpsell,
+  RomaUpsellDialog,
+  resolveTargetPlan,
+  type PublicationCapacityUpgrade,
+  type UpsellPresentation,
+} from './roma-upsell-dialog';
 import { useRomaShellActions } from './roma-shell';
 import { WidgetCopyCodeDialog } from './widget-copy-code-dialog';
 
@@ -22,7 +31,6 @@ type BuilderDomainProps = {
 };
 
 const OPEN_EDITOR_TIMEOUT_MS = 7000;
-const OPEN_EDITOR_RECONCILE_DELAYS_MS = [250, 1000, 2500] as const;
 const UNSAVED_OPEN_REASON = 'coreui.errors.builder.open.unsavedChanges';
 
 type BobReadyMessage = {
@@ -31,19 +39,19 @@ type BobReadyMessage = {
 
 type BobDirtyStateChangedMessage = {
   type: 'bob:dirty-state-changed';
-  isDirty?: boolean;
+  isDirty: boolean;
 };
 
 type BobOpenEditorAppliedMessage = {
   type: 'bob:open-editor-applied';
-  requestId?: string | null;
+  requestId: string;
 };
 
 type BobOpenEditorFailedMessage = {
   type: 'bob:open-editor-failed';
-  requestId?: string | null;
-  reasonKey?: string | null;
-  message?: string | null;
+  requestId: string;
+  reasonKey: string;
+  message?: string;
 };
 
 type BobAccountCommand =
@@ -55,30 +63,81 @@ type BobAccountCommand =
   | 'run-copilot'
   | 'cancel-copilot';
 
-type BobAccountCommandMessage = {
+type BobInstanceAccountCommand = Exclude<
+  BobAccountCommand,
+  AccountAssetHostCommand | 'cancel-copilot'
+>;
+
+type BobAccountCommandMessageBase = {
   type: 'bob:account-command';
-  requestId?: string | null;
-  command?: BobAccountCommand | null;
-  instanceId?: string | null;
+  requestId: string;
   headers?: Record<string, string>;
   body?: unknown;
 };
 
-type BobUpsellMessage = {
+type BobAccountCommandMessage =
+  | (BobAccountCommandMessageBase & {
+      command: BobInstanceAccountCommand;
+      instanceId: string;
+    })
+  | (BobAccountCommandMessageBase & {
+      command: AccountAssetHostCommand;
+      instanceId?: string;
+    })
+  | (BobAccountCommandMessageBase & {
+      command: 'cancel-copilot';
+    });
+
+type BobWidgetUpsellMessage = {
   type: 'bob:upsell';
-  cta?: 'upgrade' | string | null;
-  reasonKey?: string | null;
+  capability: string;
+  messageId: string;
+  required: boolean | number;
 };
+
+type BobSystemUpsellMessage = {
+  type: 'bob:upsell';
+  reasonKey: string;
+  detail?: string;
+};
+
+type BobUpsellMessage = BobWidgetUpsellMessage | BobSystemUpsellMessage;
 
 type BobHostActionMessage = {
   type: 'bob:host-action';
-  action?: 'open-navigation' | 'copy-code' | string | null;
+  action: 'open-navigation' | 'copy-code' | 'publish';
 };
 
-function resolveBobUpsellReason(reasonKey: string | null | undefined): string {
-  if (reasonKey === 'coreui.upsell.reason.limitReached') return "You've reached your plan limit.";
-  if (reasonKey === 'coreui.upsell.reason.flagBlocked') return 'This option is not available on your current plan.';
-  return 'This action requires a plan upgrade.';
+function resolveBobSystemUpsellBody(reasonKey: string): string {
+  switch (reasonKey) {
+    case 'coreui.upsell.reason.limitReached':
+      return 'This exceeds your current plan limit.';
+    case 'coreui.upsell.reason.platform.uploads':
+      return 'Uploads are not available on your current plan.';
+    default:
+      throw new Error(reasonKey);
+  }
+}
+
+function composeWidgetUpsellBody(args: {
+  compiled: CompiledWidget;
+  policy: Policy;
+  capability: string;
+  messageId: string;
+  required: boolean | number;
+}): UpsellPresentation {
+  const targetPlan = resolveTargetPlan(args.policy, args.capability, args.required);
+  return targetPlan
+    ? {
+        body: args.compiled.upsell.messages[args.messageId]
+          .replaceAll('{currentPlan}', formatAccountTierLabel(args.policy.profile))
+          .replaceAll('{targetPlan}', formatAccountTierLabel(targetPlan)),
+        upgradeAvailable: true,
+      }
+    : {
+        body: `Your current plan is ${formatAccountTierLabel(args.policy.profile)}. You have reached the maximum capacity currently available for this feature.`,
+        upgradeAvailable: false,
+      };
 }
 
 type HostAccountCommandResultMessage = {
@@ -119,20 +178,15 @@ type BobOpenEditorMessage = {
   baseLocale: string;
   label: string;
   widgetname: string;
-  compiled: unknown;
+  compiled: CompiledWidget;
   instanceData: Record<string, unknown>;
-  publicPackage: {
-    indexHtml: string;
-    stylesCss: string;
-    runtimeJs: string;
-  };
   fontLibrary: AccountFontLibrary;
-  publishStatus?: 'published' | 'unpublished';
+  publishStatus: 'published' | 'unpublished';
   publicActions: WidgetPublicActions | null;
-  policy?: unknown;
-  copilot?: unknown;
-  translationSetup?: {
-        baseLocale: string;
+  policy: unknown;
+  copilot: unknown;
+  translationSetup: {
+    baseLocale: string;
     planTranslationsMax: number | null;
     activeLocales: string[];
   };
@@ -144,15 +198,11 @@ type BuilderOpenResponse = {
   instanceId: string;
   displayName: string;
   widgetType: string;
+  baseLocale: string;
   config: Record<string, unknown>;
-  publicPackage: {
-    indexHtml: string;
-    stylesCss: string;
-    runtimeJs: string;
-  };
   fontLibrary: AccountFontLibrary;
-  publishStatus?: 'published' | 'unpublished';
-  copilot?: unknown;
+  publishStatus: 'published' | 'unpublished';
+  copilot: unknown;
 };
 
 const BUILDER_REASON_COPY: Record<string, string> = {
@@ -198,15 +248,10 @@ function resolveBobAccountCommandRequest(args: {
   instanceId?: string;
   body?: unknown;
 }): { method: 'GET' | 'PUT' | 'POST' | 'DELETE'; path: string } | null {
-  const instanceId = String(args.instanceId || '').trim();
-  const body = args.body && typeof args.body === 'object' && !Array.isArray(args.body)
-    ? (args.body as Record<string, unknown>)
-    : null;
-  const locale = typeof body?.locale === 'string' ? body.locale.trim() : '';
+  const instanceId = args.instanceId as string;
 
   switch (args.command) {
     case 'update-instance':
-      if (!instanceId) return null;
       return {
         method: 'PUT',
         path: `/api/account/instances/${encodeURIComponent(instanceId)}`,
@@ -227,25 +272,22 @@ function resolveBobAccountCommandRequest(args: {
         path: '/api/account/assets/upload',
       };
     case 'list-translations':
-      if (!instanceId) return null;
       return {
         method: 'GET',
         path: `/api/account/instances/${encodeURIComponent(instanceId)}/translations`,
       };
     case 'read-translation':
-      if (!instanceId || !locale) return null;
+      const { locale } = args.body as { locale: string };
       return {
         method: 'GET',
         path: `/api/account/instances/${encodeURIComponent(instanceId)}/translations/${encodeURIComponent(locale)}`,
       };
     case 'generate-translations':
-      if (!instanceId) return null;
       return {
         method: 'POST',
         path: `/api/account/instances/${encodeURIComponent(instanceId)}/translations/generate`,
       };
     case 'run-copilot':
-      if (!instanceId) return null;
       return {
         method: 'POST',
         path: `/api/account/instances/${encodeURIComponent(instanceId)}/copilot`,
@@ -263,41 +305,31 @@ function buildTranslationSetup(args: {
   activeAccount: ReturnType<typeof useRomaAccountContext>['activeAccount'];
   accountPolicy: ReturnType<typeof useRomaAccountContext>['accountPolicy'];
 }): BobOpenEditorPayload['translationSetup'] {
-  const activeLocales = parseAccountLocaleListStrict(args.activeAccount.activeLocales)
-    .filter((locale) => locale !== args.baseLocale);
   const planTranslationsMax = args.accountPolicy.limits['l10n.locales.max'];
   return {
-        baseLocale: args.baseLocale,
-    planTranslationsMax: typeof planTranslationsMax === 'number' && Number.isFinite(planTranslationsMax)
-      ? Math.max(0, Math.floor(planTranslationsMax))
-      : null,
-    activeLocales,
+    baseLocale: args.baseLocale,
+    planTranslationsMax,
+    activeLocales: args.activeAccount.activeLocales,
   };
 }
 
-function isAccountAssetCommand(command: BobAccountCommand): boolean {
+function isAccountAssetCommand(command: BobAccountCommand): command is AccountAssetHostCommand {
   return command === 'list-assets' || command === 'resolve-assets' || command === 'upload-asset';
-}
-
-function isStreamedCommandResult(value: unknown): value is { status: number; payload: unknown } {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
-  const record = value as Record<string, unknown>;
-  return typeof record.status === 'number' && Number.isFinite(record.status) && 'payload' in record;
 }
 
 async function readJsonOrStreamedCommandResult(args: {
   response: Response;
   onActivity: (event: AgentActivityEvent) => void;
-}): Promise<unknown> {
+}): Promise<{ status: number; payload: unknown }> {
   const contentType = args.response.headers.get('content-type') ?? '';
   if (!contentType.includes('text/event-stream') || !args.response.body) {
-    return args.response.json().catch(() => null);
+    return { status: args.response.status, payload: await args.response.json() };
   }
 
   const reader = args.response.body.getReader();
   const decoder = new TextDecoder();
   let buffer = '';
-  let finalPayload: unknown = null;
+  let finalPayload: { status: number; payload: unknown } | null = null;
 
   const consumeEvent = (raw: string) => {
     const lines = raw.split(/\r?\n/);
@@ -313,19 +345,21 @@ async function readJsonOrStreamedCommandResult(args: {
       }
     }
     if (!dataLines.length) return;
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(dataLines.join('\n'));
-    } catch {
-      return;
-    }
-    if (eventName === 'activity' && parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+    const data = dataLines.join('\n');
+    if (eventName === 'activity') {
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(data);
+      } catch {
+        return;
+      }
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return;
       const message = (parsed as { message?: unknown }).message;
       if (typeof message === 'string') args.onActivity({ message });
       return;
     }
     if (eventName === 'result') {
-      finalPayload = parsed;
+      finalPayload = JSON.parse(data) as { status: number; payload: unknown };
     }
   };
 
@@ -342,18 +376,7 @@ async function readJsonOrStreamedCommandResult(args: {
   }
   const tail = `${buffer}${decoder.decode()}`.trim();
   if (tail) consumeEvent(tail);
-  if (!isStreamedCommandResult(finalPayload)) {
-    return {
-      status: 502,
-      payload: {
-        error: {
-          kind: 'UPSTREAM_UNAVAILABLE',
-          reasonKey: 'coreui.errors.builder.command.invalid',
-          detail: 'host_command_stream_missing_result',
-        },
-      },
-    };
-  }
+  if (!finalPayload) throw new Error('coreui.errors.builder.command.missingResult');
   return finalPayload;
 }
 
@@ -512,6 +535,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
   const openDispatchSeqRef = useRef(0);
   const bobAppliedInstanceIdRef = useRef('');
   const bobIsDirtyRef = useRef(false);
+  const activeCompiledWidgetRef = useRef<CompiledWidget | null>(null);
   const activeInstanceIdRef = useRef('');
   const pendingDiscardActionRef = useRef<(() => void) | null>(null);
   const allowNavigationRef = useRef(false);
@@ -529,7 +553,8 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
   } | null>(null);
   const [copyCodeOpen, setCopyCodeOpen] = useState(false);
   const [unsavedDialogOpen, setUnsavedDialogOpen] = useState(false);
-  const [upsellReason, setUpsellReason] = useState<string | null>(null);
+  const [upsell, setUpsell] = useState<UpsellPresentation | null>(null);
+  const [publicationError, setPublicationError] = useState<string | null>(null);
 
   const bobBaseUrl = useMemo(() => resolveBobBaseUrl(), []);
   const currentUrl = pathname;
@@ -604,9 +629,9 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         args.source.postMessage(message, bobBaseUrl);
       };
       const commandUsesActiveInstance = !isAccountAssetCommand(args.command);
-      const requestedInstanceId = typeof args.instanceId === 'string' ? args.instanceId.trim() : '';
+      const requestedInstanceId = args.instanceId as string;
       const scopedInstanceId = commandUsesActiveInstance
-        ? (bobAppliedInstanceIdRef.current || activeInstanceId).trim()
+        ? (bobAppliedInstanceIdRef.current || activeInstanceId)
         : requestedInstanceId;
       if (commandUsesActiveInstance && requestedInstanceId && requestedInstanceId !== scopedInstanceId) {
         reply({
@@ -742,13 +767,11 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         init.headers = headers;
 
         const response = await accountApi.fetchRaw(route.path, init);
-        const resultPayload = await readJsonOrStreamedCommandResult({
+        const commandResult = await readJsonOrStreamedCommandResult({
           response,
           onActivity: sendActivity,
         });
-        const streamedResult = isStreamedCommandResult(resultPayload) ? resultPayload : null;
-        const status = streamedResult ? streamedResult.status : response.status;
-        const payload = streamedResult ? streamedResult.payload : resultPayload;
+        const { status, payload } = commandResult;
 
         reply({
           requestId: args.requestId,
@@ -822,8 +845,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
           if (!source || event.source !== source) return;
           const data = event.data as BobOpenEditorAppliedMessage | BobOpenEditorFailedMessage | null;
           if (!data || typeof data !== 'object') return;
-          const dataRequestId = typeof data.requestId === 'string' ? data.requestId.trim() : '';
-          if (dataRequestId !== requestId) return;
+          if (data.requestId !== requestId) return;
 
           if (data.type === 'bob:open-editor-applied') {
             succeed();
@@ -831,12 +853,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
           }
 
           if (data.type === 'bob:open-editor-failed') {
-            const failed = data as BobOpenEditorFailedMessage;
-            const reason =
-              (typeof failed.reasonKey === 'string' && failed.reasonKey.trim()) ||
-              (typeof failed.message === 'string' && failed.message.trim()) ||
-              'coreui.errors.builder.open.failed';
-            fail(new Error(reason));
+            fail(new Error(data.reasonKey));
           }
         };
 
@@ -861,6 +878,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
 
     const openSeq = ++openDispatchSeqRef.current;
     setOpenError(null);
+    setPublicationError(null);
     setCopyCodeOpen(false);
     setPublicActionContext(null);
 
@@ -871,16 +889,10 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
 
       if (openSeq !== openDispatchSeqRef.current) return;
 
-      const resolvedInstanceId = typeof builderOpen.instanceId === 'string' ? builderOpen.instanceId.trim() : '';
-      if (!resolvedInstanceId || resolvedInstanceId !== activeInstanceId) {
-        throw new Error('coreui.errors.payload.invalid');
-      }
-      if (builderOpen.publishStatus !== 'published' && builderOpen.publishStatus !== 'unpublished') {
-        throw new Error('coreui.errors.payload.invalid');
-      }
-      const label = typeof builderOpen?.displayName === 'string' && builderOpen.displayName.trim() ? builderOpen.displayName.trim() : resolvedInstanceId;
-      const config = builderOpen.config as Record<string, unknown>;
-      const baseLocale = parseAccountLocalePolicyStrict(activeAccount.localePolicy).baseLocale;
+      const resolvedInstanceId = builderOpen.instanceId;
+      const label = builderOpen.displayName;
+      const config = builderOpen.config;
+      const baseLocale = builderOpen.baseLocale;
       const translationSetup = buildTranslationSetup({
         baseLocale,
         activeAccount,
@@ -901,12 +913,11 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         widgetname: widgetType,
         compiled,
         instanceData: config,
-        publicPackage: builderOpen.publicPackage,
         fontLibrary: builderOpen.fontLibrary,
         publishStatus: builderOpen.publishStatus,
         publicActions: nextPublicActions,
         policy: accountPolicy,
-        copilot: builderOpen.copilot ?? null,
+        copilot: builderOpen.copilot,
         translationSetup,
       };
       await postOpenEditorAndWait({
@@ -915,6 +926,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         openSeq,
       });
       if (openSeq !== openDispatchSeqRef.current) return;
+      activeCompiledWidgetRef.current = compiled;
       bobAppliedInstanceIdRef.current = resolvedInstanceId;
       bobIsDirtyRef.current = false;
       setPublicActionContext(nextPublicActions ? { instanceName: label, actions: nextPublicActions } : null);
@@ -938,6 +950,36 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
   useEffect(() => {
     openActiveInstanceInBobRef.current = openActiveInstanceInBob;
   }, [openActiveInstanceInBob]);
+
+  const publishActiveInstance = useCallback(async () => {
+    const instanceId = bobAppliedInstanceIdRef.current;
+    setPublicationError(null);
+    setUpsell(null);
+    try {
+      const response = await accountApi.fetchRaw(
+        `/api/account/instances/${encodeURIComponent(instanceId)}/publish`,
+        { method: 'POST' },
+      );
+      if (response.status === 402) {
+        const denied = await response.json() as { upgrade: PublicationCapacityUpgrade };
+        setUpsell(buildPublicationCapacityUpsell(denied.upgrade, accountPolicy));
+        return;
+      }
+      if (!response.ok) {
+        const failed = await response.json() as { error: { reasonKey: string } };
+        setPublicationError(
+          resolveAccountShellErrorCopy(
+            failed.error.reasonKey,
+            'Publishing this widget failed. Please try again.',
+          ),
+        );
+        return;
+      }
+      await openActiveInstanceInBobRef.current();
+    } catch {
+      setPublicationError('Publishing this widget failed. Please try again.');
+    }
+  }, [accountApi, accountPolicy]);
 
   const handleBobIframeLoad = useCallback(() => {
     bobReadyRef.current = true;
@@ -970,11 +1012,23 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         return;
       }
       if (data.type === 'bob:dirty-state-changed') {
-        bobIsDirtyRef.current = data.isDirty === true;
+        bobIsDirtyRef.current = data.isDirty;
         return;
       }
       if (data.type === 'bob:upsell') {
-        if (data.cta === 'upgrade') setUpsellReason(resolveBobUpsellReason(data.reasonKey));
+        const presentation = 'capability' in data
+          ? composeWidgetUpsellBody({
+              compiled: activeCompiledWidgetRef.current!,
+              policy: accountPolicy,
+              capability: data.capability,
+              messageId: data.messageId,
+              required: data.required,
+            })
+          : {
+              body: resolveBobSystemUpsellBody(data.reasonKey),
+              upgradeAvailable: true,
+            };
+        setUpsell(presentation);
         return;
       }
       if (data.type === 'bob:host-action') {
@@ -983,15 +1037,15 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         } else if (data.action === 'copy-code') {
           if (publicActionContext) setCopyCodeOpen(true);
           else setOpenError('coreui.errors.builder.publicActions.invalid');
+        } else if (data.action === 'publish') {
+          void publishActiveInstance();
         }
         return;
       }
       if (data.type === 'bob:account-command') {
         const message = data as BobAccountCommandMessage;
-        const requestId = typeof message.requestId === 'string' ? message.requestId.trim() : '';
-        const command = message.command ?? null;
-        const instanceId = typeof message.instanceId === 'string' ? message.instanceId.trim() : '';
-        if (!requestId || !command) return;
+        const requestId = message.requestId;
+        const command = message.command;
         if (command === 'cancel-copilot') {
           const controller = copilotAbortControllers.current.get(requestId);
           if (controller) {
@@ -1018,31 +1072,43 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
           }
           return;
         }
-        if (!instanceId && !isAccountAssetCommand(command)) return;
-        void runBobAccountCommand({
-          source,
-          requestId,
-          command,
-          ...(instanceId ? { instanceId } : {}),
-          ...(message.headers ? { headers: message.headers } : {}),
-          ...(typeof message.body === 'undefined' ? {} : { body: message.body }),
-        });
+        if (isAccountAssetCommand(command)) {
+          void runBobAccountCommand({
+            source,
+            requestId,
+            command,
+            ...(message.instanceId ? { instanceId: message.instanceId } : {}),
+            ...(message.headers ? { headers: message.headers } : {}),
+            ...(typeof message.body === 'undefined' ? {} : { body: message.body }),
+          });
+        } else {
+          void runBobAccountCommand({
+            source,
+            requestId,
+            command,
+            instanceId: message.instanceId,
+            ...(message.headers ? { headers: message.headers } : {}),
+            ...(typeof message.body === 'undefined' ? {} : { body: message.body }),
+          });
+        }
         return;
       }
     };
 
     window.addEventListener('message', listener);
     return () => window.removeEventListener('message', listener);
-  }, [activeInstanceId, bobBaseUrl, openNavigation, publicActionContext, runBobAccountCommand]);
+  }, [accountPolicy, activeInstanceId, bobBaseUrl, openNavigation, publicActionContext, publishActiveInstance, runBobAccountCommand]);
 
   useEffect(() => {
     bobReadyRef.current = false;
     openDispatchSeqRef.current += 1;
+    activeCompiledWidgetRef.current = null;
     bobAppliedInstanceIdRef.current = '';
     bobIsDirtyRef.current = false;
     setCopyCodeOpen(false);
     setPublicActionContext(null);
     setOpenError(null);
+    setPublicationError(null);
   }, [bobSrc]);
 
   useEffect(() => {
@@ -1053,26 +1119,6 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
     if (!bobReadyRef.current) return;
     void openActiveInstanceInBobRef.current();
   }, [activeInstanceId]);
-
-  useEffect(() => {
-    if (!activeInstanceId) return;
-    let cancelled = false;
-    const timers = OPEN_EDITOR_RECONCILE_DELAYS_MS.map((delay) =>
-      window.setTimeout(() => {
-        if (cancelled) return;
-        const requestedInstanceId = activeInstanceIdRef.current;
-        if (!requestedInstanceId) return;
-        if (bobAppliedInstanceIdRef.current === requestedInstanceId) return;
-        if (!iframeRef.current?.contentWindow) return;
-        bobReadyRef.current = true;
-        void openActiveInstanceInBobRef.current();
-      }, delay),
-    );
-    return () => {
-      cancelled = true;
-      timers.forEach((timer) => window.clearTimeout(timer));
-    };
-  }, [activeInstanceId, bobSrc]);
 
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -1156,6 +1202,22 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
           </div>
         </div>
       ) : null}
+      {publicationError ? (
+        <div className="rd-canvas-module roma-builder-error" role="alert">
+          <p className="body-m">{publicationError}</p>
+          <div className="rd-canvas-module__actions">
+            <button
+              className="diet-button"
+              data-size="medium"
+              data-type="secondary"
+              type="button"
+              onClick={() => setPublicationError(null)}
+            >
+              <span className="diet-button__label">Dismiss</span>
+            </button>
+          </div>
+        </div>
+      ) : null}
       <iframe
         ref={iframeRef}
         src={bobSrc}
@@ -1176,9 +1238,10 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         onDiscard={discardAndContinue}
       />
       <RomaUpsellDialog
-        open={Boolean(upsellReason)}
-        reason={upsellReason ?? undefined}
-        onClose={() => setUpsellReason(null)}
+        open={Boolean(upsell)}
+        reason={upsell?.body}
+        upgradeAvailable={upsell?.upgradeAvailable}
+        onClose={() => setUpsell(null)}
       />
     </>
   );

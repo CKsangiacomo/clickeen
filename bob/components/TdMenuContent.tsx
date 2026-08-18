@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { type PanelId } from '../lib/types';
 import type { ApplyWidgetOpsResult, WidgetOp } from '../lib/ops';
-import { useWidgetSession, useWidgetSessionChrome } from '../lib/session/useWidgetSession';
+import { useWidgetSession } from '../lib/session/useWidgetSession';
 import { resolvePathFromTarget } from './td-menu-content/fieldValue';
 import { type ShowIfEntry } from './td-menu-content/showIf';
 import { useTdMenuBindings } from './td-menu-content/useTdMenuBindings';
@@ -35,7 +35,6 @@ export function TdMenuContent({
   footer,
 }: TdMenuContentProps) {
   const session = useWidgetSession();
-  const chrome = useWidgetSessionChrome();
   const containerRef = useRef<HTMLDivElement>(null);
   const [renderKey, setRenderKey] = useState(0);
   const showIfEntriesRef = useRef<ShowIfEntry[]>([]);
@@ -88,7 +87,7 @@ export function TdMenuContent({
     renderKey,
     compiled: session.compiled,
     fontLibrary: session.fontLibrary,
-    requestUpsell: chrome.requestUpsell,
+    requestUpsell: session.requestSystemUpsell,
     lastUpdate: lastUpdate ?? null,
     activePathRef,
     showIfEntriesRef,

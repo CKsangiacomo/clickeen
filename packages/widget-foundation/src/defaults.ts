@@ -224,6 +224,9 @@ export const COMMON_WIDGET_FACTORY_DEFAULTS = {
     position: 'top-right',
   },
   behavior: {
+    seoGeo: {
+      enabled: false,
+    },
     showBacklink: true,
     socialShare: {
       channels: {

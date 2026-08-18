@@ -1,0 +1,12 @@
+{
+  "widgetType": "faq",
+  "locale": "en",
+  "messages": {
+    "branding.remove": "Your current plan is {currentPlan}. Upgrade to {targetPlan} to remove Clickeen branding from this FAQ.",
+    "social-share.enable": "Your current plan is {currentPlan}. Upgrade to {targetPlan} to enable social sharing for this FAQ.",
+    "seo-geo.enable": "Your current plan is {currentPlan}. Upgrade to {targetPlan} to enable SEO/GEO optimization for this FAQ.",
+    "sections.max": "Your current plan is {currentPlan}. Upgrade to {targetPlan} to add more sections to this FAQ.",
+    "questions-per-section.max": "Your current plan is {currentPlan}. Upgrade to {targetPlan} to add more questions to this section.",
+    "questions-total.max": "Your current plan is {currentPlan}. Upgrade to {targetPlan} to add more questions to this FAQ."
+  }
+}

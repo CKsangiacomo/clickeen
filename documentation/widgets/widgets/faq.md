@@ -1,51 +1,65 @@
 # FAQ Widget
 
-STATUS: CURRENT SYSTEM OPERATOR SPEC
+STATUS: LOCAL CANONICAL CORE IMPLEMENTATION — NOT DEPLOYED
 
 ## Purpose
 
-FAQ renders grouped questions and answers inside the shared widget Shell. Runtime
-supports list, accordion, and multicolumn/card layouts.
+FAQ presents grouped questions and answers in list, accordion, grid, or masonry
+layouts. FAQ owns that meaning and behavior. Stage, Pod, Header, Bob, Roma,
+materialization, localization, account policy, storage, and serving remain
+shared Clickeen services.
 
 ## Source
 
 ```text
 tokyo/product/widgets/faq/
+  widget.html
+  spec.json
+  editable-fields.json
+  limits.json
+  discovery.json
+  labels/
+    en.json
+  upsell/
+    en.json
+  core/
+    core.html
+    core.css
+    core.js
 ```
 
-Files:
+The deleted `widget.css` and `widget.client.js` have no alias or compatibility
+wrapper.
 
-```text
-spec.json
-editable-fields.json
-limits.json
-faq_tooldrawer_l10n_labels/
-  en.json
-widget.html
-widget.css
-widget.client.js
-```
+## File Ownership
+
+| File | FAQ responsibility |
+| --- | --- |
+| `widget.html` | Complete Stage/Pod/Shell/Header/Core composition and declared shared/Core sources |
+| `core/core.html` | FAQ sections, questions, answers, identities, accessibility relationships, and Discovery microdata locations |
+| `core/core.css` | FAQ layouts, cards, links, accordion presentation, and FAQ typography variables |
+| `core/core.js` | FAQ accordion, startup expansion, and deep-link interaction |
+| `spec.json` | FAQ defaults and Bob controls |
+| `editable-fields.json` | Exact customer-content paths and repeated-item identities |
+| `limits.json` | Generic entitlement bindings and exact FAQ message identities |
+| `discovery.json` | Internal FAQ/search/answer-system meaning |
+| `labels/en.json` | Exact English FAQ ToolDrawer copy |
+| `upsell/en.json` | Exact English FAQ-context denial messages |
+
+Core JavaScript is mandatory. It does not create the initial FAQ, contain the
+editable instance, host Bob, materialize, localize, enforce tiers, or serve the
+Widget.
 
 ## Contract
 
-| Concern | Current value |
+| Concern | Value |
 | --- | --- |
 | `widgetname` | `faq` |
 | display name | FAQ |
 | Core namespace | `faq.*` |
 | panels | `content`, `layout`, `appearance`, `typography`, `settings` |
 
-Core defaults live under:
-
-```text
-faq
-typography
-uiLabels
-```
-
-`spec.json` includes widget-local normalization for FAQ Core state.
-
-Core state families:
+Core state families remain:
 
 ```text
 faq.appearance
@@ -56,7 +70,27 @@ faq.layout
 faq.sections
 ```
 
-## Editable Fields
+Each section and question carries its stable saved `id`. The Widget compiler
+owns default identity production. Bob, Roma, materialization, and Tokyo-worker
+trust the resulting instance truth rather than repairing or revalidating it.
+
+## Authored HTML Contract
+
+`widget.html` contains exactly one `{{> core}}` Mustache partial. The build
+resolves it from `core/core.html`. Bob preview and Roma Publish use the same
+compiled software with different exact state inputs:
+
+```text
+compiled FAQ software + Bob draft -> temporary Workspace preview
+compiled FAQ software + saved source + allowed Publish -> stored package
+```
+
+FAQ Core directly authors every section/question loop, stable DOM identity,
+question-to-answer relationship, accordion controls, and accessibility
+reference. Complete saved questions and answers therefore exist in generated
+HTML before JavaScript.
+
+## Editable Customer Content
 
 ```text
 header.title
@@ -67,124 +101,115 @@ faq.sections[].faqs[].question
 faq.sections[].faqs[].answer
 ```
 
-`header.title`, `header.subtitleHtml`, `faq.sections[].faqs[].question`, and
-`faq.sections[].faqs[].answer` are rich-text Dropdown Edit fields. Their saved
-inline HTML supports emphasis, `br`, and `http(s)` links.
-
-`faq.sections[]` and `faq.sections[].faqs[]` entries carry stable `id` values
-in widget Core state.
+Header title/subtitle, questions, and answers retain the existing compact
+inline-rich-text behavior. Each materialized value has its exact
+`data-ck-content-path` and `data-ck-content-mode` attribute. Tokyo-worker uses
+those generic authored coordinates for selected-locale Edge expression; it has
+no FAQ path list.
 
 ## Editor Composition
 
-FAQ follows the canonical ToolDrawer sequence:
+FAQ retains the canonical ToolDrawer sequence:
 
-1. **Content** — shared Header plus the initially open primary Content section.
-   **Show section titles** sits directly above the Sections Object Manager in
-   that section. Object Manager owns sections; each section contains one nested
-   Repeater for its questions and answers.
-2. **Layout** — shared Header/Core/Stage/Pod layout plus FAQ layout type,
-   content gap, multicolumn arrangement, columns, question-and-answer spacing,
-   and linked or per-side Q&A-card padding.
-3. **Appearance** — shared Header appearance first, then Accordion Icon, rich
-   link treatment, Q&A-card surface, and shared Stage/Pod appearance. The
-   Accordion section is present only for Accordion layout.
-4. **Typography** — exact Section title, Question, and Answer roles after the
-   shared roles.
-5. **Settings** — Accordion behavior and question deep links when Accordion is
-   selected, followed by shared locale, branding, and social-share behavior.
+1. Content — shared Header, section-title setting, Sections Object Manager,
+   and nested question/answer Repeater.
+2. Layout — shared Header/Core/Stage/Pod layout plus FAQ list, accordion, grid,
+   masonry, columns, gaps, and card padding.
+3. Appearance — shared Header/Stage/Pod appearance plus FAQ icons, links, and
+   Q&A-card surface.
+4. Typography — Section title, Question, and Answer roles after shared roles.
+5. Settings — FAQ accordion/deep-link behavior plus shared locale, branding,
+   social share, and **Enable SEO/GEO** controls.
 
-Only shared Header and the primary FAQ Content section start open. Every other
-section starts collapsed.
+Only shared Header and the primary FAQ Content section start open.
 
-## Limits
+## Limits And Upsell
 
-```text
-branding.remove -> behavior.showBacklink
-widget.socialShare.enabled -> behavior.socialShare.enabled
-items.group.small.max -> faq.sections[]
-items.group.medium.max -> faq.sections[].faqs[]
-items.group.large.max -> faq.sections[].faqs[]
-```
+| System capability | FAQ coordinate/metric | Message |
+| --- | --- | --- |
+| `branding.remove` | `behavior.showBacklink` | `branding.remove` |
+| `widget.socialShare.enabled` | `behavior.socialShare.enabled` | `social-share.enable` |
+| `embed.seoGeo.enabled` | `behavior.seoGeo.enabled` | `seo-geo.enable` |
+| `items.group.small.max` | `faq.sections[]` count | `sections.max` |
+| `items.group.medium.max` | `faq.sections[].faqs[]` per-section count | `questions-per-section.max` |
+| `items.group.large.max` | `faq.sections[].faqs[]` total count | `questions-total.max` |
 
-## Shared Widget Utilities
+Bob applies one generic decision before a manual, Product Copilot, or undo
+mutation. A denial leaves the draft unchanged and sends Roma the exact
+`{ capability, messageId, required }`. Roma selects the first higher system
+tier that permits `required`, inserts system current/target plan names into the
+exact FAQ message, and opens one shared Popup. Save does not repeat the limit.
+Core and the public package contain none of this commercial UI.
 
-FAQ uses the presentation frame for Stage/Pod, the Shell for Header/Core
-composition, and shared utilities for Core sizing, typography, and locale
-switching. Branding and social share are required shared runtime contracts; a
-missing `CKBranding.applyBacklink` or `CKSocialShare.apply` fails closed, and
-FAQ applies both on every state render.
+## Discovery
 
-Runtime requires these Core DOM hooks:
+`discovery.json` declares:
 
-```text
-[data-role="faq"]
-[data-role="faq-core"]
-[data-role="faq-empty"]
-[data-role="faq-list"]
-```
+- kind `faq`;
+- baseline title `FAQ by Clickeen`;
+- baseline description `Questions and answers published with Clickeen.`;
+- section-title, question, and answer parts; and
+- the exact question `answers` answer relationship using section/question
+  identities.
 
-`widget.client.js` registers as `faq`, validates `faq.*`, renders section and
-question DOM into `faq-list`, applies shared widget utilities, and binds
-`ck:state-update` for the current instance id.
+Every Publish writes the baseline title and meta description. When both the
+saved `behavior.seoGeo.enabled` value and system
+`embed.seoGeo.enabled` flag are true, FAQ Core's authored schema.org
+`FAQPage`/`Question`/`Answer` microdata surrounds the exact visible content
+slots. The generic render seam attaches FAQ's declared parts and `answers`
+relationship to those matching slots; FAQ Core alone turns those annotations
+into FAQ search markup. The user does not edit `discovery.json`; no shared
+service contains FAQ markup or derives customer metadata.
 
-Runtime invariants:
+## Core Behavior
 
-- `faq.sections[]` ids must be stable and unique.
-- `faq.sections[].faqs[]` ids must be stable and unique inside each section.
-- Each FAQ item contains only its stable `id`, `question`, and `answer`; startup
-  expansion is global behavior rather than per-question content state.
-- Runtime validates 1-20 sections and 1-100 FAQs per section.
-- Question and answer fields are customer-visible rich text and must stay in
-  `editable-fields.json`.
-- Question and answer HTML is limited to the supported inline tags and
-  `http(s)` links. In accordion layout, the question row and its dedicated
-  expand control are siblings of the rich-text link target, so following a
-  question link does not toggle the accordion.
-- The runtime handles `ck:copy-overrides` for exact FAQ copy paths and replies
-  with `ck:copy-overrides-applied`; do not turn that into a generic mutation
-  channel.
-- The static Header/list/empty hooks carry no invented customer copy before
-  exact saved state is applied. The empty hook starts hidden; valid FAQ state
-  requires at least one section and one question in every section.
-
-Presentation invariants:
-
-- Multicolumn grid and masonry composition responds to the existing Pod
-  inline-size container at `900px`, not to the outer browser viewport. The
-  exact declared desktop/mobile column values remain the layout authority on
-  either side of that boundary.
-- Section titles, questions, answers, and their rich links preserve complete
-  localized content inside the available Q&A-card width.
-- List, Accordion, multicolumn Grid, and multicolumn Masonry retain their
-  existing layout values and runtime behavior.
-
-Accordion behavior applies only when `faq.layout.type` is `accordion`.
-Accordion-specific state includes:
+FAQ retains list, accordion, grid, and masonry presentation. Accordion startup
+uses one existing authority:
 
 ```text
-faq.behavior.expandAll
-faq.behavior.expandFirst
-faq.behavior.multiOpen
-faq.geo.enableDeepLinks
+expandAll -> open every question
+else expandFirst -> open the first question
+else -> start closed
 ```
 
-Startup expansion has one global authority: `expandAll` opens every question;
-otherwise `expandFirst` opens the first question; otherwise every question
-starts closed. `multiOpen` governs subsequent user interaction. Deep links use
-the existing exact question anchor and respect `multiOpen` when opening their
-target.
+`multiOpen` governs later interaction. Deep links use the exact question item
+anchor and open their target without making the rich-text question link itself
+an accordion toggle.
 
-Limit metrics:
+## Lifecycle
 
-```text
-items.group.small.max -> faq.sections[] count
-items.group.medium.max -> faq.sections[].faqs[] per-section count
-items.group.large.max -> faq.sections[].faqs[] total count
-```
+- New and Duplicate write unpublished editable source only and open the new
+  instance in Bob.
+- Bob previews compiled FAQ software plus one browser-memory draft.
+- Save updates `instance.config.json` and `instance.content.json` only.
+- A clean explicit Publish/Republish invokes Roma's generic materializer.
+- Roma alone generates complete `index.html`, complete `styles.css`, and
+  mandatory visitor-behavior `runtime.js`.
+- Tokyo-worker stores the exact bytes and publication truth.
+- Base serving returns stored files. Selected-locale serving applies the exact
+  overlay to semantic content slots through Cloudflare `HTMLRewriter` before
+  JavaScript.
 
-## Verification
+## Local Verification
 
 ```bash
-pnpm validate:widgets
-pnpm --filter @clickeen/bob test:editor-contract
+node scripts/widgets/generate-artifacts.mjs --widget faq
+node scripts/widgets/generate-artifacts.mjs --widget faq --check
+git diff --check -- tokyo/product/widgets/faq documentation/widgets/widgets/faq.md
 ```
+
+Inspect the focused generated editor/materializer artifacts and materialized
+FAQ HTML/CSS/JavaScript. Cloud-dev and live product truth require an authorized
+deploy and owner-surface verification; neither has been performed by the local
+PRD 129 pass.
+
+## Hard Stops
+
+- Do not restore `widget.client.js` or turn `core.js` into the same pipeline.
+- Do not put FAQ paths or meaning in Bob, Roma, Tokyo-worker, Dieter, or shared
+  Widget code.
+- Do not make Create or Save generate public files.
+- Do not make Bob preview read a stored package.
+- Do not move tier/Popup behavior into Core or public runtime.
+- Do not localize initial public content in JavaScript.
+- Do not migrate another Widget in the FAQ pass.

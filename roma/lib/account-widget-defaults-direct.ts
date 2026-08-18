@@ -1,5 +1,4 @@
-import { isRecord } from '@clickeen/ck-contracts';
-import { normalizeAccountFontLibrary, type AccountFontLibrary } from '@clickeen/widget-foundation';
+import type { AccountFontLibrary } from '@clickeen/widget-foundation';
 import { callTokyo, type TokyoCallContext } from './tokyo-client';
 
 export type AccountWidgetDefaultsDocument = {
@@ -16,44 +15,13 @@ export type AccountWidgetDefaultsDocument = {
   updatedAt: string;
 };
 
-export function normalizeAccountWidgetDefaultsDocument(
-  raw: unknown,
-): AccountWidgetDefaultsDocument | null {
-  if (!isRecord(raw)) return null;
-  if (Object.prototype.hasOwnProperty.call(raw, 'shell')) return null;
-  if (typeof raw.accountId !== 'string' || !isRecord(raw.common) || !isRecord(raw.widgets))
-    return null;
-  const fontLibrary = normalizeAccountFontLibrary(raw.fontLibrary);
-  if (!fontLibrary) return null;
-  const widgets: AccountWidgetDefaultsDocument['widgets'] = {};
-  for (const [widgetType, widgetDefaults] of Object.entries(raw.widgets)) {
-    if (!isRecord(widgetDefaults) || !isRecord(widgetDefaults.core)) return null;
-    widgets[widgetType] = {
-      core: widgetDefaults.core,
-    };
-  }
-  return {
-    accountId: raw.accountId,
-    fontLibrary,
-    common: raw.common,
-    widgets,
-    seededAt: typeof raw.seededAt === 'string' ? raw.seededAt : '',
-    updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : '',
-  };
-}
-
 function decodeWidgetDefaultsPayload(payload: unknown): {
   accountId: string;
   widgetDefaults: AccountWidgetDefaultsDocument;
 } {
-  if (!isRecord(payload) || typeof payload.accountId !== 'string') {
-    throw new Error('invalid Tokyo account widget defaults payload');
-  }
-  const widgetDefaults = normalizeAccountWidgetDefaultsDocument(payload.widgetDefaults);
-  if (!widgetDefaults) throw new Error('invalid Tokyo account widget defaults document');
-  return {
-    accountId: payload.accountId,
-    widgetDefaults,
+  return payload as {
+    accountId: string;
+    widgetDefaults: AccountWidgetDefaultsDocument;
   };
 }
 

@@ -223,61 +223,6 @@ function sameStringSet(left: string[], right: string[]): boolean {
   return Array.from(leftSet).every((value) => rightSet.has(value));
 }
 
-function isTranslationItem(value: unknown): value is TranslationItem {
-  if (!isRecord(value)) return false;
-  const path = asTrimmedString(value.path);
-  const itemType = value.type;
-  return Boolean(
-    path &&
-      (itemType === 'string' || itemType === 'richtext') &&
-      typeof value.value === 'string' &&
-      (value.label === undefined || typeof value.label === 'string') &&
-      (value.role === undefined || typeof value.role === 'string') &&
-      (value.promptType === undefined || value.promptType === 'string' || value.promptType === 'richtext'),
-  );
-}
-
-function normalizeTranslationItems(raw: unknown): TranslationItem[] | null {
-  if (!Array.isArray(raw)) return null;
-  if (raw.length === 0) return null;
-  const items = raw.filter(isTranslationItem);
-  if (items.length !== raw.length) return null;
-  return items.map((item) => ({
-    path: item.path,
-    type: item.type,
-    value: item.value,
-    ...(item.label ? { label: item.label } : {}),
-    ...(item.role ? { role: item.role } : {}),
-    ...(item.promptType ? { promptType: item.promptType } : {}),
-  }));
-}
-
-function normalizeWorkerRequest(raw: unknown): TranslationAgentWorkerRequest | null {
-  if (!isRecord(raw)) return null;
-  const grant = asTrimmedString(raw.grant);
-  const accountPublicId = asTrimmedString(raw.accountPublicId);
-  const instanceId = asTrimmedString(raw.instanceId);
-  const requestedLocales = normalizeStringArray(raw.requestedLocales);
-  const items = normalizeTranslationItems(raw.items);
-  if (!grant || !accountPublicId || !instanceId || !requestedLocales || !items) return null;
-  if (raw.agentId !== undefined && raw.agentId !== TRANSLATION_AGENT_ID) return null;
-  return {
-    grant,
-    accountPublicId,
-    instanceId,
-    widgetType: asTrimmedString(raw.widgetType) ?? null,
-    baseLocale: asTrimmedString(raw.baseLocale) ?? null,
-    requestedLocales,
-    items,
-    trace: isRecord(raw.trace)
-      ? {
-          requestId: asTrimmedString(raw.trace.requestId) ?? undefined,
-          client: raw.trace.client === 'roma' ? 'roma' : undefined,
-        }
-      : undefined,
-  };
-}
-
 function resolveRequestId(request: Request, body: TranslationAgentWorkerRequest): string {
   return (
     normalizeRequestId(request.headers.get(CK_REQUEST_ID_HEADER)) ??
@@ -286,44 +231,8 @@ function resolveRequestId(request: Request, body: TranslationAgentWorkerRequest)
   );
 }
 
-function buildExactOverlayValues(args: {
-  items: TranslationItem[];
-  restored: Array<{ path: string; value: string }>;
-}): Record<string, string> {
-  const values = Object.fromEntries(args.restored.map((item) => [item.path, item.value]));
-  const expectedPaths = new Set(args.items.map((item) => item.path));
-  for (const path of expectedPaths) {
-    if (typeof values[path] !== 'string') {
-      throw new HttpError(502, {
-        error: {
-          code: 'PROVIDER_ERROR',
-          provider: 'translation-agent',
-          message: `Translation output missing requested path: ${path}`,
-        },
-      });
-    }
-  }
-  for (const path of Object.keys(values)) {
-    if (!expectedPaths.has(path)) {
-      throw new HttpError(502, {
-        error: {
-          code: 'PROVIDER_ERROR',
-          provider: 'translation-agent',
-          message: `Translation output included unexpected path: ${path}`,
-        },
-      });
-    }
-  }
-  return values;
-}
-
-async function readJsonResponse(response: Response): Promise<{ text: string; payload: unknown }> {
-  const text = await response.text().catch(() => '');
-  try {
-    return { text, payload: text ? JSON.parse(text) as unknown : null };
-  } catch {
-    return { text, payload: null };
-  }
+async function readJsonResponse(response: Response): Promise<unknown> {
+  return JSON.parse(await response.text()) as unknown;
 }
 
 async function callSanFranciscoTurn(args: {
@@ -352,6 +261,7 @@ async function callSanFranciscoTurn(args: {
     throw new HttpError(500, {
       error: {
         code: 'PROVIDER_ERROR',
+        reasonKey: 'PROVIDER_ERROR',
         provider: 'translation-agent',
         message: 'Missing SANFRANCISCO_AI_ENGINE service binding.',
       },
@@ -362,36 +272,31 @@ async function callSanFranciscoTurn(args: {
     headers,
     body,
   });
-  const { text, payload } = await readJsonResponse(response);
+  const payload = await readJsonResponse(response);
   if (!response.ok) {
-    throw new HttpError(response.status, isRecord(payload) ? payload : {
-      error: {
-        code: 'PROVIDER_ERROR',
-        provider: 'sanfrancisco',
-        message: text || `San Francisco model turn failed (${response.status})`,
-      },
-    });
+    throw new HttpError(response.status, payload);
   }
-  if (!isRecord(payload) || payload.ok !== true || !isRecord(payload.output)) {
-    throw new HttpError(502, {
-      error: {
-        code: 'PROVIDER_ERROR',
-        provider: 'sanfrancisco',
-        message: 'San Francisco returned an invalid structured model turn response.',
-      },
-    });
+  const result = payload as
+    | {
+        ok: true;
+        output: { translations: Array<{ path: string; value: string }> };
+      }
+    | {
+        ok: false;
+        error: {
+          code: string;
+          reasonKey: string;
+          message: string;
+          provider?: string;
+          upstreamStatus?: number;
+          issues?: Array<{ path: string; message: string }>;
+          requestId?: string;
+        };
+      };
+  if (!result.ok) {
+    throw new HttpError(response.status, payload);
   }
-  const translations = payload.output.translations;
-  if (!Array.isArray(translations)) {
-    throw new HttpError(502, {
-      error: {
-        code: 'PROVIDER_ERROR',
-        provider: 'sanfrancisco',
-        message: 'San Francisco structured output missing translations array.',
-      },
-    });
-  }
-  return payload.output as { translations: Array<{ path: string; value: string }> };
+  return result.output;
 }
 
 async function writeTokyoOverlayValues(args: {
@@ -420,30 +325,15 @@ async function writeTokyoOverlayValues(args: {
     throw new HttpError(500, {
       error: {
         code: 'PROVIDER_ERROR',
+        reasonKey: 'PROVIDER_ERROR',
         provider: 'translation-agent',
         message: 'Missing TOKYO_PRODUCT_CONTROL service binding.',
       },
     });
   }
   const response = await args.env.TOKYO_PRODUCT_CONTROL.fetch(`https://tokyo-product-control.internal${path}`, init);
-  const { text, payload } = await readJsonResponse(response);
   if (!response.ok) {
-    throw new HttpError(response.status, isRecord(payload) ? payload : {
-      error: {
-        code: 'PROVIDER_ERROR',
-        provider: 'tokyo-worker',
-        message: text || `Tokyo overlay write failed (${response.status})`,
-      },
-    });
-  }
-  if (!isRecord(payload) || payload.ok !== true || payload.locale !== args.locale) {
-    throw new HttpError(502, {
-      error: {
-        code: 'PROVIDER_ERROR',
-        provider: 'tokyo-worker',
-        message: 'Tokyo returned an invalid overlay write response.',
-      },
-    });
+    throw new HttpError(response.status, await readJsonResponse(response));
   }
 }
 
@@ -492,7 +382,7 @@ async function translateLocale(args: {
     translatedItems,
     provider: 'sanfrancisco',
   });
-  return buildExactOverlayValues({ items: args.request.items, restored });
+  return Object.fromEntries(restored.map((item) => [item.path, item.value]));
 }
 
 function resolveLocaleLabel(locale: string): string {
@@ -536,19 +426,30 @@ async function executeTranslationRun(args: {
         args.onActivity?.({ message: `${localeLabel} written` });
         results[localeIndex] = { locale, ok: true, count: Object.keys(values).length };
       } catch (error) {
-        const payload = error instanceof HttpError && isRecord(error.payload) ? error.payload : null;
-        const errorPayload = isRecord(payload?.error) ? payload.error : null;
-        const reasonKey =
-          asTrimmedString(errorPayload?.reasonKey) ??
-          asTrimmedString(errorPayload?.code) ??
-          (error instanceof TranslationAgentError ? error.code : null) ??
-          'coreui.errors.translation.failed';
-        const detail =
-          asTrimmedString(errorPayload?.message) ??
-          asTrimmedString(errorPayload?.detail) ??
-          (error instanceof Error ? error.message : String(error));
         args.onActivity?.({ message: `${localeLabel} failed` });
-        results[localeIndex] = { locale, ok: false, reasonKey, ...(detail ? { detail } : {}) };
+        if (error instanceof HttpError) {
+          const failure = (error.payload as {
+            error: { reasonKey: string; message?: string; detail?: string };
+          }).error;
+          const detail = failure.message ?? failure.detail;
+          results[localeIndex] = {
+            locale,
+            ok: false,
+            reasonKey: failure.reasonKey,
+            ...(detail !== undefined ? { detail } : {}),
+          };
+          continue;
+        }
+        if (error instanceof TranslationAgentError) {
+          results[localeIndex] = {
+            locale,
+            ok: false,
+            reasonKey: error.code,
+            detail: error.message,
+          };
+          continue;
+        }
+        throw error;
       }
     }
   };
@@ -565,17 +466,7 @@ async function handleTranslateInstance(args: {
   env: Env;
   streamActivity: boolean;
 }): Promise<Response> {
-  const body = normalizeWorkerRequest(await readJson(args.request));
-  if (!body) {
-    throw new HttpError(400, {
-      error: {
-        code: 'BAD_REQUEST',
-        reasonKey: 'coreui.errors.translation.invalidRequest',
-        message: 'Invalid Translation Agent worker request',
-        issues: [{ path: '', message: 'Expected { grant, accountPublicId, instanceId, requestedLocales, items }' }],
-      },
-    });
-  }
+  const body = await readJson(args.request) as TranslationAgentWorkerRequest;
   const requestId = resolveRequestId(args.request, body);
   await verifyRomaTranslationGrant({
     grant: body.grant,

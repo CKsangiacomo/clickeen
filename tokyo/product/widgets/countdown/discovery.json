@@ -1,0 +1,47 @@
+{
+  "widgetType": "countdown",
+  "kind": "countdown",
+  "baseline": {
+    "title": "Countdown by Clickeen",
+    "description": "A countdown or number counter published with Clickeen."
+  },
+  "parts": [
+    {
+      "id": "days-label",
+      "path": "countdown.timer.labels.days",
+      "role": "timer-unit-label",
+      "identityPaths": []
+    },
+    {
+      "id": "hours-label",
+      "path": "countdown.timer.labels.hours",
+      "role": "timer-unit-label",
+      "identityPaths": []
+    },
+    {
+      "id": "minutes-label",
+      "path": "countdown.timer.labels.minutes",
+      "role": "timer-unit-label",
+      "identityPaths": []
+    },
+    {
+      "id": "seconds-label",
+      "path": "countdown.timer.labels.seconds",
+      "role": "timer-unit-label",
+      "identityPaths": []
+    },
+    {
+      "id": "active-action",
+      "path": "countdown.actions.during.text",
+      "role": "action-label",
+      "identityPaths": []
+    },
+    {
+      "id": "finished-action",
+      "path": "countdown.actions.after.text",
+      "role": "action-label",
+      "identityPaths": []
+    }
+  ],
+  "relationships": []
+}

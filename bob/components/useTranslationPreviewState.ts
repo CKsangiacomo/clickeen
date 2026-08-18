@@ -3,10 +3,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useWidgetSessionTransport } from '../lib/session/useWidgetSession';
 import {
-  normalizeTranslatedLocales,
-  normalizeTranslatedLocaleValues,
   retainTranslatedLocaleValues,
   type TranslatedLocalesData,
+  type TranslatedLocaleValuesData,
 } from '../lib/translations-preview';
 
 export type { TranslatedLocalesData, TranslationSetup } from '../lib/translations-preview';
@@ -95,9 +94,7 @@ export function useTranslationPreviewState(args: {
         if (cancelled) return;
         const readFailure = resolveSavedTranslationReadFailure(response);
         if (readFailure) throw new Error(readFailure);
-        const payload = normalizeTranslatedLocales(response.json);
-        if (!payload) throw new Error('coreui.errors.payload.invalid');
-        if (payload.baseLocale !== args.baseLocale) throw new Error('coreui.errors.payload.invalid');
+        const payload = response.json as TranslatedLocalesData;
         setValuesByLocale((current) => retainTranslatedLocaleValues(current, payload));
         setTranslatedLocales(payload);
         setListState(EMPTY_READ_CHANNEL);
@@ -120,9 +117,9 @@ export function useTranslationPreviewState(args: {
 
   const selectedTranslation = useMemo(() => {
     if (!translatedLocales) return null;
-    if (!args.selectedLocale || args.selectedLocale === translatedLocales.baseLocale) return null;
+    if (!args.selectedLocale || args.selectedLocale === args.baseLocale) return null;
     return translatedLocales.translations.find((entry) => entry.locale === args.selectedLocale) ?? null;
-  }, [args.selectedLocale, translatedLocales]);
+  }, [args.baseLocale, args.selectedLocale, translatedLocales]);
 
   const selectedTranslationLocale = selectedTranslation?.locale ?? '';
   const selectedLocaleState = selectedTranslationLocale
@@ -151,10 +148,7 @@ export function useTranslationPreviewState(args: {
         if (cancelled) return;
         const readFailure = resolveSavedTranslationReadFailure(response);
         if (readFailure) throw new Error(readFailure);
-        const payload = normalizeTranslatedLocaleValues(response.json);
-        if (!payload || payload.locale !== requestedLocale) {
-          throw new Error('coreui.errors.payload.invalid');
-        }
+        const payload = response.json as TranslatedLocaleValuesData;
         setValuesByLocale((current) => ({
           ...current,
           [requestedLocale]: payload.values,

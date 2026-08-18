@@ -3,6 +3,7 @@ export const WIDGET_SHARED_CSS_MODULE_KEYS = [
   'product/widgets/shared/localeSwitcher.css',
   'product/widgets/shared/stagePod.css',
   'product/widgets/shared/socialShare.css',
+  'product/widgets/shared/composition.css',
 ] as const;
 
 export const WIDGET_SHARED_RUNTIME_MODULE_KEYS = [

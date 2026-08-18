@@ -1,15 +1,8 @@
-import { isRecord as isPlainRecord } from '@clickeen/ck-contracts';
 import type { CompiledWidget } from '../../lib/types';
 import type { WidgetOp } from '../../lib/ops';
 import type { AccountFontLibrary } from '@clickeen/widget-foundation';
 import { getAt } from '../../lib/utils/paths';
-import { findBestControlForPath } from '../../lib/edit/controls';
 import { expandTypographyFamilyOps } from '../../lib/edit/typography-family-ops';
-
-type PresetSpec = {
-  customValue?: string;
-  values?: Record<string, Record<string, unknown>>;
-};
 
 type PresetEntry = {
   sourcePath: string;
@@ -17,8 +10,6 @@ type PresetEntry = {
   values: Record<string, Record<string, unknown>>;
   targetPaths: string[];
 };
-
-export { isPlainRecord };
 
 export function isFiniteNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value);
@@ -28,50 +19,15 @@ function finiteNumber(value: unknown): number | null {
   return isFiniteNumber(value) ? value : null;
 }
 
-function buildPresetEntries(raw: unknown): PresetEntry[] {
-  if (raw == null) return [];
-  if (!isPlainRecord(raw)) throw new Error('[BobLinkedOps] compiled presets must be an object');
-  const entries: PresetEntry[] = [];
-
-  for (const [sourcePath, specRaw] of Object.entries(raw)) {
-    if (!sourcePath.trim()) throw new Error('[BobLinkedOps] compiled preset source path is missing');
-    if (!isPlainRecord(specRaw)) throw new Error(`[BobLinkedOps] compiled preset "${sourcePath}" must be an object`);
-    const valuesRaw = (specRaw as PresetSpec).values;
-    if (!isPlainRecord(valuesRaw)) throw new Error(`[BobLinkedOps] compiled preset "${sourcePath}" values must be an object`);
-
-    const values: Record<string, Record<string, unknown>> = {};
-    const targetSet = new Set<string>();
-    for (const [presetKey, mappingRaw] of Object.entries(valuesRaw)) {
-      if (!presetKey.trim()) throw new Error(`[BobLinkedOps] compiled preset "${sourcePath}" has an empty preset key`);
-      if (!isPlainRecord(mappingRaw)) {
-        throw new Error(`[BobLinkedOps] compiled preset "${sourcePath}.${presetKey}" values must be an object`);
-      }
-      if (Object.keys(mappingRaw).length === 0) {
-        throw new Error(`[BobLinkedOps] compiled preset "${sourcePath}.${presetKey}" values cannot be empty`);
-      }
-      values[presetKey] = mappingRaw;
-      Object.keys(mappingRaw).forEach((path) => {
-        if (!path.trim()) throw new Error(`[BobLinkedOps] compiled preset "${sourcePath}.${presetKey}" has an empty target path`);
-        targetSet.add(path);
-      });
-    }
-
-    if (Object.keys(values).length === 0) throw new Error(`[BobLinkedOps] compiled preset "${sourcePath}" values cannot be empty`);
-    if (targetSet.size === 0) throw new Error(`[BobLinkedOps] compiled preset "${sourcePath}" has no target paths`);
-    const customValue = (specRaw as PresetSpec).customValue;
-    if (customValue != null && (typeof customValue !== 'string' || !customValue.trim())) {
-      throw new Error(`[BobLinkedOps] compiled preset "${sourcePath}" customValue must be a non-empty string`);
-    }
-
-    entries.push({
-      sourcePath,
-      ...(typeof customValue === 'string' ? { customValue: customValue.trim() } : {}),
-      values,
-      targetPaths: Array.from(targetSet),
-    });
-  }
-
-  return entries;
+function buildPresetEntries(compiled: CompiledWidget | null): PresetEntry[] {
+  return Object.entries(compiled?.presets ?? {}).map(([sourcePath, spec]) => ({
+    sourcePath,
+    ...(spec.customValue ? { customValue: spec.customValue } : {}),
+    values: spec.values,
+    targetPaths: Array.from(
+      new Set(Object.values(spec.values).flatMap((values) => Object.keys(values))),
+    ),
+  }));
 }
 
 function pathMatchesTarget(path: string, target: string): boolean {
@@ -100,8 +56,7 @@ export function expandLinkedOps(args: {
   fontLibrary: AccountFontLibrary | null;
 }): WidgetOp[] {
   const setOp = (path: string, value: unknown): WidgetOp => ({ op: 'set', path, value });
-  const presetEntries = buildPresetEntries(args.compiled?.presets);
-  const controls = args.compiled?.controls ?? [];
+  const presetEntries = buildPresetEntries(args.compiled);
   const typographyFamilyPaths = Array.from(
     new Set(
       (args.compiled?.controls ?? [])
@@ -109,26 +64,9 @@ export function expandLinkedOps(args: {
         .filter((path) => /^typography\.roles\.[^.]+\.family$/.test(path)),
     ),
   );
-  const isAllowedPath = (path: string) => Boolean(findBestControlForPath(controls, path));
-
   const expanded: WidgetOp[] = [];
   const presetByPath = new Map(presetEntries.map((entry) => [entry.sourcePath, entry]));
   const presetOps = new Map<string, WidgetOp>();
-  const requireAllowedPath = (path: string) => {
-    if (!isAllowedPath(path)) throw new Error(`[BobLinkedOps] preset target path "${path}" has no compiled control`);
-  };
-
-  presetEntries.forEach((entry) => {
-    entry.targetPaths.forEach((targetPath) => {
-      if (targetPath === 'typography.globalFamily') {
-        if (typographyFamilyPaths.length === 0) {
-          throw new Error('[BobLinkedOps] typography.globalFamily preset has no typography family controls');
-        }
-        return;
-      }
-      requireAllowedPath(targetPath);
-    });
-  });
 
   for (const op of args.ops) {
     if (op.op === 'set' && typeof op.path === 'string' && presetByPath.has(op.path)) {
@@ -175,17 +113,13 @@ export function expandLinkedOps(args: {
       if (presetValues) {
         for (const [presetPath, presetValue] of Object.entries(presetValues)) {
           if (presetPath === 'typography.globalFamily') {
-            const familyValue = typeof presetValue === 'string' ? presetValue : '';
-            if (!familyValue) throw new Error(`[BobLinkedOps] preset "${op.value}" has an invalid typography.globalFamily value`);
+            const familyValue = presetValue as string;
             if (!args.fontLibrary) throw new Error('[BobLinkedOps] missing account font library');
             typographyFamilyPaths.forEach((familyPath) => {
-              if (isAllowedPath(familyPath)) {
-                expanded.push(setOp(familyPath, familyValue));
-              }
+              expanded.push(setOp(familyPath, familyValue));
             });
             continue;
           }
-          requireAllowedPath(presetPath);
           expanded.push(setOp(presetPath, presetValue));
         }
       }

@@ -1,11 +1,29 @@
 # Cards Widget
 
-STATUS: CURRENT SYSTEM OPERATOR SPEC
+STATUS: CURRENT LOCAL CANONICAL IMPLEMENTATION — PRODUCT QA/DEPLOY PENDING
 
 ## Purpose
 
-Cards renders a repeatable set of cards with text, media metadata, and optional
-links inside the shared widget Shell.
+Cards renders an ordered, repeatable collection of cards with text, optional
+media, optional actions, and Cards-specific layout and presentation inside the
+shared Widget Shell.
+
+## Architecture Status
+
+Cards now uses the canonical Widget contract locally. `widget.html` composes
+shared Stage, Pod, Header, and shared capabilities with one Cards Core.
+`core/core.html` owns the complete semantic card list, `core/core.css` owns
+Cards presentation and its Card title/Card copy typography roles, and
+`core/core.js` owns only whole-card visitor interaction.
+
+Bob preview and explicit allowed Publish use the same compiled Widget
+software. The materializer writes every saved card and the exact current order
+into initial semantic HTML. Core JavaScript does not reconstruct card state,
+localize content, invoke shared utilities, or receive Bob state updates. There
+is no flat-source compatibility path or Widget-specific shared-service branch.
+
+The local source and generated artifacts are complete. Product QA, deploy,
+stored-package verification, and live cloud-dev proof remain pending.
 
 ## Source
 
@@ -18,12 +36,17 @@ Files:
 ```text
 spec.json
 editable-fields.json
+discovery.json
 limits.json
-cards_tooldrawer_l10n_labels/
+labels/
+  en.json
+upsell/
   en.json
 widget.html
-widget.css
-widget.client.js
+core/
+  core.html
+  core.css
+  core.js
 ```
 
 ## Contract
@@ -56,7 +79,19 @@ cards.items
 cards.treatment
 ```
 
-## Editable Fields
+Treatment and layout state:
+
+```text
+cards.treatment -> cards|linked-cards|steps
+cards.columns -> 2|3|4
+cards.gap
+cards.cardPadding
+cards.betweenCards
+cards.customCardStyles
+cards.appearance.cardwrapper
+```
+
+## Editable Fields And Stable Items
 
 ```text
 header.title
@@ -72,10 +107,16 @@ cards.items[].link.label
 `cards.items[].copy` are rich-text Dropdown Edit fields. Their saved inline
 HTML supports emphasis, `br`, and `http(s)` links.
 
-`cards.items[]` entries carry stable `id` values in widget Core state.
-The Content Repeater's declared new-card object carries the same nested field
-shape as a saved card, including `media.image: { "type": "none" }`, and leaves
-only its declared `id` empty for Repeater to assign.
+Each `cards.items[]` entry carries a stable `id`. That id anchors localization
+and discovery identity even when cards are reordered. The generic source
+renderer also supplies a render-only positional path to the existing CSS
+helpers so the authored per-card Fill values can be materialized without a
+Cards branch. The stable content identity and positional style path are
+different coordinates.
+
+The Content Repeater's declared new-card object carries the complete nested
+field shape, including `media.image: { "type": "none" }`, and leaves only its
+declared `id` empty for Repeater to assign.
 
 ## Editor Composition
 
@@ -83,109 +124,80 @@ Cards follows the canonical ToolDrawer sequence:
 
 1. **Content** — shared Header plus the initially open Cards section. Each
    repeated card owns title, copy, media, image alt text, and link values.
-   `linked-cards` already makes every card a link, so that treatment exposes
-   Link URL and Link label directly and omits the otherwise optional Add link
-   to card toggle.
+   `linked-cards` makes every card an action, so that treatment exposes Link
+   URL and Link label directly and omits the otherwise optional Add link to
+   card toggle.
 2. **Layout** — shared Header/Core/Stage/Pod layout, Card format, Columns,
    exact pixel gap/padding, and connector enable/type/geometry.
 3. **Appearance** — shared Header/Stage/Pod appearance, optional per-card
-   styling, and the existing connector line/icon colors. Color controls remain
-   in Appearance; connector arrangement remains in Layout.
-4. **Typography** — the Card title and Card copy roles after the shared roles.
-5. **Settings** — shared branding and social-share behavior only.
+   styling, and connector line/icon colors. Color controls remain in
+   Appearance; connector arrangement remains in Layout.
+4. **Typography** — Card title and Card copy after the shared roles.
+5. **Settings** — shared SEO/GEO, branding, and social-share behavior.
 
 Only shared Header and the primary Cards Content section start open. Every
 Layout, Appearance, Typography, and Settings section starts collapsed.
 
+## Discovery
+
+`discovery.json` identifies Cards as a `card-list`. For each stable card it
+declares the title, copy, image alt text, and action label as important
+customer-content parts. It declares that copy describes its title and the
+action acts on its title.
+
+This file is internal Widget software; users do not edit it. Free and Tier 1
+use its system baseline, including Clickeen identification. When a Tier 2+
+account enables SEO/GEO, Publish may optimize technical discovery output from
+the exact saved cards. Only Publish materialization writes public files.
+
 ## Limits
 
 ```text
-items.group.small.max -> cards.items[]
-branding.remove -> behavior.showBacklink
-widget.socialShare.enabled -> behavior.socialShare.enabled
+items.group.small.max -> cards.items[] -> cards.max
+branding.remove -> behavior.showBacklink -> branding.remove
+widget.socialShare.enabled -> behavior.socialShare.enabled -> social-share.enable
+embed.seoGeo.enabled -> behavior.seoGeo.enabled -> seo-geo.enable
 ```
 
-## Shared Widget Utilities
+The final value on each line is the exact message identity in
+`upsell/en.json`. The item template explains adding more Cards; the other
+templates explain their exact Cards actions. Account policy supplies the
+decision and current/target plans, while Roma supplies the system CTA and
+Popup. Core and public runtime consume none of this product UI contract.
 
-Cards uses the presentation frame for Stage/Pod, the Shell for Header/Core
-composition, and shared utilities for Core sizing, typography, branding,
-social share, and locale switching. Card visual surfaces are Core-owned under
-`cards.*`.
+## Materialized Core And Visitor Behavior
 
-Runtime requires these Core DOM hooks:
+Core HTML contains an ordered list of complete card articles. Each card keeps
+its saved id, text, media, alt text, action label, and action URL. Image alt
+text is authored as an exact localized attribute slot. Core CSS owns the
+configured column count, Pod-responsive two/one-column changes, card wrapper,
+spacing, media, step marker, connectors, and exact per-card styles.
 
-```text
-[data-role="cards"]
-[data-role="cards-core"]
-```
+Core JavaScript has one job: when a linked card is clicked outside any existing
+anchor, it activates that card's materialized action link. Rich-text links
+inside title or copy remain independent anchors, so the document never nests
+one anchor inside another. Removed preview roots carry no persistent
+asynchronous work.
 
-`widget.client.js` registers as `cards`, validates `cards.*`, renders cards
-into `cards-core`, applies shared widget utilities, and binds `ck:state-update`
-for the current instance id.
+Current product behavior preserved by the Core migration:
 
-Runtime invariants:
+- per-card Fill `type: "none"` means exact transparent fill, not inheritance;
+- current `textTone` choices do not replace the exact Card title/Card copy
+  typography colors;
+- Steps uses only its authored step marker, not browser list markers;
+- long titles, copy, and labels wrap inside their card;
+- connectors follow the effective responsive column count;
+- the shared Object Manager still owns how repeated per-card Appearance
+  controls are headed.
 
-- `cards.items[]` must contain 2-16 cards.
-- `cards.items[]` must contain stable, unique item ids.
-- Card `title` and `copy` are required non-empty rich-text values.
-- `cards.items[].media.kind` is `none`, `icon`, or `image`.
-- Image cards require `cards.items[].media.image.src`.
-- Icon cards require a Dieter icon name.
-- Linked-card treatment requires each rendered card link to have both href and label.
-- Card action URLs are validated as empty, `#`, root-relative, `http(s)`,
-  `mailto`, or `tel`.
-- Card wrapper styling uses shared `CKSurface.applyCardWrapper`, not a
-  widget-local surface helper.
-
-Presentation invariants:
-
-- Header title typography remains owned by the shared Header role; Card title
-  typography applies only to rendered cards.
-- Card-title and Card-copy rich-text links inherit their exact role color.
-- Complete titles, copy, and link labels wrap inside the available card width.
-- Steps removes the browser's native ordered-list marker/margin/padding and
-  uses only the existing Cards step marker.
-- Responsive card composition follows the Pod's existing inline-size
-  container: two columns at `900px` or less and one column at `620px` or less.
-  Connector placement follows that effective column count rather than the
-  wider configured column value.
-
-## Current Frozen-Functionality Boundaries
-
-This Widget-system presentation pass deliberately does not reinterpret these
-existing product contracts:
-
-- Selecting Image exposes its asset control before an image source exists, so
-  exact runtime validation can reject that intermediate preview state. A
-  different draft-validity law requires a separate product decision.
-- Per-card Fill value `type: "none"` means exact transparent fill. It is not an
-  inheritance marker. Enabling per-card styles with untouched `none` values
-  therefore does not preserve the shared card border/accent.
-- The current `textTone` choices do not override the exact Card title/Card copy
-  typography colors, and `inherit`/`default` are not yet distinct visible
-  outcomes. Defining those meanings is product behavior, not a presentation
-  cleanup.
-- A whole-card link can currently contain rich-text links from title/copy.
-  Resolving that nested-interaction model requires a deliberate link contract.
-- The non-structural Appearance Object Manager currently renders repeated
-  per-card controls without visible item headings. That behavior belongs to
-  the shared Object Manager contract, not Cards-local markup.
-
-Treatment and layout state:
-
-```text
-cards.treatment -> cards|linked-cards|steps
-cards.columns -> 2|3|4
-cards.gap
-cards.cardPadding
-cards.betweenCards
-cards.customCardStyles
-cards.appearance.cardwrapper
-```
+Shared Header, Stage, Pod, branding, social share, and locale switching remain
+generic shared services. Core neither invokes nor revalidates them.
 
 ## Verification
 
 ```bash
 pnpm validate:widgets
+pnpm --filter @clickeen/widget-foundation typecheck
 pnpm --filter @clickeen/bob test:editor-contract
+node --check tokyo/product/widgets/cards/core/core.js
 ```

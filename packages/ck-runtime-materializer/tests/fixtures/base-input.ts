@@ -6,9 +6,25 @@ export const baseState = {
     eyebrow: 'AI-native widgets',
   },
   behavior: {
+    seoGeo: {
+      enabled: false,
+    },
     socialShare: {
       enabled: true,
+      attachTo: 'stage',
     },
+  },
+  headerCta: {
+    openMode: 'same-tab',
+  },
+  localeSwitcher: {
+    enabled: false,
+    attachTo: 'stage',
+  },
+  typography: {
+    globalFamily: 'Inter',
+    roles: {},
+    roleScales: {},
   },
   items: [
     { id: 'first', title: 'First answer' },
@@ -18,7 +34,16 @@ export const baseState = {
 
 export const baseCompiledWidget = {
   widgetname: 'contract-widget',
-  displayName: 'Contract Widget',
+  discovery: {
+    widgetType: 'contract-widget',
+    kind: 'contract-widget',
+    baseline: {
+      title: 'Contract Widget',
+      description: 'Contract Widget public package.',
+    },
+    parts: [],
+    relationships: [],
+  },
   editableFields: {
     widgetType: 'contract-widget',
     fields: [
@@ -48,48 +73,41 @@ export const baseCompiledWidget = {
       },
     ],
   },
-  controls: [{ path: 'headline' }, { path: 'nested.eyebrow' }, { path: 'items[].title' }],
-  widgetPackage: {
-    files: {
-      'widget.html': {
-        mediaType: 'text/html',
-        source: `<body>
+  widgetSoftware: {
+    widgetHtml: `<body>
 <link rel="stylesheet" href="/dieter/tokens/tokens.css" />
-<link rel="stylesheet" href="./widget.css" />
+<link rel="stylesheet" href="./core/core.css" />
 <section class="ck-headerLayout" data-ck-widget="contract-widget">
   <p data-bind="nested.eyebrow"></p>
   <h1 data-bind="headline"></h1>
   <ul data-bind="items"></ul>
 </section>
-<script src="./widget.client.js" defer></script>
+<script src="./core/core.js" defer></script>
 </body>`,
-      },
-      '/dieter/tokens/tokens.css': {
-        mediaType: 'text/css',
+    coreHtml: '',
+    coreCss: `.contract-widget { color: var(--ck-color-text); }
+`,
+    coreJs: `window.__contractWidgetLoaded = true;
+`,
+    styles: [
+      {
+        path: '/dieter/tokens/tokens.css',
         source: `:root { --ck-color-text: #111; }
 `,
       },
-      'product/widgets/contract-widget/widget.css': {
-        mediaType: 'text/css',
+      {
+        path: './core/core.css',
         source: `.contract-widget { color: var(--ck-color-text); }
 `,
       },
-      'product/widgets/contract-widget/widget.client.js': {
-        mediaType: 'text/javascript',
+    ],
+    scripts: [
+      {
+        path: './core/core.js',
         source: `window.__contractWidgetLoaded = true;
 `,
       },
-      'product/widgets/shared/socialShare.css': {
-        mediaType: 'text/css',
-        source: `.ck-social-share { display: flex; }
-`,
-      },
-      'product/widgets/shared/socialShare.js': {
-        mediaType: 'text/javascript',
-        source: `window.__ckSocialShareLoaded = true;
-`,
-      },
-    },
+    ],
   },
 } satisfies RuntimeMaterializerCompiledWidget;
 
@@ -101,11 +119,17 @@ export const baseMaterializerInput = {
     instanceId: 'inst_contract',
     baseLocale: 'en',
   },
-  displayName: 'Contract Widget',
   state: baseState,
-  evidence: {
-    schemaWidgetContractFingerprint: 'schema:fingerprint',
-    sourceFingerprint: 'source:fingerprint',
-    sourceReference: 'accounts/CLICKEEN/instances/inst_contract/source.json',
+  discoveryPolicyEnabled: false,
+  typographyData: {
+    curatedFonts: {
+      Inter: {
+        source: 'google',
+        spec: 'Inter:wght@100..900',
+        familyClass: 'sans',
+        weights: ['400'],
+        styles: ['normal'],
+      },
+    },
   },
 } satisfies RuntimeMaterializerInput;

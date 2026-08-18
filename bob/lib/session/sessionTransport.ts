@@ -8,6 +8,8 @@ import type { ProductCopilotTurnEvent } from '@clickeen/ck-contracts/ai';
 import {
   type BobAccountCommand,
   type BobAccountCommandMessage,
+  type BobSystemUpsellMessage,
+  type BobWidgetUpsellMessage,
   type AgentActivityEvent,
   type HostAgentActivityMessage,
   type HostAccountCommandResultMessage,
@@ -83,99 +85,43 @@ type AccountAssetsTransport = {
   uploadAsset: (file: File, source: string) => Promise<Response>;
 };
 
-const ACCOUNT_ASSET_UPSELL_REASONS = new Set([
-  'coreui.upsell.reason.limitReached',
-  'coreui.upsell.reason.platform.uploads',
-]);
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
-
-function isExactString(value: unknown): value is string {
-  return typeof value === 'string' && value.length > 0 && value === value.trim();
-}
-
-function hasOnlyKeys(value: Record<string, unknown>, keys: string[]): boolean {
-  const actual = Object.keys(value);
-  return actual.length === keys.length && keys.every((key) => actual.includes(key));
-}
-
-function resolveApiErrorReason(payload: unknown, status: number, fallback: string): string {
-  if (isRecord(payload) && isRecord(payload.error)) {
-    const reasonKey = typeof payload.error.reasonKey === 'string' ? payload.error.reasonKey : '';
-    if (reasonKey) return reasonKey;
-  }
-  return fallback || `HTTP_${status}`;
+function accountAssetError(error: { kind: string; reasonKey: string; detail?: string }): Error {
+  return Object.assign(new Error(error.reasonKey), { kind: error.kind, detail: error.detail });
 }
 
 export function createAccountAssetsClient(transport: AccountAssetsTransport): AccountAssetsClient {
   return {
     resolveUploadUpsellReason(error): string | null {
-      const reasonKey = error instanceof Error ? error.message : '';
-      return ACCOUNT_ASSET_UPSELL_REASONS.has(reasonKey) ? reasonKey : null;
+      return error instanceof Error && (error as Error & { kind?: string }).kind === 'DENY'
+        ? error.message
+        : null;
     },
 
     async listAssets(): Promise<AccountAssetRecord[]> {
       const response = await transport.listAssets();
-      const payload = (await response.json().catch(() => null)) as unknown;
+      const payload = (await response.json()) as {
+        assets: AccountAssetRecord[];
+        error: { kind: string; reasonKey: string; detail?: string };
+      };
       if (!response.ok) {
-        throw new Error(resolveApiErrorReason(payload, response.status, 'coreui.errors.db.readFailed'));
+        throw accountAssetError(payload.error);
       }
-      if (
-        !isRecord(payload) ||
-        !Array.isArray(payload.assets) ||
-        payload.assets.some(
-          (asset) =>
-            !isRecord(asset) ||
-            !isExactString(asset.assetRef) ||
-            !isExactString(asset.assetType) ||
-            !isExactString(asset.filename) ||
-            !isExactString(asset.contentType) ||
-            !isExactString(asset.createdAt) ||
-            typeof asset.sizeBytes !== 'number' ||
-            !Number.isFinite(asset.sizeBytes),
-        )
-      ) {
-        throw new Error('coreui.errors.assets.payloadInvalid');
-      }
-      return payload.assets as AccountAssetRecord[];
+      return payload.assets;
     },
 
     async resolveAssets(assetRefsRaw: string[]): Promise<{
       assetsByRef: Map<string, ResolvedAccountAsset>;
     }> {
-      const requested = new Set(assetRefsRaw);
-      if (requested.size !== assetRefsRaw.length) {
-        throw new Error('coreui.errors.assets.payloadInvalid');
-      }
       const response = await transport.resolveAssets(assetRefsRaw);
-      const payload = (await response.json().catch(() => null)) as unknown;
+      const payload = (await response.json()) as {
+        assets: ResolvedAccountAsset[];
+        error: { kind: string; reasonKey: string; detail?: string };
+      };
       if (!response.ok) {
-        throw new Error(resolveApiErrorReason(payload, response.status, 'coreui.errors.db.readFailed'));
-      }
-      if (
-        !isRecord(payload) ||
-        !hasOnlyKeys(payload, ['assets']) ||
-        !Array.isArray(payload.assets) ||
-        payload.assets.length !== assetRefsRaw.length ||
-        payload.assets.some(
-          (asset) =>
-            !isRecord(asset) ||
-            !hasOnlyKeys(asset, ['assetRef', 'url', 'assetType', 'contentType']) ||
-            !isExactString(asset.assetRef) ||
-            !isExactString(asset.url) ||
-            !isExactString(asset.assetType) ||
-            !isExactString(asset.contentType) ||
-            !requested.delete(asset.assetRef),
-        )
-      ) {
-        throw new Error('coreui.errors.assets.payloadInvalid');
+        throw accountAssetError(payload.error);
       }
       return {
-        assetsByRef: new Map(
-          (payload.assets as ResolvedAccountAsset[]).map((asset) => [asset.assetRef, asset]),
-        ),
+        assetsByRef: new Map(payload.assets.map((asset) => [asset.assetRef, asset])),
       };
     },
 
@@ -184,25 +130,13 @@ export function createAccountAssetsClient(transport: AccountAssetsTransport): Ac
         throw new Error('coreui.errors.payload.empty');
       }
       const response = await transport.uploadAsset(file, source);
-      const payload = (await response.json().catch(() => null)) as unknown;
+      const payload = (await response.json()) as AccountAssetRecord & {
+        error: { kind: string; reasonKey: string; detail?: string };
+      };
       if (!response.ok) {
-        throw new Error(
-          resolveApiErrorReason(payload, response.status, 'coreui.errors.assets.uploadFailed'),
-        );
+        throw accountAssetError(payload.error);
       }
-      if (
-        !isRecord(payload) ||
-        !isExactString(payload.assetRef) ||
-        !isExactString(payload.assetType) ||
-        !isExactString(payload.filename) ||
-        !isExactString(payload.contentType) ||
-        !isExactString(payload.createdAt) ||
-        typeof payload.sizeBytes !== 'number' ||
-        !Number.isFinite(payload.sizeBytes)
-      ) {
-        throw new Error('coreui.errors.assets.uploadFailed');
-      }
-      return payload as AccountAssetRecord;
+      return payload;
     },
   };
 }
@@ -230,6 +164,32 @@ export function useSessionTransport(args: {
   metaRef: MutableRefObject<SessionMeta>;
 }) {
   const hostOriginRef = useRef<string | null>(null);
+
+  const postUpsell = useCallback((message: BobWidgetUpsellMessage | BobSystemUpsellMessage) => {
+    const targetOrigin = hostOriginRef.current;
+    if (!targetOrigin) {
+      throw new Error('coreui.errors.builder.command.hostUnavailable');
+    }
+    window.parent.postMessage(message, targetOrigin);
+  }, []);
+
+  const requestWidgetUpsell = useCallback(
+    (capability: string, messageId: string, required: boolean | number) => {
+      postUpsell({ type: 'bob:upsell', capability, messageId, required });
+    },
+    [postUpsell],
+  );
+
+  const requestSystemUpsell = useCallback(
+    (reasonKey: string, detail?: string) => {
+      postUpsell({
+        type: 'bob:upsell',
+        reasonKey,
+        ...(detail ? { detail } : {}),
+      });
+    },
+    [postUpsell],
+  );
 
   const waitForHostOrigin = useCallback(async (): Promise<string | null> => {
     const existing = hostOriginRef.current;
@@ -306,7 +266,7 @@ export function useSessionTransport(args: {
         type: 'bob:account-command',
         requestId,
         command: commandArgs.command,
-        ...(String(commandArgs.instanceId || '').trim() ? { instanceId: String(commandArgs.instanceId || '').trim() } : {}),
+        ...(commandArgs.instanceId ? { instanceId: commandArgs.instanceId } : {}),
         ...(commandArgs.headers ? { headers: commandArgs.headers } : {}),
         ...(typeof commandArgs.body === 'undefined' ? {} : { body: commandArgs.body }),
       };
@@ -326,16 +286,16 @@ export function useSessionTransport(args: {
           if (!data || typeof data !== 'object') return;
           if (data.requestId !== requestId) return;
           if (data.type === 'host:agent-activity') {
-            if (data.event && typeof data.event === 'object') commandArgs.onActivity?.(data.event);
+            commandArgs.onActivity?.(data.event);
             return;
           }
           if (data.type !== 'host:account-command-result') return;
           cleanup();
           resolve({
-            ok: data.ok === true,
-            status: typeof data.status === 'number' ? data.status : 500,
-            payload: data.payload ?? null,
-            message: typeof data.message === 'string' ? data.message : undefined,
+            ok: data.ok,
+            status: data.status,
+            payload: data.payload,
+            message: data.message,
           });
         };
 
@@ -364,7 +324,7 @@ export function useSessionTransport(args: {
       headers?: Record<string, string>;
       body?: unknown;
     }): Promise<Response> => {
-      const instanceId = String(args.metaRef.current?.instanceId || '').trim();
+      const instanceId = args.metaRef.current?.instanceId;
       const result = await dispatchHostAccountCommand({
         command: commandArgs.command,
         ...(instanceId ? { instanceId } : {}),
@@ -409,7 +369,7 @@ export function useSessionTransport(args: {
 
   const fetchApi = useCallback(async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
     const inputUrl = normalizeInputUrl(input);
-    const instanceId = String(args.metaRef.current?.instanceId || '').trim();
+    const instanceId = args.metaRef.current?.instanceId;
     if (inputUrl === '/api/ai/widget-copilot') {
       if (!instanceId) {
         return createHostUnavailableResponse();
@@ -461,10 +421,9 @@ export function useSessionTransport(args: {
 
   const listTranslations: ListTranslations = useCallback(
     async (commandArgs: ListTranslationsArgs) => {
-      const instanceId = String(commandArgs.instanceId || '').trim();
       const result = await dispatchHostAccountCommand({
         command: 'list-translations',
-        instanceId,
+        instanceId: commandArgs.instanceId,
         body: {
           baseLocale: commandArgs.baseLocale,
         },
@@ -476,13 +435,11 @@ export function useSessionTransport(args: {
 
   const readTranslation: ReadTranslation = useCallback(
     async (commandArgs: ReadTranslationArgs) => {
-      const instanceId = String(commandArgs.instanceId || '').trim();
-      const locale = String(commandArgs.locale || '').trim();
       const result = await dispatchHostAccountCommand({
         command: 'read-translation',
-        instanceId,
+        instanceId: commandArgs.instanceId,
         body: {
-          locale,
+          locale: commandArgs.locale,
         },
       });
       return { ok: result.ok, status: result.status, json: result.payload };
@@ -492,10 +449,9 @@ export function useSessionTransport(args: {
 
   const generateTranslations: GenerateTranslations = useCallback(
     async (commandArgs: GenerateTranslationsArgs) => {
-      const instanceId = String(commandArgs.instanceId || '').trim();
       const result = await dispatchHostAccountCommand({
         command: 'generate-translations',
-        instanceId,
+        instanceId: commandArgs.instanceId,
         timeoutMs: 120_000,
         onActivity: commandArgs.onActivity,
       });
@@ -506,7 +462,6 @@ export function useSessionTransport(args: {
 
   const runCopilot: RunCopilot = useCallback(
     (commandArgs: RunCopilotArgs) => {
-      const instanceId = String(commandArgs.instanceId || '').trim();
       const requestId = crypto.randomUUID();
 
       const completed = (async () => {
@@ -519,7 +474,7 @@ export function useSessionTransport(args: {
           type: 'bob:account-command',
           requestId,
           command: 'run-copilot',
-          ...(instanceId ? { instanceId } : {}),
+          ...(commandArgs.instanceId ? { instanceId: commandArgs.instanceId } : {}),
           ...(typeof commandArgs.body === 'undefined' ? {} : { body: commandArgs.body }),
         };
 
@@ -538,15 +493,15 @@ export function useSessionTransport(args: {
             if (!data || typeof data !== 'object') return;
             if (data.requestId !== requestId) return;
             if (data.type === 'host:copilot-event') {
-              if (data.event && typeof data.event === 'object') commandArgs.onCopilotEvent?.(data.event);
+              commandArgs.onCopilotEvent?.(data.event);
               return;
             }
             if (data.type !== 'host:account-command-result') return;
             cleanup();
             resolve({
-              ok: data.ok === true,
-              status: typeof data.status === 'number' ? data.status : 500,
-              payload: data.payload ?? null,
+              ok: data.ok,
+              status: data.status,
+              payload: data.payload,
             });
           };
 
@@ -591,6 +546,8 @@ export function useSessionTransport(args: {
   return {
     accountAssets: accountAssets.current,
     hostOriginRef,
+    requestWidgetUpsell,
+    requestSystemUpsell,
     fetchApi,
     executeAccountCommand,
     listTranslations,

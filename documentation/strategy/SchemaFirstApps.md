@@ -72,6 +72,13 @@ This means a future CRM, social media tool, marketing automation app, or ORM
 must not recreate its own disconnected source truth. It must attach to the
 schema substrate and expose agent-operable domain operations.
 
+Domain software uses the Clickeen substrate; the substrate does not absorb the
+domain's unique meaning. Shared capabilities are extended through one generic
+contract for every applicable domain expression, never through a private
+Widget/app branch. Once a named Clickeen authority produces structured truth,
+other Clickeen services trust and use it rather than adding another internal
+validation or repair layer.
+
 ## Render Layer And Operate Layer
 
 Widgets, pages, sites, emails, reports, feeds, crawler artifacts, and answer
@@ -95,6 +102,14 @@ schema
 
 The materializer is one substrate capability. It resolves schema truth into
 artifacts. It does not define app operation by itself.
+
+For renderable artifacts, resolution is static-first. The stored materialized
+HTML already contains complete base-language content, CSS contains the complete
+presentation, and mandatory client JavaScript owns visitor behavior without
+creating the first meaningful page.
+A non-base Edge response applies the exact overlay before returning complete
+selected-language HTML. Client JavaScript does not create or localize the
+initial meaning of the surface.
 
 A Clickeen-native app has this shape:
 
@@ -202,6 +217,12 @@ Future apps must preserve these laws:
 - Integration writes require explicit authorized write paths.
 - Shared schema is preferred over private app schemas whenever the domain truth
   is actually shared.
+- Domain software consumes shared Clickeen services through uniform contracts;
+  shared services do not gain domain-specific semantic branches.
+- Named Clickeen authorities trust one another's outputs; correctness is owned
+  once at production/ingress rather than repeatedly revalidated downstream.
+- Materialized render surfaces expose semantic content before client
+  JavaScript.
 
 ## Strategic Boundary
 

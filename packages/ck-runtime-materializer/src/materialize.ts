@@ -1,143 +1,53 @@
-import { buildRuntimePackageFingerprint } from './fingerprint';
-import { packageSource } from './files';
-import {
-  buildIndexHtml,
-  extractBody,
-  stampPackageShell,
-  stripScripts,
-  stripStylesheetLinks,
-} from './html';
-import { buildRuntime, buildStyles, socialShareEnabled } from './runtime';
-import { materializerFailure } from './errors';
-import {
-  RUNTIME_MATERIALIZER_CONTRACT_VERSION,
-  type RuntimeMaterializerArtifactCoordinate,
-  type RuntimeMaterializerCompiledWidget,
-  type RuntimeMaterializerFileSet,
-  type RuntimeMaterializerInput,
-  type RuntimeMaterializerResult,
-} from './types';
+import { listWidgetFontStylesheets, renderWidgetHtml } from '@clickeen/widget-foundation';
+import { buildIndexHtml } from './html';
+import { buildRuntime, buildStyles } from './runtime';
+import type { RuntimeMaterializerInput, RuntimeMaterializerResult } from './types';
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
-
-function validString(value: string): boolean {
-  return typeof value === 'string' && value.trim() === value && value.length > 0;
-}
-
-function validCoordinate(coordinate: RuntimeMaterializerArtifactCoordinate): boolean {
-  return (
-    coordinate.kind === 'account-instance-widget' &&
-    validString(coordinate.accountPublicId) &&
-    validString(coordinate.instanceId) &&
-    validString(coordinate.baseLocale)
-  );
-}
-
-function encodePathSegment(value: string): string {
-  return encodeURIComponent(value);
-}
-
-function publicPackagePath(coordinate: RuntimeMaterializerArtifactCoordinate): string {
-  return `/${encodePathSegment(coordinate.accountPublicId)}/${encodePathSegment(coordinate.instanceId)}`;
-}
-
-function validCompiledWidget(compiled: RuntimeMaterializerCompiledWidget): boolean {
-  return (
-    isRecord(compiled) &&
-    validString(compiled.widgetname) &&
-    (typeof compiled.displayName === 'undefined' || typeof compiled.displayName === 'string') &&
-    isRecord(compiled.widgetPackage) &&
-    isRecord(compiled.widgetPackage.files)
-  );
-}
-
-function buildPackage(args: {
-  compiled: RuntimeMaterializerCompiledWidget;
-  artifactCoordinate: RuntimeMaterializerArtifactCoordinate;
-  instanceId: string;
-  baseLocale: string;
-  displayName: string | null;
-  baseState: Record<string, unknown>;
-  typographyData: RuntimeMaterializerInput['typographyData'];
-}): { ok: true; files: RuntimeMaterializerFileSet } | RuntimeMaterializerResult {
-  const widgetHtml = packageSource({ compiled: args.compiled, key: 'widget.html' });
-  if (!widgetHtml) return materializerFailure('widget_package_missing');
-
-  const includeSocialShare = socialShareEnabled(args.baseState);
-  const stamped = stampPackageShell({
-    html: extractBody(widgetHtml),
-    widgetType: args.compiled.widgetname,
-    instanceId: args.instanceId,
-  });
-  if (!stamped.ok) return stamped;
-
-  const withoutStylesheets = stripStylesheetLinks(stamped.body);
-  const stripped = stripScripts(withoutStylesheets);
-  const styles = buildStyles({ compiled: args.compiled, widgetHtml, includeSocialShare });
-  if (!styles.ok) return styles;
-
-  const runtime = buildRuntime({
-    compiled: args.compiled,
-    scriptSources: stripped.scriptSources,
-    includeSocialShare,
-    instanceId: args.instanceId,
-    baseLocale: args.baseLocale,
-    publicPath: publicPackagePath(args.artifactCoordinate),
-    baseState: args.baseState,
-    ...(args.typographyData ? { typographyData: args.typographyData } : {}),
-  });
-  if (!runtime.ok) return runtime;
-
-  return {
-    ok: true,
-    files: {
-      indexHtml: buildIndexHtml({
-        compiled: args.compiled,
-        htmlLocale: args.baseLocale,
-        displayName: args.displayName,
-        body: stripped.body,
-        publicPath: publicPackagePath(args.artifactCoordinate),
-      }),
-      stylesCss: styles.stylesCss,
-      runtimeJs: runtime.runtimeJs,
-      dependencies: { instanceIds: [] },
-    },
-  };
+function publicPackagePath(input: RuntimeMaterializerInput): string {
+  return `/${encodeURIComponent(input.artifactCoordinate.accountPublicId)}/${encodeURIComponent(input.artifactCoordinate.instanceId)}`;
 }
 
 export async function materializeRuntimePackage(
   input: RuntimeMaterializerInput,
 ): Promise<RuntimeMaterializerResult> {
-  if (!validCoordinate(input.artifactCoordinate))
-    return materializerFailure('artifact_coordinate_invalid');
-  if (!validCompiledWidget(input.compiled)) return materializerFailure('compiled_widget_invalid');
-  if (!isRecord(input.state)) return materializerFailure('source_state_invalid');
-
-  const built = buildPackage({
-    compiled: input.compiled,
-    artifactCoordinate: input.artifactCoordinate,
-    instanceId: input.artifactCoordinate.instanceId,
-    baseLocale: input.artifactCoordinate.baseLocale,
-    displayName: input.displayName,
-    baseState: input.state,
-    typographyData: input.typographyData,
+  const savedDiscoveryEnabled = (
+    input.state.behavior as { seoGeo: { enabled: boolean } }
+  ).seoGeo.enabled;
+  const body = renderWidgetHtml({
+    software: input.compiled.widgetSoftware,
+    state: input.state,
+    editableFields: input.compiled.editableFields,
+    context: {
+      instanceId: input.artifactCoordinate.instanceId,
+      locale: input.artifactCoordinate.baseLocale,
+      discoveryEnabled: input.discoveryPolicyEnabled && savedDiscoveryEnabled,
+      discovery: input.compiled.discovery,
+    },
   });
-  if (!built.ok) return built;
-
-  const generatedPackageFingerprint = await buildRuntimePackageFingerprint(built.files);
+  const publicPath = publicPackagePath(input);
   return {
     ok: true,
-    files: built.files,
-    evidence: {
-      schemaWidgetContractFingerprint: input.evidence.schemaWidgetContractFingerprint,
-      sourceFingerprint: input.evidence.sourceFingerprint,
-      sourceReference: input.evidence.sourceReference,
-      artifactCoordinate: input.artifactCoordinate,
-      materializerContractVersion: RUNTIME_MATERIALIZER_CONTRACT_VERSION,
-      generatedPackageFingerprint,
-      supportFileFingerprints: [],
+    files: {
+      indexHtml: buildIndexHtml({
+        compiled: input.compiled,
+        htmlLocale: input.artifactCoordinate.baseLocale,
+        body,
+        publicPath,
+        fontStylesheets: listWidgetFontStylesheets({
+          state: input.state,
+          context: {
+            locale: input.artifactCoordinate.baseLocale,
+            typographyData: input.typographyData,
+          },
+        }),
+      }),
+      stylesCss: buildStyles({
+        software: input.compiled.widgetSoftware,
+        state: input.state,
+        locale: input.artifactCoordinate.baseLocale,
+        typographyData: input.typographyData,
+      }),
+      runtimeJs: buildRuntime(input.compiled.widgetSoftware),
     },
   };
 }

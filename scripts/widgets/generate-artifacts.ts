@@ -6,19 +6,21 @@ import {
   type WidgetEditableFieldsContract,
 } from '../../packages/ck-contracts/src/translated-value-primitives';
 import { parseLimitsSpec, type LimitsSpec } from '../../packages/ck-policy/src';
+import { compileWidgetSoftware, type WidgetSoftware } from '../../packages/widget-foundation/src';
 import {
-  WIDGET_SHARED_CSS_MODULE_KEYS,
-  WIDGET_SHARED_RUNTIME_MODULE_KEYS,
-} from '../../packages/widget-foundation/src';
-import { extractStylesheetSources } from '../../packages/ck-runtime-materializer/src/html';
+  extractBody,
+  extractStylesheetSources,
+  stripScripts,
+} from '../../packages/ck-runtime-materializer/src/html';
+import { resolveProductPath } from '../../packages/ck-runtime-materializer/src/files';
 import { compileWidgetServer } from '../../bob/lib/compiler.server';
 import type { RawWidget } from '../../bob/lib/compiler.shared';
 import type { ComponentStencil, ComponentStencilLoader } from '../../bob/lib/compiler/stencils';
 import { resolveWidgetTooldrawerLabels } from '../../bob/lib/compiler/tooldrawer-labels';
 import type {
   CompiledWidget,
-  WidgetPackageContext,
-  WidgetPackageFileContext,
+  WidgetDiscoveryContract,
+  WidgetUpsellCatalog,
 } from '../../bob/lib/types';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -28,15 +30,21 @@ const dieterComponentsRoot = path.join(dieterRoot, 'components');
 const editorOutputRoot = path.join(repoRoot, 'roma/public/widget-editors');
 const materializerOutputRoot = path.join(repoRoot, 'roma/generated/widgets');
 const checkOnly = process.argv.includes('--check');
+const requestedWidgetType = (() => {
+  const index = process.argv.indexOf('--widget');
+  if (index < 0) return null;
+  const value = String(process.argv[index + 1] || '').trim();
+  if (!value) throw new Error('[generate-widget-artifacts] --widget requires a Widget type');
+  return value;
+})();
 
 type MaterializerArtifact = {
   widgetname: string;
   displayName: string;
-  limits: LimitsSpec;
+  discovery: WidgetDiscoveryContract;
   editableFields: WidgetEditableFieldsContract;
-  controls: Array<{ path?: string }>;
   coreDefaults: Record<string, unknown>;
-  widgetPackage: WidgetPackageContext;
+  widgetSoftware: WidgetSoftware;
 };
 
 function discoverWidgetTypes(): string[] {
@@ -52,6 +60,132 @@ function readText(relativePath: string): string {
   return fs.readFileSync(path.join(repoRoot, relativePath), 'utf8');
 }
 
+function readSourceRecord(value: unknown, context: string): Record<string, unknown> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error(`[generate-widget-artifacts] ${context} must be an object`);
+  }
+  return value as Record<string, unknown>;
+}
+
+function readSourceString(value: unknown, context: string): string {
+  if (typeof value !== 'string' || !value.trim()) {
+    throw new Error(`[generate-widget-artifacts] ${context} must be a non-empty string`);
+  }
+  return value;
+}
+
+function readSourceStringArray(value: unknown, context: string): string[] {
+  if (!Array.isArray(value)) {
+    throw new Error(`[generate-widget-artifacts] ${context} must be an array`);
+  }
+  return value.map((item, index) => readSourceString(item, `${context}[${index}]`));
+}
+
+function readWidgetUpsellCatalog(
+  raw: unknown,
+  widgetType: string,
+  limits: LimitsSpec,
+): WidgetUpsellCatalog {
+  const source = readSourceRecord(raw, `${widgetType} upsell/en.json`);
+  if (source.widgetType !== widgetType || source.locale !== 'en') {
+    throw new Error(
+      `[generate-widget-artifacts] ${widgetType} upsell/en.json must declare widgetType ${widgetType} and locale en`,
+    );
+  }
+  const rawMessages = readSourceRecord(source.messages, `${widgetType} upsell/en.json messages`);
+  const messages = Object.fromEntries(
+    Object.entries(rawMessages).map(([messageId, value]) => {
+      const message = readSourceString(value, `${widgetType} upsell/en.json message ${messageId}`);
+      const unsupportedPlaceholder = [...message.matchAll(/\{([^{}]+)\}/g)]
+        .map((match) => String(match[1]))
+        .find((placeholder) => placeholder !== 'currentPlan' && placeholder !== 'targetPlan');
+      const remainder = message.replace(/\{(?:currentPlan|targetPlan)\}/g, '');
+      if (unsupportedPlaceholder || /[{}]/.test(remainder)) {
+        throw new Error(
+          `[generate-widget-artifacts] ${widgetType} upsell message ${messageId} has an unsupported placeholder`,
+        );
+      }
+      return [messageId, message];
+    }),
+  );
+  const referencedMessageIds = new Set(limits.limits.map((limit) => limit.messageId));
+  const authoredMessageIds = new Set(Object.keys(messages));
+  const missingMessageIds = [...referencedMessageIds].filter(
+    (messageId) => !authoredMessageIds.has(messageId),
+  );
+  const unusedMessageIds = [...authoredMessageIds].filter(
+    (messageId) => !referencedMessageIds.has(messageId),
+  );
+  if (missingMessageIds.length || unusedMessageIds.length) {
+    throw new Error(
+      `[generate-widget-artifacts] ${widgetType} upsell message ids must exactly match limits.json`,
+    );
+  }
+  return { widgetType, locale: 'en', messages };
+}
+
+function readWidgetDiscoveryContract(raw: unknown, widgetType: string): WidgetDiscoveryContract {
+  const source = readSourceRecord(raw, `${widgetType} discovery.json`);
+  if (source.widgetType !== widgetType) {
+    throw new Error(
+      `[generate-widget-artifacts] ${widgetType} discovery.json must declare widgetType ${widgetType}`,
+    );
+  }
+  const baseline = readSourceRecord(source.baseline, `${widgetType} discovery.json baseline`);
+  if (!Array.isArray(source.parts) || !Array.isArray(source.relationships)) {
+    throw new Error(
+      `[generate-widget-artifacts] ${widgetType} discovery.json must declare parts and relationships arrays`,
+    );
+  }
+  return {
+    widgetType,
+    kind: readSourceString(source.kind, `${widgetType} discovery.json kind`),
+    baseline: {
+      title: readSourceString(baseline.title, `${widgetType} discovery.json baseline.title`),
+      description: readSourceString(
+        baseline.description,
+        `${widgetType} discovery.json baseline.description`,
+      ),
+    },
+    parts: source.parts.map((value, index) => {
+      const part = readSourceRecord(value, `${widgetType} discovery.json parts[${index}]`);
+      return {
+        id: readSourceString(part.id, `${widgetType} discovery.json parts[${index}].id`),
+        path: readSourceString(part.path, `${widgetType} discovery.json parts[${index}].path`),
+        role: readSourceString(part.role, `${widgetType} discovery.json parts[${index}].role`),
+        identityPaths: readSourceStringArray(
+          part.identityPaths,
+          `${widgetType} discovery.json parts[${index}].identityPaths`,
+        ),
+      };
+    }),
+    relationships: source.relationships.map((value, index) => {
+      const relationship = readSourceRecord(
+        value,
+        `${widgetType} discovery.json relationships[${index}]`,
+      );
+      return {
+        kind: readSourceString(
+          relationship.kind,
+          `${widgetType} discovery.json relationships[${index}].kind`,
+        ),
+        from: readSourceString(
+          relationship.from,
+          `${widgetType} discovery.json relationships[${index}].from`,
+        ),
+        to: readSourceString(
+          relationship.to,
+          `${widgetType} discovery.json relationships[${index}].to`,
+        ),
+        identityPaths: readSourceStringArray(
+          relationship.identityPaths,
+          `${widgetType} discovery.json relationships[${index}].identityPaths`,
+        ),
+      };
+    }),
+  };
+}
+
 function readHtmlAttribute(openingTag: string, attrName: string): string {
   const escapedAttr = attrName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const match = openingTag.match(
@@ -63,7 +197,7 @@ function readHtmlAttribute(openingTag: string, attrName: string): string {
 function assertWidgetShellContract(
   widgetType: string,
   widgetHtml: string,
-  widgetCss: string,
+  coreCss: string,
 ): void {
   const shellTags = [...widgetHtml.matchAll(/<[a-z][\w:-]*(?:\s[^<>]*)?>/gi)]
     .map((match) => match[0])
@@ -135,7 +269,7 @@ function assertWidgetShellContract(
   const shellClasses = new Set(
     readHtmlAttribute(shellTags[0]!, 'class').split(/\s+/).filter(Boolean),
   );
-  for (const rule of widgetCss.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+  for (const rule of coreCss.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
     const declarations = String(rule[2] || '');
     if (!/(?:^|;)\s*display\s*:/i.test(declarations)) continue;
     for (const selector of String(rule[1] || '').split(',')) {
@@ -151,22 +285,9 @@ function assertWidgetShellContract(
       const targetsShell = [...shellClasses].some((className) => targetClasses.has(className));
       if (targetsShell) {
         throw new Error(
-          `[generate-widget-artifacts] ${widgetType} widget.css must not set display on its Shell; shared/header.css owns .ck-headerLayout layout`,
+          `[generate-widget-artifacts] ${widgetType} core/core.css must not set display on its Shell; shared/header.css owns .ck-headerLayout layout`,
         );
       }
-    }
-  }
-}
-
-function assertWidgetSharedRuntimeContract(widgetType: string, widgetClient: string): void {
-  for (const sharedCall of ['CKBranding.applyBacklink', 'CKSocialShare.apply'] as const) {
-    if (
-      !widgetClient.includes(`Missing ${sharedCall}`) ||
-      !widgetClient.includes(`window.${sharedCall}(`)
-    ) {
-      throw new Error(
-        `[generate-widget-artifacts] ${widgetType} must fail closed and call ${sharedCall}`,
-      );
     }
   }
 }
@@ -177,13 +298,6 @@ function readCssEntry(relativePath: string): string {
     /^@import url\(['"](.+?)['"]\);\s*$/gm,
     (_match, importPath: string) => readCssEntry(path.posix.join(entryDir, importPath)),
   );
-}
-
-function mediaTypeForPath(filePath: string): WidgetPackageFileContext['mediaType'] {
-  if (filePath.endsWith('.json')) return 'application/json';
-  if (filePath.endsWith('.html')) return 'text/html';
-  if (filePath.endsWith('.css')) return 'text/css';
-  return 'text/javascript';
 }
 
 const loadLocalStencil: ComponentStencilLoader = async (type): Promise<ComponentStencil> => {
@@ -200,64 +314,29 @@ const loadLocalStencil: ComponentStencilLoader = async (type): Promise<Component
   };
 };
 
-function buildWidgetPackage(args: {
-  widgetType: string;
-  specSource: string;
-  editableFieldsSource: string;
-  tooldrawerLabelsSource: string;
-}): WidgetPackageContext {
-  const files: WidgetPackageContext['files'] = {};
-  const widgetDirectory = `tokyo/product/widgets/${args.widgetType}`;
+function buildWidgetSoftware(widgetType: string): WidgetSoftware {
+  const widgetDirectory = `tokyo/product/widgets/${widgetType}`;
   const widgetHtml = readText(`${widgetDirectory}/widget.html`);
-  const widgetCss = readText(`${widgetDirectory}/widget.css`);
-  const widgetClient = readText(`${widgetDirectory}/widget.client.js`);
-  assertWidgetShellContract(args.widgetType, widgetHtml, widgetCss);
-  assertWidgetSharedRuntimeContract(args.widgetType, widgetClient);
-  for (const filename of ['spec.json', 'widget.html', 'widget.css', 'widget.client.js'] as const) {
-    files[filename] = {
-      mediaType: mediaTypeForPath(filename),
-      source:
-        filename === 'spec.json'
-          ? args.specSource
-          : filename === 'widget.html'
-            ? widgetHtml
-            : filename === 'widget.css'
-              ? widgetCss
-              : filename === 'widget.client.js'
-                ? widgetClient
-                : readText(`${widgetDirectory}/${filename}`),
-    };
+  const coreHtml = readText(`${widgetDirectory}/core/core.html`);
+  const coreCss = readText(`${widgetDirectory}/core/core.css`);
+  const coreJs = readText(`${widgetDirectory}/core/core.js`);
+  const composedWidgetHtml = widgetHtml.replace(/{{>\s*core\s*}}/, coreHtml);
+  assertWidgetShellContract(widgetType, composedWidgetHtml, coreCss);
+  const styles: WidgetSoftware['styles'] = [];
+  const scripts: WidgetSoftware['scripts'] = [];
+  for (const href of extractStylesheetSources(widgetHtml)) {
+    const key = href.startsWith('/') ? href : resolveProductPath(widgetType, href);
+    if (!key) continue;
+    const source = href.startsWith('/') ? readCssEntry(href.slice(1)) : readText(`tokyo/${key}`);
+    styles.push({ path: href, source });
   }
-  files['editable-fields.json'] = {
-    mediaType: 'application/json',
-    source: args.editableFieldsSource,
-  };
-  files[`${args.widgetType}_tooldrawer_l10n_labels/en.json`] = {
-    mediaType: 'application/json',
-    source: args.tooldrawerLabelsSource,
-  };
-  for (const href of extractStylesheetSources(widgetHtml).filter((source) =>
-    source.startsWith('/dieter/'),
-  )) {
-    files[href] = {
-      mediaType: 'text/css',
-      source: readCssEntry(href.slice(1)),
-    };
+  for (const src of stripScripts(extractBody(widgetHtml)).scriptSources) {
+    const key = resolveProductPath(widgetType, src);
+    if (!key) continue;
+    const source = readText(`tokyo/${key}`);
+    scripts.push({ path: src, source });
   }
-
-  const supportKeys = new Set<string>([
-    ...WIDGET_SHARED_CSS_MODULE_KEYS,
-    ...WIDGET_SHARED_RUNTIME_MODULE_KEYS,
-    `product/widgets/${args.widgetType}/widget.css`,
-    `product/widgets/${args.widgetType}/widget.client.js`,
-  ]);
-  for (const key of supportKeys) {
-    files[key] = {
-      mediaType: mediaTypeForPath(key),
-      source: readText(`tokyo/${key}`),
-    };
-  }
-  return { widgetType: args.widgetType, files };
+  return compileWidgetSoftware({ widgetHtml, coreHtml, coreCss, coreJs, styles, scripts });
 }
 
 function writeOrCheck(filePath: string, source: string): void {
@@ -309,18 +388,17 @@ function generatedMaterializerIndex(widgetTypes: string[]): string {
     .map((widgetType, index) => `  '${widgetType}': artifact${index},`)
     .join('\n');
   return `// Generated by scripts/widgets/generate-artifacts.ts. Do not edit manually.
-import type { CompiledWidget, WidgetPackageContext } from '../../bob/lib/types';
+import type { CompiledWidget, WidgetDiscoveryContract } from '../../bob/lib/types';
 
 ${imports.join('\n')}
 
 export type WidgetMaterializerArtifact = {
   widgetname: string;
   displayName: string;
-  limits: CompiledWidget['limits'];
+  discovery: WidgetDiscoveryContract;
   editableFields: NonNullable<CompiledWidget['editableFields']>;
-  controls: Array<{ path?: string }>;
   coreDefaults: Record<string, unknown>;
-  widgetPackage: WidgetPackageContext;
+  widgetSoftware: CompiledWidget['widgetSoftware'];
 };
 
 const WIDGET_MATERIALIZER_ARTIFACTS = {
@@ -339,8 +417,11 @@ async function buildArtifacts(widgetType: string): Promise<{
 }> {
   const widgetDirectory = `tokyo/product/widgets/${widgetType}`;
   const specSource = readText(`${widgetDirectory}/spec.json`);
+  const discoverySource = readText(`${widgetDirectory}/discovery.json`);
   const editableFieldsSource = readText(`${widgetDirectory}/editable-fields.json`);
-  const tooldrawerLabelsRelativePath = `${widgetType}_tooldrawer_l10n_labels/en.json`;
+  const limitsSource = readText(`${widgetDirectory}/limits.json`);
+  const upsellSource = readText(`${widgetDirectory}/upsell/en.json`);
+  const tooldrawerLabelsRelativePath = 'labels/en.json';
   const tooldrawerLabelsSource = readText(`${widgetDirectory}/${tooldrawerLabelsRelativePath}`);
   const spec = JSON.parse(specSource) as RawWidget;
   const tooldrawerLabels = JSON.parse(tooldrawerLabelsSource) as unknown;
@@ -349,35 +430,36 @@ async function buildArtifacts(widgetType: string): Promise<{
     throw new Error(`[generate-widget-artifacts] ${widgetType} resolved defaults are missing`);
   }
   const editableFields = readWidgetEditableFieldsContract(JSON.parse(editableFieldsSource));
-  const limits = parseLimitsSpec(JSON.parse(readText(`${widgetDirectory}/limits.json`)));
+  const limits = parseLimitsSpec(JSON.parse(limitsSource));
+  const upsell = readWidgetUpsellCatalog(JSON.parse(upsellSource), widgetType, limits);
+  const discovery = readWidgetDiscoveryContract(JSON.parse(discoverySource), widgetType);
   const compiled = await compileWidgetServer(spec, {
     loadComponentStencil: loadLocalStencil,
     tokyoBaseUrl: '',
     tooldrawerLabels,
   });
   assertProductReadableControls(widgetType, compiled.controls);
+  const widgetSoftware = buildWidgetSoftware(widgetType);
   return {
-    editor: { ...compiled, limits, editableFields },
+    editor: { ...compiled, limits, editableFields, upsell, widgetSoftware },
     materializer: {
       widgetname: compiled.widgetname,
       displayName: compiled.displayName,
-      limits,
+      discovery,
       editableFields,
-      controls: compiled.controls.map(({ path }) => ({ path })),
       coreDefaults: resolvedWidget.defaults,
-      widgetPackage: buildWidgetPackage({
-        widgetType,
-        specSource,
-        editableFieldsSource,
-        tooldrawerLabelsSource,
-      }),
+      widgetSoftware,
     },
   };
 }
 
 async function main(): Promise<void> {
-  const widgetTypes = discoverWidgetTypes();
-  if (!checkOnly) {
+  const allWidgetTypes = discoverWidgetTypes();
+  if (requestedWidgetType && !allWidgetTypes.includes(requestedWidgetType)) {
+    throw new Error(`[generate-widget-artifacts] unknown Widget type ${requestedWidgetType}`);
+  }
+  const widgetTypes = requestedWidgetType ? [requestedWidgetType] : allWidgetTypes;
+  if (!checkOnly && !requestedWidgetType) {
     fs.rmSync(editorOutputRoot, { recursive: true, force: true });
     fs.rmSync(materializerOutputRoot, { recursive: true, force: true });
   }

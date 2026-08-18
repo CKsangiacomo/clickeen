@@ -3,13 +3,8 @@ import {
   deleteAccountInstanceFromTokyo,
   saveAccountInstanceInTokyo,
 } from '@roma/lib/account-instance-direct';
-import {
-  readWidgetForInstancePackage,
-  materializeAccountInstancePublicPackage,
-} from '@roma/lib/account-instance-public-package';
-import { materializeAccountInstanceSourceArtifacts } from '@roma/lib/account-instance-source-artifacts';
-import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
-import { validateAccountInstanceSavePolicy } from '@roma/lib/account-instance-save-policy';
+import { readWidgetMaterializerArtifact } from '@roma/generated/widget-materializer-artifacts';
+import { prepareAccountInstanceSourceArtifacts } from '@roma/lib/account-instance-source-artifacts';
 import { readJsonPayloadOrValidation, requireInstanceIdParam } from '@roma/lib/route-helpers';
 import {
   resolveCurrentAccountRouteContext,
@@ -58,10 +53,9 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     );
   }
   const bodyResult = await readJsonPayloadOrValidation<{
-    widgetType?: string;
-    config?: Record<string, unknown>;
-    displayName?: string | null;
-  } | null>(request);
+    widgetType: string;
+    config: Record<string, unknown>;
+  }>(request);
   if (!bodyResult.ok) {
     return withSession(
       request,
@@ -69,137 +63,33 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       current.value.setCookies,
     );
   }
-  const body = bodyResult.payload;
+  const { widgetType, config } = bodyResult.payload;
 
-  const widgetType = typeof body?.widgetType === 'string' ? body.widgetType.trim() : '';
-  const config = body?.config;
-  const displayName =
-    body && Object.prototype.hasOwnProperty.call(body, 'displayName')
-      ? typeof body.displayName === 'string'
-        ? body.displayName
-        : body.displayName === null
-          ? null
-          : undefined
-      : undefined;
-  if (
-    !widgetType ||
-    !config ||
-    typeof config !== 'object' ||
-    Array.isArray(config)
-  ) {
+  const compiled = readWidgetMaterializerArtifact(widgetType);
+  if (!compiled) {
     return withSession(
       request,
       NextResponse.json(
-        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' } },
+        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.widgetType.invalid' } },
         { status: 422 },
       ),
       current.value.setCookies,
     );
   }
-  if (
-    body &&
-    Object.prototype.hasOwnProperty.call(body, 'displayName') &&
-    displayName === undefined
-  ) {
-    return withSession(
-      request,
-      NextResponse.json(
-        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' } },
-        { status: 422 },
-      ),
-      current.value.setCookies,
-    );
-  }
-
-  const accountLocales = await loadCurrentAccountLocalesState({
-    accessToken: current.value.accessToken,
-    accountId: current.value.authzPayload.accountId,
-    requestId: current.value.requestId,
-  });
-  if (!accountLocales.ok) {
-    return withSession(
-      request,
-      NextResponse.json(
-        accountLocales.payload ?? {
-          error: {
-            kind: accountLocales.status === 401 ? 'AUTH' : 'UPSTREAM_UNAVAILABLE',
-            reasonKey:
-              accountLocales.status === 401
-                ? 'coreui.errors.auth.required'
-                : 'coreui.errors.auth.contextUnavailable',
-            detail: accountLocales.detail,
-          },
-        },
-        { status: accountLocales.status },
-      ),
-      current.value.setCookies,
-    );
-  }
-  const baseLocale = accountLocales.localePolicy.baseLocale;
-
-  const compiled = readWidgetForInstancePackage(widgetType);
-  if (!compiled.ok) {
-    return withSession(
-      request,
-      NextResponse.json({ error: compiled.error }, { status: compiled.status }),
-      current.value.setCookies,
-    );
-  }
-  const policyGate = validateAccountInstanceSavePolicy({
-    config,
-    authz: current.value.authzPayload,
-    limits: compiled.value.limits,
-    context: 'publish',
-  });
-  if (!policyGate.ok) {
-    return withSession(
-      request,
-      NextResponse.json({ error: policyGate.error }, { status: policyGate.status }),
-      current.value.setCookies,
-    );
-  }
-  const publicPackage = await materializeAccountInstancePublicPackage({
-    compiled: compiled.value,
-    accountId,
-    accountCapsule: current.value.authzToken,
-    requestId: current.value.requestId,
-    instanceId,
-    baseLocale,
-    displayName: displayName ?? null,
-    config,
-  });
-  if (!publicPackage.ok) {
-    return withSession(
-      request,
-      NextResponse.json({ error: publicPackage.error }, { status: publicPackage.status }),
-      current.value.setCookies,
-    );
-  }
-  const sourceArtifacts = materializeAccountInstanceSourceArtifacts({
+  const sourceArtifacts = prepareAccountInstanceSourceArtifacts({
     accountId,
     instanceId,
     widgetType,
     config,
-    editableFields: compiled.value.editableFields ?? null,
+    editableFields: compiled.editableFields,
     initialStatus: 'changed',
   });
-  if (!sourceArtifacts.ok) {
-    return withSession(
-      request,
-      NextResponse.json({ error: sourceArtifacts.error }, { status: sourceArtifacts.status }),
-      current.value.setCookies,
-    );
-  }
 
   const result = await saveAccountInstanceInTokyo({
     accountId,
     instanceId,
-    widgetType,
-    baseLocale,
-    config: sourceArtifacts.value.config,
-    content: sourceArtifacts.value.content,
-    publicPackage: publicPackage.value,
-    ...(displayName !== undefined ? { displayName } : {}),
+    config: sourceArtifacts.config,
+    content: sourceArtifacts.content,
     accountCapsule: current.value.authzToken,
     requestId: current.value.requestId,
   });

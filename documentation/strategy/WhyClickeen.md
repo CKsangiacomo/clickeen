@@ -75,6 +75,18 @@ Agents need a system they can read and operate. Clickeen is built around:
 This lets agents do real work over real product artifacts. They do not need to
 guess through opaque app state or drive a fragile human workflow.
 
+Widget software makes that principle concrete. A Widget's structured contract
+and mandatory Core HTML/CSS/JavaScript expose its unique meaning and behavior
+directly. Bob, Roma,
+materialization, localization, storage, assets, connectors, and integrations
+are shared Clickeen capabilities used through the same contracts by every
+applicable Widget. If a shared capability grows, it grows once for the system;
+it does not absorb one Widget's semantics.
+
+A massive per-Widget client script that hides markup, presentation, shared
+service orchestration, and state meaning inside one procedure is not
+agent-operable and does not scale to hundreds of Widgets.
+
 ## Agent Activity
 
 Agent Activity is how an agent-operated product tells the user what is happening
@@ -99,6 +111,12 @@ distribution surface.
 Widgets are not the final definition of Clickeen. They are the first proof that
 the architecture works: structured source, agent-operated edits, account-owned
 storage, public runtime artifacts, and global availability from one source.
+That proof is static-first: Roma materializes complete HTML, CSS, and JavaScript
+once per explicit allowed Publish, then Tokyo serves the stored artifact
+globally. Initial content exists before JavaScript; mandatory runtime code owns
+visitor behavior. This is
+the technical foundation for Edge scale, localization, and semantic
+SEO/GEO/AEO; it enables discovery but does not guarantee ranking or citation.
 
 ## Beyond Surfaces
 
@@ -137,6 +155,11 @@ fail-visible behavior, and no invented fallbacks or compatibility machinery.
 Incumbents face rebuild cost because agent-operability has to exist in the
 foundation; it cannot be added by placing an assistant beside an old product.
 
+Named Clickeen authorities also form a closed trusted system. One authority
+owns the correctness of the artifact it produces; downstream services use that
+artifact directly instead of rebuilding confidence with validation layers.
+This keeps the system lean enough for agents to understand and operate.
+
 ### Babel
 
 Babel is the global-content moat. One account-owned source can become
@@ -165,7 +188,9 @@ source-truth fidelity, accessibility, performance, or the user's public output.
 Public artifacts must be fast, polished, accessible, embed-safe, locale-aware,
 and consistent with Dieter primitives. Design quality is an operator constraint,
 not decoration: agents should preserve it when creating, localizing, or changing
-public content.
+public content. Complete semantic content belongs in the served HTML before
+client JavaScript, so Edge performance, search crawling, and answer-engine
+understanding are properties of the artifact itself.
 
 ## The AI Workforce
 

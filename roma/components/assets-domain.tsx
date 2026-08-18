@@ -3,7 +3,6 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type CSSProperties } from 'react';
 import type { AccountAssetRecord } from '@clickeen/ck-contracts';
 import { createDialogLifecycle } from '../../dieter/components/shared/dialog-lifecycle';
-import { parseAccountAssetRecord } from '../lib/account-asset-record';
 import { formatBytes, formatNumber } from '../lib/format';
 import { useRomaAccountApi, type RomaAccountApi } from './account-api';
 import { DieterDropdownActions } from './dieter-dropdown-actions';
@@ -22,7 +21,7 @@ type DeleteAssetPayload = {
 type AccountAssetsListResponse = {
   accountId: string;
   storageBytesUsed: number;
-  assets: unknown[];
+  assets: AccountAssetRecord[];
 };
 
 type BulkItemStatus = 'queued' | 'uploading' | 'success' | 'failed';
@@ -111,20 +110,10 @@ async function requestDeleteAsset(
   const response = await accountApi.fetchRaw(`/api/account/assets/${encodeURIComponent(assetRef)}`, {
     method: 'DELETE',
   });
-  const payload = (await response.json().catch(() => null)) as DeleteAssetPayload | { error?: unknown } | null;
+  const payload = (await response.json()) as DeleteAssetPayload | { error?: unknown };
   if (!response.ok) {
     const reason = parseApiErrorReason(payload, response.status);
     throw new Error(reason);
-  }
-  if (
-    !payload ||
-    typeof payload !== 'object' ||
-    Array.isArray(payload) ||
-    (payload as { accountId?: unknown }).accountId !== accountId ||
-    (payload as { assetRef?: unknown }).assetRef !== assetRef ||
-    (payload as { deleted?: unknown }).deleted !== true
-  ) {
-    throw new Error('coreui.errors.assets.payloadInvalid');
   }
   return payload as DeleteAssetPayload;
 }
@@ -139,13 +128,11 @@ async function requestUploadAsset(accountApi: Pick<RomaAccountApi, 'fetchRaw'>, 
     },
     body: file,
   });
-  const payload = (await response.json().catch(() => null)) as unknown;
+  const payload = (await response.json()) as AccountAssetRecord | { error?: unknown };
   if (!response.ok) {
     throw new Error(parseApiErrorReason(payload, response.status));
   }
-  const normalized = parseAccountAssetRecord(payload);
-  if (!normalized) throw new Error('coreui.errors.assets.uploadFailed');
-  return normalized;
+  return payload as AccountAssetRecord;
 }
 
 export function AssetsPage() {
@@ -281,29 +268,13 @@ export function AssetsDomain({
       const assetsResponse = await accountApi.fetchRaw(`/api/account/assets`, {
         method: 'GET',
       });
-      const assetsPayload = (await assetsResponse.json().catch(() => null)) as AccountAssetsListResponse | { error?: unknown } | null;
+      const assetsPayload = (await assetsResponse.json()) as AccountAssetsListResponse | { error?: unknown };
       if (!assetsResponse.ok) {
         throw new Error(parseApiErrorReason(assetsPayload, assetsResponse.status));
       }
-      if (
-        !assetsPayload ||
-        typeof assetsPayload !== 'object' ||
-        !Array.isArray((assetsPayload as AccountAssetsListResponse).assets) ||
-        typeof (assetsPayload as AccountAssetsListResponse).storageBytesUsed !== 'number'
-      ) {
-        throw new Error('coreui.errors.assets.invalidPayload');
-      }
-      const normalizedAssets = (assetsPayload as AccountAssetsListResponse).assets.map(parseAccountAssetRecord);
-      if (normalizedAssets.some((asset) => !asset)) {
-        throw new Error('coreui.errors.assets.invalidPayload');
-      }
-      const storageBytesUsed = Number((assetsPayload as AccountAssetsListResponse).storageBytesUsed);
-      if (!Number.isFinite(storageBytesUsed) || storageBytesUsed < 0) {
-        throw new Error('coreui.errors.assets.invalidPayload');
-      }
-
-      setAssets(normalizedAssets as AccountAssetRecord[]);
-      setStorageBytesUsed(Math.trunc(storageBytesUsed));
+      const exact = assetsPayload as AccountAssetsListResponse;
+      setAssets(exact.assets);
+      setStorageBytesUsed(exact.storageBytesUsed);
       setError(null);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);

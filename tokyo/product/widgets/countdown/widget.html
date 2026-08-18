@@ -5,80 +5,257 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Countdown Widget</title>
     <link rel="stylesheet" href="/dieter/tokens/tokens.css" />
+    <link rel="stylesheet" href="/dieter/components/button/button.css" />
     <link rel="stylesheet" href="../shared/header.css" />
     <link rel="stylesheet" href="../shared/localeSwitcher.css" />
     <link rel="stylesheet" href="../shared/stagePod.css" />
     <link rel="stylesheet" href="../shared/socialShare.css" />
-    <link rel="stylesheet" href="./widget.css" />
+    <link rel="stylesheet" href="../shared/composition.css" />
+    <link rel="stylesheet" href="./core/core.css" />
   </head>
   <body>
-    <div class="stage" data-role="stage">
-      <div class="pod" data-role="pod">
+    <div
+      class="stage"
+      data-role="stage"
+      data-canvas-mode="{{stage.canvas.mode}}"
+      data-alignment="{{stage.alignment}}"
+      data-inside-shadow-layer="{{stage.insideShadow.layer}}"
+    >
+      {{#stage.background.video}}
+      <div
+        class="ck-fill-layer"
+        style="--ck-fill-video-fit: {{fit}}; --ck-fill-video-position: {{position}}"
+        aria-hidden="true"
+      >
+        <video
+          src="{{src}}"
+          {{#poster}}poster="{{poster}}"{{/poster}}
+          {{#autoplay}}autoplay{{/autoplay}}
+          {{#loop}}loop{{/loop}}
+          {{#muted}}muted{{/muted}}
+          playsinline
+        ></video>
+      </div>
+      {{/stage.background.video}}
+      <div
+        class="pod"
+        data-role="pod"
+        data-width-mode="{{pod.widthMode}}"
+        data-inside-shadow-layer="{{pod.insideShadow.layer}}"
+      >
+        {{#pod.background.video}}
+        <div
+          class="ck-fill-layer"
+          style="--ck-fill-video-fit: {{fit}}; --ck-fill-video-position: {{position}}"
+          aria-hidden="true"
+        >
+          <video
+            src="{{src}}"
+            {{#poster}}poster="{{poster}}"{{/poster}}
+            {{#autoplay}}autoplay{{/autoplay}}
+            {{#loop}}loop{{/loop}}
+            {{#muted}}muted{{/muted}}
+            playsinline
+          ></video>
+        </div>
+        {{/pod.background.video}}
         <section
           class="ck-widget ck-countdown-widget ck-countdown ck-headerLayout"
+          id="ck-instance-{{ck.instanceId}}"
           data-ck-widget="countdown"
+          data-ck-instance-id="{{ck.instanceId}}"
+          data-ck-locale="{{ck.locale}}"
+          {{#ck.previewMode}}data-ck-preview-mode="{{ck.previewMode}}"{{/ck.previewMode}}
           data-role="countdown"
+          data-has-header="{{header.enabled}}"
+          data-header-placement="{{header.placement}}"
+          data-mode="{{countdown.timer.mode}}"
+          data-timer-style="{{countdown.appearance.timerStyle}}"
+          data-show-labels="{{countdown.appearance.showLabels}}"
+          data-layout-position="inline"
+          data-layout-align="center"
+          data-state="ready"
         >
-          <header class="ck-countdown__header ck-header" hidden>
+          <header
+            class="ck-countdown__header ck-header"
+            data-align="{{header.alignment}}"
+            data-cta-placement="{{header.ctaPlacement}}"
+            data-cta="{{headerCta.enabled}}"
+            {{^header.enabled}}hidden{{/header.enabled}}
+          >
             <div class="ck-header__text">
-              <h2 class="ck-countdown__title ck-header__title heading-4" data-role="header-title"></h2>
-              <div class="ck-header__subtitle" data-role="header-subtitle" hidden></div>
+              <h1
+                class="ck-countdown__title ck-header__title heading-4"
+                data-role="header-title"
+                data-ck-content-path="{{header.$ck.title.path}}"
+                data-ck-content-mode="{{header.$ck.title.mode}}"
+              >{{{header.title}}}</h1>
+              <div
+                class="ck-header__subtitle"
+                data-role="header-subtitle"
+                data-ck-content-path="{{header.$ck.subtitleHtml.path}}"
+                data-ck-content-mode="{{header.$ck.subtitleHtml.mode}}"
+                {{^header.showSubtitle}}hidden{{/header.showSubtitle}}
+              >{{{header.subtitleHtml}}}</div>
             </div>
-            <a class="ck-header__cta" data-role="header-cta" hidden>
-              <span class="ck-header__ctaIcon" aria-hidden="true"></span>
-              <span class="ck-header__ctaLabel"></span>
+            <a
+              class="ck-header__cta"
+              data-role="header-cta"
+              data-open-mode="{{headerCta.openMode}}"
+              data-icon-placement="{{headerCta.iconPlacement}}"
+              href="{{headerCta.href}}"
+              {{#ck.shared.headerCtaNewTab}}target="_blank" rel="noopener"{{/ck.shared.headerCtaNewTab}}
+              {{^headerCta.enabled}}hidden{{/headerCta.enabled}}
+            >
+              <span
+                class="ck-header__ctaIcon"
+                aria-hidden="true"
+                {{^headerCta.iconEnabled}}hidden{{/headerCta.iconEnabled}}
+              ></span>
+              <span
+                class="ck-header__ctaLabel"
+                data-ck-content-path="{{headerCta.$ck.label.path}}"
+                data-ck-content-mode="{{headerCta.$ck.label.mode}}"
+              >{{headerCta.label}}</span>
             </a>
           </header>
-          <div class="ck-countdown__body ck-headerLayout__body" data-role="countdown-core">
-            <div class="ck-countdown__timer" data-role="timer" hidden>
-              <div class="ck-countdown__number" data-role="number-display" hidden>
-                <div class="ck-countdown__value" data-role="number-value">0</div>
-              </div>
-              <div class="ck-countdown__units" data-role="units-display">
-                <div class="ck-countdown__unit" data-role="unit" data-unit="days">
-                  <div class="ck-countdown__value" data-role="value">00</div>
-                  <div class="ck-countdown__label" data-role="label"></div>
-                </div>
-                <div class="ck-countdown__separator" data-role="separator">:</div>
-                <div class="ck-countdown__unit" data-role="unit" data-unit="hours">
-                  <div class="ck-countdown__value" data-role="value">00</div>
-                  <div class="ck-countdown__label" data-role="label"></div>
-                </div>
-                <div class="ck-countdown__separator" data-role="separator">:</div>
-                <div class="ck-countdown__unit" data-role="unit" data-unit="minutes">
-                  <div class="ck-countdown__value" data-role="value">00</div>
-                  <div class="ck-countdown__label" data-role="label"></div>
-                </div>
-                <div class="ck-countdown__separator" data-role="separator">:</div>
-                <div class="ck-countdown__unit" data-role="unit" data-unit="seconds">
-                  <div class="ck-countdown__value" data-role="value">00</div>
-                  <div class="ck-countdown__label" data-role="label"></div>
-                </div>
-              </div>
-            </div>
-            <div class="ck-countdown__actions">
-              <a class="ck-countdown__cta" data-role="cta" hidden></a>
-            </div>
-            <div class="ck-countdown__after-message" data-role="after-message" hidden>
-              <a class="ck-countdown__after-link" data-role="after-link"></a>
-            </div>
-          </div>
+          {{> core}}
         </section>
-        <script src="../shared/fill.js?v=20260228-1" defer></script>
-        <script src="../shared/appearance.js" defer></script>
-        <script src="../shared/runtime.js" defer></script>
-        <script src="../shared/header.js" defer></script>
-        <script src="../shared/localeSwitcher.js" defer></script>
-        <script src="../shared/surface.js" defer></script>
-        <script src="../shared/typography-data.js" defer></script>
-        <script src="../shared/typography.js" defer></script>
-        <script src="../shared/coreSize.js" defer></script>
-        <script src="../shared/stagePod.js" defer></script>
-        <script src="../shared/branding.js" defer></script>
-        <script src="../shared/socialShare.js" defer></script>
-        <script src="../shared/previewL10n.js" defer></script>
-        <script src="./widget.client.js" defer></script>
+        {{#behavior.showBacklink}}
+        <div class="ck-branding" data-ck-branding-for="countdown">
+          <a class="ck-branding__link" href="https://clickeen.com" target="_blank" rel="noreferrer"
+            >Made with Clickeen</a
+          >
+        </div>
+        {{/behavior.showBacklink}}
+        {{#ck.shared.localeSwitcherPod}}
+        <div
+          class="ck-locale-switcher"
+          data-ck-locale-switcher-for="{{ck.instanceId}}"
+          data-host="pod"
+          data-position="{{localeSwitcher.position}}"
+          hidden
+        >
+          <select class="ck-locale-switcher__select" aria-label="Language"></select>
+        </div>
+        {{/ck.shared.localeSwitcherPod}}
+        {{#ck.shared.socialSharePod}}
+        <div
+          class="ck-socialShare"
+          data-ck-social-share-root
+          data-ck-social-share-for="{{ck.instanceId}}"
+          data-ck-share-anchor-id="ck-instance-{{ck.instanceId}}"
+          data-ck-widget-label="Countdown"
+          data-host="pod"
+          data-position="{{behavior.socialShare.position}}"
+          {{#ck.previewMode}}data-ck-preview="true"{{/ck.previewMode}}
+        >
+          <div class="ck-socialShare__toast" role="status" aria-live="polite"></div>
+          <div class="ck-socialShare__topbar">
+            <details class="ck-socialShare__details">
+              <summary class="ck-socialShare__button"><span class="ck-socialShare__icon" aria-hidden="true"></span><span>Share</span></summary>
+              <div class="ck-socialShare__menu" role="menu" aria-label="Share">
+                <div class="ck-socialShare__section" data-ck-social-share-section="message">
+                  <div class="ck-socialShare__sectionTitle">Send this widget as message</div>
+                  <div class="ck-socialShare__grid">
+                    {{#behavior.socialShare.channels.copy}}<button type="button" class="ck-socialShare__card" data-action="copy" data-share-kind="message" data-ck-share-label="Copy link"><span class="ck-socialShare__icon" aria-hidden="true"></span><span class="ck-socialShare__cardLabel">Copy link</span></button>{{/behavior.socialShare.channels.copy}}
+                    {{#behavior.socialShare.channels.sms}}<button type="button" class="ck-socialShare__card" data-action="sms" data-share-kind="message" data-ck-share-label="SMS"><span class="ck-socialShare__icon" aria-hidden="true"></span><span class="ck-socialShare__cardLabel">SMS</span></button>{{/behavior.socialShare.channels.sms}}
+                    {{#behavior.socialShare.channels.email}}<button type="button" class="ck-socialShare__card" data-action="email" data-share-kind="message" data-ck-share-label="Email"><span class="ck-socialShare__icon" aria-hidden="true"></span><span class="ck-socialShare__cardLabel">Email</span></button>{{/behavior.socialShare.channels.email}}
+                    {{#behavior.socialShare.channels.whatsapp}}<button type="button" class="ck-socialShare__card" data-action="whatsapp" data-share-kind="message" data-ck-share-label="WhatsApp"><span class="ck-socialShare__icon" aria-hidden="true"></span><span class="ck-socialShare__cardLabel">WhatsApp</span></button>{{/behavior.socialShare.channels.whatsapp}}
+                    {{#behavior.socialShare.channels.telegram}}<button type="button" class="ck-socialShare__card" data-action="telegram" data-share-kind="message" data-ck-share-label="Telegram"><span class="ck-socialShare__icon" aria-hidden="true"></span><span class="ck-socialShare__cardLabel">Telegram</span></button>{{/behavior.socialShare.channels.telegram}}
+                    {{#behavior.socialShare.channels.signal}}<button type="button" class="ck-socialShare__card" data-action="signal" data-share-kind="message" data-ck-share-label="Signal"><span class="ck-socialShare__icon" aria-hidden="true"></span><span class="ck-socialShare__cardLabel">Signal</span></button>{{/behavior.socialShare.channels.signal}}
+                    {{#behavior.socialShare.channels.messenger}}<button type="button" class="ck-socialShare__card" data-action="messenger" data-share-kind="message" data-ck-share-label="Messenger"><span class="ck-socialShare__icon" aria-hidden="true"></span><span class="ck-socialShare__cardLabel">Messenger</span></button>{{/behavior.socialShare.channels.messenger}}
+                    {{#behavior.socialShare.channels.wechat}}<button type="button" class="ck-socialShare__card" data-action="wechat" data-share-kind="message" data-ck-share-label="WeChat"><span class="ck-socialShare__icon" aria-hidden="true"></span><span class="ck-socialShare__cardLabel">WeChat</span></button>{{/behavior.socialShare.channels.wechat}}
+                    {{#behavior.socialShare.channels.line}}<button type="button" class="ck-socialShare__card" data-action="line" data-share-kind="message" data-ck-share-label="LINE"><span class="ck-socialShare__icon" aria-hidden="true"></span><span class="ck-socialShare__cardLabel">LINE</span></button>{{/behavior.socialShare.channels.line}}
+                    {{#behavior.socialShare.channels.slack}}<button type="button" class="ck-socialShare__card" data-action="slack" data-share-kind="message" data-ck-share-label="Slack"><span class="ck-socialShare__icon" aria-hidden="true"></span><span class="ck-socialShare__cardLabel">Slack</span></button>{{/behavior.socialShare.channels.slack}}
+                    {{#behavior.socialShare.channels.teams}}<button type="button" class="ck-socialShare__card" data-action="teams" data-share-kind="message" data-ck-share-label="Teams"><span class="ck-socialShare__icon" aria-hidden="true"></span><span class="ck-socialShare__cardLabel">Teams</span></button>{{/behavior.socialShare.channels.teams}}
+                    {{#behavior.socialShare.channels.discord}}<button type="button" class="ck-socialShare__card" data-action="discord" data-share-kind="message" data-ck-share-label="Discord"><span class="ck-socialShare__icon" aria-hidden="true"></span><span class="ck-socialShare__cardLabel">Discord</span></button>{{/behavior.socialShare.channels.discord}}
+                  </div>
+                </div>
+                <div class="ck-socialShare__section" data-ck-social-share-section="social">
+                  <div class="ck-socialShare__sectionTitle">Share this widget on social</div>
+                  <div class="ck-socialShare__grid">
+                    {{#behavior.socialShare.channels.x}}<button type="button" class="ck-socialShare__card" data-action="x" data-ck-share-label="X"><span class="ck-socialShare__icon" aria-hidden="true"></span><span class="ck-socialShare__cardLabel">X</span></button>{{/behavior.socialShare.channels.x}}
+                    {{#behavior.socialShare.channels.linkedin}}<button type="button" class="ck-socialShare__card" data-action="linkedin" data-ck-share-label="LinkedIn"><span class="ck-socialShare__icon" aria-hidden="true"></span><span class="ck-socialShare__cardLabel">LinkedIn</span></button>{{/behavior.socialShare.channels.linkedin}}
+                    {{#behavior.socialShare.channels.facebook}}<button type="button" class="ck-socialShare__card" data-action="facebook" data-ck-share-label="Facebook"><span class="ck-socialShare__icon" aria-hidden="true"></span><span class="ck-socialShare__cardLabel">Facebook</span></button>{{/behavior.socialShare.channels.facebook}}
+                    {{#behavior.socialShare.channels.reddit}}<button type="button" class="ck-socialShare__card" data-action="reddit" data-ck-share-label="Reddit"><span class="ck-socialShare__icon" aria-hidden="true"></span><span class="ck-socialShare__cardLabel">Reddit</span></button>{{/behavior.socialShare.channels.reddit}}
+                    {{#behavior.socialShare.channels.instagram}}<button type="button" class="ck-socialShare__card" data-action="instagram" data-ck-share-label="Instagram"><span class="ck-socialShare__icon" aria-hidden="true"></span><span class="ck-socialShare__cardLabel">Instagram</span></button>{{/behavior.socialShare.channels.instagram}}
+                    {{#behavior.socialShare.channels.tiktok}}<button type="button" class="ck-socialShare__card" data-action="tiktok" data-ck-share-label="TikTok"><span class="ck-socialShare__icon" aria-hidden="true"></span><span class="ck-socialShare__cardLabel">TikTok</span></button>{{/behavior.socialShare.channels.tiktok}}
+                  </div>
+                </div>
+              </div>
+            </details>
+          </div>
+        </div>
+        {{/ck.shared.socialSharePod}}
       </div>
+      {{#ck.shared.localeSwitcherStage}}
+      <div
+        class="ck-locale-switcher"
+        data-ck-locale-switcher-for="{{ck.instanceId}}"
+        data-host="stage"
+        data-position="{{localeSwitcher.position}}"
+        hidden
+      >
+        <select class="ck-locale-switcher__select" aria-label="Language"></select>
+      </div>
+      {{/ck.shared.localeSwitcherStage}}
+      {{#ck.shared.socialShareStage}}
+      <div
+        class="ck-socialShare"
+        data-ck-social-share-root
+        data-ck-social-share-for="{{ck.instanceId}}"
+        data-ck-share-anchor-id="ck-instance-{{ck.instanceId}}"
+        data-ck-widget-label="Countdown"
+        data-host="stage"
+        data-position="{{behavior.socialShare.position}}"
+        {{#ck.previewMode}}data-ck-preview="true"{{/ck.previewMode}}
+      >
+        <div class="ck-socialShare__toast" role="status" aria-live="polite"></div>
+        <div class="ck-socialShare__topbar">
+          <details class="ck-socialShare__details">
+            <summary class="ck-socialShare__button"><span class="ck-socialShare__icon" aria-hidden="true"></span><span>Share</span></summary>
+            <div class="ck-socialShare__menu" role="menu" aria-label="Share">
+              <div class="ck-socialShare__section" data-ck-social-share-section="message">
+                <div class="ck-socialShare__sectionTitle">Send this widget as message</div>
+                <div class="ck-socialShare__grid">
+                  {{#behavior.socialShare.channels.copy}}<button type="button" class="ck-socialShare__card" data-action="copy" data-share-kind="message" data-ck-share-label="Copy link"><span class="ck-socialShare__icon" aria-hidden="true"></span><span class="ck-socialShare__cardLabel">Copy link</span></button>{{/behavior.socialShare.channels.copy}}
+                  {{#behavior.socialShare.channels.sms}}<button type="button" class="ck-socialShare__card" data-action="sms" data-share-kind="message" data-ck-share-label="SMS"><span class="ck-socialShare__icon" aria-hidden="true"></span><span class="ck-socialShare__cardLabel">SMS</span></button>{{/behavior.socialShare.channels.sms}}
+                  {{#behavior.socialShare.channels.email}}<button type="button" class="ck-socialShare__card" data-action="email" data-share-kind="message" data-ck-share-label="Email"><span class="ck-socialShare__icon" aria-hidden="true"></span><span class="ck-socialShare__cardLabel">Email</span></button>{{/behavior.socialShare.channels.email}}
+                  {{#behavior.socialShare.channels.whatsapp}}<button type="button" class="ck-socialShare__card" data-action="whatsapp" data-share-kind="message" data-ck-share-label="WhatsApp"><span class="ck-socialShare__icon" aria-hidden="true"></span><span class="ck-socialShare__cardLabel">WhatsApp</span></button>{{/behavior.socialShare.channels.whatsapp}}
+                  {{#behavior.socialShare.channels.telegram}}<button type="button" class="ck-socialShare__card" data-action="telegram" data-share-kind="message" data-ck-share-label="Telegram"><span class="ck-socialShare__icon" aria-hidden="true"></span><span class="ck-socialShare__cardLabel">Telegram</span></button>{{/behavior.socialShare.channels.telegram}}
+                  {{#behavior.socialShare.channels.signal}}<button type="button" class="ck-socialShare__card" data-action="signal" data-share-kind="message" data-ck-share-label="Signal"><span class="ck-socialShare__icon" aria-hidden="true"></span><span class="ck-socialShare__cardLabel">Signal</span></button>{{/behavior.socialShare.channels.signal}}
+                  {{#behavior.socialShare.channels.messenger}}<button type="button" class="ck-socialShare__card" data-action="messenger" data-share-kind="message" data-ck-share-label="Messenger"><span class="ck-socialShare__icon" aria-hidden="true"></span><span class="ck-socialShare__cardLabel">Messenger</span></button>{{/behavior.socialShare.channels.messenger}}
+                  {{#behavior.socialShare.channels.wechat}}<button type="button" class="ck-socialShare__card" data-action="wechat" data-share-kind="message" data-ck-share-label="WeChat"><span class="ck-socialShare__icon" aria-hidden="true"></span><span class="ck-socialShare__cardLabel">WeChat</span></button>{{/behavior.socialShare.channels.wechat}}
+                  {{#behavior.socialShare.channels.line}}<button type="button" class="ck-socialShare__card" data-action="line" data-share-kind="message" data-ck-share-label="LINE"><span class="ck-socialShare__icon" aria-hidden="true"></span><span class="ck-socialShare__cardLabel">LINE</span></button>{{/behavior.socialShare.channels.line}}
+                  {{#behavior.socialShare.channels.slack}}<button type="button" class="ck-socialShare__card" data-action="slack" data-share-kind="message" data-ck-share-label="Slack"><span class="ck-socialShare__icon" aria-hidden="true"></span><span class="ck-socialShare__cardLabel">Slack</span></button>{{/behavior.socialShare.channels.slack}}
+                  {{#behavior.socialShare.channels.teams}}<button type="button" class="ck-socialShare__card" data-action="teams" data-share-kind="message" data-ck-share-label="Teams"><span class="ck-socialShare__icon" aria-hidden="true"></span><span class="ck-socialShare__cardLabel">Teams</span></button>{{/behavior.socialShare.channels.teams}}
+                  {{#behavior.socialShare.channels.discord}}<button type="button" class="ck-socialShare__card" data-action="discord" data-share-kind="message" data-ck-share-label="Discord"><span class="ck-socialShare__icon" aria-hidden="true"></span><span class="ck-socialShare__cardLabel">Discord</span></button>{{/behavior.socialShare.channels.discord}}
+                </div>
+              </div>
+              <div class="ck-socialShare__section" data-ck-social-share-section="social">
+                <div class="ck-socialShare__sectionTitle">Share this widget on social</div>
+                <div class="ck-socialShare__grid">
+                  {{#behavior.socialShare.channels.x}}<button type="button" class="ck-socialShare__card" data-action="x" data-ck-share-label="X"><span class="ck-socialShare__icon" aria-hidden="true"></span><span class="ck-socialShare__cardLabel">X</span></button>{{/behavior.socialShare.channels.x}}
+                  {{#behavior.socialShare.channels.linkedin}}<button type="button" class="ck-socialShare__card" data-action="linkedin" data-ck-share-label="LinkedIn"><span class="ck-socialShare__icon" aria-hidden="true"></span><span class="ck-socialShare__cardLabel">LinkedIn</span></button>{{/behavior.socialShare.channels.linkedin}}
+                  {{#behavior.socialShare.channels.facebook}}<button type="button" class="ck-socialShare__card" data-action="facebook" data-ck-share-label="Facebook"><span class="ck-socialShare__icon" aria-hidden="true"></span><span class="ck-socialShare__cardLabel">Facebook</span></button>{{/behavior.socialShare.channels.facebook}}
+                  {{#behavior.socialShare.channels.reddit}}<button type="button" class="ck-socialShare__card" data-action="reddit" data-ck-share-label="Reddit"><span class="ck-socialShare__icon" aria-hidden="true"></span><span class="ck-socialShare__cardLabel">Reddit</span></button>{{/behavior.socialShare.channels.reddit}}
+                  {{#behavior.socialShare.channels.instagram}}<button type="button" class="ck-socialShare__card" data-action="instagram" data-ck-share-label="Instagram"><span class="ck-socialShare__icon" aria-hidden="true"></span><span class="ck-socialShare__cardLabel">Instagram</span></button>{{/behavior.socialShare.channels.instagram}}
+                  {{#behavior.socialShare.channels.tiktok}}<button type="button" class="ck-socialShare__card" data-action="tiktok" data-ck-share-label="TikTok"><span class="ck-socialShare__icon" aria-hidden="true"></span><span class="ck-socialShare__cardLabel">TikTok</span></button>{{/behavior.socialShare.channels.tiktok}}
+                </div>
+              </div>
+            </div>
+          </details>
+        </div>
+      </div>
+      {{/ck.shared.socialShareStage}}
     </div>
+
+    <script src="../shared/runtime.js" defer></script>
+    <script src="../shared/header.js" defer></script>
+    <script src="../shared/localeSwitcher.js" defer></script>
+    <script src="../shared/stagePod.js" defer></script>
+    <script src="../shared/socialShare.js" defer></script>
+    <script src="./core/core.js" defer></script>
   </body>
 </html>

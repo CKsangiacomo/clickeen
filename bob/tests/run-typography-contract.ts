@@ -51,11 +51,9 @@ function readSpec(widgetType: string): RawWidget {
 
 function compile(spec: RawWidget) {
   const widgetType = String(spec.widgetname || '').trim();
+  const widgetRoot = path.join(widgetsRoot, widgetType);
   const tooldrawerLabels = JSON.parse(
-    fs.readFileSync(
-      path.join(widgetsRoot, widgetType, `${widgetType}_tooldrawer_l10n_labels`, 'en.json'),
-      'utf8',
-    ),
+    fs.readFileSync(path.join(widgetRoot, 'labels', 'en.json'), 'utf8'),
   ) as unknown;
   return compileWidgetServer(spec, {
     loadComponentStencil: loadStencil,

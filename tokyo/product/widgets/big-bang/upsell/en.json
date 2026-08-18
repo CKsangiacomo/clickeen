@@ -1,0 +1,9 @@
+{
+  "widgetType": "big-bang",
+  "locale": "en",
+  "messages": {
+    "branding.remove": "Your current plan is {currentPlan}. Upgrade to {targetPlan} to remove Clickeen branding from this Big Bang.",
+    "social-share.enable": "Your current plan is {currentPlan}. Upgrade to {targetPlan} to enable social sharing for this Big Bang.",
+    "seo-geo.enable": "Your current plan is {currentPlan}. Upgrade to {targetPlan} to enable SEO/GEO optimization for this Big Bang."
+  }
+}

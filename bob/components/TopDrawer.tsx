@@ -27,12 +27,12 @@ export function TopDrawer({
   const moreButtonRef = useRef<HTMLButtonElement>(null);
 
   const meta = chrome.meta;
-  const currentInstanceId = typeof meta?.instanceId === 'string' ? meta.instanceId : '';
+  const currentInstanceId = meta?.instanceId ?? '';
   const hasInstance = Boolean(currentInstanceId);
   const canSave = hasInstance && isDirty;
   const showSaveAction = canSave || isSaving;
-  const instanceLabel = typeof meta?.label === 'string' ? meta.label.trim() : '';
-  const currentLabel = instanceLabel || currentInstanceId;
+  const showPublishAction = hasInstance && !isDirty && !isSaving;
+  const currentLabel = meta?.label ?? '';
   const publicActions = meta?.publicActions ?? null;
 
   useEffect(() => {
@@ -168,6 +168,19 @@ export function TopDrawer({
           >
             {isSaving ? <span className="diet-spinner" aria-hidden="true" /> : null}
             <span className="diet-button__label">{isSaving ? 'Saving…' : 'Save'}</span>
+          </button>
+        ) : null}
+        {showPublishAction ? (
+          <button
+            className="diet-button"
+            data-size="large"
+            data-type="primary"
+            type="button"
+            onClick={() => requestHostAction('publish')}
+          >
+            <span className="diet-button__label">
+              {meta?.publishStatus === 'published' ? 'Republish' : 'Publish'}
+            </span>
           </button>
         ) : null}
       </div>

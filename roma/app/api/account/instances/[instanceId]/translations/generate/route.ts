@@ -54,21 +54,6 @@ function streamGenerateTranslations(args: {
       };
 
       try {
-        if (!args.activeLocales.length) {
-          result(200, {
-            ok: true,
-            translation: {
-              ok: true,
-              accepted: false,
-              baseLocale: args.baseLocale,
-              requestedLocales: [],
-              translatedLocales: [],
-              failedLocales: [],
-            },
-          });
-          return;
-        }
-
         const generated = await generateAccountInstanceTranslations({
           accountId: args.accountId,
           instanceId: args.instanceId,
@@ -131,26 +116,12 @@ export async function POST(request: NextRequest, context: RouteContext) {
   if (!accountLocales.ok) {
     return withSession(
       request,
-      NextResponse.json(
-        accountLocales.payload ?? {
-          error: {
-            kind: accountLocales.status === 401 ? 'AUTH' : 'UPSTREAM_UNAVAILABLE',
-            reasonKey:
-              accountLocales.status === 401
-                ? 'coreui.errors.auth.required'
-                : 'coreui.errors.auth.contextUnavailable',
-            detail: accountLocales.detail,
-          },
-        },
-        { status: accountLocales.status },
-      ),
+      NextResponse.json(accountLocales.payload, { status: accountLocales.status }),
       current.value.setCookies,
     );
   }
   const baseLocale = accountLocales.localePolicy.baseLocale;
-  const activeLocalesToGenerate = accountLocales.activeLocales.filter(
-    (locale) => locale !== baseLocale,
-  );
+  const activeLocalesToGenerate = accountLocales.activeLocales;
   const policy = resolvePolicy({
     profile: current.value.authzPayload.profile,
     role: current.value.authzPayload.role,

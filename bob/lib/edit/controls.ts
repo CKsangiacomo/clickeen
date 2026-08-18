@@ -19,7 +19,7 @@ export function findBestControlForPath(controls: CompiledControl[], path: string
   let best: CompiledControl | null = null;
   let bestScore = -1;
   for (const control of controls) {
-    if (typeof control.path !== 'string' || !control.path || !controlPathMatches(control.path, path)) continue;
+    if (!controlPathMatches(control.path, path)) continue;
     const score = scoreControl(control);
     if (score > bestScore) {
       best = control;
@@ -32,14 +32,6 @@ export function findBestControlForPath(controls: CompiledControl[], path: string
 export type ValidateValueResult =
   | { ok: true }
   | { ok: false; message: string };
-
-function toEnumValues(control: CompiledControl): string[] | null {
-  if (control.enumValues && control.enumValues.length > 0) return control.enumValues;
-  const fromOptions = control.options
-    ?.map((opt) => opt.value)
-    .filter((value): value is string => typeof value === 'string' && Boolean(value));
-  return fromOptions && fromOptions.length > 0 ? fromOptions : null;
-}
 
 export function validateValueStrict(control: CompiledControl, rawValue: unknown): ValidateValueResult {
   const kind = control.kind;
@@ -68,10 +60,9 @@ export function validateValueStrict(control: CompiledControl, rawValue: unknown)
   }
 
   if (kind === 'enum') {
-    const allowed = toEnumValues(control);
+    const allowed = control.enumValues!;
     if (typeof rawValue !== 'string') return { ok: false, message: 'Value must be a string' };
     if (!rawValue) return { ok: false, message: 'Value cannot be empty' };
-    if (!allowed || allowed.length === 0) return { ok: false, message: 'Control is missing enum values' };
     if (!allowed.includes(rawValue)) {
       return { ok: false, message: `Value must be one of: ${allowed.join(', ')}` };
     }
@@ -87,8 +78,14 @@ export function validateValueStrict(control: CompiledControl, rawValue: unknown)
 
   if (kind === 'array') {
     if (rawValue == null) return { ok: false, message: 'Value is required' };
-    if (Array.isArray(rawValue)) return { ok: true };
-    return { ok: false, message: 'Value must be an array' };
+    if (!Array.isArray(rawValue)) return { ok: false, message: 'Value must be an array' };
+    if (typeof control.min === 'number' && rawValue.length < control.min) {
+      return { ok: false, message: `Array must contain at least ${control.min} items` };
+    }
+    if (typeof control.max === 'number' && rawValue.length > control.max) {
+      return { ok: false, message: `Array must contain at most ${control.max} items` };
+    }
+    return { ok: true };
   }
 
   if (kind === 'object') {

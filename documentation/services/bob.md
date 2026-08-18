@@ -6,6 +6,11 @@ Bob is Clickeen's widget editor. It loads widget software and one saved widget
 instance, edits the instance in browser memory, previews the working state, and
 delegates persistence back to Roma.
 
+Bob is one shared service used by every Widget through the same structured
+editing contract. It is not the Widget, and it does not own, infer, validate,
+or reinterpret a Widget's unique product meaning. That meaning belongs to the
+Widget's structured contract and mandatory Core HTML/CSS/JavaScript.
+
 For platform context see:
 
 - `documentation/architecture/CONTEXT.md`
@@ -27,6 +32,23 @@ Bob owns:
 
 Roma owns the current account, policy, account routes, and save/upload commands.
 Tokyo-worker owns R2 storage. Widget software lives in the system product tree.
+
+For Widget-bound tier limits, Bob is the shared user-intent enforcement host,
+not the policy or copy owner. Roma supplies the exact account policy snapshot;
+the compiled Widget contract maps its unique edit coordinate to a generic
+system capability and an exact Widget upsell message identity. Bob applies
+that one decision before mutating its browser-memory draft. An allowed edit is
+applied normally. A denied edit leaves the draft unchanged and sends the
+capability/message identity to Roma for the single shared account upsell Popup.
+Bob does not own plan names, target-plan selection, Upgrade behavior, or a
+parallel popup.
+
+Bob verifies browser origin because the Roma/Bob iframe is an external browser
+security boundary. After that origin is established, Bob trusts Roma's exact
+open envelope and every deploy-built Clickeen artifact inside it. Bob accepts
+direct human edits and model-produced edit operations at their owning ingress;
+it does not install a second semantic validation layer over system-produced
+Widget software, saved state, fonts, assets, packages, or Roma command results.
 
 ## Workspace Capability
 
@@ -59,9 +81,10 @@ is created.
 
 Bob does not consume Dieter's application Layout/Page contract. Its
 `ToolDrawer | Workspace` structure is a distinct editor composition and remains
-locally owned. Bob consumes applicable shared component contracts, including
-Popup for its plan-limit prompt; Table remains available where a semantic table
-is needed.
+locally owned. Bob consumes applicable shared component contracts; Table
+remains available where a semantic table is needed. Roma hosts the shared
+account upsell Popup outside Bob rather than asking Bob to compose another
+plan-limit dialog.
 
 Bob operational chrome selects only the complete Dieter visual typography
 classes revealed by DevStudio. It does not assemble local typography from font
@@ -81,41 +104,45 @@ When Roma hosts an active Bob session, Roma's `page` contains only the
 full-canvas Builder body. Roma does not place a Page header, generic action
 band, padding, or module frame around Bob. `TopDrawer` is Bob-owned editor
 chrome, not a Roma Page header. It holds the instance label and publish state,
-Save as the primary editor action, Open public widget as the applicable
-secondary action, and one Copy code host intent under More. Roma presents the
-shared public-code Popup and performs the browser copy; Bob neither reconstructs
-nor copies public values. In Compact mode TopDrawer also exposes the control
-that opens Roma's existing navigation drawer.
+Save as the primary editor action, Publish or Republish for a clean saved
+draft, Open public widget when published, and one Copy code host intent under
+More. Publish never chains an implicit Save. Roma owns the Publish command,
+presents the shared public-code Popup, and performs browser copy; Bob neither
+materializes nor reconstructs public values. In Compact mode TopDrawer also
+exposes the control that opens Roma's existing navigation drawer.
 
 ## Authoring Flow
 
 The active account authoring flow is:
 
 1. Roma resolves the current account and opened `instanceId`.
-2. Roma opens one saved widget document.
-3. Roma loads the deploy-built widget editor artifact.
+2. Roma reads `instance.config.json` and `instance.content.json` and recomposes
+   one complete saved Widget document.
+3. Roma loads the deploy-built Widget editor artifact.
 4. Roma sends Bob a `ck:open-editor` message.
-5. Bob validates the open payload and stores `{ compiled, instanceData }` in
-   React state.
+5. After the browser-origin check, Bob trusts the Roma-produced open envelope
+   and stores `{ compiled, instanceData }` in React state.
 6. Bob edits that working state in browser memory.
 7. User presses Save.
 8. Bob sends the save intent to Roma.
-9. Roma saves the current account instance through Tokyo-worker.
+9. Roma resolves the editable source split and Tokyo-worker writes the exact
+   saved source. A later explicit allowed Publish owns package materialization.
 
 Between open and save, Bob writes no account persistence.
 
-Ordinary control edits are path operations against the already validated open
-document. Bob applies the compiled control allowlist and value contract to the
-changed path, updates only affected panel controls, and sends the resulting
-working state to the preview. Object, JSON, array, insert, remove, and move
-operations revalidate the complete document because they can change its shape.
-Bob also validates the complete document when opening and before saving.
-Opening or rebuilding a panel projects the complete browser-memory working
-state into that panel's controls. For JSON-bound Dieter controls, Bob writes the
-exact value from that working state into the compiled `data-bob-path` field
-marked with `data-dieter-json` before running the Dieter hydrator; the empty value authored in compiled panel
-HTML is only an unbound placeholder, not product truth or a default. Changed-path
-updates apply only while the same panel control surface remains mounted.
+Ordinary control edits are path operations against the trusted open document.
+Bob applies the operation declared by the compiled control, updates only the
+affected panel controls, and sends the resulting working state to the preview.
+Object, JSON, array, insert, remove, and move operations use that same declared
+editing contract; they do not trigger a whole-document semantic revalidation.
+Opening or rebuilding a panel projects the complete browser-memory working state
+into that panel's controls. For JSON-bound Dieter controls, Bob writes the exact
+value from that working state into the compiled `data-bob-path` field marked
+with `data-dieter-json` before running the Dieter hydrator; the empty value
+authored in compiled panel HTML is only an unbound placeholder, not product
+truth or a default. Changed-path updates apply only while the same panel control
+surface remains mounted.
+
 Before Bob replaces or unmounts that surface, it invokes the owning Bulk Edit,
 Dropdown Actions, Border, Edit, Fill, Shadow, Upload, Object Manager, Repeater,
 and Slider destroy functions; Bulk Edit releases its dialog lifecycle and
@@ -161,11 +188,6 @@ Roma opens Bob:
   "baseLocale": "[baseLocale]",
   "compiled": "[compiledWidgetPayload]",
   "instanceData": "[savedInstanceData]",
-  "publicPackage": {
-    "indexHtml": "[exact saved index.html]",
-    "stylesCss": "[exact saved styles.css]",
-    "runtimeJs": "[exact saved runtime.js]"
-  },
   "fontLibrary": "[accountFontLibrary]",
   "policy": "[policySnapshot]",
   "accountPublicId": "[accountPublicId]",
@@ -174,13 +196,20 @@ Roma opens Bob:
   "label": "[displayName]",
   "publicActions": {
     "publicUrl": "[exact published URL]",
-    "iframeSnippet": "[exact iframe snippet]",
-    "scriptSnippet": "[exact script snippet]"
+    "iframeSnippet": "[exact iframe snippet]"
   },
   "copilot": "[copilotRuntimeUi]",
   "translationSetup": "[translationSetup]"
 }
 ```
+
+The compiled editor artifact carries exact deploy-built `widgetSoftware`:
+`widgetHtml`, `coreHtml`, `coreCss`, `coreJs`, and the ordered shared/Core style
+and script sources. Bob uses that source only for preview. It creates no
+registry, runtime source fetch, route, or account object.
+
+The open contract contains no stored `publicPackage`; public bytes are not
+editable truth and a never-published instance opens normally.
 
 Bob replies with:
 
@@ -204,9 +233,12 @@ or:
 }
 ```
 
-Open succeeds only with explicit deploy-built widget editor software, explicit saved
-instance data, and the current account font library from Roma. Missing or
-malformed `fontLibrary` fails open; Bob does not invent fallback font choices.
+Roma sends explicit deploy-built Widget editor software, explicit saved instance
+data, and the current account font library as one authoritative open envelope.
+Bob uses those values directly and never invents fallback font choices. If Roma
+cannot produce the envelope, Roma returns the owning operation failure and does
+not open the session; Bob does not independently guard or reinterpret the
+system-produced fields after receipt.
 
 Bob also notifies Roma when the browser-memory working copy changes:
 
@@ -217,19 +249,22 @@ Bob also notifies Roma when the browser-memory working copy changes:
 }
 ```
 
-Bob sends host navigation intents without owning Roma routes:
+Bob sends host intents without owning Roma routes:
 
 ```json
 {
   "type": "bob:host-action",
-  "action": "[open-navigation|copy-code]"
+  "action": "[open-navigation|copy-code|publish]"
 }
 ```
 
 Roma validates the Bob origin and frame source. `open-navigation` opens the
 existing Roma navigation drawer. `copy-code` asks Roma to open the shared
 public-code Popup for the exact published values already supplied in the current
-Builder-open envelope.
+Builder-open envelope. `publish` asks Roma to Publish or Republish the exact
+saved instance; TopDrawer exposes it only when Bob's draft is clean. Roma owns
+capacity, materialization, storage, result handling, and reopening the same
+instance after success.
 
 Roma replies to account commands with:
 
@@ -244,60 +279,84 @@ Roma replies to account commands with:
 }
 ```
 
-Bob's plan-limit/upsell prompt may close through Escape, backdrop, or its
-explicit Not now/Close action because dismissal loses no work. That D1 dismissal
-rule does not weaken route/policy enforcement and does not decide what Upgrade
-does.
-
-Bob may also send an Upgrade intent from a plan-limit/upsell surface:
+When Bob's generic edit boundary denies a Widget-bound action, Bob sends only
+the exact denied system capability and Widget-owned message identity from the
+trusted compiled artifact:
 
 ```json
 {
   "type": "bob:upsell",
-  "cta": "upgrade",
-  "reasonKey": "[reasonKey]"
+  "capability": "[systemEntitlementKey]",
+  "messageId": "[widgetUpsellMessageId]",
+  "required": "[boolean|number]"
 }
 ```
 
-Roma owns the account-shell transition and opens its one reusable pre-GA upsell
-dialog scaffold. It does not route the user to inactive Billing or duplicate
-the scaffold inside Bob. Bob does not expose raw entitlement/detail strings
-inside the upsell surface, and Bob/Roma must not stack the scaffold over an
-existing plan-limit modal.
+Roma already owns the active Builder session and compiled Widget artifact. It
+uses that identity to obtain the exact localized Widget body template, combines
+it with system-owned current/target plan truth and system-owned actions, and
+opens one Roma-hosted Dieter Popup. `required` is the exact attempted Boolean
+or numeric demand and lets Roma select the first higher system tier that
+actually permits the edit. Bob never sends plan names, renders the template,
+chooses a target plan, supplies CTA copy, or opens a second dialog.
+Dismissal loses no work because the denied operation never changed the draft.
 
-The scaffold is a real UI destination for developing the upsell experience; it
-does not purchase, mutate a plan, call a billing provider, or claim commercial
-success. Opening it preserves Bob's unsaved working state and must not invoke a
-discard confirmation. Bob uses the shared native-dialog lifecycle for this
-prompt. Final 126M integration re-verified this completed behavior through the
-deployed Bob-to-Roma path.
+Local implementation: every current compiled Widget artifact carries its exact
+limit-to-message map and English templates. Bob's common operation gate applies
+the system decision before manual, Product Copilot, or undo mutation. On denial
+it sends the exact three values above and leaves the draft unchanged. The old
+Bob `UpsellPopup` and Save-time Widget limit decision are absent.
 
 ## Save Contract
 
 Save persists the one widget document currently open in Builder.
 
-Bob sends the current working config and explicit instance coordinates back to
-Roma:
+That document is the complete logical instance, not merely the Widget Core or
+the set of currently rendered ToolDrawer controls. It includes the exact
+instance-owned shared state (`header.*`, `headerCta.*`, `stage.*`, `pod.*`,
+`coreSize.*`, shared appearance/typography/chrome) and the exact Widget Core
+namespace such as `faq.*`. Bob does not split or store that document.
 
-- widget type
-- display name
-- base locale
-- current config/content state
+Bob sends the current working config and exact command coordinate back to Roma:
+
+- instance id as command/session metadata
+- Widget type
+- one complete logical instance document containing every shared and Core
+  value
+
+Rename and base-locale changes remain separate owned operations.
 
 Bob sends this as a `bob:account-command` with `command: "update-instance"`.
-Roma reads the deploy-built materializer artifact, materializes the browser
-package files, and performs the account save command. Tokyo-worker stores the
-saved source and package under:
+Roma performs the account Save command. Tokyo-worker stores the saved editable
+source under:
 
 ```text
 accounts/{accountPublicId}/instances/{instanceId}/
 ```
 
+Roma resolves the complete logical document into exact config/content payloads,
+and Tokyo-worker writes the canonical source documents. A later explicit
+allowed Publish asks Roma's materializer to generate the served complete
+`index.html`, complete `styles.css`, and mandatory `runtime.js`. Bob never
+generates or persists those files.
+
+The Save contract is source-only. The complete browser-memory document is
+trusted Widget-instance truth from Bob. Bob preview is an editing concern and
+does not require a stored public package. Bob does not add a second
+whole-document validator before sending the Save intent, and Roma does not
+reconstruct a Widget schema from the ToolDrawer surface.
+
+Save also does not re-run Widget tier limits. The generic Bob edit boundary has
+already applied Roma's exact policy truth to every accepted Widget-bound edit,
+so the resulting complete draft is trusted Clickeen truth. Roma saves it;
+Tokyo-worker stores it. Rechecking the same Widget limit during
+Save, materialization, storage, or public serving would duplicate the owning
+decision and violate closed-system trust.
+
 Save is separate from manual translation generation, publish, unpublish, rename,
 duplicate, and delete. Roma does not generate translations, regenerate
 translations, or mutate locale overlays from the `update-instance` command.
-Bob treats the save response as base-source and base-package persistence truth
-only.
+Bob treats the Save response as editable-source persistence truth only.
 
 While that existing Save request is pending, TopDrawer keeps the same primary
 Dieter Button, changes its exact caller-owned label to `Saving…`, sets the
@@ -371,6 +430,13 @@ loads no UI-language file at runtime, and does not change an open editor
 session's UI language. The person preference stored by Berlin/Michael is
 dormant and is not a current Bob session input.
 
+Widget upsell copy is a separate Widget-owned locale artifact. The build joins
+its exact message ids to `limits.json`; Bob transports the selected compiled
+identity but does not render or localize the body. Roma owns selection and
+composition in the account UI locale. Until product UI locale selection is
+activated, the compiled English Widget upsell messages are the current product
+artifact; there is no runtime language fallback.
+
 ## Widget Software
 
 Widget software is system software stored in:
@@ -385,21 +451,39 @@ The deployed software authority is:
 product/widgets/{widgetType}/
 ```
 
-Each widget package contains:
+Canonical Widget software contains:
 
 ```text
+widget.html
 spec.json
 editable-fields.json
 limits.json
-{widgetType}_tooldrawer_l10n_labels/en.json
-widget.html
-widget.css
-widget.client.js
+discovery.json
+labels/en.json
+upsell/
+  en.json
+core/
+  core.html
+  core.css
+  core.js
 declared support files
 ```
 
+Each Widget's `widget.html` composes Stage, Pod, Shell, Header, Core, and the
+shared capabilities it uses, including localization, typography, branding,
+social sharing, and other
+system-owned behavior. Core HTML exposes the Widget's structure, Core CSS owns
+its unique presentation, and mandatory Core JavaScript owns its behavior. Bob
+consumes the structured contract;
+it does not absorb Core or generate a Widget-specific editor path.
+
+Local source state: Big Bang, Cards, Countdown, FAQ, and Logo Showcase use the
+canonical folder and no longer have `widget.css` or `widget.client.js`. The
+universal generator has no Widget branch, runtime source-kind discriminator,
+or compatibility path.
+
 `spec.json` carries defaults, editor structure, and ToolDrawer label tokens.
-`{widgetType}_tooldrawer_l10n_labels/en.json` carries the exact English values
+`labels/en.json` carries the exact English values
 for those tokens, the five widget panel names, and migrated ToolDrawer copy
 such as Agent Activity's title; Dropdown Border, Dropdown Edit, Dropdown Fill,
 Dropdown Shadow and—when declared—Dropdown Upload field/component labels; and
@@ -407,17 +491,32 @@ Object Manager/Repeater collection labels and actions.
 The Widget spec declares the exact state path and label-token coordinates; Bob
 joins them with the one Dieter component without Widget-specific compiler
 branches. `editable-fields.json`
-carries editable/translatable field contracts. `limits.json` carries widget
-capability context.
+carries editable/translatable field contracts. `limits.json` maps each unique
+Widget coordinate governed by tier policy to a generic system entitlement and
+the exact message id for that denial. It contains no tier values, plan names,
+CTA destination, or Widget-owned policy decision. `upsell/{locale}.json`
+contains the Widget-owned, localized contextual body templates referenced by
+those message ids. A complete template may use the system-owned
+`{currentPlan}` and `{targetPlan}` values; it does not own either value or the
+Upgrade action. This upsell copy is separate from ToolDrawer labels because it
+is consumed by Roma's account-policy surface, not rendered as editor-control
+Chrome. The binding does not declare a second Save/publish enforcement phase;
+it is consumed once by the editing host at the governed user intent.
+
+When no higher configured tier permits the denied demand, Roma uses
+system-owned maximum-capacity copy and exposes no Upgrade action. Bob neither
+invents a target plan nor substitutes another Widget message.
 
 ## Editor Artifact Build
 
-The widget build compiles each canonical `spec.json` with its exact adjacent
-English ToolDrawer label file into:
+The Widget build compiles each canonical `spec.json`, its exact adjacent English
+ToolDrawer label file, `limits.json`, and its exact Widget upsell locale file
+into:
 
 - `compiled.panels[]`
 - `compiled.controls[]`
 - `compiled.toolDrawerLabels`
+- the exact localized Widget upsell message map referenced by `limits.json`
 - editor binding metadata
 - AI context metadata
 
@@ -428,6 +527,17 @@ from the repo and emits ignored editor artifacts under
 `roma/generated/`.
 Normal product requests do not fetch Tokyo source, fetch Dieter stencils, or
 compile controls.
+
+The compiler may fail its own build when git-authored source cannot produce the
+declared artifact. That is source-artifact production and repository
+verification, not a runtime validator over a Clickeen-produced editor artifact.
+After the compiler emits the artifact, Bob and Roma trust it directly.
+
+Every Widget-bound limit reference must resolve to one exact message in the
+selected Widget upsell locale at artifact-production time. There is no generic
+runtime fallback, inherited message, or reconstruction from the entitlement
+key. Bob and Roma consume the complete compiled association without a second
+copy check.
 
 The current editor artifact remains the English artifact at the existing URL.
 Label files are build input; Bob does not fetch them, choose a locale, or
@@ -447,10 +557,15 @@ GET /dieter/icons/svg/{icon}
 GET /fonts/**
 ```
 
-Builder preview does not load widget source through a Bob `/widgets/**` proxy.
-Roma opens the instance with its saved `index.html`, `styles.css`, and
-`runtime.js` package. Bob boots that exact package in the sandboxed iframe, then
-streams unsaved browser-memory state into the running instance runtime.
+Builder preview does not load Widget authoring source through a Bob
+`/widgets/**` proxy and does not read account-instance package files. The
+existing generated editor-artifact path carries the deploy-built Widget
+software in addition to the compiled controls. Bob combines that software with
+the one browser-memory draft in Workspace.
+
+Every current local editor artifact carries its Widget software. Workspace
+renders that software with the exact current draft and never boots the
+instance's stored package or sends draft state to public `runtime.js`.
 
 The Bob-local AI API route is a guard route only:
 
@@ -460,8 +575,10 @@ POST /api/ai/widget-copilot -> 409
 
 Copilot turn traffic must run through the Roma account route.
 
-Editor artifacts contain no raw widget HTML, CSS, JavaScript, or materializer
-package. Roma's server-only materializer reads a separate build artifact.
+Editor artifacts contain Bob controls and the deploy-built source needed for
+temporary preview. They contain neither an account public package nor the
+server-only materializer artifact. Bob does not fetch authoring source or reuse
+a stored public package as editable truth.
 
 ## Controls
 
@@ -476,6 +593,14 @@ Common primitives include:
 
 Controls emit edit operations. The edit engine applies those operations to the
 current in-memory instance state.
+
+Before applying an operation that is bound by `limits.json`, the common edit
+engine evaluates only that candidate operation against the exact Roma-supplied
+policy snapshot and the compiled Widget binding. This is one generic gate for
+manual controls, collection controls, and Product-Copilot-produced operations;
+it is not a Widget-specific handler. Denial leaves the working state unchanged
+and emits the bound capability/message identity to Roma. Acceptance creates the
+new browser-memory Clickeen truth, which downstream Save trusts.
 
 Menu Actions is Dieter's unbound native action row. Bob supplies exact Chrome
 wording for application commands such as Copy code and uses the same primitive
@@ -597,8 +722,8 @@ initial-state, and entity round-trip rules.
 
 Typography family controls are account-independent in compiled widget
 artifacts. Session open binds them to the current account `fontLibrary`; that
-bound contract drives manual controls, Copilot choices, and normal config
-validation. The library includes the system Google fonts and seven global
+bound contract drives manual controls and Copilot choices. The library includes
+the system Google fonts and seven global
 `source: "tokyo"` special fonts for every account, plus any account-uploaded
 font records. Bob contains no separate default-account font catalog. A family
 change is expanded through the shared account-font resolver into one atomic
@@ -614,9 +739,10 @@ account-font family transition adapter. It does not export
 Bob session state, live edit application, preview binding, save behavior, or
 account persistence. Roma Widget Defaults uses this presentation seam to bind
 compiled controls to the account defaults draft document while Roma remains the
-document and save authority. Persisted typography is accepted only when Roma's
-package boundary confirms that the selected family, weight, and style belong to
-the current account library.
+document and save authority. The shared controls produce one exact typography
+selection from the authoritative account library. Roma trusts that
+system-produced draft; it does not revalidate the selection at the package
+boundary.
 
 ## Builder Copilot
 
@@ -628,11 +754,18 @@ controls with current values, unavailable capabilities, and bounded
 controls are excluded from the capsule. Widget package source is not sent as
 Copilot prompt context.
 
-Conversational Product Copilot turns require the widget/session orientation,
-but they do not require a valid edit-control catalog. If Builder control
-metadata is invalid or unavailable, Bob still allows the turn so Product
-Copilot can answer, clarify, suggest, refuse, or report an error. The
-`apply_widget_ops` tool remains unavailable until the edit context is valid.
+Conversational Product Copilot turns use the Widget/session orientation and the
+deploy-built edit-control catalog supplied by Clickeen. Bob trusts that catalog.
+Product Copilot owns the governed model turn and the one-tool-call step
+boundary. It transports the model's `apply_widget_ops` request. Bob owns the
+actual external edit-request acceptance against the exact compiled controls
+and current draft, then applies the accepted batch when its originating draft
+signature is still current.
+
+Current implementation mismatch: Bob still carries a degraded-context path
+that treats Clickeen-produced control metadata as potentially invalid or
+unavailable. That defensive path is not the canonical closed-system contract
+and must not be replicated.
 
 Bob does not pre-route user language with regex/control matching before the
 agent sees the turn. The Copilot turn streams `ProductCopilotTurnEvent` frames
@@ -640,9 +773,9 @@ agent sees the turn. The Copilot turn streams `ProductCopilotTurnEvent` frames
 `agent_turn_finished`, `agent_turn_error`, `agent_turn_stopped`). Bob renders
 `text_delta` incrementally and executes a buffered `tool_call` only after the
 matching `model_step_finished`. Bob remains the owner of the open working copy,
-model-visible Product Copilot thread context, terminal draft validation, and
-reversible draft apply. San Francisco does not store Product Copilot thread
-state.
+model-visible Product Copilot thread context, draft concurrency, and reversible
+application of Product-Copilot-produced operations. San Francisco does not
+store Product Copilot thread state.
 
 Product Copilot model picker state is display/input state only. Bob renders the
 model options and default model that Roma sends in the Builder-open payload.
@@ -690,38 +823,52 @@ visible text-only chat bubbles.
 
 ## Preview
 
-Bob preview loads the saved instance package in a sandboxed iframe and streams
-working state updates into its runtime:
+The preview contract is Bob-owned editing behavior. It must not determine the
+public package or require JavaScript so Clickeen can render, localize, host, or
+serve a saved instance.
 
-```json
-{
-  "type": "ck:state-update",
-  "widgetname": "[widgetType]",
-  "state": "[workingState]",
-  "device": "[desktop|mobile]"
-}
+Target preview path:
+
+```text
+deploy-built Widget software
++ one browser-memory draft
++ instance/device/locale/resource preview context
+-> existing Workspace iframe
+-> temporary preview
 ```
 
-Widget runtime sends:
+The iframe remains isolated editing UI. It loads the selected Widget software
+once and stays alive through ordinary draft edits. Manual controls,
+undo/redo, Product Copilot, Save, and preview all use the same draft. Switching
+Widget or instance may reset the temporary preview, but it always starts from
+deploy-built Widget software plus the new exact draft and does not load that
+instance's stored serving package.
 
-```json
-{
-  "type": "ck:ready"
-}
-```
+The Widget software comes through the existing generated editor artifact. Bob
+does not create another Widget registry, source proxy, preview service, package
+endpoint, or account storage object. The source
+contract used to express state in authored HTML is the same contract used later
+by Publish; Bob contains no second FAQ renderer.
 
-`ck:ready` acknowledges the first state applied by one iframe document. Bob's
-generic `Loading preview...` status therefore belongs only to that initial
-iframe boot and resets only when a different saved public package recreates the
-iframe document. It is not an edit-progress signal.
+Every current local Widget preview renders authored HTML and CSS into the
+isolated iframe from `compiled.widgetSoftware` and the exact draft. It executes
+the authored preview behavior inside that temporary document. Ordinary edits
+update that same preview from Bob's draft; there is no stored-package read,
+`publicPackage` session field, public-runtime Blob, or public
+`ck:state-update`/`ck:ready` protocol. Public `runtime.js` contains no Bob
+editor receiver.
+
+Because ordinary edits replace the preview body's rendered content inside the
+same iframe, shared visitor bindings must be reusable: social-share document
+delegation is installed once, and Stage/Pod disconnects its previous
+`ResizeObserver` before observing the newly rendered Stage. Editing therefore
+does not accumulate listeners or observers.
 
 When an in-memory edit introduces an unresolved account media or font
-reference, Bob keeps the last successfully rendered preview visible, resolves
-the dependency through Roma, materializes the resolved URL, and sends the
-updated state to the existing iframe. Resolution failure is an explicit preview
-error. A later valid dependency resolution clears that dependency error; Bob
-does not reload the iframe, repeat `ck:ready`, or present an iframe failure as a
-ready preview.
+reference, Bob keeps the last successfully rendered preview visible and
+resolves the dependency through Roma on its existing path. Resolution failure
+is an explicit preview error. A later valid dependency resolution clears that
+dependency error. This editor behavior does not redefine the public package.
 
 Global `source: "tokyo"` fonts are not account dependencies. Preview loads their
 declared `/fonts/special/**` paths through Bob's same-origin Tokyo proxy.
@@ -734,13 +881,16 @@ https://clk.live/{accountPublicId}/{instanceId}
 ```
 
 Roma owns public-widget action truth for the current account and opened
-instance. It constructs the exact public URL and iframe/script snippets and
+instance. It constructs the exact public URL and complete iframe snippet and
 sends either that complete set or `null` in the Builder-open envelope. Bob
-fails a published open when that set is incomplete and presents Open public
-widget plus one Copy code intent in TopDrawer. Roma handles that intent with
-the same public-code Popup used by the Widgets inventory. Bob never constructs
-or copies those values from editor state. Unpublished instances expose no live
-actions.
+trusts that Roma-owned value and presents Open public widget plus one Copy code
+intent in TopDrawer when the value is present. Roma handles that intent with the
+same public-code Popup used by the Widgets inventory. Bob never reconstructs,
+validates, or copies those values from editor state. Unpublished instances
+expose no live actions.
+
+`runtime.js` is behavior-only and is never offered as a standalone embed. A
+script-only copy option would omit the materialized HTML and CSS.
 
 ## Account Assets
 
@@ -767,12 +917,13 @@ the upload.
 
 Bob does not expose account asset proxy routes. Account asset list, upload,
 resolve, and delete operations stay behind Roma current-account routes.
-Bob's existing session transport is the account-asset UI adapter: it validates
-the exact Roma response shapes and classifies the two current account-plan
-upload denial reason keys through the caller-owned asset client. Fill or Upload
-then emits the existing generic Dieter upsell event for an exact classified
-reason. Dieter never parses Roma payloads or decides which account-policy
-reasons qualify.
+Bob's session transport is the account-asset UI adapter: it trusts Roma's exact
+result and carries a Roma-owned account-plan denial as generic host intent.
+Fill or Upload may emit the generic Dieter upsell event for that exact reason;
+Bob transports it to Roma and does not render another Popup. Because upload
+size/storage are account-service capabilities rather than unique Widget state,
+Roma supplies the system-owned contextual body. Dieter never parses Roma
+payloads or decides which account-policy reasons qualify.
 
 ## Localization
 
@@ -788,9 +939,10 @@ Bob sends only the opened `instanceId` to Roma. Roma resolves the account,
 active locales, tier, saved instance source, and Translation Agent grant. Bob
 does not send locale authority for generation.
 
-The normal save command is source/base persistence only. Roma does not generate
-translations, regenerate translations, or mutate locale overlays. Bob treats
-the save response as base-source and base-package persistence truth.
+The normal Save command is editable-source persistence only. Roma does not
+generate a public package, generate translations, regenerate translations, or
+mutate locale overlays. Bob treats the Save response as source persistence
+truth.
 
 After Roma returns, Bob refreshes the overlay list only when at least one locale
 translated and lets the user preview active locales that have saved overlay
@@ -869,8 +1021,20 @@ Runtime evidence comes from cloud-dev Cloudflare surfaces.
 
 ## Hard Stops
 
+- Do not put Widget-specific meaning, rendering, persistence, or service
+  branches in Bob.
+- Do not validate, filter, normalize, fingerprint, or reconcile a Widget
+  contract, saved document, package, font library, asset result, or command
+  result produced by another Clickeen authority.
+- Do not make client JavaScript create the initial public Widget; saved HTML and
+  CSS are complete before browser interaction starts.
 - Do not add account persistence inside Bob.
 - Do not save package files from Bob.
 - Do not let Bob choose account locales, tier policy, model availability, or storage paths.
+- Do not put plan names, target-plan selection, Widget upsell copy, CTA behavior,
+  or a duplicate upsell Popup in Bob. Bob carries the exact compiled denial
+  identity to Roma.
+- Do not re-run Widget limits on Save after Bob's common edit boundary accepted
+  the browser-memory draft.
 - Do not create Bob account asset API routes; asset commands go through Roma.
 - Do not treat Builder preview as public serving evidence.

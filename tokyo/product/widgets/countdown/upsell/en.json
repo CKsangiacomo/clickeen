@@ -1,0 +1,9 @@
+{
+  "widgetType": "countdown",
+  "locale": "en",
+  "messages": {
+    "branding.remove": "Your current plan is {currentPlan}. Upgrade to {targetPlan} to remove Clickeen branding from this Countdown.",
+    "social-share.enable": "Your current plan is {currentPlan}. Upgrade to {targetPlan} to enable social sharing for this Countdown.",
+    "seo-geo.enable": "Your current plan is {currentPlan}. Upgrade to {targetPlan} to enable SEO/GEO optimization for this Countdown."
+  }
+}

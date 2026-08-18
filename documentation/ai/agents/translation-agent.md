@@ -114,24 +114,30 @@ Roma returns `accepted: false` and does not call the Translation Agent.
 Roma builds items from the saved instance source:
 
 ```text
-source.content.fields[path].value
+source.content.fields[concretePath].identityKey
+source.content.fields[concretePath].fieldPattern
+source.content.fields[concretePath].value
 ```
+
+The item field remains named `path` for the Babel/Agent transport, but its
+value is the saved stable `identityKey`, not `concretePath`.
 
 Item shape sent to Translation Agent:
 
 ```json
 {
-  "path": "[field path]",
+  "path": "[stable identity key]",
   "type": "string",
   "value": "[source value]",
-  "label": "[identity key]",
-  "role": "[field pattern]"
+  "label": "[editable field label]",
+  "role": "[editable field role]"
 }
 ```
 
-Rich text is detected from HTML-like values and sent as `type: "richtext"`.
-The saved instance field map is authority. Translation Agent must not rederive
-the field list from current widget source code during overlay writes.
+Roma resolves `type`, `label`, and `role` from the deploy-built Widget
+materializer artifact using the saved `fieldPattern`. The saved instance field
+map remains authority for which current fields and values enter the operation.
+Translation Agent must not rederive that field list during overlay writes.
 
 ## Worker HTTP Contract
 
@@ -161,11 +167,11 @@ Request:
   "requestedLocales": ["[requested locale]"],
   "items": [
     {
-      "path": "[field path]",
+      "path": "[stable identity key]",
       "type": "string",
       "value": "[source value]",
-      "label": "[identity key]",
-      "role": "[field pattern]",
+      "label": "[editable field label]",
+      "role": "[editable field role]",
       "promptType": "string"
     }
   ],
@@ -191,6 +197,11 @@ Optional fields:
 - `baseLocale`
 - `trace.requestId`
 - `trace.client`
+
+After service-binding and grant authorization, Translation Agent trusts this
+exact Roma-produced request. It does not normalize, reparse, or semantically
+revalidate the account, instance, locale, or item contract that Roma already
+owns.
 
 Response:
 
@@ -252,9 +263,9 @@ Translation Agent:
   tokens in normal strings;
 - validates structured model output through `validateStructuredTranslationResult`;
 - restores protected tokens;
-- validates that every requested path has exactly one translated value;
-- rejects unexpected output paths;
-- rejects missing requested paths.
+- validates that every requested identity coordinate has exactly one translated value;
+- rejects unexpected output coordinates;
+- rejects missing requested coordinates.
 
 Model execution goes through San Francisco `/model/turn` in structured mode
 (not `/model/chat`) using the same Roma grant. `TRANSLATION_OUTPUT_SCHEMA`
@@ -296,7 +307,7 @@ x-request-id: [request id]
 Body:
 
 ```json
-{ "values": { "[field path]": "[translated value]" } }
+{ "values": { "[stable identity key]": "[translated value]" } }
 ```
 
 Expected Tokyo response:
@@ -305,7 +316,7 @@ Expected Tokyo response:
 { "ok": true, "locale": "[active locale]" }
 ```
 
-## Storage And Verification
+## Storage
 
 Overlay file path:
 
@@ -313,8 +324,28 @@ Overlay file path:
 accounts/[account public id]/instances/[instance id]/overlays/locales/[active locale].json
 ```
 
-Tokyo-worker stores the file. Translation Agent does not store files directly in
-R2.
+Tokyo-worker trusts and stores the accepted Translation-Agent overlay, then
+returns its exact storage result. Translation Agent trusts that Clickeen result;
+it does not parse or semantically validate Tokyo's success through another
+shape. Translation Agent does not store files directly in R2.
+
+Stable coordinates have this current systemic form:
+
+```text
+scalar:
+{widgetType}|{role}|{fieldPattern}
+
+repeated:
+{widgetType}|{role}|{fieldPattern}|{arrayItemIdentityPath}={stableId}...
+```
+
+Save never asks Translation Agent to rewrite overlays. Reorder therefore
+follows identity, newly added identities remain untranslated until the next
+Generate Translations operation, and deleted identities disappear from current
+preview/public expression. This is a pre-GA cutover for scalar and repeated
+fields: previously stored positional overlays require explicit Generate
+Translations or explicit deletion after deployment. No consumer reads them
+through a compatibility key.
 
 ## Active Locale Settings Reconcile
 
@@ -367,15 +398,15 @@ This is an operator fact, not a desired future abstraction.
 
 | Failure | Current behavior |
 | --- | --- |
-| invalid worker request | `400 BAD_REQUEST` |
+| invalid JSON transport body | `400 BAD_REQUEST` |
 | invalid or expired grant | `401 GRANT_INVALID` or `401 GRANT_EXPIRED` |
 | grant/request mismatch | `403 CAPABILITY_DENIED` |
 | missing `ROMA_AI_GRANT_PUBLIC_KEY_PEM` | `500 PROVIDER_ERROR` from Translation Agent |
 | missing `SANFRANCISCO_AI_ENGINE` | HTTP `200` with an explicit failed result for every requested locale |
 | San Francisco provider/model failure | exact failed-locale result; remaining locales continue |
 | malformed model output | exact failed-locale result; remaining locales continue |
-| missing requested path | exact failed-locale result |
-| unexpected translated path | exact failed-locale result |
+| missing requested identity coordinate | exact failed-locale result |
+| unexpected translated identity coordinate | exact failed-locale result |
 | missing `TOKYO_PRODUCT_CONTROL` | HTTP `200` with an explicit failed result for every requested locale |
 | Tokyo-worker missing write grant public key | HTTP `200` with explicit failed-locale outcomes carrying `tokyo.translation.writeGrantPublicKeyMissing` |
 | Tokyo write rejection | exact failed-locale result; remaining locales continue |

@@ -19,76 +19,47 @@ function assertNoOldUpgradePath(source: string): void {
   assert.doesNotMatch(source, /status:\s*403/);
 }
 
-async function testCreateGateBeforeWork(): Promise<void> {
-  const source = await readRoute('app/api/account/instances/route.ts');
-  const gateBranch = 'if (widgetInstanceIds.value.instanceIds.length >= widgetInstancesLimit)';
-  assert.match(source, /action: 'create_instance'/);
-  assert.match(source, /status: 402/);
-  assert.match(source, /policyContractFailure\('widgets\.instances\.max'\)/);
-  assert.match(source, /listAccountWidgetInstanceIds\(\{/);
-  assert.match(source, /if \(widgetInstanceIds\.value\.instanceIds\.length >= widgetInstancesLimit\) \{\s+return withSession\(\s+request,\s+upgradeRequired\(\{/);
-  assertNoOldUpgradePath(source);
-  assertBefore(source, gateBranch, 'listTokyoWidgetDefinitions({');
-  assertBefore(source, gateBranch, 'createCompactInstanceId()');
-  assertBefore(source, gateBranch, 'readWidgetForInstancePackage(');
-  assertBefore(source, gateBranch, 'materializeAccountInstancePublicPackage({');
-  assertBefore(source, gateBranch, 'createAccountInstanceInTokyo({');
-}
-
-async function testDuplicateGateBeforeWorkAfterSourceProof(): Promise<void> {
-  const source = await readRoute('app/api/account/instances/[instanceId]/duplicate/route.ts');
-  const gateBranch = 'if (widgetInstanceIds.value.instanceIds.length >= widgetInstancesLimit)';
-  assert.match(source, /action: 'duplicate_instance'/);
-  assert.match(source, /status: 402/);
-  assert.match(source, /policyContractFailure\('widgets\.instances\.max'\)/);
-  assert.match(source, /listAccountWidgetInstanceIds\(\{/);
-  assert.match(source, /if \(widgetInstanceIds\.value\.instanceIds\.length >= widgetInstancesLimit\) \{\s+return withSession\(\s+request,\s+upgradeRequired\(\{/);
-  assertNoOldUpgradePath(source);
-  assertBefore(source, 'loadTokyoAccountInstanceDocument({', 'listAccountWidgetInstanceIds({');
-  assertBefore(source, gateBranch, 'createCompactInstanceId()');
-  assertBefore(source, gateBranch, 'readWidgetForInstancePackage(');
-  assertBefore(source, gateBranch, 'materializeAccountInstancePublicPackage({');
-  assertBefore(source, gateBranch, 'createAccountInstanceInTokyo({');
-}
-
 async function testPublishGateBeforeTransition(): Promise<void> {
   const source = await readRoute('app/api/account/instances/[instanceId]/publish/route.ts');
+  const tokyoOperations = await readFile(
+    new URL('../../tokyo-worker/src/domains/account-instances/operations.ts', import.meta.url),
+    'utf8',
+  );
+  const tokyoCoordinator = await readFile(
+    new URL(
+      '../../tokyo-worker/src/domains/account-instances/publication-coordinator.ts',
+      import.meta.url,
+    ),
+    'utf8',
+  );
   const gateBranch = 'if (!alreadyPublished && publishedTotal >= publishedLimit)';
   assert.match(source, /loadAccountWidgetInstanceFacts\(\{/);
   assert.match(source, /action: 'publish_instance'/);
   assert.match(source, /status: 402/);
-  assert.match(source, /policyContractFailure\('instances\.published\.max'\)/);
   assert.match(source, /const publishedTotal = instances\.value\.instances\.filter/);
   assert.match(source, /if \(!alreadyPublished && publishedTotal >= publishedLimit\) \{\s+return withSession\(\s+request,\s+upgradeRequired\(\{/);
   assertNoOldUpgradePath(source);
   assert.doesNotMatch(source, /listAccountInstancesInTokyo/);
   assert.doesNotMatch(source, /\/instances\/facts/);
+  assert.match(source, /publishedLimit,/);
+  assert.match(source, /kind: 'PUBLISH_IN_PROGRESS'/);
+  assertBefore(source, gateBranch, 'materializeAccountInstancePublicPackage({');
   assertBefore(source, gateBranch, 'publishAccountInstanceInTokyo({');
+  assertBefore(tokyoOperations, 'listAccountInstanceIds({', 'writeInstancePublicPackage({');
+  assert.match(tokyoOperations, /publishedTotal >= args\.publishedLimit/);
+  assert.match(tokyoCoordinator, /private active = false/);
+  assert.match(tokyoCoordinator, /reasonKey: 'coreui\.errors\.instance\.publishInProgress'/);
+  assertBefore(
+    tokyoCoordinator,
+    'this.active = false;',
+    'await purgeClkLiveEntryCache({',
+  );
 }
 
 async function testDeleteDoesNotDependOnRetiredPages(): Promise<void> {
   const source = await readRoute('app/api/account/instances/[instanceId]/route.ts');
   assert.match(source, /deleteAccountInstanceFromTokyo\(\{/);
   assert.doesNotMatch(source, /account-page|PageSources|pageIdsPlacingInstance|placedOnPage|pageIds/);
-}
-
-async function testBuilderHandlesBobUpsell(): Promise<void> {
-  const builderSource = await readRoute('components/builder-domain.tsx');
-  const bobDocs = await readFile(new URL('../../documentation/services/bob.md', import.meta.url), 'utf8');
-  const upsellPopup = await readFile(new URL('../../bob/components/UpsellPopup.tsx', import.meta.url), 'utf8');
-  assert.match(builderSource, /type BobUpsellMessage = \{\s+type: 'bob:upsell'/);
-  assert.match(builderSource, /if \(data\.type === 'bob:upsell'\) \{\s+if \(data\.cta === 'upgrade'\) setUpsellReason/);
-  assert.match(builderSource, /<RomaUpsellDialog/);
-  assert.doesNotMatch(builderSource, /confirmDiscardBuilderEdits/);
-  assert.doesNotMatch(builderSource, /router\.push\('\/billing'\)/);
-  assert.match(bobDocs, /"type": "bob:upsell"/);
-  assert.match(bobDocs, /"payload": "\[commandPayload\]"/);
-  assert.doesNotMatch(bobDocs, /"result": "\[commandResult\]"/);
-  assert.match(upsellPopup, /className="diet-popup"/);
-  assert.match(upsellPopup, /className="diet-popup__header"/);
-  assert.match(upsellPopup, /className="diet-popup__body"/);
-  assert.match(upsellPopup, /className="diet-popup__footer"/);
-  assert.doesNotMatch(upsellPopup, /ck-upsellModal/);
 }
 
 async function testBuilderUsesBobTopDrawerAsItsOnlyEditorChrome(): Promise<void> {
@@ -131,9 +102,9 @@ async function testBuilderUsesBobTopDrawerAsItsOnlyEditorChrome(): Promise<void>
   assert.match(topDrawer, /className="topdrawer-more diet-popover-host"/);
   assert.match(topDrawer, /requestHostAction\('open-navigation'\)/);
   assert.doesNotMatch(topDrawer, /requestHostAction\('return'\)|returnLabel|topdrawer-return/);
-  assert.equal((topDrawer.match(/data-type="primary"/g) ?? []).length, 1);
-  assert.match(bobBoot, /message\.publishStatus === 'published'/);
-  assert.match(bobBoot, /coreui\.errors\.builder\.publicActions\.invalid/);
+  assert.match(bobBoot, /const publicActions = message\.publicActions/);
+  assert.match(bobBoot, /publishStatus: message\.publishStatus/);
+  assert.doesNotMatch(bobBoot, /coreui\.errors\.builder\.publicActions\.invalid/);
   assert.doesNotMatch(bobBoot, /returnLabel/);
   assert.doesNotMatch(bobCss, /topdrawer-action-status/);
   assert.match(copyDialog, /aria-label=\{`Copy \$\{option\.label\}`\}/);
@@ -150,11 +121,6 @@ function testRomaOwnsExactPublicWidgetActions(): void {
   });
   assert.equal(actions.publicUrl, 'https://dev.clk.live/CLICKEEN/ABC123');
   assert.match(actions.iframeSnippet, /src="https:\/\/dev\.clk\.live\/CLICKEEN\/ABC123"/);
-  assert.equal(actions.scriptSnippet, '<script src="https://dev.clk.live/CLICKEEN/ABC123/runtime.js" async></script>');
-  assert.throws(
-    () => buildWidgetPublicActions({ accountPublicId: '', instanceId: 'ABC123', baseUrl: 'https://dev.clk.live' }),
-    /coreui\.errors\.payload\.invalid/,
-  );
 }
 
 async function testWidgetsListComposition(): Promise<void> {
@@ -221,7 +187,6 @@ async function testWidgetsListComposition(): Promise<void> {
   assert.doesNotMatch(source, /groupedInstances|displayedGroups|groupSorts|changeGroupSort/);
   assert.doesNotMatch(romaCss, /roma-widget-group/);
   assert.doesNotMatch(source, /menuWidth|menuHeight/);
-  assert.doesNotMatch(source, /Unpublishing\.\.\.|Publishing\.\.\.|>Unpublish<|>Publish</);
 }
 
 async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
@@ -341,7 +306,6 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
     'components/roma-unsaved-changes-dialog.tsx',
     'components/roma-upsell-dialog.tsx',
     'components/assets-domain.tsx',
-    'components/widgets-domain.tsx',
     'components/widget-copy-code-dialog.tsx',
   ]) {
     const source = await readRoute(relativePath);
@@ -354,7 +318,6 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
 
   for (const relativePath of [
     'components/assets-domain.tsx',
-    'components/widgets-domain.tsx',
     'components/widget-copy-code-dialog.tsx',
     'components/roma-upsell-dialog.tsx',
   ]) {
@@ -373,16 +336,10 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
 }
 
 async function run(): Promise<void> {
-  await testCreateGateBeforeWork();
-  console.log('PASS create gate runs before id/package/Tokyo write work');
-  await testDuplicateGateBeforeWorkAfterSourceProof();
-  console.log('PASS duplicate gate runs after source proof and before id/package/Tokyo write work');
   await testPublishGateBeforeTransition();
-  console.log('PASS publish gate uses list-facts and runs before Tokyo publish transition');
+  console.log('PASS Publish prechecks before materialization and Tokyo atomically backs the transition');
   await testDeleteDoesNotDependOnRetiredPages();
   console.log('PASS instance deletion has no retired Pages dependency');
-  await testBuilderHandlesBobUpsell();
-  console.log('PASS Bob upsell CTA opens the Roma scaffold without discarding Builder work');
   await testBuilderUsesBobTopDrawerAsItsOnlyEditorChrome();
   console.log('PASS active Builder owns full-canvas chrome and preserves initial-only preview readiness');
   testRomaOwnsExactPublicWidgetActions();

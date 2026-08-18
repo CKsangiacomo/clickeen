@@ -1,7 +1,7 @@
 import { isCompactAccountPublicId, isCompactInstanceId } from '@clickeen/ck-contracts/overlay-identity';
 import { normalizeLocale } from '../asset-utils';
 import { readAccountInstanceSourcePointer } from '../domains/account-instances/source';
-import { publicPackageContentType } from '../domains/public-package-serve-metadata';
+import { accountInstanceCacheTag } from '../domains/account-instances/keys';
 import {
   isPublicPackageFile,
   PUBLIC_INDEX_FILE,
@@ -10,15 +10,20 @@ import {
   type PublicPackageFile,
 } from '../domains/account-instances/package-file-names';
 import {
-  publicPackageObjectMatchesExpectedFingerprint,
-  verifyInstancePublicPackageReady,
-} from '../domains/account-instances/package-files';
-import { readAccountInstanceTranslatedLocaleValues } from '../domains/account-translations/values';
-import { listLocaleOverlayCoordinates } from '../domains/account-translations/overlays';
+  listLocaleOverlayCoordinates,
+  readLocaleOverlay,
+} from '../domains/account-translations/overlays';
 import { respondMethodNotAllowed, type TokyoRouteArgs } from '../route-helpers';
 
 function notFound(): Response {
-  return new Response('Not found', { status: 404 });
+  return new Response('Not found', {
+    status: 404,
+    headers: {
+      'cache-control': 'no-store',
+      'cdn-cache-control': 'no-store',
+      'cloudflare-cdn-cache-control': 'no-store',
+    },
+  });
 }
 
 function localeNotAvailable(): Response {
@@ -79,66 +84,86 @@ function cacheControlForGeneratedFile(file: string): string {
 }
 
 function responseForObject(
-  key: string,
-  file: string,
-  obj: { body: ReadableStream | null; httpMetadata?: { contentType?: string | null } | null },
+  file: PublicPackageFile,
+  obj: { body: ReadableStream | null },
   headOnly: boolean,
+  accountId: string,
+  instanceId: string,
 ): Response {
-  const contentType = publicPackageContentType(obj);
-  if (!contentType) return new Response('Invalid asset metadata', { status: 500 });
+  const contentType =
+    file === PUBLIC_INDEX_FILE
+      ? 'text/html; charset=utf-8'
+      : file === PUBLIC_STYLES_FILE
+        ? 'text/css; charset=utf-8'
+        : 'text/javascript; charset=utf-8';
   const cacheControl = cacheControlForGeneratedFile(file);
   const headers = new Headers();
   headers.set('content-type', contentType);
   headers.set('cache-control', cacheControl);
   headers.set('cdn-cache-control', cacheControl);
   headers.set('cloudflare-cdn-cache-control', cacheControl);
+  headers.set('cache-tag', accountInstanceCacheTag(accountId, instanceId));
   headers.set('access-control-allow-origin', '*');
   headers.set('x-content-type-options', 'nosniff');
   return new Response(headOnly ? null : obj.body, { status: 200, headers });
 }
 
-const LOCALE_CONTEXT_MARKER = 'window.CK_LOCALE_CONTEXT = null;';
-
-function inlineJson(value: unknown): string {
-  return JSON.stringify(value)
-    .replace(/</g, '\\u003c')
-    .replace(/\u2028/g, '\\u2028')
-    .replace(/\u2029/g, '\\u2029');
-}
-
-function indexHtmlWithLocaleContext(args: {
-  html: string;
+function responseForIndex(args: {
+  response: Response;
   locale: string;
-  baseLocale: string;
-  values: Record<string, string> | null;
   languages: string[];
-}): string | null {
-  const markerStart = args.html.indexOf(LOCALE_CONTEXT_MARKER);
-  if (markerStart < 0 || markerStart !== args.html.lastIndexOf(LOCALE_CONTEXT_MARKER)) return null;
-  const htmlTag = /<html lang="[^"]*">/;
-  if (!htmlTag.test(args.html)) return null;
-  return args.html
-    .replace(htmlTag, `<html lang="${args.locale}">`)
-    .replace(
-      LOCALE_CONTEXT_MARKER,
-      `window.CK_LOCALE_CONTEXT = ${inlineJson({
-        locale: args.locale,
-        baseLocale: args.baseLocale,
-        values: args.values,
-        languages: args.languages,
-      })};`,
-    );
+  values?: Record<string, string>;
+}): Response {
+  const rewriter = new HTMLRewriter()
+    .on('html', {
+      element(element) {
+        element.setAttribute('lang', args.locale);
+      },
+    })
+    .on('.ck-locale-switcher__select', {
+      element(element) {
+        element.setInnerContent(
+          args.languages
+            .map((language) => `<option value="${language}">${language}</option>`)
+            .join(''),
+          { html: true },
+        );
+      },
+    });
+  if (args.values) {
+    rewriter.on('[data-ck-content-path]', {
+      element(element) {
+        applyLocaleOverlayToContentSlot({
+          element,
+          values: args.values!,
+        });
+      },
+    });
+  }
+  return rewriter.transform(args.response);
 }
 
-function responseForLocalizedIndex(html: string, headOnly: boolean): Response {
-  const headers = new Headers();
-  headers.set('content-type', 'text/html; charset=utf-8');
-  headers.set('cache-control', 'no-store');
-  headers.set('cdn-cache-control', 'no-store');
-  headers.set('cloudflare-cdn-cache-control', 'no-store');
-  headers.set('access-control-allow-origin', '*');
-  headers.set('x-content-type-options', 'nosniff');
-  return new Response(headOnly ? null : html, { status: 200, headers });
+type ContentSlotElement = {
+  getAttribute(name: string): string | null;
+  setAttribute(name: string, value: string): ContentSlotElement;
+  setInnerContent(content: string, options?: { html?: boolean }): ContentSlotElement;
+};
+
+export function applyLocaleOverlayToContentSlot(args: {
+  element: ContentSlotElement;
+  values: Record<string, string>;
+}): void {
+  const coordinate = args.element.getAttribute('data-ck-content-path')!;
+  const value = args.values[coordinate];
+  if (value === undefined) return;
+  const attribute = args.element.getAttribute('data-ck-content-attribute');
+  if (attribute !== null) {
+    args.element.setAttribute(attribute, value);
+    return;
+  }
+  args.element.setInnerContent(value, {
+    html: args.element.getAttribute('data-ck-content-mode') === 'html',
+  });
 }
 
 export async function tryHandleClkLiveStaticRoutes(
@@ -162,68 +187,69 @@ export async function tryHandleClkLiveStaticRoutes(
   });
   if (!pointer.ok || pointer.value.publishStatus !== 'published') return respond(notFound());
 
-  const ready = await verifyInstancePublicPackageReady({
-    env,
-    accountId: parsed.accountId,
-    instanceId: parsed.instanceId,
-    expectedFingerprint: pointer.value.publicPackageFingerprint ?? null,
-  });
-  if (!ready.ok) return respond(notFound());
-
   const key = instanceObjectKey(parsed.accountId, parsed.instanceId, parsed.file);
   const obj = await env.TOKYO_R2.get(key);
-  if (obj && !publicPackageObjectMatchesExpectedFingerprint(obj, pointer.value.publicPackageFingerprint ?? null)) {
-    return respond(notFound());
-  }
+  if (!obj) return respond(notFound());
 
   if (parsed.file === PUBLIC_INDEX_FILE) {
     const localeParams = url.searchParams.getAll('locale');
     if (localeParams.length > 1) return respond(localeNotAvailable());
     const rawLocale = localeParams[0];
-    let overlayLocales: string[];
-    try {
-      overlayLocales = await listLocaleOverlayCoordinates({
+    const locale = typeof rawLocale === 'string' ? normalizeLocale(rawLocale) : pointer.value.baseLocale;
+    if (!locale || (typeof rawLocale === 'string' && locale !== rawLocale)) return respond(localeNotAvailable());
+    const baseResponse = responseForObject(
+      parsed.file,
+      obj,
+      req.method === 'HEAD',
+      parsed.accountId,
+      parsed.instanceId,
+    );
+    if (locale === pointer.value.baseLocale) {
+      if (req.method === 'HEAD') return respond(baseResponse);
+      const overlayLocales = await listLocaleOverlayCoordinates({
         env,
         accountId: parsed.accountId,
         widgetCode: pointer.value.widgetCode,
         instanceId: parsed.instanceId,
       });
+      const languages = [pointer.value.baseLocale, ...overlayLocales];
+      return respond(responseForIndex({ response: baseResponse, locale, languages }));
+    }
+    let overlay: Awaited<ReturnType<typeof readLocaleOverlay>>;
+    try {
+      overlay = await readLocaleOverlay({
+        env,
+        accountId: parsed.accountId,
+        widgetCode: pointer.value.widgetCode,
+        instanceId: parsed.instanceId,
+        locale,
+      });
     } catch {
       return respond(localeDataInvalid());
     }
-    if (overlayLocales.includes(pointer.value.baseLocale)) return respond(localeDataInvalid());
-    const languages = [pointer.value.baseLocale, ...overlayLocales];
-    const locale = typeof rawLocale === 'string' ? normalizeLocale(rawLocale) : pointer.value.baseLocale;
-    if (!locale || (typeof rawLocale === 'string' && locale !== rawLocale)) return respond(localeNotAvailable());
-    let values: Record<string, string> | null = null;
-    if (locale !== pointer.value.baseLocale) {
-      if (!obj) return respond(localeNotAvailable());
-      let translated:
-        | Awaited<ReturnType<typeof readAccountInstanceTranslatedLocaleValues>>
-        | null = null;
-      try {
-        translated = await readAccountInstanceTranslatedLocaleValues({
-          env,
-          accountId: parsed.accountId,
-          instanceId: parsed.instanceId,
-          widgetType: pointer.value.widgetType,
-          locale,
-        });
-      } catch {
-        return respond(localeDataInvalid());
-      }
-      if (!translated.ok) return respond(localeNotAvailable());
-      values = translated.value.values;
-    }
-    if (!obj) return respond(notFound());
-    const localized = indexHtmlWithLocaleContext({
-      html: await obj.text(),
-      locale,
-      baseLocale: pointer.value.baseLocale,
-      values,
-      languages,
+    if (!overlay) return respond(localeNotAvailable());
+    if (req.method === 'HEAD') return respond(baseResponse);
+    const overlayLocales = await listLocaleOverlayCoordinates({
+      env,
+      accountId: parsed.accountId,
+      widgetCode: pointer.value.widgetCode,
+      instanceId: parsed.instanceId,
     });
-    return respond(localized ? responseForLocalizedIndex(localized, req.method === 'HEAD') : localeDataInvalid());
+    const languages = [pointer.value.baseLocale, ...overlayLocales];
+    return respond(responseForIndex({
+      response: baseResponse,
+      locale,
+      languages,
+      values: overlay.values,
+    }));
   }
-  return respond(obj ? responseForObject(key, parsed.file, obj, req.method === 'HEAD') : notFound());
+  return respond(
+    responseForObject(
+      parsed.file,
+      obj,
+      req.method === 'HEAD',
+      parsed.accountId,
+      parsed.instanceId,
+    ),
+  );
 }

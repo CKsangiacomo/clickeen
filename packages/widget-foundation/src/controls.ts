@@ -158,6 +158,7 @@ export const COMMON_WIDGET_CONTROL_DEFINITIONS: readonly CommonWidgetControlDefi
   control('settings', 'localeSwitcher.enabled'),
   control('settings', 'localeSwitcher.attachTo'),
   control('settings', 'localeSwitcher.position'),
+  control('settings', 'behavior.seoGeo.enabled'),
   control('settings', 'behavior.showBacklink'),
   control('settings', 'behavior.socialShare.enabled'),
   control('settings', 'behavior.socialShare.attachTo'),

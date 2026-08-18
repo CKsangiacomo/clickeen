@@ -1,23 +1,12 @@
 'use client';
 
+import type { CompiledWidget } from '@clickeen/bob/types';
 import { fetchSameOriginJson } from './same-origin-json';
 
-function normalizeWidgetType(value: unknown): string {
-  return String(value || '').trim().toLowerCase();
-}
-
-function isEditorArtifact(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
-
-export async function getWidgetEditorArtifact(widgetType: string): Promise<unknown> {
-  const normalizedWidgetType = normalizeWidgetType(widgetType);
-  if (!normalizedWidgetType) throw new Error('coreui.errors.widgetType.invalid');
-  const artifact = await fetchSameOriginJson<unknown>(
-    `/widget-editors/${encodeURIComponent(normalizedWidgetType)}.json`,
+export async function getWidgetEditorArtifact(widgetType: string): Promise<CompiledWidget> {
+  return fetchSameOriginJson<CompiledWidget>(
+    `/widget-editors/${encodeURIComponent(widgetType)}.json`,
   );
-  if (!isEditorArtifact(artifact)) throw new Error('coreui.errors.widget.compiled.invalid');
-  return artifact;
 }
 
 export async function prefetchWidgetEditorArtifact(widgetType: string): Promise<void> {

@@ -1,0 +1,195 @@
+body {
+  --stage-shadow-gutter-top: {{#ck.css.shadowGutter}}stage.shadow top{{/ck.css.shadowGutter}}px;
+  --stage-shadow-gutter-right: {{#ck.css.shadowGutter}}stage.shadow right{{/ck.css.shadowGutter}}px;
+  --stage-shadow-gutter-bottom: {{#ck.css.shadowGutter}}stage.shadow bottom{{/ck.css.shadowGutter}}px;
+  --stage-shadow-gutter-left: {{#ck.css.shadowGutter}}stage.shadow left{{/ck.css.shadowGutter}}px;
+}
+
+.stage {
+  --stage-bg: {{#ck.css.background}}stage.background{{/ck.css.background}};
+  --stage-shadow: {{#ck.css.shadow}}stage.shadow{{/ck.css.shadow}};
+  --stage-inside-shadow: {{#ck.css.insideShadow}}stage.insideShadow{{/ck.css.insideShadow}};
+  --stage-pad-desktop-top: {{#ck.css.padding}}stage.padding.desktop top{{/ck.css.padding}}px;
+  --stage-pad-desktop-right: {{#ck.css.padding}}stage.padding.desktop right{{/ck.css.padding}}px;
+  --stage-pad-desktop-bottom: {{#ck.css.padding}}stage.padding.desktop bottom{{/ck.css.padding}}px;
+  --stage-pad-desktop-left: {{#ck.css.padding}}stage.padding.desktop left{{/ck.css.padding}}px;
+  --stage-pad-mobile-top: {{#ck.css.padding}}stage.padding.mobile top{{/ck.css.padding}}px;
+  --stage-pad-mobile-right: {{#ck.css.padding}}stage.padding.mobile right{{/ck.css.padding}}px;
+  --stage-pad-mobile-bottom: {{#ck.css.padding}}stage.padding.mobile bottom{{/ck.css.padding}}px;
+  --stage-pad-mobile-left: {{#ck.css.padding}}stage.padding.mobile left{{/ck.css.padding}}px;
+  --stage-fixed-width: {{#ck.css.positivePx}}stage.canvas.width{{/ck.css.positivePx}};
+  --stage-fixed-height: {{#ck.css.positivePx}}stage.canvas.height{{/ck.css.positivePx}};
+  position: relative;
+  isolation: isolate;
+}
+
+.stage[data-alignment='left'] {
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.stage[data-alignment='right'] {
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.stage[data-alignment='top'] {
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.stage[data-alignment='bottom'] {
+  justify-content: center;
+  align-items: flex-end;
+}
+
+.stage[data-alignment='center'] {
+  justify-content: center;
+  align-items: center;
+}
+
+.stage[data-alignment='center'] > .pod {
+  position: relative;
+  left: calc((var(--stage-pad-desktop-right) - var(--stage-pad-desktop-left)) / 2);
+  top: calc((var(--stage-pad-desktop-bottom) - var(--stage-pad-desktop-top)) / 2);
+}
+
+.stage::after,
+.pod::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.stage::after {
+  box-shadow: var(--stage-inside-shadow);
+}
+
+.stage[data-inside-shadow-layer='above-content']::after,
+.pod[data-inside-shadow-layer='above-content']::after {
+  z-index: 20;
+}
+
+.stage > :not(.ck-fill-layer),
+.pod > :not(.ck-fill-layer) {
+  position: relative;
+  z-index: 2;
+}
+
+.stage[data-inside-shadow-layer='above-content'] > :not(.ck-fill-layer),
+.pod[data-inside-shadow-layer='above-content'] > :not(.ck-fill-layer) {
+  z-index: 10;
+}
+
+.ck-fill-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.ck-fill-layer > video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: var(--ck-fill-video-fit);
+  object-position: var(--ck-fill-video-position);
+}
+
+.pod {
+  --pod-bg: {{#ck.css.background}}pod.background{{/ck.css.background}};
+  --pod-border-width: {{#ck.css.borderWidth}}appearance.podBorder{{/ck.css.borderWidth}};
+  --pod-border-color: {{#ck.css.borderColor}}appearance.podBorder{{/ck.css.borderColor}};
+  --pod-radius: {{#ck.css.radii}}pod{{/ck.css.radii}};
+  --pod-shadow: {{#ck.css.shadow}}pod.shadow{{/ck.css.shadow}};
+  --pod-inside-shadow: {{#ck.css.insideShadow}}pod.insideShadow{{/ck.css.insideShadow}};
+  --pod-pad-desktop-top: {{#ck.css.padding}}pod.padding.desktop top{{/ck.css.padding}}px;
+  --pod-pad-desktop-right: {{#ck.css.padding}}pod.padding.desktop right{{/ck.css.padding}}px;
+  --pod-pad-desktop-bottom: {{#ck.css.padding}}pod.padding.desktop bottom{{/ck.css.padding}}px;
+  --pod-pad-desktop-left: {{#ck.css.padding}}pod.padding.desktop left{{/ck.css.padding}}px;
+  --pod-pad-mobile-top: {{#ck.css.padding}}pod.padding.mobile top{{/ck.css.padding}}px;
+  --pod-pad-mobile-right: {{#ck.css.padding}}pod.padding.mobile right{{/ck.css.padding}}px;
+  --pod-pad-mobile-bottom: {{#ck.css.padding}}pod.padding.mobile bottom{{/ck.css.padding}}px;
+  --pod-pad-mobile-left: {{#ck.css.padding}}pod.padding.mobile left{{/ck.css.padding}}px;
+  --content-width: {{pod.contentWidth}}px;
+  position: relative;
+  isolation: isolate;
+}
+
+.pod::after {
+  box-shadow: var(--pod-inside-shadow);
+}
+
+.ck-headerLayout {
+  --ck-header-gap: {{header.gap}}px;
+  --ck-header-inner-gap: {{header.innerGap}}px;
+  --ck-header-text-gap: {{header.textGap}}px;
+  --ck-header-cta-bg: {{#ck.css.background}}appearance.headerCta.background{{/ck.css.background}};
+  --ck-header-cta-fg: {{#ck.css.color}}appearance.headerCta.textColor{{/ck.css.color}};
+  --ck-header-cta-radius: {{#ck.css.radius}}appearance.headerCta.radius{{/ck.css.radius}};
+  --ck-header-cta-border-width: {{#ck.css.borderWidth}}appearance.headerCta.border{{/ck.css.borderWidth}};
+  --ck-header-cta-border-color: {{#ck.css.borderColor}}appearance.headerCta.border{{/ck.css.borderColor}};
+  --ck-header-cta-padding-inline: {{appearance.headerCta.paddingInline}}px;
+  --ck-header-cta-padding-block: {{appearance.headerCta.paddingBlock}}px;
+  --ck-header-cta-icon-size: {{appearance.headerCta.iconSize}}px;
+  --ck-header-cta-icon: url('/dieter/icons/svg/{{headerCta.iconName}}.svg');
+  --ck-locale-switcher-bg: {{#ck.css.background}}appearance.localeSwitcherBackground{{/ck.css.background}};
+  --ck-locale-switcher-fg: {{#ck.css.color}}appearance.localeSwitcherTextColor{{/ck.css.color}};
+  --ck-locale-switcher-radius: {{#ck.css.radius}}appearance.localeSwitcherRadius{{/ck.css.radius}};
+  --ck-locale-switcher-border-width: {{#ck.css.borderWidth}}appearance.localeSwitcherBorder{{/ck.css.borderWidth}};
+  --ck-locale-switcher-border-color: {{#ck.css.borderColor}}appearance.localeSwitcherBorder{{/ck.css.borderColor}};
+  --ck-locale-switcher-padding-inline: {{appearance.localeSwitcherPaddingInline}}px;
+  --ck-locale-switcher-padding-block: {{appearance.localeSwitcherPaddingBlock}}px;
+  --ck-locale-switcher-arrow: url('/dieter/icons/svg/chevron.down.svg');
+  {{#ck.css.typographyRole}}title{{/ck.css.typographyRole}}
+  {{#ck.css.typographyRole}}body{{/ck.css.typographyRole}}
+  {{#ck.css.typographyRole}}button{{/ck.css.typographyRole}}
+  {{#ck.css.typographyRole}}localeSwitcher locale-switcher{{/ck.css.typographyRole}}
+}
+
+.ck-headerLayout__body[data-core-size-mode='fixed'] {
+  height: {{coreSize.fixedHeight}}px;
+}
+
+.ck-headerLayout__body[data-core-size-mode='responsive'] {
+  min-height: clamp({{coreSize.minHeight}}px, {{coreSize.preferredVw}}vw, {{coreSize.maxHeight}}px);
+}
+
+.ck-branding {
+  position: absolute;
+  inset-inline-end: var(--space-6);
+  inset-block-end: 0;
+  z-index: 50;
+  display: flex;
+  pointer-events: none;
+}
+
+.ck-branding__link {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-0) var(--space-2);
+  border-radius: var(--control-radius-sm);
+  background: color-mix(in oklab, var(--color-system-white), transparent 15%);
+  color: var(--color-text);
+  font: 500 var(--fs-12) / var(--lh-tight) 'Inter', sans-serif;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.ck-branding__link:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 900px) {
+  .stage[data-alignment='center'] > .pod {
+    left: calc((var(--stage-pad-mobile-right) - var(--stage-pad-mobile-left)) / 2);
+    top: calc((var(--stage-pad-mobile-bottom) - var(--stage-pad-mobile-top)) / 2);
+  }
+}

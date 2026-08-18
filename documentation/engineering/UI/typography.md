@@ -12,8 +12,8 @@ This document defines two typography lanes:
 - Operational UI typography: Dieter owns Bob, Roma, DevStudio, Admin chrome, and
   Dieter components.
 - Public widget content typography: Bob authors structured widget typography;
-  widget runtime applies it through `CKTypography.applyTypography` and
-  `--typo-*` variables.
+  the shared static style renderer applies it during Bob preview and explicit
+  Publish through `--typo-*` variables.
 
 Do not merge these lanes. Operational UI must stay deterministic and Clickeen
 owned. Public widget content must stay account-authored and portable.
@@ -82,24 +82,24 @@ typography.roles.*
 typography.roleScales.*
 ```
 
-Runtime applies that state through:
+Every current Widget applies that state during Bob preview and Roma Publish
+through the same static style renderer:
 
 ```text
-tokyo/product/widgets/shared/typography.js
-CKTypography.applyTypography(...)
+renderWidgetStyles(exact state + exact account font data)
+-> complete CSS variables and role styles
 ```
 
-Runtime emits `--typo-*` variables for the widget scope. Widget typography may
+The generated CSS emits `--typo-*` variables for the Widget scope. Widget typography may
 include account-authored content colors, role scales, custom sizes, weights,
 styles, tracking presets, line-height presets, and locale/script-aware fallback
 behavior. That is widget content authority, not Dieter chrome authority.
 
-Saved `typography.roleScales` is the only role-scale authority used by the
-runtime. Shared runtime code does not carry a second copy of common role
-scales. Before materialization, Roma requires every common and widget-declared
-role, its scale, and its explicit tracking and line-height presets. Missing
-state fails the save instead of becoming an implicit `normal` value or a
-partially styled public package.
+Saved `typography.roleScales` is the only role-scale authority. The
+source/editor contract produces every common and Widget-declared role, scale,
+tracking preset, and line-height preset as exact Clickeen truth. Roma consumes
+that complete trusted typography during materialization; it does not reconstruct
+or revalidate the contract against a second schema.
 
 Widget content may use container-query fluid sizing because widgets run inside
 variable embed containers. Operational UI chrome must not use viewport-fluid
@@ -188,58 +188,68 @@ Bob behavior:
 
 - The account-independent widget compiler emits typography family controls as
   strings without a default font catalog.
-- On editor open, Bob binds those family controls to the normalized current
-  account font library. The bound controls govern manual edits, Copilot context,
-  and normal config validation.
+- On editor open, Bob binds those family controls to the exact current-account
+  font library supplied by Roma. The bound controls govern manual edits and
+  Copilot context. Bob does not normalize or semantically revalidate that
+  Clickeen-owned artifact.
 - Family changes are one product operation: the requested family plus a
   compatible weight and style are applied together. Dieter emits the requested
   family only; it does not choose companion values.
-- The account-backed controls do not offer unavailable choices. Direct or
-  malformed saved family/weight/style combinations are rejected by package
-  materialization; they are not trimmed, repaired, or replaced.
+- The user-facing account-backed controls admit only choices from the exact
+  account library at the editing ingress. Once Bob emits the complete draft,
+  materialization trusts it; it does not run a second family/weight/style
+  validator.
 - Bob preview resolves account-uploaded font `assetRef` values through the
-  current account asset route and posts runtime typography data into the widget
-  iframe with preview state.
+  current account asset route and renders the exact temporary preview CSS from
+  the same draft typography state.
 - Bob preview passes global Tokyo font paths through its same-origin `/fonts/**`
   proxy; it does not resolve those files as account assets.
 - Inter is always available when account data is valid.
-- Missing or malformed `fontLibrary` fails editor open explicitly.
+- An unavailable Roma-owned `fontLibrary` fails at the owning account/open
+  boundary. Bob does not reinterpret its contents.
 - Bob must not show or preview font choices the runtime cannot load.
 
-Runtime package behavior:
+Published-package behavior:
 
-- Save/package materialization reads saved typography and account font library
+- Publish materialization reads saved typography and account font library
   together.
-- Materialization validates every role's family, weight, and style before asset
-  resolution. Instance typography and common defaults are required. A widget
+- Materialization consumes every role's exact family, weight, and style before
+  asset resolution. Instance typography and common defaults are required. A widget
   with no widget-core typography roles does not invent a core typography block.
 - Packages include only the font records used by the saved instance plus Inter.
-- Google records load from Google.
+- Google records become exact stylesheet `<link>` elements in generated
+  `index.html`; generated CSS never uses a render-blocking Google `@import`.
 - Global Tokyo records materialize to an absolute URL on the configured Tokyo
   origin, such as `https://tokyo.dev.clickeen.com/fonts/special/Orio.woff`.
   Public packages never resolve them through `clk.live` or an account folder.
 - Account-uploaded records emit `@font-face` from resolved account asset URLs.
-- Unknown font families, missing font records, or missing account font assets
-  fail materialization. They are not silently replaced with Inter.
+- A genuinely unreadable required account font asset fails at the owning asset
+  boundary. No consumer silently replaces it with Inter.
 
-Shared widget runtime behavior:
+- One stored stylesheet includes locale-responsive `:lang(...)` typography
+  rules and the required script font dependencies. Tokyo changes only
+  `<html lang>` while applying an overlay, so Japanese, Korean, Chinese,
+  Arabic, Hebrew, Thai, Devanagari, Bengali, Cyrillic, and Latin text select
+  the correct authored fallback/line-height rules without locale packages.
+- Bob preview uses the same rendered CSS and exact Google stylesheet links.
 
-- Common typography labels are owned by the widget foundation. Widgets declare
-  labels and display order for widget-specific roles in
-  `editor.panels[].shared.roleLabels`.
-- `CKTypography` reads `CK_WIDGET_TYPOGRAPHY_DATA`.
-- Public runtime packages inline that data during package materialization.
-- Bob preview supplies the same shape through `ck:state-update.typographyData`
-  before widget clients apply preview state.
+Big Bang, Cards, Countdown, FAQ, and Logo Showcase all use the canonical static
+style path locally. Common typography labels remain owned by the Widget
+foundation; Widgets declare labels and display order for Widget-specific roles
+in `editor.panels[].shared.roleLabels`. Roma Publish writes complete typography
+into `styles.css`, and Bob uses the same style renderer for its temporary
+source-and-draft preview. Public `runtime.js` does not perform initial
+typography application, and there is no `CKTypography`,
+`CK_WIDGET_TYPOGRAPHY_DATA`, or `ck:state-update` compatibility path.
 
 ## Fallback Truth
 
 Public widget CSS uses the required Inter account-font baseline directly before
 structured widget typography data is applied. It does not depend on an
-operational UI font-family variable. That static baseline must not turn missing
-`CKTypography.applyTypography`, malformed account font data, or a missing font
-asset into apparent success. Those failures surface through the owning editor
-or materialization path.
+operational UI font-family variable. A missing programmer-authored typography
+module is a source/build failure, and an unavailable required asset fails at
+its owning asset boundary. The static baseline is presentation, not a runtime
+validator, repair path, or substitute for either authority.
 
 ## Font Uploads
 

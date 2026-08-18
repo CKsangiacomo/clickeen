@@ -1,0 +1,117 @@
+<main
+  class="ck-logoshowcase__strips ck-headerLayout__body"
+  data-role="logoshowcase-core"
+  data-core-size-mode="{{coreSize.mode}}"
+  data-ck-core
+  {{#ck.discovery}}data-ck-discovery-kind="{{kind}}"{{/ck.discovery}}
+>
+  {{#logoshowcase.strips}}
+  <section
+    class="ck-logoshowcase__strip"
+    data-role="strip"
+    data-strip-id="{{id}}"
+    data-swipe="{{logoshowcase.typeConfig.carousel.allowSwipe}}"
+    data-pause-on-hover="{{logoshowcase.typeConfig.carousel.pauseOnHover}}"
+  >
+    <div class="ck-logoshowcase__strip-viewport" data-role="strip-viewport">
+      <div class="ck-logoshowcase__strip-track" data-role="strip-track">
+        <div class="ck-logoshowcase__ticker-copy" data-role="ticker-a">
+          <ul class="ck-logoshowcase__logos" data-role="logos">
+            {{#logos}}
+            <li
+              class="ck-logoshowcase__logo"
+              data-role="logo"
+              data-logo-id="{{id}}"
+              title="{{title}}"
+              data-ck-content-path="{{$ck.title.path}}"
+              data-ck-content-mode="{{$ck.title.mode}}"
+              data-ck-content-attribute="title"
+              {{#$ck.title.discovery}}data-ck-discovery-part="{{id}}" data-ck-discovery-role="{{role}}"{{/$ck.title.discovery}}
+              {{#alt}}aria-labelledby="logo-alt-{{ck.instanceId}}-{{$ck.path}}"{{/alt}}
+              {{^alt}}{{#name}}aria-labelledby="logo-name-{{ck.instanceId}}-{{$ck.path}}"{{/name}}{{/alt}}
+            >
+              {{#logoFill.image}}
+              <img
+                class="ck-logoshowcase__logo-visual"
+                src="{{src}}"
+                alt="{{alt}}"
+                loading="lazy"
+                style="object-fit: {{fit}}; object-position: {{position}}"
+                data-ck-content-path="{{$ck.alt.path}}"
+                data-ck-content-mode="{{$ck.alt.mode}}"
+                data-ck-content-attribute="alt"
+                {{#$ck.alt.discovery}}data-ck-discovery-part="{{id}}" data-ck-discovery-role="{{role}}"{{/$ck.alt.discovery}}
+              />
+              {{/logoFill.image}}
+              <span
+                class="sr-only"
+                id="logo-name-{{ck.instanceId}}-{{$ck.path}}"
+                data-ck-content-path="{{$ck.name.path}}"
+                data-ck-content-mode="{{$ck.name.mode}}"
+                {{#$ck.name.discovery}}data-ck-discovery-part="{{id}}" data-ck-discovery-role="{{role}}"{{/$ck.name.discovery}}
+              >{{name}}</span>
+              <span
+                class="sr-only"
+                id="logo-alt-{{ck.instanceId}}-{{$ck.path}}"
+                data-ck-content-path="{{$ck.alt.path}}"
+                data-ck-content-mode="{{$ck.alt.mode}}"
+              >{{alt}}</span>
+              {{#caption}}
+              <span
+                class="ck-logoshowcase__logo-caption"
+                data-role="logo-caption"
+                data-ck-content-path="{{$ck.caption.path}}"
+                data-ck-content-mode="{{$ck.caption.mode}}"
+                {{#$ck.caption.discovery}}data-ck-discovery-part="{{id}}" data-ck-discovery-role="{{role}}"{{/$ck.caption.discovery}}
+                {{#$ck.caption.discovery.relationship}}data-ck-discovery-relationship="{{kind}}"{{/$ck.caption.discovery.relationship}}
+              >{{caption}}</span>
+              {{/caption}}
+              {{^caption}}{{#name}}
+              <span
+                class="ck-logoshowcase__logo-caption"
+                data-role="logo-caption"
+                data-ck-content-path="{{$ck.name.path}}"
+                data-ck-content-mode="{{$ck.name.mode}}"
+              >{{name}}</span>
+              {{/name}}{{/caption}}
+              {{#href}}
+              <a
+                class="ck-logoshowcase__logo-link"
+                href="{{href}}"
+                {{#targetBlank}}target="_blank"{{/targetBlank}}
+                {{#nofollow}}rel="nofollow noopener noreferrer"{{/nofollow}}
+                {{^nofollow}}rel="noopener noreferrer"{{/nofollow}}
+                {{#alt}}aria-labelledby="logo-alt-{{ck.instanceId}}-{{$ck.path}}"{{/alt}}
+                {{^alt}}{{#name}}aria-labelledby="logo-name-{{ck.instanceId}}-{{$ck.path}}"{{/name}}{{/alt}}
+              ></a>
+              {{/href}}
+            </li>
+            {{/logos}}
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="ck-logoshowcase__nav" data-role="nav" data-dots="false" hidden>
+      <button
+        type="button"
+        class="diet-button ck-logoshowcase__arrow"
+        data-size="medium"
+        data-type="quaternary"
+        data-role="arrow"
+        data-dir="prev"
+        aria-label="Previous"
+      ><span class="diet-icon" data-size="16"></span></button>
+      <div class="ck-logoshowcase__dots" data-role="dots" hidden></div>
+      <button
+        type="button"
+        class="diet-button ck-logoshowcase__arrow"
+        data-size="medium"
+        data-type="quaternary"
+        data-role="arrow"
+        data-dir="next"
+        aria-label="Next"
+      ><span class="diet-icon" data-size="16"></span></button>
+    </div>
+  </section>
+  {{/logoshowcase.strips}}
+</main>

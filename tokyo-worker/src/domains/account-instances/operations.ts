@@ -1,30 +1,25 @@
-import { isCompactAccountPublicId, isCompactInstanceId } from '@clickeen/ck-contracts/overlay-identity';
+import { resolveWidgetOverlayCode } from '@clickeen/ck-contracts/overlay-codebooks';
 import type { Env } from '../../types';
 import {
-  type SubmittedInstancePublicPackage,
-  verifyInstancePublicPackageReady,
   writeInstancePublicPackage,
+  type SubmittedInstancePublicPackage,
 } from './package-files';
-import { PUBLIC_INDEX_FILE, PUBLIC_RUNTIME_FILE, PUBLIC_STYLES_FILE } from './package-file-names';
+import { accountInstanceCacheTag } from './keys';
 import { deleteAccountInstanceSubtree } from './delete';
-import { accountInstanceRoot } from './keys';
 import {
-  readAccountInstanceSource,
+  listAccountInstanceIds,
+  readAccountInstanceSourcePointer,
   writeAccountInstanceSource,
 } from './source';
-import {
-  readInstanceServeState,
-  writeInstanceServeState,
-} from './serve-state';
+import { writeInstanceServeState } from './serve-state';
 import type { AccountInstanceContentDocument, AccountInstanceSourcePointer } from './types';
-import { normalizeStorageId } from './utils';
-import { deletePrefix } from '../storage';
 
 export class AccountInstanceTransitionError extends Error {
   status: number;
   kind: 'VALIDATION' | 'DENY' | 'NOT_FOUND' | 'UPSTREAM_UNAVAILABLE';
   reasonKey: string;
   paths?: string[];
+  capacity?: { current: number; limit: number };
 
   constructor(args: {
     status: number;
@@ -32,6 +27,7 @@ export class AccountInstanceTransitionError extends Error {
     reasonKey: string;
     detail?: string;
     issues?: Array<{ path: string }>;
+    capacity?: { current: number; limit: number };
   }) {
     super(args.detail ?? args.reasonKey);
     this.name = 'AccountInstanceTransitionError';
@@ -39,23 +35,8 @@ export class AccountInstanceTransitionError extends Error {
     this.kind = args.kind;
     this.reasonKey = args.reasonKey;
     this.paths = args.issues?.map((issue) => issue.path);
+    this.capacity = args.capacity;
   }
-}
-
-function assertScopedIds(accountIdRaw: string, instanceIdRaw: string): {
-  accountId: string;
-  instanceId: string;
-} {
-  const accountId = normalizeStorageId(accountIdRaw);
-  const instanceId = normalizeStorageId(instanceIdRaw);
-  if (!isCompactAccountPublicId(accountId) || !isCompactInstanceId(instanceId)) {
-    throw new AccountInstanceTransitionError({
-      status: 422,
-      kind: 'VALIDATION',
-      reasonKey: 'coreui.errors.instance.invalidPayload',
-    });
-  }
-  return { accountId, instanceId };
 }
 
 function transitionFailureFromSavedRead(result: { kind: 'NOT_FOUND' | 'VALIDATION'; reasonKey: string }): never {
@@ -74,22 +55,6 @@ function transitionFailureFromSavedRead(result: { kind: 'NOT_FOUND' | 'VALIDATIO
   });
 }
 
-export function buildClkLiveEntryCachePurgeFiles(args: {
-  publicServingBase: string;
-  accountId: string;
-  instanceId: string;
-}): string[] {
-  const base = `${args.publicServingBase.replace(/\/+$/, '')}/${args.accountId}/${args.instanceId}`;
-  const files = new Set([
-    base,
-    `${base}/`,
-    `${base}/${PUBLIC_INDEX_FILE}`,
-    `${base}/${PUBLIC_STYLES_FILE}`,
-    `${base}/${PUBLIC_RUNTIME_FILE}`,
-  ]);
-  return [...files];
-}
-
 export async function purgeClkLiveEntryCache(args: {
   env: Env;
   accountId: string;
@@ -97,8 +62,7 @@ export async function purgeClkLiveEntryCache(args: {
 }): Promise<void> {
   const zoneId = String(args.env.CLOUDFLARE_ZONE_ID || '').trim();
   const token = String(args.env.CLOUDFLARE_CACHE_PURGE_TOKEN || '').trim();
-  const publicServingBase = String(args.env.PUBLIC_SERVING_BASE_URL || '').trim().replace(/\/+$/, '');
-  if (!zoneId || !token || !publicServingBase) {
+  if (!zoneId || !token) {
     throw new AccountInstanceTransitionError({
       status: 503,
       kind: 'UPSTREAM_UNAVAILABLE',
@@ -112,11 +76,7 @@ export async function purgeClkLiveEntryCache(args: {
       'content-type': 'application/json',
     },
     body: JSON.stringify({
-      files: buildClkLiveEntryCachePurgeFiles({
-        publicServingBase,
-        accountId: args.accountId,
-        instanceId: args.instanceId,
-      }),
+      tags: [accountInstanceCacheTag(args.accountId, args.instanceId)],
     }),
   });
   const payload = await response.json().catch(() => null) as { success?: unknown } | null;
@@ -130,62 +90,22 @@ export async function purgeClkLiveEntryCache(args: {
   }
 }
 
-function normalizeDisplayName(value: unknown): string | null {
-  if (typeof value !== 'string') return null;
-  const trimmed = value.trim();
-  return trimmed.length > 0 && trimmed.length <= 120 ? trimmed : null;
-}
-
-async function cleanupCreatedInstanceOrThrow(args: {
-  env: Env;
-  accountId: string;
-  instanceId: string;
-  detail: string;
-}): Promise<never> {
-  try {
-    await deletePrefix(args.env, `${accountInstanceRoot(args.accountId, '', args.instanceId)}/`);
-    await deleteAccountInstanceSubtree(args.env, args.instanceId, args.accountId);
-  } catch (cleanupError) {
-    throw new AccountInstanceTransitionError({
-      status: 500,
-      kind: 'UPSTREAM_UNAVAILABLE',
-      reasonKey: 'coreui.errors.instance.cleanupFailed',
-      detail: `${args.detail}; cleanup:${cleanupError instanceof Error ? cleanupError.message : String(cleanupError)}`,
-    });
-  }
-  throw new AccountInstanceTransitionError({
-    status: 409,
-    kind: 'VALIDATION',
-    reasonKey: 'coreui.errors.instance.embedNotReady',
-    detail: args.detail,
-  });
-}
-
 export async function createAccountInstanceFromSubmittedSource(args: {
   env: Env;
   accountId: string;
   instanceId: string;
   widgetType: string;
-  displayName?: unknown;
+  displayName: string | null;
   config: Record<string, unknown>;
   content: AccountInstanceContentDocument;
   baseLocale: string;
-  publicPackage: SubmittedInstancePublicPackage;
 }): Promise<{
   pointer: AccountInstanceSourcePointer;
   config: Record<string, unknown>;
   content: AccountInstanceContentDocument;
 }> {
-  const { accountId, instanceId } = assertScopedIds(args.accountId, args.instanceId);
-  const widgetType = normalizeStorageId(args.widgetType);
-  if (!widgetType) {
-    throw new AccountInstanceTransitionError({
-      status: 422,
-      kind: 'VALIDATION',
-      reasonKey: 'coreui.errors.instance.invalidPayload',
-    });
-  }
-  const existing = await readAccountInstanceSource({
+  const { accountId, instanceId, widgetType } = args;
+  const existing = await readAccountInstanceSourcePointer({
     env: args.env,
     accountId,
     instanceId,
@@ -198,156 +118,123 @@ export async function createAccountInstanceFromSubmittedSource(args: {
     });
   }
 
-  const packaged = await writeInstancePublicPackage({
-    env: args.env,
-    accountId,
-    instanceId,
-    publicPackage: args.publicPackage,
-  });
-  if (!packaged.ok) {
-    throw new AccountInstanceTransitionError({
-      status: 409,
-      kind: 'VALIDATION',
-      reasonKey: 'coreui.errors.instance.embedNotReady',
-      detail: packaged.detail,
-    });
-  }
-  let saved: { pointer: AccountInstanceSourcePointer };
-  try {
-    saved = await writeAccountInstanceSource({
-      env: args.env,
-      accountId,
-      instanceId,
-      widgetType,
-      config: args.config,
-      content: args.content,
-      displayName: normalizeDisplayName(args.displayName),
-      baseLocale: args.baseLocale,
-      publicPackageFingerprint: packaged.fingerprint,
-    });
-  } catch (error) {
-    return cleanupCreatedInstanceOrThrow({
-      env: args.env,
-      accountId,
-      instanceId,
-      detail: error instanceof Error ? error.message : String(error),
-    });
-  }
-  return { pointer: saved.pointer, config: args.config, content: args.content };
-}
-
-export async function saveAccountInstanceTransition(args: {
-  env: Env;
-  accountId: string;
-  instanceId: string;
-  submittedWidgetType: string;
-  config: Record<string, unknown>;
-  content: AccountInstanceContentDocument;
-  publicPackage: SubmittedInstancePublicPackage;
-  displayName?: unknown;
-  baseLocale: string;
-  hasDisplayName: boolean;
-}): Promise<{
-  ok: true;
-  pointer: AccountInstanceSourcePointer;
-  live: boolean;
-}> {
-  const { accountId, instanceId } = assertScopedIds(args.accountId, args.instanceId);
-  const submittedWidgetType = String(args.submittedWidgetType || '').trim();
-  if (!submittedWidgetType) {
-    throw new AccountInstanceTransitionError({
-      status: 422,
-      kind: 'VALIDATION',
-      reasonKey: 'coreui.errors.instance.invalidPayload',
-    });
-  }
-
-  const existing = await readAccountInstanceSource({ env: args.env, accountId, instanceId });
-  if (!existing.ok) transitionFailureFromSavedRead(existing);
-  const existingWidgetType = existing.value.pointer.widgetType;
-  if (submittedWidgetType !== existingWidgetType) {
-    throw new AccountInstanceTransitionError({
-      status: 422,
-      kind: 'VALIDATION',
-      reasonKey: 'coreui.errors.instance.widgetMismatch',
-      detail: `submitted widgetType "${submittedWidgetType}" does not match Tokyo instance widgetType "${existingWidgetType}"`,
-    });
-  }
-  const live = existing.value.pointer.publishStatus === 'published';
-  const packaged = await writeInstancePublicPackage({
-    env: args.env,
-    accountId,
-    instanceId,
-    publicPackage: args.publicPackage,
-  });
-  if (!packaged.ok) {
-    throw new AccountInstanceTransitionError({
-      status: 409,
-      kind: 'VALIDATION',
-      reasonKey: 'coreui.errors.instance.embedNotReady',
-      detail: packaged.detail,
-    });
-  }
   const saved = await writeAccountInstanceSource({
     env: args.env,
     accountId,
     instanceId,
-    widgetType: existingWidgetType,
+    widgetCode: resolveWidgetOverlayCode(widgetType)!,
+    widgetType,
     config: args.config,
     content: args.content,
-    displayName: args.hasDisplayName ? args.displayName : existing.value.pointer.displayName,
+    displayName: args.displayName,
     baseLocale: args.baseLocale,
-    publicPackageFingerprint: packaged.fingerprint,
   });
-  if (live) {
-    await purgeClkLiveEntryCache({ env: args.env, accountId, instanceId });
-  }
+  return { pointer: saved.pointer, config: args.config, content: args.content };
+}
 
-  return {
-    ok: true,
-    pointer: saved.pointer,
-    live,
-  };
+export async function saveAccountInstanceSource(args: {
+  env: Env;
+  accountId: string;
+  instanceId: string;
+  config: Record<string, unknown>;
+  content: AccountInstanceContentDocument;
+}): Promise<{
+  pointer: AccountInstanceSourcePointer;
+}> {
+  const { accountId, instanceId } = args;
+  const existing = await readAccountInstanceSourcePointer({ env: args.env, accountId, instanceId });
+  if (!existing.ok) transitionFailureFromSavedRead(existing);
+  const saved = await writeAccountInstanceSource({
+    env: args.env,
+    accountId,
+    instanceId,
+    widgetCode: existing.value.widgetCode,
+    widgetType: existing.value.widgetType,
+    config: args.config,
+    content: args.content,
+    displayName: existing.value.displayName,
+    baseLocale: existing.value.baseLocale,
+    existing: {
+      createdAt: existing.value.createdAt,
+      publishStatus: existing.value.publishStatus,
+    },
+  });
+  return { pointer: saved.pointer };
 }
 
 export async function publishAccountInstanceTransition(args: {
   env: Env;
   accountId: string;
   instanceId: string;
+  publishedLimit: number;
+  publicPackage: SubmittedInstancePublicPackage;
 }): Promise<{ instanceId: string; status: 'published'; changed: boolean }> {
-  const { accountId, instanceId } = assertScopedIds(args.accountId, args.instanceId);
-  const existing = await readAccountInstanceSource({ env: args.env, accountId, instanceId });
-  if (!existing.ok) transitionFailureFromSavedRead(existing);
-  const packageReady = await verifyInstancePublicPackageReady({
-    env: args.env,
-    accountId,
-    instanceId,
-    expectedFingerprint: existing.value.pointer.publicPackageFingerprint ?? null,
+  const { accountId, instanceId } = args;
+  const instanceIds = await listAccountInstanceIds({ env: args.env, accountId });
+  const instancePointers = await Promise.all(
+    instanceIds.map((listedInstanceId) =>
+      readAccountInstanceSourcePointer({
+        env: args.env,
+        accountId,
+        instanceId: listedInstanceId,
+      }),
+    ),
+  );
+  const pointers = instancePointers.map((pointer) => {
+    if (!pointer.ok) transitionFailureFromSavedRead(pointer);
+    return pointer.value;
   });
-  if (!packageReady.ok) {
+  const existing = pointers.find((pointer) => pointer.id === instanceId);
+  if (!existing) {
     throw new AccountInstanceTransitionError({
-      status: 409,
-      kind: 'VALIDATION',
-      reasonKey: packageReady.reasonKey,
-      detail: packageReady.detail,
+      status: 404,
+      kind: 'NOT_FOUND',
+      reasonKey: 'coreui.errors.instance.notFound',
     });
   }
 
-  const liveStatus = await readInstanceServeState({
+  const liveStatus = existing.publishStatus;
+  const publishedTotal = pointers.filter(
+    (pointer) => pointer.publishStatus === 'published',
+  ).length;
+  if (liveStatus !== 'published' && publishedTotal >= args.publishedLimit) {
+    throw new AccountInstanceTransitionError({
+      status: 402,
+      kind: 'DENY',
+      reasonKey: 'coreui.upsell.reason.limitReached',
+      capacity: {
+        current: publishedTotal,
+        limit: args.publishedLimit,
+      },
+    });
+  }
+
+  const packageWrite = await writeInstancePublicPackage({
     env: args.env,
     accountId,
     instanceId,
-    widgetCode: existing.value.pointer.widgetCode,
+    publicPackage: args.publicPackage,
   });
-  await purgeClkLiveEntryCache({ env: args.env, accountId, instanceId });
+  if (!packageWrite.ok) {
+    throw new AccountInstanceTransitionError({
+      status: 502,
+      kind: 'UPSTREAM_UNAVAILABLE',
+      reasonKey: packageWrite.reasonKey,
+      detail: packageWrite.detail,
+    });
+  }
   await writeInstanceServeState({
     env: args.env,
     accountId,
     instanceId,
-    widgetCode: existing.value.pointer.widgetCode,
+    widgetCode: existing.widgetCode,
     status: 'published',
   });
-  return { instanceId, status: 'published', changed: liveStatus !== 'published' };
+  return {
+    instanceId,
+    status: 'published',
+    changed: liveStatus !== 'published',
+  };
 }
 
 export async function unpublishAccountInstanceTransition(args: {
@@ -355,25 +242,20 @@ export async function unpublishAccountInstanceTransition(args: {
   accountId: string;
   instanceId: string;
 }): Promise<{ instanceId: string; status: 'unpublished'; changed: boolean }> {
-  const { accountId, instanceId } = assertScopedIds(args.accountId, args.instanceId);
-  const existing = await readAccountInstanceSource({ env: args.env, accountId, instanceId });
+  const { accountId, instanceId } = args;
+  const existing = await readAccountInstanceSourcePointer({ env: args.env, accountId, instanceId });
   if (!existing.ok) transitionFailureFromSavedRead(existing);
-  const liveStatus = await readInstanceServeState({
-    env: args.env,
-    accountId,
-    instanceId,
-    widgetCode: existing.value.pointer.widgetCode,
-  });
-  await purgeClkLiveEntryCache({ env: args.env, accountId, instanceId });
+  const liveStatus = existing.value.publishStatus;
   if (liveStatus !== 'unpublished') {
     await writeInstanceServeState({
       env: args.env,
       accountId,
       instanceId,
-      widgetCode: existing.value.pointer.widgetCode,
+      widgetCode: existing.value.widgetCode,
       status: 'unpublished',
     });
   }
+  await purgeClkLiveEntryCache({ env: args.env, accountId, instanceId });
   return { instanceId, status: 'unpublished', changed: liveStatus !== 'unpublished' };
 }
 
@@ -382,15 +264,21 @@ export async function deleteAccountInstanceTransition(args: {
   accountId: string;
   instanceId: string;
 }): Promise<{ existed: boolean }> {
-  const { accountId, instanceId } = assertScopedIds(args.accountId, args.instanceId);
-  const existing = await readAccountInstanceSource({ env: args.env, accountId, instanceId });
+  const { accountId, instanceId } = args;
+  const existing = await readAccountInstanceSourcePointer({ env: args.env, accountId, instanceId });
   if (!existing.ok) {
-    if (existing.kind === 'NOT_FOUND') return { existed: false };
+    if (existing.kind === 'NOT_FOUND') {
+      await purgeClkLiveEntryCache({ env: args.env, accountId, instanceId });
+      return { existed: false };
+    }
     transitionFailureFromSavedRead(existing);
   }
-  const live = existing.value.pointer.publishStatus === 'published';
-  if (live) {
-    await purgeClkLiveEntryCache({ env: args.env, accountId, instanceId });
-  }
-  return deleteAccountInstanceSubtree(args.env, instanceId, accountId);
+  await deleteAccountInstanceSubtree(
+    args.env,
+    instanceId,
+    accountId,
+    existing.value.widgetCode,
+  );
+  await purgeClkLiveEntryCache({ env: args.env, accountId, instanceId });
+  return { existed: true };
 }

@@ -1,18 +1,18 @@
 .ck-logoshowcase-widget {
-  --ls-gap: 20px;
-  --ls-gap-mobile: 16px;
-  --ls-strip-gap: 16px;
-  --ls-strip-gap-mobile: 12px;
-  --ls-row-gap: 16px;
-  --ls-logo-h: 40px;
+  --ls-gap: {{logoshowcase.spacing.gap}}px;
+  --ls-gap-mobile: {{logoshowcase.spacing.mobileGap}}px;
+  --ls-strip-gap: {{logoshowcase.spacing.stripGap}}px;
+  --ls-strip-gap-mobile: {{logoshowcase.spacing.mobileStripGap}}px;
+  --ls-row-gap: {{logoshowcase.spacing.rowGap}}px;
+  --ls-logo-h: {{logoshowcase.spacing.logoHeight}}px;
   --ls-logo-h-mobile: var(--ls-logo-h);
-  --ls-logo-opacity: 0.9;
+  --ls-logo-opacity: {{logoshowcase.appearance.logoOpacity}};
   --ls-logo-filter: none;
-  --ls-item-bg: transparent;
-  --ck-cardwrapper-border-width: 0px;
-  --ck-cardwrapper-border-color: transparent;
-  --ck-cardwrapper-shadow: none;
-  --ck-cardwrapper-radius: var(--control-radius-4xl);
+  --ls-item-bg: {{#ck.css.background}}logoshowcase.appearance.itemBackground{{/ck.css.background}};
+  --ck-cardwrapper-border-width: {{#ck.css.borderWidth}}logoshowcase.appearance.cardwrapper.border{{/ck.css.borderWidth}};
+  --ck-cardwrapper-border-color: {{#ck.css.borderColor}}logoshowcase.appearance.cardwrapper.border{{/ck.css.borderColor}};
+  --ck-cardwrapper-shadow: {{#ck.css.shadow}}logoshowcase.appearance.cardwrapper.shadow{{/ck.css.shadow}};
+  --ck-cardwrapper-radius: {{#ck.css.radii}}logoshowcase.appearance.cardwrapper{{/ck.css.radii}};
 }
 
 .ck-logoshowcase {
@@ -20,6 +20,10 @@
   --ls-tile-w-mobile: clamp(80px, calc(var(--ls-logo-h-mobile) * 3), 200px);
   --ls-tile-w-resolved: var(--ls-tile-w);
   --ck-header-gap: var(--space-6);
+}
+
+.ck-logoshowcase[data-logo-look='grayscale'] {
+  --ls-logo-filter: grayscale(1);
 }
 
 .ck-logoshowcase [hidden] {
@@ -65,6 +69,9 @@
 
 .ck-logoshowcase__logos {
   box-sizing: border-box;
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
 /* Type: Grid */
@@ -205,13 +212,23 @@ a.ck-logoshowcase__logo {
 }
 
 .ck-logoshowcase__logo-visual {
+  display: block;
   width: 100%;
   height: var(--ls-logo-h);
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: contain;
   filter: var(--ls-logo-filter);
   opacity: var(--ls-logo-opacity);
+}
+
+.ck-logoshowcase__logo-link {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+}
+
+.ck-logoshowcase__logo-link:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
 }
 
 @container (max-width: 900px) {

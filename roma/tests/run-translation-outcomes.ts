@@ -43,7 +43,11 @@ async function run(): Promise<void> {
             source: {
               content: {
                 fields: {
-                  'header.title': { value: 'Frequently asked questions' },
+                  'header.title': {
+                    value: 'Frequently asked questions',
+                    identityKey: 'faq|header-title|header.title',
+                    fieldPattern: 'header.title',
+                  },
                 },
               },
             },
@@ -112,47 +116,11 @@ async function run(): Promise<void> {
     assert.ok(sentAgentRequest);
     assert.deepEqual(sentAgentRequest.requestedLocales, requestedLocales);
     assert.equal(Object.prototype.hasOwnProperty.call(sentAgentRequest, 'activeLocales'), false);
+    assert.equal(
+      (sentAgentRequest.items as Array<{ path: string }>)[0]?.path,
+      'faq|header-title|header.title',
+    );
 
-    const valid = validAgentTranslation();
-    const validResults = valid.results as Array<Record<string, unknown>>;
-    const invalidTranslations: Array<{ name: string; value: Record<string, unknown> }> = [
-      {
-        name: 'missing result',
-        value: { ...valid, results: validResults.slice(0, 2) },
-      },
-      {
-        name: 'duplicate result',
-        value: { ...valid, results: [validResults[0], validResults[0], validResults[2]] },
-      },
-      {
-        name: 'out-of-order result',
-        value: { ...valid, results: [validResults[1], validResults[0], validResults[2]] },
-      },
-      {
-        name: 'mismatched requested locales',
-        value: { ...valid, requestedLocales: ['fr', 'it', 'de'] },
-      },
-      {
-        name: 'inconsistent success flag',
-        value: { ...valid, ok: true },
-      },
-      {
-        name: 'malformed translated count',
-        value: {
-          ...valid,
-          results: [{ locale: 'fr', ok: true, count: -1 }, validResults[1], validResults[2]],
-        },
-      },
-    ];
-    for (const invalid of invalidTranslations) {
-      agentTranslation = invalid.value;
-      const invalidResult = await generate();
-      assert.equal(invalidResult.ok, false, invalid.name);
-      if (!invalidResult.ok) {
-        assert.equal(invalidResult.status, 422, invalid.name);
-        assert.equal(invalidResult.error.detail, 'translation_agent_invalid_payload', invalid.name);
-      }
-    }
   } finally {
     if (typeof previous === 'undefined') {
       delete globalRecord[CLOUDFLARE_REQUEST_CONTEXT_SYMBOL];

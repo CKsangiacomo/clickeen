@@ -8,11 +8,49 @@ declarations plus the widget's adjacent English ToolDrawer labels:
 ```text
 tokyo/product/widgets/{widgetType}/
   spec.json
-  {widgetType}_tooldrawer_l10n_labels/
+  labels/
     en.json
 ```
 
 Widgets declare controls. Bob compiles them. Dieter supplies the UI components.
+
+Bob is one shared editing service used identically by every Widget. The
+structured Widget declaration is its input; Bob never gains a Widget-specific
+branch or interprets Core meaning. Compilation checks authoring source before
+deployment. Once the compiler emits a Clickeen artifact, Bob, Roma, and other
+Clickeen consumers trust it without another schema, allowlist, filter, or
+semantic validation pass.
+
+The rendered ToolDrawer is an editable projection, not the persisted Widget
+schema. Fields that are not currently rendered remain part of the complete
+Widget document and round-trip unchanged.
+
+## Entitlement Denial Is A Separate Widget Contract
+
+Widget-authored upsell messages are not ToolDrawer labels and do not belong in
+`labels/`. Every customer-facing entitlement
+binding in `limits.json` names one exact template from
+`upsell/{locale}.json`. The compiler carries that complete mapping and copy in
+the trusted Widget artifact consumed by Bob and Roma.
+
+At the raw editing ingress, Bob applies the system-owned entitlement decision
+through one generic operation boundary. A denied operation leaves the current
+browser-memory draft unchanged and emits the exact Widget/message identity to
+Roma together with the exact Boolean/numeric `required` demand. Roma supplies
+the current plan, selects the first higher system tier that satisfies that
+demand, and composes the
+Widget-owned complete template, and owns the system CTA and shared Popup.
+
+Bob never authors denial copy, infers a Widget message from a control label,
+chooses a tier, or contains a Widget-specific branch. Roma never substitutes a
+generic sentence when the exact compiled message is unavailable. Completeness
+is proved by the Widget compiler before deployment; neither service adds a
+runtime validator or fallback. Core and the public Widget package are not part
+of this product-UI flow.
+
+All five current Widgets implement this entitlement-message contract. Their
+compiled artifacts carry exact messages and Bob sends
+`{ capability, messageId, required }` from the one denied edit boundary.
 
 ## Panels
 
@@ -69,7 +107,7 @@ Compiler-enforced rules:
 
 Product rules:
 
-- Every Core field path must have one runtime binding.
+- Every editable Core field path has one exact editor/materialization binding.
 - Related Core fields use `groupId`.
 - Conditional controls use structured `showIf`.
 - Repeated content uses `repeater` or `object-manager` with stable item ids.
@@ -321,9 +359,11 @@ that grows with the exact value while preserving the shared right rail.
 adjacent ToolDrawer label file. The compiler never replaces a missing caller
 placeholder with Dieter demonstration copy. `valuefield` receives its numeric
 meaning from the caller: declare the exact inclusive `min` and `max` when the
-field is bounded. A signed field declares a signed range. Bob and Roma reject
-non-finite and out-of-bounds edits without clamping or rewriting the draft;
-`step` remains native input metadata rather than a second acceptance rule.
+field is bounded. A signed field declares a signed range. The user-edit ingress
+accepts the exact numeric value under that declared field contract once. Roma
+then trusts Bob's complete submitted Widget document; it does not recheck,
+clamp, filter, or rewrite the value. `step` remains native input metadata rather
+than a second acceptance rule.
 
 `dropdown-fill` uses explicit fill modes in field attrs. Use the hyphenated
 attribute name `fill-modes` in authored specs and list only the exact
@@ -348,9 +388,9 @@ Widget declares the component, that Widget also declares the exact
 ToolDrawer label file owns those five resolved strings. Dieter receives those
 words and uses the existing account-assets client; it does not own a locale,
 file policy, storage path, account-plan reason set, or Widget-specific rule.
-The caller-owned client validates the host response and decides whether an
-upload failure supplies an exact generic upsell reason or uses the component's
-caller-owned error copy. None of the five current
+The caller-owned client consumes the exact result from the owning Roma asset
+service and presents its declared outcome; it does not revalidate the response
+or infer another account-plan reason. None of the five current
 Widget specs declares this field, so do not add unused Widget labels or a fake
 product example merely to exercise the component.
 
@@ -446,5 +486,12 @@ literal SVG markup.
 - Do not add unbound controls.
 - Do not place English widget-authored ToolDrawer copy directly in `spec.json`.
 - Do not create a central all-widget ToolDrawer catalog.
+- Do not put Widget upsell templates in ToolDrawer labels or infer them from a
+  control label.
+- Do not add a Widget-specific compiler, control-host, Bob, or Roma branch.
+- Do not use rendered controls as a persistence schema or filter complete
+  Widget state through them.
+- Do not revalidate, normalize, repair, or reinterpret a trusted Clickeen
+  artifact in another service.
 - Do not add non-English files until a separately approved localization stage
   defines and verifies their exact runtime use.

@@ -3,30 +3,33 @@
     {
       "kind": "limit",
       "key": "items.group.small.max",
+      "messageId": "cards.max",
       "path": "cards.items[]",
       "metric": "count"
     },
     {
       "kind": "flag",
       "key": "branding.remove",
+      "messageId": "branding.remove",
       "path": "behavior.showBacklink",
       "mode": "boolean",
-      "deny": false,
-      "enforce": {
-        "ops": "reject",
-        "publish": "reject"
-      }
+      "deny": false
     },
     {
       "kind": "flag",
       "key": "widget.socialShare.enabled",
+      "messageId": "social-share.enable",
       "path": "behavior.socialShare.enabled",
       "mode": "boolean",
-      "deny": true,
-      "enforce": {
-        "ops": "reject",
-        "publish": "reject"
-      }
+      "deny": true
+    },
+    {
+      "kind": "flag",
+      "key": "embed.seoGeo.enabled",
+      "messageId": "seo-geo.enable",
+      "path": "behavior.seoGeo.enabled",
+      "mode": "boolean",
+      "deny": true
     }
   ]
 }

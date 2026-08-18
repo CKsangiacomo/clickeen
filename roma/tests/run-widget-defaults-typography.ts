@@ -8,10 +8,7 @@ import {
   type AccountFontLibrary,
 } from '@clickeen/widget-foundation';
 import { validateAccountWidgetDefaultsTypography } from '../lib/account-widget-defaults-contract';
-import {
-  normalizeAccountWidgetDefaultsDocument,
-  type AccountWidgetDefaultsDocument,
-} from '../lib/account-widget-defaults-direct';
+import type { AccountWidgetDefaultsDocument } from '../lib/account-widget-defaults-direct';
 import { readValuefieldInput } from '../components/widget-defaults-builder-controls';
 
 function fontLibraryWithAccountFont(): AccountFontLibrary {
@@ -76,20 +73,6 @@ async function main(): Promise<void> {
   assert.ok(valid.common.coreSize);
   assert.equal(isCommonWidgetControlPath('coreSize.mode'), true);
   assert.equal(isCommonWidgetControlPath(' coreSize.mode'), false);
-  assert.ok(normalizeAccountWidgetDefaultsDocument(valid));
-  const retiredShellOnly = {
-    ...valid,
-    shell: valid.common,
-  } as Record<string, unknown>;
-  delete retiredShellOnly.common;
-  assert.equal(normalizeAccountWidgetDefaultsDocument(retiredShellOnly), null);
-  assert.equal(
-    normalizeAccountWidgetDefaultsDocument({
-      ...valid,
-      shell: valid.common,
-    }),
-    null,
-  );
   assert.deepEqual(
     validateAccountTypographyFontSelections({
       fontLibrary: valid.fontLibrary,

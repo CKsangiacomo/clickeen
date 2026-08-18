@@ -1,4 +1,7 @@
 .ck-bigBang-widget {
+  --ck-bigBang-text-width: {{bigBang.textWidth}}px;
+  --ck-bigBang-gap: {{bigBang.gap}}px;
+  {{#ck.css.typographyRole}}bigBang{{/ck.css.typographyRole}}
   width: 100%;
 }
 

@@ -4,10 +4,18 @@ import {
   materializeConfigMedia,
   resolveTranslatedValues,
   type ResolvedAccountAsset,
+  type WidgetEditableFieldsContract,
 } from '@clickeen/ck-contracts';
-import type { AccountFontLibrary, RuntimeTypographyData } from '@clickeen/widget-foundation';
-import type { InstancePublicPackage } from '../lib/session/sessionTypes';
+import {
+  renderWidgetHtml,
+  renderWidgetStyles,
+  listWidgetFontStylesheets,
+  type AccountFontLibrary,
+  type RuntimeTypographyData,
+  type WidgetSoftware,
+} from '@clickeen/widget-foundation';
 import { useWidgetSession, useWidgetSessionChrome } from '../lib/session/useWidgetSession';
+import { mapTranslationOverlayValuesToCurrentPaths } from '../lib/translations-preview';
 import { dieterIconStyle } from './dieterIcon';
 
 const BLOCKED_SWITCHER_COPY =
@@ -20,10 +28,12 @@ export function shouldBlockSavedTranslationPreview(args: {
   loading: boolean;
   error: string | null;
 }): boolean {
-  return args.previewMode === 'translations' &&
+  return (
+    args.previewMode === 'translations' &&
     Boolean(args.requestedLocale) &&
     args.requestedLocale !== args.baseLocale &&
-    (args.loading || Boolean(args.error));
+    (args.loading || Boolean(args.error))
+  );
 }
 
 function collectFontAssetRefs(fontLibrary: AccountFontLibrary | null): string[] {
@@ -64,9 +74,6 @@ function buildPreviewTypographyData(args: {
     }
     const resolved = args.resolvedAssets.get(record.assetRef);
     if (!resolved) return { ok: false, error: null };
-    if (resolved.assetType !== 'font' || resolved.contentType !== record.contentType) {
-      return { ok: false, error: 'Failed to resolve preview font assets' };
-    }
     curatedFonts[family] = {
       source: 'account-asset',
       url: resolved.url,
@@ -79,21 +86,79 @@ function buildPreviewTypographyData(args: {
   return { ok: true, data: { curatedFonts } };
 }
 
-function buildPreviewDocument(
-  publicPackage: InstancePublicPackage,
-  runtimeUrl: string,
-): string {
-  const document = new DOMParser().parseFromString(publicPackage.indexHtml, 'text/html');
-  const stylesheet = document.querySelector('link[rel="stylesheet"]');
-  const runtime = document.querySelector('script[src]');
-  if (!stylesheet || !runtime) {
-    throw new Error('coreui.errors.instance.publicPackageNotFound');
-  }
-  const style = document.createElement('style');
-  style.textContent = publicPackage.stylesCss;
-  stylesheet.replaceWith(style);
-  runtime.setAttribute('src', runtimeUrl);
-  return `<!doctype html>\n${document.documentElement.outerHTML}`;
+const PREVIEW_BRIDGE_SOURCE = `
+(function () {
+  window.addEventListener('message', function (event) {
+    var data = event.data;
+    if (!data || data.type !== 'ck:preview-render') return;
+
+    document.documentElement.lang = data.locale;
+    document.getElementById('ck-widget-styles').textContent = data.stylesCss;
+    document.querySelectorAll('link[data-ck-preview-font]').forEach(function (link) {
+      link.remove();
+    });
+    data.fontStylesheets.forEach(function (href) {
+      var link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = href;
+      link.dataset.ckPreviewFont = '';
+      document.head.appendChild(link);
+    });
+    document.body.innerHTML = data.bodyHtml;
+    window.CK_LOCALE_POLICY = {
+      baseLocale: data.baseLocale,
+      languages: data.languages
+    };
+    var shell = document.querySelector('.ck-headerLayout[data-ck-widget]');
+    window.CKWidgetRuntime.initialize(shell);
+    window.parent.postMessage({
+      type: 'ck:ready',
+      widgetname: data.widgetname,
+      instanceId: data.instanceId
+    }, '*');
+  });
+})();`;
+
+function inlineScript(source: string): string {
+  return source.replace(/<\/script/gi, '<\\/script');
+}
+
+function buildPreviewFrameDocument(software: WidgetSoftware): string {
+  const scripts = software.scripts
+    .map((asset) => `<script>${inlineScript(asset.source)}</script>`)
+    .join('\n');
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style id="ck-widget-styles"></style>
+  </head>
+  <body></body>
+  <script>${inlineScript(PREVIEW_BRIDGE_SOURCE)}</script>
+  ${scripts}
+</html>`;
+}
+
+function renderPreviewBody(args: {
+  software: WidgetSoftware;
+  editableFields: WidgetEditableFieldsContract;
+  state: Record<string, unknown>;
+  instanceId: string;
+  locale: string;
+  previewMode: 'editing' | 'translations';
+}): string {
+  return renderWidgetHtml({
+    software: args.software,
+    state: args.state,
+    editableFields: args.editableFields,
+    context: {
+      instanceId: args.instanceId,
+      locale: args.locale,
+      discoveryEnabled: false,
+      previewMode: args.previewMode,
+    },
+  });
 }
 
 export function Workspace({
@@ -117,15 +182,20 @@ export function Workspace({
 }) {
   const session = useWidgetSession();
   const chrome = useWidgetSessionChrome();
-  const { accountAssets, compiled, fontLibrary, instanceData, publicPackage } = session;
+  const { accountAssets, compiled, fontLibrary, instanceData } = session;
   const { preview, setPreview } = chrome;
   const instanceId = chrome.meta?.instanceId ?? '';
   const device = preview.device;
   const host = preview.host;
-  const hasWidget = Boolean(compiled && publicPackage);
-  const stageCanvas = (instanceData as { stage?: { canvas?: { mode?: unknown; width?: unknown; height?: unknown } } }).stage?.canvas;
-  const stageMode = stageCanvas?.mode === 'wrap' || stageCanvas?.mode === 'fixed' ? stageCanvas.mode : null;
-  const [stageFixedWidth, stageFixedHeight] = [stageCanvas?.width, stageCanvas?.height].map((value) => typeof value === 'number' && Number.isFinite(value) ? value : Number.NaN);
+  const hasWidget = Boolean(compiled);
+  const stageCanvas = (
+    instanceData as { stage?: { canvas?: { mode?: unknown; width?: unknown; height?: unknown } } }
+  ).stage?.canvas;
+  const stageMode =
+    stageCanvas?.mode === 'wrap' || stageCanvas?.mode === 'fixed' ? stageCanvas.mode : null;
+  const [stageFixedWidth, stageFixedHeight] = [stageCanvas?.width, stageCanvas?.height].map(
+    (value) => (typeof value === 'number' && Number.isFinite(value) ? value : Number.NaN),
+  );
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [iframeLoaded, setIframeLoaded] = useState(false);
   const [iframeHasState, setIframeHasState] = useState(false);
@@ -134,15 +204,13 @@ export function Workspace({
   const [measuredHeight, setMeasuredHeight] = useState<number | null>(null);
   const [measuredWidth, setMeasuredWidth] = useState<number | null>(null);
   const [switcherNotice, setSwitcherNotice] = useState<string | null>(null);
-  const [resolvedAssets, setResolvedAssets] = useState<Map<string, ResolvedAccountAsset>>(() => new Map());
-  const mediaAssets = useMemo(() => {
-    try {
-      return { ok: true as const, refs: collectConfigMediaAssetRefs(instanceData) };
-    } catch (error) {
-      return { ok: false as const, error: error instanceof Error ? error.message : String(error) };
-    }
-  }, [instanceData]);
-  const mediaAssetRefs = useMemo(() => mediaAssets.ok ? mediaAssets.refs : [], [mediaAssets]);
+  const [resolvedAssets, setResolvedAssets] = useState<Map<string, ResolvedAccountAsset>>(
+    () => new Map(),
+  );
+  const mediaAssetRefs = useMemo(
+    () => collectConfigMediaAssetRefs(instanceData),
+    [instanceData],
+  );
   const fontAssetRefs = useMemo(() => collectFontAssetRefs(fontLibrary), [fontLibrary]);
   const accountAssetRefs = useMemo(
     () => Array.from(new Set([...mediaAssetRefs, ...fontAssetRefs])),
@@ -163,42 +231,22 @@ export function Workspace({
   const previewInstanceData = useMemo(() => {
     if (!mediaAssetRefs.length) return instanceData;
     if (unresolvedMediaAssetRefs.length) return instanceData;
-    const materialized = materializeConfigMedia(instanceData, resolvedAssets);
-    return materialized && typeof materialized === 'object' && !Array.isArray(materialized)
-      ? (materialized as Record<string, unknown>)
-      : instanceData;
+    return materializeConfigMedia(instanceData, resolvedAssets) as Record<string, unknown>;
   }, [instanceData, mediaAssetRefs, resolvedAssets, unresolvedMediaAssetRefs]);
-  const mediaPreviewStateReady = mediaAssets.ok && !unresolvedMediaAssetRefs.length;
+  const mediaPreviewStateReady = !unresolvedMediaAssetRefs.length;
   const previewTypography = useMemo(
     () => buildPreviewTypographyData({ fontLibrary, resolvedAssets }),
     [fontLibrary, resolvedAssets],
   );
   const previewTypographyData = previewTypography.ok ? previewTypography.data : null;
-  const effectivePreviewableLocales = useMemo(() => {
-    const previewableLocales = Array.from(
-      new Set(
-        previewablePreviewLocales
-          .map((entry) => String(entry || '').trim())
-          .filter(Boolean),
-      ),
-    );
-    if (baseLocale && !previewableLocales.includes(baseLocale)) {
-      return [baseLocale, ...previewableLocales];
-    }
-    return previewableLocales;
-  }, [baseLocale, previewablePreviewLocales]);
-  const fallbackPreviewLocale = baseLocale || effectivePreviewableLocales[0] || '';
-  const requestedTranslationPreviewLocale =
-    translationPreviewLocale && effectivePreviewableLocales.includes(translationPreviewLocale)
-      ? translationPreviewLocale
-      : '';
+  const effectivePreviewableLocales = previewablePreviewLocales;
   const effectivePreviewLocale =
     previewMode === 'translations'
-      ? requestedTranslationPreviewLocale || fallbackPreviewLocale
-      : fallbackPreviewLocale;
+      ? translationPreviewLocale
+      : baseLocale;
   const selectedTranslationValues =
     previewMode === 'translations' && effectivePreviewLocale !== baseLocale
-      ? translationValuesByLanguage[effectivePreviewLocale] ?? null
+      ? (translationValuesByLanguage[effectivePreviewLocale] ?? null)
       : null;
   const savedTranslationPreviewBlocked = shouldBlockSavedTranslationPreview({
     previewMode,
@@ -212,14 +260,19 @@ export function Workspace({
     previewTypography.ok &&
     !unresolvedFontAssetRefs.length &&
     !savedTranslationPreviewBlocked;
-  const previewDependencyError = !mediaAssets.ok
-    ? 'Failed to resolve preview media assets'
-    : assetResolutionError ?? (!previewTypography.ok ? previewTypography.error : null);
+  const previewDependencyError = assetResolutionError ?? (!previewTypography.ok ? previewTypography.error : null);
   const previewError = iframeLoadError ?? previewDependencyError;
   const resolvedPreviewInstanceData = useMemo(() => {
-    if (!selectedTranslationValues) return previewInstanceData;
-    return resolveTranslatedValues(previewInstanceData, selectedTranslationValues);
-  }, [previewInstanceData, selectedTranslationValues]);
+    if (!selectedTranslationValues || !compiled) return previewInstanceData;
+    return resolveTranslatedValues(
+      previewInstanceData,
+      mapTranslationOverlayValuesToCurrentPaths({
+        contract: compiled.editableFields,
+        config: previewInstanceData,
+        values: selectedTranslationValues,
+      }),
+    );
+  }, [compiled, previewInstanceData, selectedTranslationValues]);
 
   const latestPreviewSelectionRef = useRef({
     previewMode,
@@ -234,10 +287,6 @@ export function Workspace({
   }, [previewMode, effectivePreviewableLocales]);
 
   useEffect(() => {
-    if (!mediaAssets.ok) {
-      setAssetResolutionError(null);
-      return;
-    }
     if (!accountAssetRefs.length) {
       setAssetResolutionError(null);
       return;
@@ -272,7 +321,7 @@ export function Workspace({
     return () => {
       cancelled = true;
     };
-  }, [accountAssets, mediaAssets, accountAssetRefs, unresolvedAccountAssetRefs]);
+  }, [accountAssets, accountAssetRefs, unresolvedAccountAssetRefs]);
 
   useEffect(() => {
     if (!switcherNotice) return undefined;
@@ -316,19 +365,8 @@ export function Workspace({
     setIframeLoaded(false);
     setIframeHasState(false);
     setIframeLoadError(null);
-    if (!publicPackage) {
+    if (!compiled) {
       iframe.srcdoc = '';
-      return;
-    }
-    const runtimeUrl = URL.createObjectURL(
-      new Blob([publicPackage.runtimeJs], { type: 'text/javascript' }),
-    );
-    let previewDocument: string;
-    try {
-      previewDocument = buildPreviewDocument(publicPackage, runtimeUrl);
-    } catch (error) {
-      URL.revokeObjectURL(runtimeUrl);
-      setIframeLoadError(error instanceof Error ? error.message : String(error));
       return;
     }
 
@@ -342,14 +380,13 @@ export function Workspace({
 
     iframe.addEventListener('load', handleLoad);
     iframe.addEventListener('error', handleError);
-    iframe.srcdoc = previewDocument;
+    iframe.srcdoc = buildPreviewFrameDocument(compiled.widgetSoftware);
 
     return () => {
       iframe.removeEventListener('load', handleLoad);
       iframe.removeEventListener('error', handleError);
-      URL.revokeObjectURL(runtimeUrl);
     };
-  }, [publicPackage]);
+  }, [compiled, instanceId]);
 
   useEffect(() => {
     if (!hasWidget || !compiled) return;
@@ -358,16 +395,48 @@ export function Workspace({
     if (!iframeWindow) return;
     if (!iframeLoaded) return;
 
+    let bodyHtml: string;
+    let stylesCss: string;
+    let fontStylesheets: string[];
+    try {
+      bodyHtml = renderPreviewBody({
+        software: compiled.widgetSoftware,
+        editableFields: compiled.editableFields,
+        state: resolvedPreviewInstanceData,
+        instanceId,
+        locale: effectivePreviewLocale,
+        previewMode,
+      });
+      stylesCss = renderWidgetStyles({
+        software: compiled.widgetSoftware,
+        state: resolvedPreviewInstanceData,
+        context: {
+          locale: effectivePreviewLocale,
+          typographyData: previewTypographyData!,
+        },
+      });
+      fontStylesheets = listWidgetFontStylesheets({
+        state: resolvedPreviewInstanceData,
+        context: {
+          locale: effectivePreviewLocale,
+          typographyData: previewTypographyData!,
+        },
+      });
+    } catch (error) {
+      setIframeLoadError(error instanceof Error ? error.message : String(error));
+      return;
+    }
+
     const message = {
-      type: 'ck:state-update',
+      type: 'ck:preview-render',
       widgetname: compiled.widgetname,
       instanceId,
       baseLocale,
-      state: resolvedPreviewInstanceData,
+      bodyHtml,
+      stylesCss,
+      fontStylesheets,
       locale: effectivePreviewLocale,
-      previewMode,
-      device,
-      ...(previewTypographyData ? { typographyData: previewTypographyData } : null),
+      languages: effectivePreviewableLocales,
     };
 
     iframeWindow.postMessage(message, '*');
@@ -377,9 +446,9 @@ export function Workspace({
     instanceId,
     resolvedPreviewInstanceData,
     effectivePreviewLocale,
+    effectivePreviewableLocales,
     previewMode,
     baseLocale,
-    device,
     previewTypographyData,
     iframeLoaded,
     previewMessageReady,
@@ -402,14 +471,15 @@ export function Workspace({
         return;
       }
       if (data.type === 'ck:preview-locale-change-request') {
-        const requestedLocale =
-          typeof data.locale === 'string' ? data.locale.trim() : '';
+        const requestedLocale = typeof data.locale === 'string' ? data.locale.trim() : '';
         if (!requestedLocale) return;
         if (latestPreviewSelectionRef.current.previewMode !== 'translations') {
           setSwitcherNotice(BLOCKED_SWITCHER_COPY);
           return;
         }
-        if (!latestPreviewSelectionRef.current.previewablePreviewLocales.includes(requestedLocale)) {
+        if (
+          !latestPreviewSelectionRef.current.previewablePreviewLocales.includes(requestedLocale)
+        ) {
           return;
         }
         onTranslationPreviewLocaleChange(requestedLocale);
@@ -443,14 +513,14 @@ export function Workspace({
 
   const isDesktopCanvas = host === 'canvas' && device === 'desktop';
   const shouldResizeCanvas = isDesktopCanvas && (stageMode === 'wrap' || stageMode === 'fixed');
-  const resolvedCanvasHeight = measuredHeight ?? (
-    isDesktopCanvas &&
+  const resolvedCanvasHeight =
+    measuredHeight ??
+    (isDesktopCanvas &&
     stageMode === 'fixed' &&
     Number.isFinite(stageFixedHeight) &&
     stageFixedHeight > 0
       ? stageFixedHeight
-      : null
-  );
+      : null);
   const canvasHeightPx =
     shouldResizeCanvas && resolvedCanvasHeight ? `${resolvedCanvasHeight}px` : null;
   const canvasWidthPx =
@@ -496,7 +566,9 @@ export function Workspace({
         title="Widget preview"
         className="workspace-iframe"
         sandbox="allow-scripts allow-same-origin"
-        style={!iframeHasState && iframeBackdrop ? ({ background: iframeBackdrop } as any) : undefined}
+        style={
+          !iframeHasState && iframeBackdrop ? ({ background: iframeBackdrop } as any) : undefined
+        }
       />
       {previewStatus ? (
         <div

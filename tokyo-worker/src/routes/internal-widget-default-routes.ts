@@ -1,4 +1,3 @@
-import { isRecord } from '@clickeen/ck-contracts';
 import {
   createInitialAccountWidgetDefaults,
   readAccountWidgetDefaults,
@@ -69,22 +68,18 @@ export async function tryHandleInternalWidgetDefaultRoutes(args: TokyoRouteArgs)
     });
     if (authErr) return respond(authErr);
 
-    const body = await readInternalProductJsonBody({
+    const body = (await readInternalProductJsonBody({
       req,
       env,
       boundary: 'internal.widgetDefaults.create.body',
       accountId,
-    });
-    const widgetDefaults = isRecord(body) && isRecord(body.widgetDefaults) ? body.widgetDefaults : body;
-    if (!isRecord(widgetDefaults)) {
-      return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
-    }
+    })) as { widgetDefaults: AccountWidgetDefaultsDocument };
 
     try {
       const saved = await createInitialAccountWidgetDefaults({
         env,
         accountId,
-        widgetDefaults: widgetDefaults as AccountWidgetDefaultsDocument,
+        widgetDefaults: body.widgetDefaults,
       });
       return respond(json({ ok: true, accountId, widgetDefaults: saved }, { status: 201 }));
     } catch (error) {
@@ -101,22 +96,18 @@ export async function tryHandleInternalWidgetDefaultRoutes(args: TokyoRouteArgs)
     });
     if (authErr) return respond(authErr);
 
-    const body = await readInternalProductJsonBody({
+    const body = (await readInternalProductJsonBody({
       req,
       env,
       boundary: 'internal.widgetDefaults.save.body',
       accountId,
-    });
-    const widgetDefaults = isRecord(body) && isRecord(body.widgetDefaults) ? body.widgetDefaults : body;
-    if (!isRecord(widgetDefaults)) {
-      return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
-    }
+    })) as { widgetDefaults: AccountWidgetDefaultsDocument };
 
     try {
       const saved = await writeAccountWidgetDefaults({
         env,
         accountId,
-        widgetDefaults: widgetDefaults as AccountWidgetDefaultsDocument,
+        widgetDefaults: body.widgetDefaults,
       });
       return respond(json({ ok: true, accountId, widgetDefaults: saved }));
     } catch (error) {

@@ -1,9 +1,17 @@
 import assert from 'node:assert/strict';
 import {
+  resolveTranslatedValues,
+  type WidgetEditableFieldsContract,
+} from '@clickeen/ck-contracts';
+import {
   buildActivityRows,
   buildTranslationGenerationFeedback,
   shouldRefreshTranslationsAfterGeneration,
 } from '../components/TranslationsPanel';
+import {
+  buildEditableFieldsTranslationOverlayInspection,
+  mapTranslationOverlayValuesToCurrentPaths,
+} from '../lib/translations-preview';
 
 assert.deepEqual(
   buildActivityRows([
@@ -139,46 +147,64 @@ assert.equal(allFailed.title, 'Translation generation failed');
 assert.match(allFailed.lines.join(' '), /French, German/);
 assert.equal(shouldRefreshTranslationsAfterGeneration(allFailedPayload), false);
 
-const malformedPartial = buildTranslationGenerationFeedback({
-  ok: true,
-  status: 200,
-  json: {
-    ok: true,
-    translation: {
-      ok: true,
-      accepted: true,
-      baseLocale: 'en',
-      requestedLocales: ['fr', 'de'],
-      translatedLocales: ['fr'],
-      failedLocales: [],
+const repeatedContentContract: WidgetEditableFieldsContract = {
+  widgetType: 'contract-widget',
+  fields: [
+    {
+      path: 'items[].title',
+      type: 'string',
+      label: 'Item title',
+      role: 'item-title',
+      arrayItemIdentity: ['items[].id'],
+      limits: [],
     },
-  },
+  ],
+};
+const firstCoordinate = 'contract-widget|item-title|items[].title|items[].id=first';
+const secondCoordinate = 'contract-widget|item-title|items[].title|items[].id=second';
+const thirdCoordinate = 'contract-widget|item-title|items[].title|items[].id=third';
+const translatedValues = {
+  [firstCoordinate]: 'Premier',
+  [secondCoordinate]: 'Deuxième',
+};
+const reorderedConfig = {
+  items: [
+    { id: 'second', title: 'Second' },
+    { id: 'first', title: 'First' },
+    { id: 'third', title: 'Third' },
+  ],
+};
+const reorderedValuesByPath = mapTranslationOverlayValuesToCurrentPaths({
+  contract: repeatedContentContract,
+  config: reorderedConfig,
+  values: translatedValues,
 });
-assert.equal(malformedPartial.tone, 'error');
-assert.match(malformedPartial.lines.join(' '), /result was incomplete/);
-assert.equal(shouldRefreshTranslationsAfterGeneration({
-  translation: {
-    ok: true,
-    accepted: true,
-    requestedLocales: ['fr', 'de'],
-    translatedLocales: ['fr'],
-    failedLocales: [],
+assert.deepEqual(reorderedValuesByPath, {
+  'items.0.title': 'Deuxième',
+  'items.1.title': 'Premier',
+});
+assert.deepEqual(
+  resolveTranslatedValues(reorderedConfig, reorderedValuesByPath),
+  {
+    items: [
+      { id: 'second', title: 'Deuxième' },
+      { id: 'first', title: 'Premier' },
+      { id: 'third', title: 'Third' },
+    ],
   },
-}), false);
+);
+const addedInspection = buildEditableFieldsTranslationOverlayInspection({
+  contract: repeatedContentContract,
+  config: reorderedConfig,
+  values: translatedValues,
+});
+assert.deepEqual(addedInspection.missingPaths, [thirdCoordinate]);
 
-const missingAccepted = buildTranslationGenerationFeedback({
-  ok: true,
-  status: 200,
-  json: {
-    translation: {
-      ok: true,
-      requestedLocales: [],
-      translatedLocales: [],
-      failedLocales: [],
-    },
-  },
+const afterDeleteValuesByPath = mapTranslationOverlayValuesToCurrentPaths({
+  contract: repeatedContentContract,
+  config: { items: [{ id: 'second', title: 'Second' }] },
+  values: translatedValues,
 });
-assert.equal(missingAccepted.tone, 'error');
-assert.match(missingAccepted.lines.join(' '), /result was incomplete/);
+assert.deepEqual(afterDeleteValuesByPath, { 'items.0.title': 'Deuxième' });
 
 console.log('translations panel tests passed');

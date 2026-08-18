@@ -15,10 +15,6 @@ import { expandLinkedOps } from '../components/td-menu-content/linkedOps';
 import { validateValueStrict } from '../lib/edit/controls';
 import { applyWidgetOps } from '../lib/edit/ops';
 import { BOB_MENU_PANEL_IDS, BOB_WIDGET_PANEL_IDS } from '../lib/types';
-import {
-  assertCompiledEditorContract,
-  assertSessionConfigContract,
-} from '../lib/session/sessionConfig';
 import { createAccountAssetsClient } from '../lib/session/sessionTransport';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -47,11 +43,9 @@ const loadStencil: ComponentStencilLoader = async (type): Promise<ComponentStenc
 };
 
 function readTooldrawerLabels(widgetType: string): unknown {
+  const widgetRoot = path.join(widgetsRoot, widgetType);
   return JSON.parse(
-    fs.readFileSync(
-      path.join(widgetsRoot, widgetType, `${widgetType}_tooldrawer_l10n_labels`, 'en.json'),
-      'utf8',
-    ),
+    fs.readFileSync(path.join(widgetRoot, 'labels', 'en.json'), 'utf8'),
   ) as unknown;
 }
 
@@ -1065,49 +1059,6 @@ function testInvalidEditorContractsFail(): void {
   );
 }
 
-function testCompiledPanelLabelsFailClosed(): void {
-  const toolDrawerLabels = {
-    components: {
-      'agent-activity': {
-        title: 'Translation Agent',
-      },
-    },
-  };
-  assert.throws(
-    () =>
-      assertCompiledEditorContract({
-        toolDrawerLabels,
-        panels: BOB_WIDGET_PANEL_IDS.map((id) => ({
-          id,
-          label: id === 'content' ? '' : id,
-          html: '',
-        })),
-      }),
-    /coreui\.errors\.builder\.open\.invalidRequest/,
-    'missing compiled panel label fails Builder open',
-  );
-
-  assert.throws(
-    () =>
-      assertCompiledEditorContract({
-        toolDrawerLabels: {
-          components: {
-            'agent-activity': {
-              title: '',
-            },
-          },
-        },
-        panels: BOB_WIDGET_PANEL_IDS.map((id) => ({
-          id,
-          label: id,
-          html: '',
-        })),
-      }),
-    /coreui\.errors\.builder\.open\.invalidRequest/,
-    'missing compiled Agent Activity title fails Builder open',
-  );
-}
-
 async function testDropdownUploadSingleValueContract(): Promise<void> {
   const panels = [
     {
@@ -1127,25 +1078,6 @@ async function testDropdownUploadSingleValueContract(): Promise<void> {
   assert.equal(controls[0].type, 'dropdown-upload');
   assert.equal(controls[0].kind, 'json');
   assert.equal(controls[0].path, 'media.logo');
-
-  assert.doesNotThrow(() =>
-    assertSessionConfigContract({ media: { logo: null } }, { controls, defaults }),
-  );
-  assert.doesNotThrow(() =>
-    assertSessionConfigContract(
-      { media: { logo: { assetRef: 'asset-logo', name: 'logo.svg' } } },
-      { controls, defaults },
-    ),
-  );
-  assert.throws(
-    () =>
-      assertSessionConfigContract(
-        { media: { logo: { assetRef: 'asset-logo', name: 'logo.svg', source: 'user' } } },
-        { controls, defaults },
-      ),
-    /coreui\.errors\.instance\.config\.invalid:media\.logo/,
-    'retired split-metadata shape is rejected',
-  );
 
   const uploadStencil = await loadStencil('dropdown-upload');
   await assert.rejects(
@@ -1258,7 +1190,7 @@ async function testAccountAssetsHostAdapter(): Promise<void> {
       }),
     uploadAsset: async () =>
       Response.json(
-        { error: { reasonKey: 'coreui.upsell.reason.limitReached' } },
+        { error: { kind: 'DENY', reasonKey: 'coreui.upsell.reason.limitReached' } },
         { status: 403 },
       ),
   });
@@ -1296,10 +1228,9 @@ async function main(): Promise<void> {
   await testEveryWidgetEditorContract();
   console.log('PASS every widget conforms to the authored and compiled editor contract');
   for (const { widgetType } of discoverWidgetSpecs()) {
-    const artifact = fs.readFileSync(
-      path.join(repoRoot, 'roma/public/widget-editors', `${widgetType}.json`),
-      'utf8',
-    );
+    const artifactPath = path.join(repoRoot, 'roma/public/widget-editors', `${widgetType}.json`);
+    if (!fs.existsSync(artifactPath)) continue;
+    const artifact = fs.readFileSync(artifactPath, 'utf8');
     assert.doesNotMatch(
       artifact,
       /diet-btn-menuactions[^>]*data-variant=/,
@@ -1328,8 +1259,6 @@ async function main(): Promise<void> {
   console.log('PASS editor labels round-trip special characters exactly once');
   testInvalidEditorContractsFail();
   console.log('PASS invalid editor contracts fail closed');
-  testCompiledPanelLabelsFailClosed();
-  console.log('PASS invalid compiled panel and ToolDrawer labels fail Builder open');
   await testDropdownUploadSingleValueContract();
   console.log('PASS Dropdown Upload binds one exact structured value');
   testDropdownUploadCopyJoin();

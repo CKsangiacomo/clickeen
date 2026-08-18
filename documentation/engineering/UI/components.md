@@ -152,9 +152,9 @@ The governing component product law is:
   The component owns no visible wording: label, placeholder, group labels,
   option labels, and badges are caller inputs. Its selected checkmark follows
   the Menu Actions size ladder at `.75rem/1rem/1.25rem`; it is not pinned to a
-  separate glyph size. Typography-family capability filtering is Bob-owned
-  consumer behavior; Dropdown Actions does not inspect typography paths or
-  font metadata.
+  separate glyph size. Bob projects the exact Roma-owned typography-family
+  library into its consumer choices; Dropdown Actions does not inspect
+  typography paths or font metadata.
 - Menu Actions is one native, unbound action row for menus and Popovers. It
   owns only its `sm|md|lg` row geometry, typography, radius, padding, states,
   and optional trailing Icon size. The size ladder is
@@ -234,8 +234,8 @@ The governing component product law is:
   the closed row shows only the centered `square.slash` Icon; it does not retain
   or display the prior mode's chip. Gradient edits preserve the declared
   `linear|radial|conic` kind and exact stop values. Image and video modes use
-  the supplied account-assets client. The caller-owned client validates its
-  host response and classifies any exact upload upsell reason; Dieter only
+  the supplied account-assets client. The caller-owned client consumes its
+  owning host's exact response and presents any exact upload upsell reason; Dieter only
   dispatches that supplied generic reason. The primitive does not own an
   account, route, policy reason set, or Widget-specific media rule. All visible and accessible
   words are caller inputs from the Widget-adjacent ToolDrawer label file.
@@ -411,7 +411,12 @@ The governing component product law is:
   are one internal Dropdown Edit link sheet, not a nested Popover or separate
   component. An added href is the exact caller-entered string; Dropdown Edit
   does not trim, prefix, reserialize, or silently repair it. Public Widget
-  rendering retains its existing URL-safety authority. Toolbar actions use the
+  rendering does not own URL acceptance. The consuming Widget's declared field
+  contract admits raw human URL/protocol input once through the generic Bob
+  editing boundary; materialization and public Core then consume that exact
+  Clickeen href without revalidation, normalization, filtering, or silent
+  omission. Existing public Widget URL-safety guards are implementation debt.
+  Toolbar actions use the
   existing medium Button geometry with the
   existing `1.25rem` Icon size; the separate link-sheet close action keeps the
   medium Button's default `1rem` Icon. Clear formatting affects the selected
@@ -533,8 +538,17 @@ the `multiply` Icon. The caller supplies its accessible label and binds it to
 an already-approved dismissal path. Popup owns no Close word and never decides
 whether dismissal is allowed. Product owners keep workflow state, copy,
 validation, persistence, and the accepted dismissal behavior. Bulk Edit,
-Object Manager, DevStudio token editing, Roma blocking dialogs, and Bob's
-plan-limit prompt consume Popup without adding a second modal framework.
+Object Manager, DevStudio token editing, and Roma blocking dialogs consume
+Popup without adding a second modal framework.
+
+The shared plan-limit/upsell surface is one Roma-hosted composition of Popup.
+For a Widget-bound denial, its body is the exact localized template supplied by
+the compiled Widget artifact; Roma/system policy supplies current and target
+plan values; Roma/system UI supplies the title, CTA labels, and behavior.
+Dieter owns none of those inputs and never reads a capability, message id,
+locale file, plan, or Upgrade destination. It provides the same caller-owned
+body/action slots and dialog mechanics as any other Popup. Missing Widget copy
+cannot be repaired by a Dieter fallback or default.
 
 ## Agent Activity Contract
 

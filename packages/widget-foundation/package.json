@@ -6,6 +6,13 @@
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
+  "dependencies": {
+    "@clickeen/ck-contracts": "workspace:*",
+    "mustache": "4.2.0"
+  },
+  "devDependencies": {
+    "@types/mustache": "^4.2.6"
+  },
   "exports": {
     ".": "./src/index.ts"
   }

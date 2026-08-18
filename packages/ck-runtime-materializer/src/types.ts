@@ -1,21 +1,15 @@
 import type { WidgetEditableFieldsContract } from '@clickeen/ck-contracts/translated-value-primitives';
-import type { RuntimeTypographyData } from '@clickeen/widget-foundation';
-
-export const RUNTIME_MATERIALIZER_CONTRACT_VERSION = 'ck-runtime-materializer:shell-anchor';
-
-export type RuntimeMaterializerFileContext = {
-  mediaType: 'application/json' | 'text/html' | 'text/css' | 'text/javascript';
-  source: string;
-};
+import type {
+  RuntimeTypographyData,
+  WidgetDiscoveryContract,
+  WidgetSoftware,
+} from '@clickeen/widget-foundation';
 
 export type RuntimeMaterializerCompiledWidget = {
   widgetname: string;
-  displayName?: string;
-  editableFields?: WidgetEditableFieldsContract;
-  controls?: Array<{ path?: string }>;
-  widgetPackage: {
-    files: Partial<Record<string, RuntimeMaterializerFileContext>>;
-  };
+  discovery: WidgetDiscoveryContract;
+  editableFields: WidgetEditableFieldsContract;
+  widgetSoftware: WidgetSoftware;
 };
 
 export type RuntimeMaterializerArtifactCoordinate = {
@@ -25,63 +19,21 @@ export type RuntimeMaterializerArtifactCoordinate = {
   baseLocale: string;
 };
 
-export type RuntimeMaterializerEvidenceInput = {
-  schemaWidgetContractFingerprint: string;
-  sourceFingerprint: string;
-  sourceReference: string;
-};
-
 export type RuntimeMaterializerInput = {
   compiled: RuntimeMaterializerCompiledWidget;
   artifactCoordinate: RuntimeMaterializerArtifactCoordinate;
-  displayName: string | null;
   state: Record<string, unknown>;
-  typographyData?: RuntimeTypographyData;
-  evidence: RuntimeMaterializerEvidenceInput;
+  typographyData: RuntimeTypographyData;
+  discoveryPolicyEnabled: boolean;
 };
 
 export type RuntimeMaterializerFileSet = {
   indexHtml: string;
   stylesCss: string;
   runtimeJs: string;
-  dependencies: {
-    instanceIds: string[];
-  };
 };
 
-export type RuntimeMaterializerEvidence = {
-  schemaWidgetContractFingerprint: string;
-  sourceFingerprint: string;
-  sourceReference: string;
-  artifactCoordinate: RuntimeMaterializerArtifactCoordinate;
-  materializerContractVersion: string;
-  generatedPackageFingerprint: string;
-  supportFileFingerprints: Array<{ path: string; fingerprint: string }>;
-};
-
-export type RuntimeMaterializerErrorReason =
-  | 'compiled_widget_invalid'
-  | 'widget_package_missing'
-  | 'widget_package_file_missing'
-  | 'widget_package_shell_invalid'
-  | 'artifact_coordinate_invalid'
-  | 'typography_data_invalid'
-  | 'source_state_invalid';
-
-export type RuntimeMaterializerFailure = {
-  ok: false;
-  error: {
-    reason: RuntimeMaterializerErrorReason;
-    reasonKey: string;
-    detail?: string;
-    paths?: string[];
-  };
-};
-
-export type RuntimeMaterializerSuccess = {
+export type RuntimeMaterializerResult = {
   ok: true;
   files: RuntimeMaterializerFileSet;
-  evidence: RuntimeMaterializerEvidence;
 };
-
-export type RuntimeMaterializerResult = RuntimeMaterializerSuccess | RuntimeMaterializerFailure;

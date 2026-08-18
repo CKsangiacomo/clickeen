@@ -5,6 +5,12 @@ STATUS: CURRENT SYSTEM OPERATOR SPEC
 Tokyo is the storage and static-serving plane. Tokyo is not an editor, account
 authority, page builder, translation authority, or AI runtime.
 
+Tokyo is one Widget-neutral shared service. A Widget uses Tokyo through the
+same artifact and account-coordinate contract as every other Widget. Tokyo
+stores and serves exact Clickeen-produced truth; it does not inspect Core
+semantics or add downstream schema validation, fingerprint comparison,
+normalization, filtering, or repair.
+
 Tokyo has two forms:
 
 - `tokyo/`: git-authored product/static artifacts;
@@ -42,10 +48,23 @@ Rules:
 
 - `accountPublicId` and `instanceId` are stable compact coordinates.
 - Widget codes and display names are metadata, not folders.
+- `instance.config.json` and `instance.content.json` are the physical source
+  split for one complete logical instance. The former carries non-translatable
+  shared Header/Stage/Pod/capability and Core values; the latter carries
+  base-locale customer-visible Header/Core text. Bob and Roma operate on their
+  recomposed complete state.
 - Overlay JSON is durable translated value truth.
-- Each instance has one base browser artifact.
-- Tokyo-worker stores exact submitted base bytes. It does not compile,
-  translate, infer, or repair them.
+- `serve-state.json` is publication truth for the public access boundary.
+- Each instance has one base browser artifact whose `index.html` contains
+  complete base-locale semantic content and whose `styles.css` contains complete
+  presentation.
+- Roma's Widget-neutral materializer is the sole generator of complete
+  `index.html`, complete `styles.css`, and mandatory `runtime.js` on explicit
+  allowed Publish. Tokyo-worker is
+  only their physical R2 writer and public server; it does not compile,
+  translate, infer, validate, fingerprint, or repair them.
+- `runtime.js` owns Widget and shared visitor behavior; it does not create the
+  first meaningful page, materialize, localize, host, or serve the instance.
 - A locale never owns HTML, CSS, JavaScript, publication state, or another
   artifact root.
 
@@ -58,19 +77,41 @@ https://clk.live/{accountPublicId}/{instanceId}?locale={locale}
 
 Cloud-dev uses `https://dev.clk.live`.
 
-Tokyo-worker serves a published instance only after base package fingerprint
-checks pass. Base HTML references:
+Public host/path parsing and publication state are external-routing and access
+boundaries. Private service bindings, signed grants, and upload-byte safety are
+also real security/ingress boundaries. The closed-system trust law begins after
+those boundaries accept the operation; it does not remove them.
+
+Tokyo-worker serves a published instance after the external request resolves to
+that exact published coordinate. Base HTML references:
 
 ```text
 /{accountPublicId}/{instanceId}/styles.css
 /{accountPublicId}/{instanceId}/runtime.js
 ```
 
-For `?locale=`, Tokyo-worker reads and validates the exact overlay against
-saved instance content, injects it into the base index response, and uses
-`no-store`. The base runtime resolves the overlay before widget modules start.
-Missing locale truth is `404`; corrupt locale truth is `500`; neither falls
-back to base content.
+For every index response, Tokyo-worker lists the exact stored overlay
+coordinates and authors the base locale plus those coordinates as the public
+switcher's options. For `?locale=`, it reads the exact trusted overlay and
+applies it to the declared semantic HTML content slots at the Edge, then returns
+complete selected-locale HTML through the existing public cache policy. The
+locale query is part of the request cache coordinate. Stylesheet and
+interaction-runtime URLs remain identical, and no locale-derived package is
+stored. Missing locale truth is `404` and never falls back to base content. An actual R2 read or
+JSON-decode failure remains explicit; Tokyo does not revalidate the stored
+overlay against another Clickeen artifact on every request. Because the option
+set appears in every index response, Publish, unpublish, Delete, and overlay
+mutation purge the instance's one Cloudflare cache tag after the owning truth
+mutation. The tag covers every package file and locale/query variant.
+
+Local implementation: public serving trusts every current Widget's Roma
+package and exact overlay, then uses Cloudflare `HTMLRewriter` over materialized
+stable-identity `data-ck-content-path` slots and sets `<html lang>` before
+JavaScript. An authored `data-ck-content-attribute` names the exact HTML
+attribute target; otherwise Tokyo replaces inner content. It does not compare
+a package/source fingerprint, inject browser locale context, or revalidate
+overlay meaning. These changes have not been deployed or verified in
+cloud-dev.
 
 ## Static Read Paths
 
@@ -106,4 +147,8 @@ Stop if a change would:
 - use UUID account folders;
 - treat Prague translations as account instance overlays;
 - treat Tokyo storage/serving as account-policy authority;
+- add Widget-specific semantics or a Widget-name branch;
+- revalidate, fingerprint, filter, normalize, compare, or repair artifacts
+  produced by another Clickeen authority;
+- defer initial base or selected-locale content to client JavaScript;
 - substitute base content for requested translated content.

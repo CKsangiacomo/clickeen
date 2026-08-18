@@ -52,71 +52,17 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value && typeof value === 'object' && !Array.isArray(value));
 }
 
-function readStringArray(value: unknown): string[] | null {
-  if (
-    !Array.isArray(value) ||
-    value.some((entry) => typeof entry !== 'string' || !entry || entry !== entry.trim())
-  ) {
-    return null;
-  }
-  const values = value as string[];
-  return new Set(values).size === values.length ? values : null;
-}
-
-function readObjectArray(value: unknown): Array<Record<string, unknown>> | null {
-  return Array.isArray(value) && value.every(isRecord)
-    ? value
-    : null;
-}
-
-function readLocaleCoordinates(entries: Array<Record<string, unknown>>): string[] | null {
-  const locales = entries.map((entry) => entry.locale);
-  return readStringArray(locales);
-}
-
-function sameStringSet(left: string[], right: string[]): boolean {
-  return left.length === right.length && left.every((value) => right.includes(value));
-}
-
 type TranslationOutcome = {
   accepted: boolean;
   requestedLocales: string[];
   translatedLocales: string[];
-  failures: Array<Record<string, unknown>>;
-  failedLocales: string[];
+  failedLocales: Array<{ locale: string; reasonKey: string; detail?: string }>;
 };
 
-function readTranslationOutcome(raw: unknown): TranslationOutcome | null {
-  if (!isRecord(raw) || typeof raw.ok !== 'boolean' || typeof raw.accepted !== 'boolean') return null;
-  const requestedLocales = readStringArray(raw.requestedLocales);
-  const translatedLocales = readStringArray(raw.translatedLocales);
-  const failures = readObjectArray(raw.failedLocales);
-  const failedLocales = failures ? readLocaleCoordinates(failures) : null;
-  if (!requestedLocales || !translatedLocales || !failures || !failedLocales) return null;
-  if (
-    failures.some(
-      (failure) =>
-        typeof failure.reasonKey !== 'string' ||
-        !failure.reasonKey ||
-        failure.reasonKey !== failure.reasonKey.trim(),
-    )
-  ) {
-    return null;
-  }
-  if (!raw.accepted) {
-    return raw.ok && requestedLocales.length === 0 && translatedLocales.length === 0 && failedLocales.length === 0
-      ? { accepted: false, requestedLocales, translatedLocales, failures, failedLocales }
-      : null;
-  }
-  if (
-    requestedLocales.length === 0 ||
-    !sameStringSet(requestedLocales, [...translatedLocales, ...failedLocales]) ||
-    raw.ok !== (failedLocales.length === 0)
-  ) {
-    return null;
-  }
-  return { accepted: true, requestedLocales, translatedLocales, failures, failedLocales };
-}
+type TranslationGenerationPayload = {
+  ok: boolean;
+  translation: TranslationOutcome;
+};
 
 function formatCount(count: number, singular: string, plural = `${singular}s`): string {
   return `${count} ${count === 1 ? singular : plural}`;
@@ -154,17 +100,13 @@ function resolveTranslationErrorCopy(payload: Record<string, unknown> | null, st
 }
 
 export function shouldRefreshTranslationsAfterGeneration(payload: unknown): boolean {
-  const record = isRecord(payload) ? payload : null;
-  const outcome = readTranslationOutcome(record?.translation);
-  return Boolean(outcome?.accepted && outcome.translatedLocales.length);
+  const outcome = (payload as TranslationGenerationPayload).translation;
+  return outcome.accepted && outcome.translatedLocales.length > 0;
 }
 
 export function buildTranslationGenerationFeedback(response: TranslationCommandResponse): TranslationGenerationFeedback {
   const payload = isRecord(response.json) ? response.json : null;
-  const hasTranslation = isRecord(payload?.translation);
-  const outcome = readTranslationOutcome(payload?.translation);
-
-  if (!response.ok && !hasTranslation) {
+  if (!response.ok) {
     return {
       tone: 'error',
       title: 'Translation generation failed',
@@ -172,13 +114,7 @@ export function buildTranslationGenerationFeedback(response: TranslationCommandR
     };
   }
 
-  if (!outcome) {
-    return {
-      tone: 'error',
-      title: 'Translation generation failed',
-      lines: ['The translation result was incomplete. Refresh Builder and try again.'],
-    };
-  }
+  const outcome = (response.json as TranslationGenerationPayload).translation;
 
   if (!outcome.accepted) {
     return {
@@ -189,8 +125,8 @@ export function buildTranslationGenerationFeedback(response: TranslationCommandR
   }
 
   const translatedLocales = outcome.translatedLocales;
-  const translationFailures = outcome.failures;
-  const failedTranslationLocales = outcome.failedLocales;
+  const translationFailures = outcome.failedLocales;
+  const failedTranslationLocales = translationFailures.map((failure) => failure.locale);
   const failedTranslationCopy = summarizeLocaleList(failedTranslationLocales);
   if (translatedLocales.length === 0) {
     return {
@@ -326,7 +262,7 @@ export function TranslationsPanel({
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [generationFeedback, setGenerationFeedback] = useState<TranslationGenerationFeedback | null>(null);
   const instanceId = chrome.meta?.instanceId ?? '';
-  const baseLocale = translationSetup?.baseLocale || translatedLocales?.baseLocale || '';
+  const baseLocale = translationSetup?.baseLocale ?? '';
   const planTranslationsCopy =
     translationSetup?.planTranslationsMax == null
       ? 'unlimited'
@@ -341,8 +277,8 @@ export function TranslationsPanel({
         ? 'This widget has no translation fields.'
         : null;
   const localeValues = useMemo(
-    () => listPreviewableLocales(translatedLocales).filter((locale) => locale === baseLocale || activeLocales.includes(locale)),
-    [activeLocales, baseLocale, translatedLocales],
+    () => listPreviewableLocales(baseLocale, translatedLocales),
+    [baseLocale, translatedLocales],
   );
   const localeOptions = useMemo(() => {
     return localeValues.map((locale) => ({
@@ -353,7 +289,7 @@ export function TranslationsPanel({
   const localeValue =
     translationPreviewLocale && localeValues.includes(translationPreviewLocale)
       ? translationPreviewLocale
-      : baseLocale || localeValues[0] || '';
+      : baseLocale;
   const selectOptions =
     localeOptions.length > 0
       ? localeOptions

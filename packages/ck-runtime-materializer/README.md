@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Pure builder for the one public root artifact of a saved widget instance.
+Pure Publish builder for one complete public package of a saved Widget instance.
 
 ## Contract
 
@@ -11,8 +11,7 @@ Input:
 - compiled widget software;
 - account/instance/base-locale coordinate;
 - saved base state;
-- optional resolved typography data;
-- source/schema evidence.
+- exact resolved typography resources.
 
 Output:
 
@@ -22,10 +21,16 @@ Output:
 /{accountPublicId}/{instanceId}/runtime.js
 ```
 
-The root index contains a stable `CK_LOCALE_CONTEXT` marker. Tokyo-worker
-injects a validated base or translated context into the HTML response. The one
-root runtime applies any injected exact overlay synchronously before widget
-modules initialize.
+The builder renders the Widget's authored Mustache HTML and CSS from the exact
+saved state. `index.html` contains the meaningful semantic document,
+`styles.css` contains its exact shared and Core presentation, and `runtime.js`
+contains only shared and Core visitor behavior. The public JavaScript receives
+no editable state or locale overlay payload.
+
+Tokyo-worker stores and serves these exact bytes. Its separate locale-serving
+path applies an exact trusted translation overlay to the semantic content slots
+already present in `index.html`; it does not ask this package or public
+JavaScript to render the Widget again.
 
 This package never accepts a requested non-base coordinate, reads storage,
 writes storage, calls a model, or creates locale-derived files.
@@ -36,6 +41,9 @@ writes storage, calls a model, or creates locale-derived files.
 - environment reads;
 - storage/network operations;
 - alternative artifact roots;
+- fingerprints or discarded evidence;
+- downstream validation of trusted Clickeen state or source artifacts;
+- editable-state or locale payloads in public JavaScript;
 - silent path/value repair;
 - base-language substitution for requested translated context.
 

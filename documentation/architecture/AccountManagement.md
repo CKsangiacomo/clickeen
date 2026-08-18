@@ -17,7 +17,13 @@ For product/system context, see [CONTEXT.md](./CONTEXT.md) and [Overview.md](./O
 | Account storage coordinate | `accounts.id`, exposed to product/API/runtime payloads as `accountPublicId`. |
 | Account runtime root | `accounts/{accountPublicId}/`. |
 | Role authority | `users.role` in the one-account user model. |
-| Tier/product policy | Roma/product policy, not Tokyo-worker. |
+| Tier/product policy | System policy consumed through Roma; never Widget Core or Tokyo-worker. |
+| Editable Widget access | Every tier may use every Widget and retain editable instances. |
+| Public Widget capacity | `instances.published.max` at Roma Publish. Free is one served instance. Roma performs a fast local precheck; Tokyo-worker owns the final account-atomic transition. A live overlapping first Publish receives `409 PUBLISH_IN_PROGRESS`; a later request that finds the slot consumed receives the existing `402 UPGRADE_REQUIRED` result. |
+| Widget denial context | Widget-owned complete localized template from `upsell/{locale}.json`. |
+| Upsell surface and CTA | Roma composes one Popup from system plan truth, Widget context, and the system CTA; Dieter owns mechanics only. |
+| Public package generation | Roma's one Widget-neutral materializer generates complete served HTML/CSS/JavaScript only on explicit allowed Publish. |
+| Suspended-account lifecycle | Day 0-30 public-serving grace; day 30+ automatic free-tier serving materialization; day 90+ automatic account-root deletion if recovery has not occurred. The scheduled runner and complete delete operation remain implementation gaps. |
 | Account files | Tokyo-worker stores exact account instance and asset files under the account root. |
 | Public references | `accountPublicId + instanceId`. |
 
@@ -56,7 +62,7 @@ That rejection is product behavior. The system must not silently attach the same
 | `Role` | The user's permission level in their one account: `owner`, `admin`, `editor`, or `viewer`. | Stored on `users`, not on a membership row. |
 | `Invite Members` | Account-scoped invitation lifecycle for creating another user in the same account. | Berlin current lifecycle table/route surface. |
 | `Login Method` | The current human sign-in proof. Cloud-dev/current runtime uses Google login. | Berlin login boundary. |
-| `accountPublicId` | The product/API/runtime field name for the compact `accounts.id` coordinate. | Berlin/Roma carry it from account truth; Tokyo-worker enforces it against account paths. |
+| `accountPublicId` | The product/API/runtime field name for the compact `accounts.id` coordinate. | Berlin/Roma carry it from account truth; Tokyo-worker uses that trusted coordinate for internal operations and bounds untrusted public-route coordinates at public ingress. |
 
 Connector terms are not current account-management primitives. Integration
 account-connection terms must not be treated as account truth.
@@ -80,7 +86,22 @@ Account deletion is an operation, not a retained `closed` status. If an account
 is deleted, account DB rows and account-owned storage must be cleaned up by the
 same account-root operation.
 
-Current runtime status: account deletion is disabled until that account-root operation exists. No service may return account deletion success after deleting only database rows or only storage objects.
+The settled suspended-account lifecycle uses `status_changed_at` as its one
+clock:
+
+1. day 0-30: existing published Widgets continue serving during billing
+   recovery grace;
+2. day 30+: the Berlin/Billing lifecycle runner invokes the named operation
+   that materializes free-tier public serving for the account; and
+3. day 90+: if recovery has not occurred, the runner invokes the complete
+   account-root deletion operation.
+
+This is account lifecycle, not Widget Publish, Save, or per-view serving work.
+Current runtime status: the scheduled lifecycle runner and complete
+account-root deletion operation are not implemented. Account deletion remains
+disabled until that operation owns both database and account storage cleanup.
+No service may return account deletion success after deleting only database
+rows or only storage objects.
 
 Agency or multi-account behavior is not current customer account behavior and
 does not belong in current account truth.
@@ -100,8 +121,10 @@ Current account truth uses these relational tables/functions:
 
 `accounts.id` is the compact account product/storage coordinate.
 `accountPublicId` is the API/embed/authz field name for that same value.
-Current Berlin/Roma payloads may carry both `accountId` and `accountPublicId`;
-they must match.
+Current Berlin/Roma payloads may carry both `accountId` and `accountPublicId`.
+Berlin owns that account truth; once its authority proof has been accepted at
+the untrusted transport boundary, downstream Clickeen services use the issued
+coordinate without independently comparing or rediscovering account identity.
 
 Account runtime storage uses:
 
@@ -213,6 +236,12 @@ Roma verifies and refreshes the current-account capsule at account route
 boundaries. Roma `/api/bootstrap` strips `authz.accountCapsule` from the JSON
 response body and writes it as the account authz cookie.
 
+The current `profile` and `entitlements` fields carry the exact tier keys and
+values used by the shared upsell surface. Roma formats the current profile and
+selects the first higher tier whose system entitlement satisfies the denied
+Boolean/numeric `required` demand. Widgets and Bob do not name or select a
+commercial plan.
+
 ## Operator Routes
 
 | Product operation | Roma route | Berlin backing route | Owner |
@@ -228,13 +257,19 @@ response body and writes it as the account authz cookie.
 
 Account deletion currently returns conflict. Roma `DELETE /api/account` and
 Berlin `DELETE /accounts/:id` must not report deletion success until the full
-account-root deletion operation exists.
+account-root deletion operation exists. The same missing operation and
+scheduled runner are the current implementation handoff for automatic day-90
+cleanup; they are not a PRD 129 Publish/Serve blocker.
 
 ## Product Surfaces
 
 ### Roma
 
-Roma is the authenticated product shell for the current account. It receives Berlin-issued user/account context and uses Tokyo product operations for widget instance work.
+Roma is the authenticated product shell for the current account. It accepts the
+Berlin authority proof at the browser-facing boundary, trusts the Berlin-issued
+user/account context, and uses Tokyo product operations for Widget instance
+work. Verifying an authority proof that crossed an untrusted transport is not a
+license to revalidate Berlin's account semantics after acceptance.
 
 Roma does not own user/account truth and does not read Supabase tables directly for normal account truth.
 
@@ -242,9 +277,67 @@ Roma account routes are the product mutation boundary for account-scoped work.
 They carry the current account coordinate to the owning service instead of
 letting downstream systems rediscover account identity.
 
+Roma also owns assembly and hosting of the one shared account upsell surface.
+For a Widget-semantic denial, it combines exact system current/target plan
+truth, the complete localized contextual template supplied by that Widget, and
+the system-owned CTA. Roma-native commands use system-owned context. Roma does
+not place Widget-specific copy in route/UI branches, and it trusts a Bob draft
+already admitted through Bob's exact editing boundary when Save is requested.
+
+For account Widget instances, Create writes the initial editable source and
+Save updates it. Bob returns one complete logical instance document containing its customized shared
+Header/Stage/Pod/capability state and its Widget Core state. Roma resolves the
+`instance.config.json` / `instance.content.json` source split. Only explicit
+allowed Publish invokes the one generic Widget materializer. That
+materializer—not Bob and not Tokyo-worker—generates the served complete
+`index.html`, complete `styles.css`, and mandatory `runtime.js`.
+
+For publication capacity, Roma first uses its exact current account policy and
+published-instance facts as a fast precheck before materialization. It passes
+the exact `instances.published.max` value with the generated package to
+Tokyo-worker. Tokyo-worker then owns the final account-atomic first-Publish
+transition through one Tokyo-owned Cloudflare
+`AccountPublicationCoordinator` Durable Object selected deterministically from
+`accountPublicId`.
+
+The coordinator sets its transient `active` gate synchronously before its
+first await. It then reads its reserved lifecycle-fence storage key before any
+R2 work; it writes no coordinator record. That read gives the in-flight command
+Cloudflare's Durable Object shutdown uniqueness behavior, so an old execution
+is stopped rather than allowed to overlap a replacement object after a deploy
+or runtime restart. The coordinator holds the gate only across the exact
+published-count decision and package/serve-state commit, then clears it before
+cache purge.
+
+Publication truth remains each instance's `serve-state.json`; Durable Object
+storage contains no tier, count, publication set, queue, or release registry.
+Republish is allowed without consuming another slot. A contender while the
+gate is active receives `409 PUBLISH_IN_PROGRESS` and persists no package or
+publication state. A later request after the winner committed reads the new
+published count and receives the existing `402 UPGRADE_REQUIRED` capacity
+result when full. There is no polling loop, automatic retry, second publication
+truth, or per-view capacity check.
+
 ### Bob
 
-Bob is the editor kernel. Bob consumes Berlin/Roma account context and Tokyo-owned widget instance state. Bob does not own account management.
+Bob is the editor kernel. Bob consumes Berlin/Roma account context and
+Tokyo-owned Widget instance state as trusted system truth. Bob does not own
+account management and does not narrow, repair, or revalidate those
+authorities' output.
+
+For a Widget-bound tier capability, Bob's one generic edit-operation boundary
+uses the exact system policy and the compiled Widget binding before mutating
+browser-memory state. A denied operation leaves the draft unchanged and carries
+the capability/message identity to Roma. Bob does not resolve tiers, select a
+target plan, author upsell copy, own a second Popup, or send the already-gated
+draft through the same entitlement decision again at Save.
+
+Current local implementation: Bob applies each Widget's compiled bindings at
+one common operation boundary and sends Roma
+`{ capability, messageId, required }` on denial. The draft remains unchanged,
+Roma chooses the first qualifying higher tier and opens one shared Popup, and
+Save does not repeat the decision. Every current Widget has its canonical
+`upsell/{locale}.json` source locally.
 
 ### Berlin
 
@@ -264,17 +357,47 @@ Berlin must not preserve old `user_profiles`, `account_members`, `active_account
 
 Tokyo owns widget definitions, exact account instance storage operations,
 translated locale overlay storage, and submitted public widget package
-storage/readiness. Tokyo consumes account/user authz context; it does not decide
-billing or account identity, does not render widget package bytes from saved
-source, and does not own translation generation.
+storage/readiness. Tokyo consumes the accepted Roma account/user authority and
+the exact submitted package; it does not re-prove account policy, decide billing
+or account identity, reinterpret Widget semantics, or own translation
+generation.
+
+Tokyo-worker physically writes the canonical source documents from Roma's exact
+semantic config/content payloads and stores Roma's exact package bytes under the
+account instance folder. It never generates, compiles, renders, or modifies the
+Widget package.
 
 ### Public Serving
 
-Public serving validates the saved instance source pointer, serve state, and
-generated package in R2. For an explicit non-base locale it also reads and
-validates the exact saved overlay before injecting locale context into the base
-index response. It does not read relational account DB state or call an agent
-or model on a visitor request.
+Public serving resolves the untrusted public route coordinate, reads the exact
+Tokyo-owned serve state and generated package, and returns only a published
+instance. The stored base `index.html` already contains complete semantic base
+content. For an explicit non-base locale, Tokyo-worker reads the exact trusted
+overlay and applies it to the semantic HTML response before returning it;
+client JavaScript is not required to discover the localized content.
+
+Public serving does not revalidate the saved source, package fingerprint,
+package shape, or Translation Agent output. It does not read relational account
+DB state or call an agent or model on a visitor request.
+
+### Local Public Runtime
+
+The local public-serving path reads exact publication truth and exact stored
+package bytes. It authors switcher options from the exact base locale and
+stored overlay coordinates. For a selected non-base locale it applies every
+present trusted stable-identity value to the materialized
+`data-ck-content-path` body or exact `data-ck-content-attribute` target through
+Cloudflare `HTMLRewriter`, then sets `<html lang>` before JavaScript. A newly
+added identity remains intentional untranslated saved source until Generate;
+a deleted identity has no current node. It does not compare package
+fingerprints or validate the overlay against saved source in the public
+request. The route coordinate, locale syntax, and publication gate remain real
+external/product boundaries.
+
+The all-Widget changes have not been deployed or verified in cloud-dev. Authenticated
+translation list/read/write operations now also trust the exact stored overlay
+coordinates and values locally; they do not project or compare them against
+saved source.
 
 ## Verification
 

@@ -20,7 +20,6 @@ export type ApplyWidgetOpsResult =
       ok: true;
       data: Record<string, unknown>;
       changedPaths: string[];
-      requiresDocumentValidation: boolean;
     }
   | { ok: false; errors: WidgetOpError[] };
 
@@ -99,17 +98,8 @@ export function applyWidgetOps(args: {
     return { ok: false, errors: [{ opIndex: 0, message: 'Ops must be a non-empty array' }] };
   }
 
-  if (!Array.isArray(controls) || controls.length === 0) {
-    return { ok: false, errors: [{ opIndex: 0, message: 'Compiled controls are required to apply ops' }] };
-  }
-
-  if (!controls.some((control) => typeof control.path === 'string' && control.path.trim())) {
-    return { ok: false, errors: [{ opIndex: 0, message: 'Compiled controls are missing valid paths' }] };
-  }
-
   let working = data;
   const changedPaths = new Set<string>();
-  let requiresDocumentValidation = false;
 
   for (let idx = 0; idx < ops.length; idx += 1) {
     const op = ops[idx];
@@ -152,15 +142,6 @@ export function applyWidgetOps(args: {
       const next = setAt(working, path, raw.value) as Record<string, unknown>;
       working = next;
       changedPaths.add(path);
-      if (
-        control.kind === 'json' ||
-        control.kind === 'array' ||
-        control.kind === 'object' ||
-        control.type === 'dropdown-fill' ||
-        control.type === 'dropdown-upload'
-      ) {
-        requiresDocumentValidation = true;
-      }
       continue;
     }
 
@@ -179,6 +160,9 @@ export function applyWidgetOps(args: {
       if (raw.index > len) {
         return { ok: false, errors: [{ opIndex: idx, path, message: `index out of range (0..${len})` }] };
       }
+      if (typeof control.max === 'number' && len + 1 > control.max) {
+        return { ok: false, errors: [{ opIndex: idx, path, message: `Array must contain at most ${control.max} items` }] };
+      }
       if (control.itemIdPath) {
         const itemId =
           raw.value && typeof raw.value === 'object' && !Array.isArray(raw.value)
@@ -191,7 +175,6 @@ export function applyWidgetOps(args: {
       const next = insertAtPath(working, path, raw.index, raw.value);
       working = next;
       changedPaths.add(path);
-      requiresDocumentValidation = true;
       continue;
     }
 
@@ -224,10 +207,12 @@ export function applyWidgetOps(args: {
           errors: [{ opIndex: idx, path, message: `index out of range (0..${Math.max(0, current.length - 1)})` }],
         };
       }
+      if (typeof control.min === 'number' && current.length - 1 < control.min) {
+        return { ok: false, errors: [{ opIndex: idx, path, message: `Array must contain at least ${control.min} items` }] };
+      }
       const next = removeAtPath(working, path, removeIndex);
       working = next;
       changedPaths.add(path);
-      requiresDocumentValidation = true;
       continue;
     }
 
@@ -255,7 +240,6 @@ export function applyWidgetOps(args: {
       const next = moveAtPath(working, path, raw.from, raw.to);
       working = next;
       changedPaths.add(path);
-      requiresDocumentValidation = true;
       continue;
     }
 
@@ -266,6 +250,5 @@ export function applyWidgetOps(args: {
     ok: true,
     data: working,
     changedPaths: Array.from(changedPaths),
-    requiresDocumentValidation,
   };
 }

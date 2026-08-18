@@ -1,6 +1,6 @@
 # Babel Protocol
 
-Last updated: 2026-07-30
+Last updated: 2026-08-17
 
 Babel is the exact saved-text translation protocol for account instances. It
 turns one current saved source field set into one exact overlay value map per
@@ -9,9 +9,11 @@ requested non-base locale.
 ## Source Text Contract
 
 Tokyo-worker resolves the saved instance and returns concrete text fields from
-`instance.content.json`. Each field carries its concrete path and current base
-text. This saved field set is the only source scope a translation job may
-translate.
+`instance.content.json`. Each field carries its physical concrete path,
+`fieldPattern`, stable `identityKey`, and current base text. Roma sends the
+stable `identityKey` in the existing Babel item `path` field; that transport
+name carries an opaque content coordinate, not a positional array path. This
+saved field set is the only source scope a translation job may translate.
 
 ## Overlay Contract
 
@@ -24,14 +26,19 @@ accounts/{accountPublicId}/instances/{instanceId}/overlays/locales/{locale}.json
 ```json
 {
   "values": {
-    "header.title": "Translated text"
+    "faq|header-title|header.title": "Translated text"
   }
 }
 ```
 
-The submitted value map must match the current saved field set exactly.
-Tokyo-worker rejects missing paths, extra paths, invalid locale coordinates,
-non-string values, and stale or malformed instance source.
+The Translation Agent owns an exact value map matching the current saved
+identity set. Scalar coordinates contain Widget type, role, and field pattern.
+Repeated coordinates additionally contain every declared
+`arrayItemIdentity` path and stable ID. Tokyo-worker trusts that
+Clickeen-produced map and stores it completely; it does not recheck
+coordinates, value types, locale meaning, or source freshness. A Translation
+Agent result that violates its contract is fixed at the producing authority,
+not guarded, filtered, or repaired downstream.
 
 ## Current Account Instance Path
 
@@ -45,36 +52,63 @@ Bob Generate Translations
 -> Bob refreshes overlay-backed translation previews
 ```
 
-That command ends after overlay truth is reconciled. It does not build, publish,
-cache, or delete runtime files.
+That command ends after the exact overlay writes complete and their outcomes
+return. It does not build, publish, cache, or delete runtime files.
 
 ## Resolution
 
-Bob preview and the public base runtime both resolve:
+Bob translated preview and the public selected-locale response both express:
 
 ```text
 saved base state + exact requested overlay values
 ```
 
 Bob uses the translated-value contract directly. Public serving is gated by the
-one instance publication state; Tokyo-worker injects the validated overlay into
-the one base index, and the one base runtime resolves it before widget modules
-start.
+one instance publication state; Tokyo-worker applies the trusted exact overlay
+to the semantic nodes in the one base index response. The returned HTML already
+contains the selected-locale content before Widget JavaScript starts.
+
+Save leaves overlays unchanged. Reorder follows stable item identity. A newly
+added identity has no value and remains explicit untranslated base-source
+content until Generate Translations. A deleted identity has no preview or
+public content node, so an older coordinate is inert. Generate Translations
+replaces the locale overlay with the complete current saved identity set.
 
 ## Failure Semantics
 
 - A requested locale has exactly one outcome: translated or failed.
 - Full success is impossible when any requested locale failed.
 - Missing and corrupt overlay truth are distinct.
-- No English/base substitution is allowed for a requested non-base locale.
+- A missing requested locale never substitutes another locale.
+- Missing value for a newly added identity is explicit untranslated source
+  content, not locale fallback.
 - Activity events are transport-only progress, not persisted truth.
+
+## Current Implementation And Pre-GA Cutover
+
+Roma now sends saved `identityKey` coordinates, Translation Agent preserves
+them through model output and overlay writes, Bob resolves them against the
+current draft, Roma materializes them into the generic content-slot attributes,
+and Tokyo-worker applies present values at the Edge without a downstream
+overlay validator.
+
+This changes both scalar and repeated coordinates from the old positional
+format. Previously stored positional overlays are not read through a
+compatibility path. After deployment, they require explicit Generate
+Translations or explicit deletion. Serve never migrates or falls back to the
+old format.
 
 ## Verification
 
 1. Read the saved field set through Roma/Tokyo.
 2. Run Generate Translations.
 3. Confirm the response contains only translation outcomes.
-4. Read each overlay and prove exact path equality with saved content.
+4. Read each newly generated overlay and prove its coordinate set equals the
+   saved `identityKey` set used for that generation.
 5. Confirm no instance HTML, CSS, or JavaScript object was created.
 6. Open `/{account}/{instance}?locale={locale}` and verify translated output
-   uses the package stylesheet and runtime.
+   is present in response HTML before JavaScript and uses the package stylesheet
+   and runtime.
+
+These are operator/release checks of the producing authorities. Normal product
+runtime must not depend on them or reproduce them as downstream validation.

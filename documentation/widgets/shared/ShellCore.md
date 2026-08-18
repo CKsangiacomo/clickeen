@@ -6,6 +6,12 @@ Every widget has one presentation frame and one Shell. Shell contains exactly
 one Header and one Core. Reusable code, common account defaults, and Shell
 ownership are separate concerns.
 
+Core is the Widget's unique software boundary: mandatory HTML, CSS, and
+JavaScript. Core JavaScript owns Widget behavior but is never the initial
+content renderer, materializer, localizer, validator, preview host, or serving engine.
+Stage, Pod, Shell, Header, and their behavior are shared system composition
+used identically by every Widget.
+
 ## Product Model
 
 ```text
@@ -28,9 +34,14 @@ Stage
 - **Core** is the widget-specific body. It owns Core geometry, including
   `coreSize.*`, plus the widget namespace such as `cards.*` or `faq.*`.
 
+The dependency direction is always Core using a generic Clickeen capability.
+Shared Widget services never inspect Widget identity or interpret a Core
+namespace.
+
 The Shell element also carries widget type and materialized instance identity.
-Those attributes let the runtime locate one widget, load its exact payload, and
-scope DOM operations. Runtime identity is not another product layer.
+Those attributes let visitor behavior locate and scope the exact Widget DOM.
+They do not load an editable-state payload. Runtime identity is not another
+product layer.
 
 ## State Ownership
 
@@ -48,9 +59,10 @@ scope DOM operations. Runtime identity is not another product layer.
 | Backlink state | Branding chrome and product policy |
 | Social-share state | Share chrome |
 
-Typography, fill, appearance, localization preview, branding, locale switching,
-and social sharing use shared runtime implementations. Shared implementation
-does not make those concerns Shell children.
+Typography, fill, appearance, and branding use shared source/build
+composition. Locale switching and social sharing additionally use shared
+visitor behavior. Shared implementation does not make those concerns Shell
+children.
 
 ## Common Account Defaults
 
@@ -68,34 +80,139 @@ account value seeds every widget type. Code must not infer Shell ownership from
 that storage scope.
 
 New instances merge the exact common defaults with the selected widget's Core
-defaults and reject conflicts. Saved instance configuration remains one exact
-flat runtime state.
+defaults. The source/build authority owns their disjoint contract; Roma
+consumes those exact system artifacts rather than running a second conflict
+validator. The saved instance remains one exact logical state even though Roma
+stores its source physically as config and content files.
 
-## Shared Runtime APIs
+## Instance State And Persistence
 
-Widget clients consume shared helpers from `tokyo/product/widgets/shared/`:
+Header, Stage, Pod, and Core are separate software owners inside one Widget,
+not separate persisted instances. One account instance contains one complete
+logical state with every namespace in the State Ownership table. A change to
+`header.title`, `stage.background`, `pod.padding.desktop.all`, or
+`faq.sections` is therefore a change to the same browser-memory draft and the
+same saved instance coordinate.
 
-| Global | Responsibility |
+Bob receives and edits the complete logical document. Roma resolves its
+physical source representation:
+
+```text
+instance.config.json   non-translatable shared and Core state
+instance.content.json  base-locale Header and Core text
+```
+
+Create writes the initial editable source and Save updates it. Only explicit
+allowed Publish invokes Roma's one generic Widget materializer with the exact
+saved state. The materializer composes this shared frame and the selected Core
+and is Roma's sole generator of complete `index.html`, complete `styles.css`,
+and mandatory `runtime.js`. Tokyo-worker physically writes the canonical source
+documents or stores the required HTML/CSS/JavaScript, locale overlays, and
+publication state under the single instance folder. It does not generate or
+reinterpret Widget software.
+
+Changing common account defaults seeds future instances only through the named
+Create operation. Changing shared or Core source affects future
+materializations only. Neither change silently mutates an already-stored
+instance or public package.
+
+## Account Policy Is Outside Shell And Core
+
+Tier limits and upsell UI are not Widget state, Shell composition, Core
+behavior, or public runtime. A Widget declares the unique coordinate-to-policy
+binding in `limits.json` and the complete localized denial context in
+`upsell/{locale}.json`. That contract is compiled for Bob/Roma product use; it
+is never materialized into `index.html`, `styles.css`, or `runtime.js`.
+
+Account policy owns the entitlement decision and exact current/target plan.
+Roma owns Popup composition and the system CTA; Dieter owns Popup mechanics.
+The Widget owns only its contextual template. Bob transports the exact denial
+identity from its generic edit boundary. None of Stage, Pod, Shell, Header,
+Core, Tokyo-worker, or public serving participates or provides fallback copy.
+
+## Shared Services And Capability APIs
+
+The shared Widget system exposes generic composition and capabilities from
+`tokyo/product/widgets/shared/`. Roma materializes their exact HTML/CSS/JS state
+the same way for every Widget during Publish. Bob previews them through Bob's
+existing editing authority:
+
+| Capability | Responsibility |
 | --- | --- |
-| `CKWidgetRuntime` | Finds the Shell instance anchor, resolves exact instance state, registers initialization, and scopes preview updates. |
-| `CKHeader` | Renders Header content, Header CTA, and Header layout. |
-| `CKStagePod` | Applies Stage and Pod presentation. |
-| `CKCoreSize` | Applies Core geometry. |
-| `CKTypography` | Applies typography state to its declared Header, Core, or chrome scope. |
-| `CKBranding` | Applies product-policy branding chrome. |
-| `CKSocialShare` | Applies share chrome to Stage or Pod. |
-| `CKLocaleSwitcher` | Applies locale chrome for delivered overlays. |
-| `CKSurface`, `CKAppearance`, `CKFill` | Provide reusable rendering primitives without owning product state. |
+| Widget host | Composes the Shell instance anchor. |
+| Header | Expresses Header content, Header CTA, and Header layout. |
+| Stage/Pod | Expresses Stage and Pod presentation. |
+| Core size | Expresses Core geometry. |
+| Typography | Expresses typography state in its declared Header, Core, or chrome scope. |
+| Branding | Expresses product-policy branding chrome. |
+| Social share | Expresses share chrome on Stage or Pod. |
+| Locale switcher | Expresses locale chrome for exact delivered locale choices. |
+| Surface, appearance, and fill | Provide reusable presentation primitives without owning product state. |
 
-Required helpers fail visibly when missing. Widget code must not create local
-fallback implementations.
+All built Widgets now materialize their authored source and shared composition
+into complete HTML/CSS. Bob previews the same compiled software plus its draft,
+and public JavaScript owns only visitor behavior: FAQ disclosure, Cards link
+interaction, Countdown progression, and Logo Showcase motion. Big Bang has no
+dynamic Core behavior but still supplies mandatory `core/core.js`. No Core
+client constructs initial content, applies shared state, or binds Bob state
+updates.
+
+Source/build composition owns the presence of required shared capabilities.
+Core does not add visitor-time probes or local fallback implementations to
+re-prove system-authored composition.
+
+Each capability has one Widget-neutral contract. If a missing capability is
+proven by a current Widget flow, augment the shared owner once for every
+applicable Widget. Never add a Widget-name branch or path-specific semantic
+adapter.
+
+## Publish-Time Materialization
+
+Each Widget's `widget.html` shows the complete Stage/Pod/Shell/Header/Core
+composition while shared implementations remain shared. On explicit allowed
+Publish, Roma's generic materializer combines that trusted source with the
+complete exact saved instance:
+
+```text
+per-Widget widget.html + shared capabilities + Core + exact saved state
+-> index.html with complete base-locale Header and Core content
+-> styles.css with complete shared and Core presentation
+-> runtime.js with mandatory Widget and shared visitor behavior
+```
+
+Explicit Save remains Bob's editable-source persistence boundary. Publish is
+the separate release/materialization boundary. Public requests never invoke
+materialization.
+
+For a non-base locale request, Tokyo applies the exact trusted overlay into the
+declared semantic HTML content slots before responding. Public JavaScript does
+not create or localize initial content.
+
+Bob preview remains an editing concern under Bob's existing authority. It does
+not read or execute an account instance's stored package. The deploy-built
+Widget software and Bob's one current draft express the same shared
+frame and selected Core temporarily in the existing isolated Workspace iframe.
+Public JavaScript does not receive Bob state messages or render, materialize,
+localize, host, or serve an instance.
+
+Preview and Publish are independent consumers of the same authored
+composition:
+
+```text
+Widget composition + draft -> Bob preview
+Widget composition + saved source -> Publish materializer -> public package
+```
+
+They do not consume one another's output and do not maintain two Widget
+meanings.
 
 ## Shadow Rendering
 
 Stage, Pod, and supported Core card surfaces retain one exact shadow shape:
-`{enabled,inset,x,y,blur,spread,color,alpha}`. Outside contexts require
-`inset:false`; inside contexts require `inset:true`. The shared appearance
-runtime rejects a mismatch instead of forcing or repairing it.
+`{enabled,inset,x,y,blur,spread,color,alpha}`. Outside contexts use
+`inset:false`; inside contexts use `inset:true`. The owning editor/source
+contract emits that exact shape and shared presentation consumes it unchanged,
+without another validation or repair pass.
 
 Inside-shadow groups retain `linked`, `layer`, and exact `all/top/right/bottom/left`
 objects. Linked rendering uses `all`; unlinked rendering produces one ordered
@@ -110,9 +227,9 @@ The Stage remains inside those gutters, and iframe resize reporting includes
 them. Disabled or zero-opacity outside shadow adds no gutter. Pod and Core-card
 outside shadows need no document gutter because they are already inside Stage.
 
-FAQ's existing Q&A-card `insideShadow` is applied to every generated card via
-the shared `CKSurface` variables and the card's existing presentation CSS; FAQ
-does not calculate or reinterpret shadow values.
+Supported Core card surfaces consume the materialized generic surface
+variables in their authored CSS. A Core does not calculate or reinterpret the
+trusted shadow values in visitor JavaScript.
 
 ## Core Namespaces
 
@@ -125,7 +242,16 @@ does not calculate or reinterpret shadow values.
 | `logoshowcase` | `logoshowcase.*` |
 
 Core owns body content, widget-specific layout and appearance, repeatable items,
-and widget-specific runtime behavior.
+and widget-specific interaction. Shared system services remain outside Core.
+
+## Closed-System Trust
+
+The compiler-produced Widget contract, Bob-produced complete draft,
+materializer-produced package, and Tokyo-stored artifacts are Clickeen system
+truth. Each downstream owner consumes the complete artifact without another
+schema check, allowlist projection, filter, normalization, repair, or semantic
+reconciliation. Authoring/build checks prove the producer's work outside normal
+runtime and never become a public-runtime dependency.
 
 ## Hard Stops
 
@@ -133,7 +259,12 @@ and widget-specific runtime behavior.
   Shell children.
 - Do not add another product layer between Pod and Shell.
 - Do not put anything beside Header and Core inside Shell.
+- Do not put tier, entitlement, denial, Popup, CTA, or upsell behavior in
+  Shell, Header, Core, or the public package.
 - Do not classify state ownership through manually maintained path-prefix
   families.
 - Do not create widget-local copies of shared runtime primitives.
-- Do not silently heal missing or invalid persisted state.
+- Do not make Core JavaScript construct initial public content.
+- Do not make shared code branch on Widget identity or Core paths.
+- Do not add downstream validators for trusted Clickeen artifacts.
+- Do not silently heal or substitute authoritative truth.

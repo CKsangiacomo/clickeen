@@ -1,0 +1,48 @@
+{
+  "widgetType": "cards",
+  "kind": "card-list",
+  "baseline": {
+    "title": "Cards by Clickeen",
+    "description": "A collection of cards published with Clickeen."
+  },
+  "parts": [
+    {
+      "id": "card-title",
+      "path": "cards.items[].title",
+      "role": "item-heading",
+      "identityPaths": ["cards.items[].id"]
+    },
+    {
+      "id": "card-copy",
+      "path": "cards.items[].copy",
+      "role": "item-description",
+      "identityPaths": ["cards.items[].id"]
+    },
+    {
+      "id": "card-image-alt",
+      "path": "cards.items[].media.imageAlt",
+      "role": "image-description",
+      "identityPaths": ["cards.items[].id"]
+    },
+    {
+      "id": "card-link-label",
+      "path": "cards.items[].link.label",
+      "role": "action-label",
+      "identityPaths": ["cards.items[].id"]
+    }
+  ],
+  "relationships": [
+    {
+      "kind": "describes",
+      "from": "card-copy",
+      "to": "card-title",
+      "identityPaths": ["cards.items[].id"]
+    },
+    {
+      "kind": "acts-on",
+      "from": "card-link-label",
+      "to": "card-title",
+      "identityPaths": ["cards.items[].id"]
+    }
+  ]
+}

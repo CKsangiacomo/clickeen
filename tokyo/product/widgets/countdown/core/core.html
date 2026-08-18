@@ -1,0 +1,92 @@
+<main
+  class="ck-countdown__body ck-headerLayout__body"
+  data-role="countdown-core"
+  data-core-size-mode="{{coreSize.mode}}"
+  data-mode="{{countdown.timer.mode}}"
+  data-target-date="{{countdown.timer.targetDate}}"
+  data-timezone="{{countdown.timer.timezone}}"
+  data-time-amount="{{countdown.timer.timeAmount}}"
+  data-time-unit="{{countdown.timer.timeUnit}}"
+  data-repeat="{{countdown.timer.repeat}}"
+  data-starting-number="{{countdown.timer.startingNumber}}"
+  data-target-number="{{countdown.timer.targetNumber}}"
+  data-count-duration="{{countdown.timer.countDuration}}"
+  data-time-format="{{countdown.appearance.timeFormat}}"
+  data-after-type="{{countdown.actions.after.type}}"
+  data-ck-core
+  {{#ck.discovery}}data-ck-discovery-kind="{{kind}}"{{/ck.discovery}}
+>
+  <div class="ck-countdown__timer" data-role="timer">
+    <div class="ck-countdown__number" data-role="number-display">
+      <div class="ck-countdown__value" data-role="number-value">{{countdown.timer.startingNumber}}</div>
+    </div>
+    <div class="ck-countdown__units" data-role="units-display">
+      <div class="ck-countdown__unit" data-role="unit" data-unit="days">
+        <div class="ck-countdown__value" data-role="value">00</div>
+        <div
+          class="ck-countdown__label"
+          data-role="label"
+          data-ck-content-path="{{countdown.timer.labels.$ck.days.path}}"
+          data-ck-content-mode="{{countdown.timer.labels.$ck.days.mode}}"
+          {{#countdown.timer.labels.$ck.days.discovery}}data-ck-discovery-part="{{id}}" data-ck-discovery-role="{{role}}"{{/countdown.timer.labels.$ck.days.discovery}}
+        >{{countdown.timer.labels.days}}</div>
+      </div>
+      <div class="ck-countdown__separator" data-role="separator">{{countdown.appearance.separator}}</div>
+      <div class="ck-countdown__unit" data-role="unit" data-unit="hours">
+        <div class="ck-countdown__value" data-role="value">00</div>
+        <div
+          class="ck-countdown__label"
+          data-role="label"
+          data-ck-content-path="{{countdown.timer.labels.$ck.hours.path}}"
+          data-ck-content-mode="{{countdown.timer.labels.$ck.hours.mode}}"
+          {{#countdown.timer.labels.$ck.hours.discovery}}data-ck-discovery-part="{{id}}" data-ck-discovery-role="{{role}}"{{/countdown.timer.labels.$ck.hours.discovery}}
+        >{{countdown.timer.labels.hours}}</div>
+      </div>
+      <div class="ck-countdown__separator" data-role="separator">{{countdown.appearance.separator}}</div>
+      <div class="ck-countdown__unit" data-role="unit" data-unit="minutes">
+        <div class="ck-countdown__value" data-role="value">00</div>
+        <div
+          class="ck-countdown__label"
+          data-role="label"
+          data-ck-content-path="{{countdown.timer.labels.$ck.minutes.path}}"
+          data-ck-content-mode="{{countdown.timer.labels.$ck.minutes.mode}}"
+          {{#countdown.timer.labels.$ck.minutes.discovery}}data-ck-discovery-part="{{id}}" data-ck-discovery-role="{{role}}"{{/countdown.timer.labels.$ck.minutes.discovery}}
+        >{{countdown.timer.labels.minutes}}</div>
+      </div>
+      <div class="ck-countdown__separator" data-role="separator">{{countdown.appearance.separator}}</div>
+      <div class="ck-countdown__unit" data-role="unit" data-unit="seconds">
+        <div class="ck-countdown__value" data-role="value">00</div>
+        <div
+          class="ck-countdown__label"
+          data-role="label"
+          data-ck-content-path="{{countdown.timer.labels.$ck.seconds.path}}"
+          data-ck-content-mode="{{countdown.timer.labels.$ck.seconds.mode}}"
+          {{#countdown.timer.labels.$ck.seconds.discovery}}data-ck-discovery-part="{{id}}" data-ck-discovery-role="{{role}}"{{/countdown.timer.labels.$ck.seconds.discovery}}
+        >{{countdown.timer.labels.seconds}}</div>
+      </div>
+    </div>
+  </div>
+  <div class="ck-countdown__actions">
+    <a
+      class="ck-countdown__cta"
+      data-role="cta"
+      data-variant="{{countdown.actions.during.style}}"
+      href="{{countdown.actions.during.url}}"
+      {{#countdown.actions.during.newTab}}target="_blank" rel="noopener"{{/countdown.actions.during.newTab}}
+      {{^countdown.actions.during.url}}hidden{{/countdown.actions.during.url}}
+      data-ck-content-path="{{countdown.actions.during.$ck.text.path}}"
+      data-ck-content-mode="{{countdown.actions.during.$ck.text.mode}}"
+      {{#countdown.actions.during.$ck.text.discovery}}data-ck-discovery-part="{{id}}" data-ck-discovery-role="{{role}}"{{/countdown.actions.during.$ck.text.discovery}}
+    >{{countdown.actions.during.text}}</a>
+  </div>
+  <div class="ck-countdown__after-message" data-role="after-message" hidden>
+    <a
+      class="ck-countdown__after-link"
+      data-role="after-link"
+      href="{{countdown.actions.after.url}}"
+      data-ck-content-path="{{countdown.actions.after.$ck.text.path}}"
+      data-ck-content-mode="{{countdown.actions.after.$ck.text.mode}}"
+      {{#countdown.actions.after.$ck.text.discovery}}data-ck-discovery-part="{{id}}" data-ck-discovery-role="{{role}}"{{/countdown.actions.after.$ck.text.discovery}}
+    >{{countdown.actions.after.text}}</a>
+  </div>
+</main>

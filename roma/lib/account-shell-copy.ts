@@ -6,6 +6,8 @@ const ACCOUNT_SHELL_REASON_COPY: Record<string, string> = {
   'coreui.errors.db.writeFailed': 'Saving failed. Please try again.',
   'coreui.errors.payload.invalid': 'Something did not load correctly. Please try again.',
   'coreui.errors.network.timeout': 'The request timed out. Please try again.',
+  'coreui.errors.instance.publishInProgress':
+    'Another Publish is finishing. Please try again in a moment.',
   'coreui.errors.account.memberNotFound': 'That team member could not be found.',
   'coreui.errors.account.invitationNotFound': 'That invitation could not be found.',
   'roma.errors.proxy.tokyo_unavailable': 'Widget delivery is unavailable right now. Please try again.',

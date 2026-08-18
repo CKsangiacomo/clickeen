@@ -3,7 +3,6 @@ import {
   COMMON_WIDGET_FACTORY_DEFAULTS,
   createDefaultAccountFontLibrary,
 } from '@clickeen/widget-foundation';
-import { normalizeAccountWidgetDefaultsDocument } from '../src/domains/account-widget-defaults';
 
 const valid = {
   accountId: 'CLICKEEN',
@@ -18,18 +17,5 @@ const valid = {
   updatedAt: '2026-01-01T00:00:00.000Z',
 };
 
-assert.ok(normalizeAccountWidgetDefaultsDocument(valid, 'CLICKEEN'));
 assert.equal(valid.fontLibrary.fonts.Orio?.source, 'tokyo');
-
-const retiredShellOnly = {
-  ...valid,
-  shell: valid.common,
-} as Record<string, unknown>;
-delete retiredShellOnly.common;
-assert.equal(normalizeAccountWidgetDefaultsDocument(retiredShellOnly, 'CLICKEEN'), null);
-assert.equal(
-  normalizeAccountWidgetDefaultsDocument({ ...valid, shell: valid.common }, 'CLICKEEN'),
-  null,
-);
-
-console.log('PASS Tokyo Widget Defaults rejects the retired shell key');
+console.log('PASS Tokyo Widget Defaults uses the exact generated font library');

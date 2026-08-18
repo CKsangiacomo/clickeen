@@ -42,32 +42,19 @@ assert.throws(
   'matrix validation must reject keys outside the registry',
 );
 
-assert.ok(registryKeys.has('widgets.instances.max'), 'widgets.instances.max must exist');
 assert.ok(!registryKeys.has(retiredWidgetTypeLimitKey), 'retired widget type limit key must not exist');
-assert.ok(PLAN_LIMIT_KEYS.includes('widgets.instances.max'), 'widgets.instances.max must be a plan limit');
 assert.ok(
   !PLAN_LIMIT_KEYS.includes(retiredWidgetTypeLimitKey),
   'retired widget type limit key must not be a plan limit',
 );
 
-const widgetInstances = matrix.entitlements['widgets.instances.max'];
 const publishedInstances = matrix.entitlements['instances.published.max'];
 
-assert.equal(widgetInstances?.kind, 'limit', 'widgets.instances.max must be a limit');
 assert.equal(publishedInstances?.kind, 'limit', 'instances.published.max must be a limit');
 
 for (const tier of tiers) {
-  const widgetValue = widgetInstances.values[tier];
   const publishedValue = publishedInstances.values[tier];
-
-  assert.equal(typeof widgetValue, 'number', `widgets.instances.max.${tier} must be finite`);
-  assert.ok(Number.isFinite(widgetValue), `widgets.instances.max.${tier} must be finite`);
 
   assert.equal(typeof publishedValue, 'number', `instances.published.max.${tier} must be finite`);
   assert.ok(Number.isFinite(publishedValue), `instances.published.max.${tier} must be finite`);
-
-  assert.ok(
-    widgetValue >= publishedValue,
-    `widgets.instances.max.${tier} must be >= instances.published.max.${tier}`,
-  );
 }

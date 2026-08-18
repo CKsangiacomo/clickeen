@@ -16,6 +16,17 @@ STATUS: CURRENT SYSTEM OPERATOR SPEC
 Agent eval suites remain owned by each agent home. There is no shared learning,
 outcome, or model-call telemetry plane in San Francisco.
 
+## Closed-System Agent Boundary
+
+Human prompts and provider/model outputs enter Clickeen at the owning agent's
+explicit ingress. The agent accepts that external output into its structured
+product result. After the agent emits the result, Bob, Roma, Tokyo-worker, and
+other Clickeen services trust it; they do not parse, validate, filter, or
+reinterpret the same semantic contract again. Signed-grant verification remains
+an authentication/authorization boundary, not permission to distrust an
+accepted Clickeen result. Agent evals prove the owner contract outside normal
+runtime and never become a downstream product dependency.
+
 ## Runtime Dependency Map
 
 ```text
@@ -28,7 +39,7 @@ Bob CopilotPane
 Bob Translations panel
 -> Roma account translation route
 -> Translation Agent Worker /translate-instance
--> San Francisco /model/chat
+-> San Francisco /model/turn (structured mode)
 -> provider API
 -> Tokyo-worker internal translation write
 -> accounts/[account public id]/instances/[instance id]/overlays/locales/[active locale].json
@@ -77,7 +88,7 @@ An unregistered agent id is not a current Clickeen AI runtime.
 | San Francisco | `sanfrancisco-dev` | `OPENAI_MODEL` | Prague system-copy translation model |
 | San Francisco | R2 bucket `sanfrancisco-logs-dev` | `SF_R2` | Prague translation request/response logs |
 | Product Copilot | `product-copilot-dev` | `SANFRANCISCO_AI_ENGINE -> sanfrancisco-dev` | Governed `/model/turn` calls |
-| Translation Agent | `translation-agent-dev` | `SANFRANCISCO_AI_ENGINE -> sanfrancisco-dev` | Governed `/model/chat` calls |
+| Translation Agent | `translation-agent-dev` | `SANFRANCISCO_AI_ENGINE -> sanfrancisco-dev` | Governed `/model/turn` structured calls |
 | Translation Agent | `translation-agent-dev` | `TOKYO_PRODUCT_CONTROL -> tokyo-assets-dev` | Locale-overlay writes through Tokyo-worker |
 
 Do not infer a resource unless the owning `wrangler.toml` binds it. Update this

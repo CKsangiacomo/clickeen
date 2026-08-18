@@ -8,7 +8,6 @@ import type { WidgetPublicActions } from '../lib/public-widget-actions';
 const COPY_OPTIONS = [
   { key: 'publicUrl', label: 'Widget URL' },
   { key: 'iframeSnippet', label: 'Embed code' },
-  { key: 'scriptSnippet', label: 'Script code' },
 ] as const;
 
 export function WidgetCopyCodeDialog({
@@ -69,7 +68,7 @@ export function WidgetCopyCodeDialog({
     setCopyStatus(copied ? `${label} copied` : `${label} could not be copied`);
   }, []);
 
-  const complete = Boolean(actions?.publicUrl && actions.iframeSnippet && actions.scriptSnippet);
+  const complete = Boolean(actions?.publicUrl && actions.iframeSnippet);
 
   return (
     <dialog ref={dialogRef} className="diet-popup" aria-labelledby="roma-widget-code-title">

@@ -56,6 +56,12 @@ Agents work over widget specs, control/field maps, locale overlays,
 account-owned artifacts, and product-law authorities instead of guessing
 through a large opaque app. This reduces operational cost and increases speed.
 
+Each Widget exposes its unique software as structured mandatory Core
+HTML/CSS/JavaScript and consumes the same
+shared Clickeen services. The system can therefore grow
+to hundreds of Widgets without turning Bob, Roma, or another service into a
+collection of Widget-specific branches.
+
 ### Babel And Global Availability
 
 Clickeen localizes without duplicating or rewriting source truth. Overlays are
@@ -73,6 +79,17 @@ reuse is part of the product policy for that surface.
 Public output should be fast, polished, accessible, embed-safe, locale-aware,
 and consistent with Dieter primitives. Clickeen can win conversion and retention
 by pairing that quality bar with agent-operated scale.
+
+### Static Edge And Discovery Quality
+
+Roma materializes complete HTML, CSS, and JavaScript once per explicit allowed
+Publish; Tokyo serves those artifacts repeatedly at the Edge and expresses an
+exact requested locale into meaningful HTML before JavaScript. Mandatory
+JavaScript owns Widget/shared visitor behavior instead of creating initial
+content. That
+architecture improves visitor performance and makes public Widget URLs directly
+legible to crawlers, search engines, and answer engines. It is a technical
+advantage, not a ranking or citation guarantee.
 
 ## Competitive Frame
 

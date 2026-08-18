@@ -1,0 +1,78 @@
+<main
+  class="ck-faq__body ck-headerLayout__body"
+  data-role="faq-core"
+  data-core-size-mode="{{coreSize.mode}}"
+  data-ck-core
+  {{#ck.discovery}}data-ck-discovery-kind="{{kind}}" itemscope itemtype="https://schema.org/FAQPage"{{/ck.discovery}}
+>
+  <ul class="ck-faq__sections" data-role="faq-list">
+    {{#faq.sections}}
+    <li
+      class="ck-faq__section"
+      data-role="faq-section"
+      role="group"
+      {{#faq.displayCategoryTitles}}aria-labelledby="faq-s-{{ck.instanceId}}-{{id}}"{{/faq.displayCategoryTitles}}
+    >
+      {{#faq.displayCategoryTitles}}
+      <header class="ck-faq__section-header" data-role="faq-section-header">
+        <h2
+          class="ck-faq__category"
+          data-role="faq-section-title"
+          data-ck-content-path="{{$ck.title.path}}"
+          data-ck-content-mode="{{$ck.title.mode}}"
+          {{#$ck.title.discovery}}data-ck-discovery-part="{{id}}" data-ck-discovery-role="{{role}}"{{/$ck.title.discovery}}
+          id="faq-s-{{ck.instanceId}}-{{id}}"
+        >{{title}}</h2>
+      </header>
+      {{/faq.displayCategoryTitles}}
+      <ul class="ck-faq__list" data-role="faq-section-body">
+        {{#faqs}}
+        <li
+          class="ck-faq__item"
+          data-role="faq-item"
+          id="faq-q-{{ck.instanceId}}-{{id}}"
+          {{#$ck.question.discovery}}data-ck-discovery-part="{{id}}" data-ck-discovery-role="{{role}}" itemprop="mainEntity" itemscope itemtype="https://schema.org/Question"{{/$ck.question.discovery}}
+        >
+          <h3 class="ck-faq__q" data-role="faq-question" data-expanded="false">
+            <span
+              class="ck-faq__q-text"
+              data-role="faq-question-text"
+              data-ck-content-path="{{$ck.question.path}}"
+              data-ck-content-mode="{{$ck.question.mode}}"
+              id="faq-q-{{ck.instanceId}}-{{id}}-text"
+              {{#$ck.question.discovery}}itemprop="name"{{/$ck.question.discovery}}
+            >{{{question}}}</span>
+            <button
+              type="button"
+              class="ck-faq__q-toggle"
+              data-role="faq-question-toggle"
+              aria-expanded="false"
+              aria-controls="faq-a-{{ck.instanceId}}-{{id}}"
+              aria-labelledby="faq-q-{{ck.instanceId}}-{{id}}-text"
+            >
+              <span class="ck-faq__q-icon diet-icon" data-size="16" aria-hidden="true"></span>
+            </button>
+          </h3>
+          <div
+            class="ck-faq__a"
+            data-role="faq-answer"
+            role="region"
+            id="faq-a-{{ck.instanceId}}-{{id}}"
+            aria-labelledby="faq-q-{{ck.instanceId}}-{{id}}-text"
+            {{#$ck.answer.discovery}}data-ck-discovery-part="{{id}}" data-ck-discovery-role="{{role}}" itemscope itemtype="https://schema.org/Answer"{{/$ck.answer.discovery}}
+            {{#$ck.answer.discovery.relationship}}data-ck-discovery-relationship="{{kind}}" itemprop="acceptedAnswer"{{/$ck.answer.discovery.relationship}}
+          >
+            <div
+              class="ck-faq__a-content"
+              data-ck-content-path="{{$ck.answer.path}}"
+              data-ck-content-mode="{{$ck.answer.mode}}"
+              {{#$ck.answer.discovery}}itemprop="text"{{/$ck.answer.discovery}}
+            >{{{answer}}}</div>
+          </div>
+        </li>
+        {{/faqs}}
+      </ul>
+    </li>
+    {{/faq.sections}}
+  </ul>
+</main>

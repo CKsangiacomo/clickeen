@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { TopDrawer } from './TopDrawer';
 import { ToolDrawer } from './ToolDrawer';
-import { UpsellPopup } from './UpsellPopup';
 import { Workspace } from './Workspace';
 import { WidgetSessionProvider } from '../lib/session/useWidgetSession';
 import { useWidgetSession, useWidgetSessionChrome } from '../lib/session/useWidgetSession';
@@ -12,19 +11,6 @@ import {
   useTranslationPreviewState,
 } from './useTranslationPreviewState';
 import { listPreviewableLocales } from '../lib/translations-preview';
-
-function UpsellPopupHost() {
-  const session = useWidgetSessionChrome();
-  const upsell = session.upsell;
-  return (
-    <UpsellPopup
-      open={Boolean(upsell)}
-      reasonKey={upsell?.reasonKey ?? ''}
-      cta={upsell?.cta ?? 'upgrade'}
-      onClose={session.dismissUpsell}
-    />
-  );
-}
 
 function BuilderShell() {
   const session = useWidgetSession();
@@ -95,8 +81,17 @@ function BuilderShell() {
   };
 
   const previewableTranslationLocales = useMemo(() => {
-    return listPreviewableLocales(translatedLocales);
-  }, [translatedLocales]);
+    return listPreviewableLocales(baseLocale, translatedLocales);
+  }, [baseLocale, translatedLocales]);
+
+  useEffect(() => {
+    if (previewMode !== 'translations' || !translationSetup) return;
+    setTranslationPreviewLocale((current) =>
+      current && previewableTranslationLocales.includes(current)
+        ? current
+        : translationSetup.baseLocale,
+    );
+  }, [previewMode, previewableTranslationLocales, translationSetup]);
   const savedTranslationReadState = resolveSavedTranslationReadState({
     list: savedTranslationListState,
     locale: savedTranslationLocaleState,
@@ -145,7 +140,6 @@ function BuilderShell() {
             savedTranslationsError={savedTranslationReadState.error}
           />
         </div>
-        <UpsellPopupHost />
       </div>
       <div className="builder-unsupported">
         <p className="heading-3">Rotate your device or use a larger screen</p>

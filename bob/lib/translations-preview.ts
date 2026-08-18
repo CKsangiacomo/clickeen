@@ -1,5 +1,7 @@
-import { asTrimmedString, isRecord } from '@clickeen/ck-contracts';
-import type { WidgetEditableFieldsContract, WidgetEditableField } from '@clickeen/ck-contracts/translated-value-primitives';
+import {
+  extractSavedTextFieldsForEditableFields,
+  type WidgetEditableFieldsContract,
+} from '@clickeen/ck-contracts/translated-value-primitives';
 
 export type TranslationSetup = {
   baseLocale: string;
@@ -44,85 +46,16 @@ export type TranslationPanelLocaleState = {
   selectedTranslationEntry: TranslatedLocaleEntry | null;
 };
 
-function normalizeValueMap(raw: unknown): Record<string, string> | null {
-  if (!isRecord(raw)) return null;
-  const values: Record<string, string> = {};
-  for (const [pathRaw, value] of Object.entries(raw)) {
-    const path = asTrimmedString(pathRaw);
-    if (!path || typeof value !== 'string') return null;
-    values[path] = value;
-  }
-  return values;
-}
-
-function normalizeLocaleList(raw: unknown): string[] {
-  if (!Array.isArray(raw)) return [];
-  return Array.from(
-    new Set(
-      raw
-        .map((entry) => asTrimmedString(entry))
-        .filter((entry): entry is string => Boolean(entry)),
-    ),
-  );
-}
-
-function normalizeTranslatedLocaleEntry(raw: unknown): TranslatedLocaleEntry | null {
-  if (!isRecord(raw)) return null;
-  const locale = asTrimmedString(raw.locale);
-  return locale ? { locale } : null;
-}
-
-export function normalizeTranslationSetup(payload: unknown): TranslationSetup | null {
-  if (!isRecord(payload)) return null;
-  const baseLocale = asTrimmedString(payload.baseLocale);
-  if (!baseLocale) return null;
-  const planTranslationsMax =
-    typeof payload.planTranslationsMax === 'number' && Number.isFinite(payload.planTranslationsMax)
-      ? Math.max(0, Math.floor(payload.planTranslationsMax))
-      : null;
-  return {
-    baseLocale,
-    planTranslationsMax,
-    activeLocales: normalizeLocaleList(payload.activeLocales).filter((locale) => locale !== baseLocale),
-  };
-}
-
-export function normalizeTranslatedLocales(payload: unknown): TranslatedLocalesData | null {
-  if (!isRecord(payload)) return null;
-  const baseLocale = asTrimmedString(payload.baseLocale);
-  if (!baseLocale || !Array.isArray(payload.translations)) return null;
-
-  const translations = payload.translations
-    .map((entry) => normalizeTranslatedLocaleEntry(entry))
-    .filter((entry): entry is TranslatedLocaleEntry => Boolean(entry));
-  if (translations.length !== payload.translations.length) return null;
-
-  return {
-    baseLocale,
-    translations,
-  };
-}
-
-export function normalizeTranslatedLocaleValues(payload: unknown): TranslatedLocaleValuesData | null {
-  if (!isRecord(payload)) return null;
-  const locale = asTrimmedString(payload.locale);
-  if (!locale) return null;
-  const values = normalizeValueMap(payload.values);
-  if (!values) return null;
-  return {
-    locale,
-    values,
-  };
-}
-
-export function listPreviewableLocales(data: TranslatedLocalesData | null): string[] {
-  if (!data) return [];
-  return Array.from(new Set([data.baseLocale, ...data.translations.map((entry) => entry.locale)]));
+export function listPreviewableLocales(
+  baseLocale: string,
+  data: TranslatedLocalesData | null,
+): string[] {
+  if (!baseLocale) return [];
+  return [baseLocale, ...(data?.translations.map((entry) => entry.locale) ?? [])];
 }
 
 export function listActivePreviewLocales(args: { baseLocale: string; activeLocales: string[] }): string[] {
-  const activeLocales = normalizeLocaleList(args.activeLocales).filter((locale) => locale !== args.baseLocale);
-  return args.baseLocale ? [args.baseLocale, ...activeLocales] : activeLocales;
+  return [args.baseLocale, ...args.activeLocales];
 }
 
 export function retainTranslatedLocaleValues(
@@ -150,7 +83,7 @@ export function buildTranslationPanelLocaleState(args: {
   const localeValue =
     args.requestedLocale && localeValues.includes(args.requestedLocale)
       ? args.requestedLocale
-      : args.baseLocale || localeValues[0] || '';
+      : args.baseLocale;
   const selectedTranslationEntry =
     localeValue && localeValue !== args.baseLocale
       ? args.translatedLocales?.translations.find((entry) => entry.locale === localeValue) ?? null
@@ -179,9 +112,14 @@ function stringAt(root: Record<string, unknown>, path: string): string {
   return typeof current === 'string' ? current : '';
 }
 
-function valueForPath(values: Record<string, string>, path: string, missing: string[]): string {
-  if (typeof values[path] === 'string') return values[path];
-  missing.push(path);
+function valueForCoordinate(
+  values: Record<string, string>,
+  coordinate: string,
+  missing: string[],
+): string {
+  const value = values[coordinate];
+  if (value !== undefined) return value;
+  missing.push(coordinate);
   return '';
 }
 
@@ -192,40 +130,6 @@ function titleCaseSegment(value: string): string {
     .trim();
   if (!words) return 'Content';
   return words.charAt(0).toUpperCase() + words.slice(1);
-}
-
-function expandFieldPaths(root: Record<string, unknown>, pattern: string): string[] {
-  const segments = pattern
-    .split('.')
-    .map((segment) => segment.trim())
-    .filter(Boolean);
-  const out: string[] = [];
-
-  const visit = (node: unknown, index: number, built: string[]) => {
-    if (index >= segments.length) {
-      if (built.length) out.push(built.join('.'));
-      return;
-    }
-
-    const segment = segments[index]!;
-    if (segment.endsWith('[]')) {
-      if (!node || typeof node !== 'object' || Array.isArray(node)) return;
-      const key = segment.slice(0, -2);
-      const next = (node as Record<string, unknown>)[key];
-      if (!Array.isArray(next)) return;
-      next.forEach((item, itemIndex) => {
-        visit(item, index + 1, [...built, key, String(itemIndex)]);
-      });
-      return;
-    }
-
-    if (!node || typeof node !== 'object' || Array.isArray(node)) return;
-    const next = (node as Record<string, unknown>)[segment];
-    visit(next, index + 1, [...built, segment]);
-  };
-
-  visit(root, 0, []);
-  return out;
 }
 
 function overlayGroupKey(path: string): string {
@@ -258,8 +162,20 @@ function overlayGroupTitle(args: {
   return index ? `${titleCaseSegment(lastText)} ${Number(index) + 1}` : titleCaseSegment(lastText);
 }
 
-function isOverlayTextField(field: WidgetEditableField): boolean {
-  return field.type === 'string' || field.type === 'richtext';
+export function mapTranslationOverlayValuesToCurrentPaths(args: {
+  contract: WidgetEditableFieldsContract;
+  config: Record<string, unknown>;
+  values: Record<string, string>;
+}): Record<string, string> {
+  const valuesByPath: Record<string, string> = {};
+  for (const field of extractSavedTextFieldsForEditableFields({
+    contract: args.contract,
+    config: args.config,
+  })) {
+    const value = args.values[field.identityKey];
+    if (value !== undefined) valuesByPath[field.path] = value;
+  }
+  return valuesByPath;
 }
 
 export function buildEditableFieldsTranslationOverlayInspection(args: {
@@ -269,28 +185,34 @@ export function buildEditableFieldsTranslationOverlayInspection(args: {
 }): TranslationOverlayInspection {
   const missingPaths: string[] = [];
   const sectionsByKey = new Map<string, TranslationOverlaySection>();
+  const fields = extractSavedTextFieldsForEditableFields({
+    contract: args.contract,
+    config: args.config,
+  });
+  const valuesByPath: Record<string, string> = {};
+  for (const field of fields) {
+    const value = args.values[field.identityKey];
+    if (value !== undefined) valuesByPath[field.path] = value;
+  }
 
-  for (const field of args.contract.fields) {
-    if (!isOverlayTextField(field)) continue;
-    for (const path of expandFieldPaths(args.config, field.path)) {
-      const groupKey = overlayGroupKey(path);
-      let section = sectionsByKey.get(groupKey);
-      if (!section) {
-        section = {
-          title: overlayGroupTitle({ config: args.config, values: args.values, groupKey }),
-          items: [],
-        };
-        sectionsByKey.set(groupKey, section);
-      }
-
-      const itemMissing = typeof args.values[path] === 'string' ? [] : [path];
-      section.items.push({
-        label: field.label,
-        path,
-        value: valueForPath(args.values, path, missingPaths),
-        missingPaths: itemMissing,
-      });
+  for (const field of fields) {
+    const groupKey = overlayGroupKey(field.path);
+    let section = sectionsByKey.get(groupKey);
+    if (!section) {
+      section = {
+        title: overlayGroupTitle({ config: args.config, values: valuesByPath, groupKey }),
+        items: [],
+      };
+      sectionsByKey.set(groupKey, section);
     }
+
+    const itemMissing = args.values[field.identityKey] === undefined ? [field.identityKey] : [];
+    section.items.push({
+      label: field.label,
+      path: field.identityKey,
+      value: valueForCoordinate(args.values, field.identityKey, missingPaths),
+      missingPaths: itemMissing,
+    });
   }
 
   return {

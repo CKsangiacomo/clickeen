@@ -1,6 +1,3 @@
-import { asTrimmedString, isRecord } from '@clickeen/ck-contracts';
-import { isCompactInstanceId } from '@clickeen/ck-contracts/overlay-identity';
-import { readWidgetEditableFieldsContract } from '@clickeen/ck-contracts/translated-value-primitives';
 import type { WidgetEditableFieldsContract } from '@clickeen/ck-contracts/translated-value-primitives';
 import { callTokyo, type TokyoCallContext } from './tokyo-client';
 import {
@@ -16,6 +13,8 @@ export type DirectRouteError = {
   reasonKey: string;
   detail?: string;
   paths?: string[];
+  current?: number;
+  limit?: number;
 };
 
 type RouteFailure = {
@@ -31,9 +30,8 @@ export type AccountInstanceCoreRow = {
   widgetId?: string;
   accountId: string;
   widgetType: string;
-  baseLocale?: string;
-  publicPackageFingerprint: string;
-  publishStatus?: AccountInstanceLiveStatus;
+  baseLocale: string;
+  publishStatus: AccountInstanceLiveStatus;
 };
 
 export type AccountInstanceLiveStatus = 'published' | 'unpublished';
@@ -42,11 +40,6 @@ export type AccountInstancePublicPackage = {
   indexHtml: string;
   stylesCss: string;
   runtimeJs: string;
-};
-
-export type AccountInstancePublicPackageRead = {
-  publicPackageFingerprint: string;
-  publicPackage: AccountInstancePublicPackage;
 };
 
 export type AccountWidgetInstanceListFact = {
@@ -62,11 +55,6 @@ export type AccountWidgetInstanceIds = {
   accountId: string;
   instanceIds: string[];
 };
-
-const RETIRED_TOKYO_ACCOUNT_INSTANCE_LIST_FIELDS = [
-  'accountInstances',
-  'publishedCount',
-] as const;
 
 export type TokyoWidgetDefinition = {
   widgetType: string;
@@ -90,204 +78,45 @@ function tokyoCallContext(args: {
   };
 }
 
-function invalidTokyoPayload(detail: string): RouteFailure {
-  return {
-    ok: false,
-    status: 502,
-    error: {
-      kind: 'UPSTREAM_UNAVAILABLE',
-      reasonKey: 'coreui.errors.instance.invalidPayload',
-      detail,
-    },
+type TokyoAccountInstancePayload = {
+  ok: true;
+  accountId: string;
+  instanceId: string;
+  widgetCode: string;
+  widgetType: string;
+  displayName: string | null;
+  publishStatus: AccountInstanceLiveStatus;
+  updatedAt: string;
+  baseLocale: string;
+  source: {
+    config: Record<string, unknown>;
+    content: AccountInstanceContentDocument;
   };
-}
+};
 
-function isAccountInstanceContentDocument(value: unknown): value is AccountInstanceContentDocument {
-  if (!isRecord(value) || !isRecord(value.fields)) return false;
-  return (
-    typeof value.id === 'string' &&
-    typeof value.accountId === 'string' &&
-    typeof value.widgetType === 'string' &&
-    typeof value.updatedAt === 'string'
-  );
-}
-
-function notFoundFailure(args: { reasonKey: string; detail?: string }): RouteFailure {
-  return {
-    ok: false,
-    status: 404,
-    error: {
-      kind: 'NOT_FOUND',
-      reasonKey: args.reasonKey,
-      ...(args.detail ? { detail: args.detail } : {}),
-    },
-  };
-}
-
-function resolveSavedInstanceDisplayName(args: {
-  displayName: unknown;
-}): string | null {
-  const displayName = asTrimmedString(args.displayName);
-  if (displayName) return displayName;
-  return null;
-}
-
-function normalizeTokyoWidgetDefinition(raw: unknown): TokyoWidgetDefinition | null {
-  if (!isRecord(raw)) return null;
-  const widgetType = asTrimmedString(raw.widgetType);
-  const widgetCode = asTrimmedString(raw.widgetCode);
-  const displayName = asTrimmedString(raw.displayName);
-  const description = typeof raw.description === 'string' ? raw.description : null;
-  let editableFields: WidgetEditableFieldsContract | null = null;
-  try {
-    editableFields = readWidgetEditableFieldsContract(raw.editableFields);
-  } catch {
-    editableFields = null;
-  }
-  if (!widgetType || !widgetCode || !displayName || description == null || !editableFields)
-    return null;
-  return {
-    widgetType,
-    widgetCode,
-    displayName,
-    description,
-    editableFields,
-  };
-}
-
-function normalizeTokyoWidgetDefinitions(raw: unknown): TokyoWidgetDefinition[] | null {
-  if (!Array.isArray(raw)) return null;
-  const entries = raw.map((entry) => normalizeTokyoWidgetDefinition(entry));
-  if (entries.some((entry) => !entry)) return null;
-  return entries as TokyoWidgetDefinition[];
-}
-
-function normalizeAccountWidgetInstanceIdsPayload(raw: unknown, expectedAccountId: string): AccountWidgetInstanceIds | null {
-  if (!isRecord(raw)) return null;
-  if (raw.ok !== true) return null;
-  if (RETIRED_TOKYO_ACCOUNT_INSTANCE_LIST_FIELDS.some((field) => field in raw)) return null;
-  const accountId = asTrimmedString(raw.accountId);
-  if (accountId !== expectedAccountId) return null;
-  if (!Array.isArray(raw.instanceIds)) return null;
-  const seen = new Set<string>();
-  const instanceIds: string[] = [];
-  for (const value of raw.instanceIds) {
-    if (!isCompactInstanceId(value) || seen.has(value)) return null;
-    seen.add(value);
-    instanceIds.push(value);
-  }
-  return { accountId, instanceIds };
-}
-
-function normalizeAccountWidgetInstanceListFactPayload(
-  raw: unknown,
-  expectedAccountId: string,
-  expectedInstanceId: string,
-): AccountWidgetInstanceListFact | null {
-  if (!isRecord(raw)) return null;
-  if (raw.ok !== true) return null;
-  const accountId = asTrimmedString(raw.accountId);
-  const instanceId = asTrimmedString(raw.instanceId);
-  const widgetType = asTrimmedString(raw.widgetType);
-  const updatedAt = asTrimmedString(raw.updatedAt);
-  const publishStatus =
-    raw.publishStatus === 'published'
-      ? 'published'
-      : raw.publishStatus === 'unpublished'
-        ? 'unpublished'
-        : null;
-  const displayName =
-    typeof raw.displayName === 'string'
-      ? raw.displayName
-      : raw.displayName === null
-        ? null
-        : undefined;
-  if (
-    accountId !== expectedAccountId ||
-    instanceId !== expectedInstanceId ||
-    !isCompactInstanceId(instanceId) ||
-    !widgetType ||
-    !updatedAt ||
-    !publishStatus ||
-    displayName === undefined
-  ) {
-    return null;
-  }
-  return {
-    accountId,
-    instanceId,
-    widgetType,
-    displayName,
-    updatedAt,
-    publishStatus,
-  };
-}
-
-function normalizeAccountInstancePayload(payload: unknown): {
+function composeTokyoAccountInstance(payload: TokyoAccountInstancePayload): {
   row: AccountInstanceCoreRow;
   config: Record<string, unknown>;
-} | null {
-  if (!isRecord(payload)) return null;
-  const source = isRecord(payload.source) ? payload.source : null;
-  const sourceConfig = isRecord(source?.config) ? source.config : null;
-  const sourceContent = isAccountInstanceContentDocument(source?.content) ? source.content : null;
-  if (!sourceConfig || !sourceContent) return null;
-  const instanceId = asTrimmedString(payload.instanceId ?? payload.id);
-  const accountId = asTrimmedString(payload.accountId);
-  const widgetType = asTrimmedString(payload.widgetType);
-  const publicPackageFingerprint = asTrimmedString(payload.publicPackageFingerprint);
-  if (!instanceId || !accountId || !widgetType || !publicPackageFingerprint) return null;
+  source: {
+    config: Record<string, unknown>;
+    content: AccountInstanceContentDocument;
+  };
+} {
   return {
     row: {
-      instanceId,
-      displayName: resolveSavedInstanceDisplayName({
-        displayName: payload.displayName,
-      }),
-      updatedAt: asTrimmedString(payload.updatedAt),
-      accountId,
-      widgetType,
-      baseLocale: asTrimmedString(payload.baseLocale) ?? undefined,
-      publicPackageFingerprint,
-      publishStatus:
-        payload.publishStatus === 'published'
-          ? 'published'
-          : payload.publishStatus === 'unpublished'
-            ? 'unpublished'
-            : undefined,
+      instanceId: payload.instanceId,
+      displayName: payload.displayName,
+      updatedAt: payload.updatedAt,
+      accountId: payload.accountId,
+      widgetType: payload.widgetType,
+      baseLocale: payload.baseLocale,
+      publishStatus: payload.publishStatus,
     },
     config: composeConfigWithInstanceContent({
-      config: sourceConfig,
-      content: sourceContent,
+      config: payload.source.config,
+      content: payload.source.content,
     }),
-  };
-}
-
-function normalizeAccountInstancePublicPackagePayload(
-  payload: unknown,
-  expectedAccountId: string,
-  expectedInstanceId: string,
-): AccountInstancePublicPackageRead | null {
-  if (!isRecord(payload) || payload.ok !== true) return null;
-  if (
-    asTrimmedString(payload.accountId) !== expectedAccountId ||
-    asTrimmedString(payload.instanceId) !== expectedInstanceId ||
-    !isRecord(payload.publicPackage)
-  ) {
-    return null;
-  }
-  const { indexHtml, stylesCss, runtimeJs } = payload.publicPackage;
-  const publicPackageFingerprint = asTrimmedString(payload.publicPackageFingerprint);
-  if (
-    !publicPackageFingerprint ||
-    typeof indexHtml !== 'string' ||
-    typeof stylesCss !== 'string' ||
-    typeof runtimeJs !== 'string'
-  ) {
-    return null;
-  }
-  return {
-    publicPackageFingerprint,
-    publicPackage: { indexHtml, stylesCss, runtimeJs },
+    source: payload.source,
   };
 }
 
@@ -300,24 +129,26 @@ async function openAccountInstanceFromTokyo(args: {
 }): Promise<
   | {
       ok: true;
-      value: { row: AccountInstanceCoreRow; config: Record<string, unknown> } | null;
+      value: {
+        row: AccountInstanceCoreRow;
+        config: Record<string, unknown>;
+        source: {
+          config: Record<string, unknown>;
+          content: AccountInstanceContentDocument;
+        };
+      };
     }
   | RouteFailure
 > {
   const result = await callTokyo(tokyoCallContext(args), {
     path: `/__internal/instances/${encodeURIComponent(args.instanceId)}`,
     method: 'GET',
-    decode: (payload) => payload,
+    decode: (payload) => payload as TokyoAccountInstancePayload,
     errorDetail: 'tokyo_instance_open_http_error',
     errorKey: 'coreui.errors.db.readFailed',
   });
-  if (!result.ok) {
-    if (result.status === 404) return { ok: true, value: null };
-    return result;
-  }
-  const saved = normalizeAccountInstancePayload(result.value);
-  if (!saved) return invalidTokyoPayload('invalid Tokyo account instance payload');
-  return { ok: true, value: saved };
+  if (!result.ok) return result;
+  return { ok: true, value: composeTokyoAccountInstance(result.value) };
 }
 
 export async function createAccountInstanceInTokyo(args: {
@@ -328,11 +159,6 @@ export async function createAccountInstanceInTokyo(args: {
   displayName?: string | null;
   config: Record<string, unknown>;
   content: AccountInstanceContentDocument;
-  publicPackage: {
-        indexHtml: string;
-    stylesCss: string;
-    runtimeJs: string;
-  };
   baseLocale: string;
   internalServiceName?: string | null;
   requestId?: string | null;
@@ -340,93 +166,52 @@ export async function createAccountInstanceInTokyo(args: {
   | { ok: true; value: { row: AccountInstanceCoreRow; config: Record<string, unknown> } }
   | RouteFailure
 > {
-  const requestedWidgetType = asTrimmedString(args.widgetType);
-  if (!requestedWidgetType) {
-    return {
-      ok: false,
-      status: 422,
-      error: {
-        kind: 'VALIDATION',
-        reasonKey: 'coreui.errors.instance.widgetMissing',
-        detail: 'widgetType is required',
-      },
-    };
-  }
   const result = await callTokyo(tokyoCallContext(args), {
     path: '/__internal/instances',
     method: 'POST',
     body: {
       instanceId: args.instanceId,
-      widgetType: requestedWidgetType,
-      ...(args.displayName !== undefined ? { displayName: args.displayName } : {}),
+      widgetType: args.widgetType,
+      displayName: args.displayName ?? null,
       source: {
         config: args.config,
         content: args.content,
       },
-      publicPackage: args.publicPackage,
       baseLocale: args.baseLocale,
     },
-    decode: (payload) => payload,
+    decode: (payload) => payload as TokyoAccountInstancePayload,
     errorDetail: 'tokyo_instance_create_http_error',
     errorKey: 'coreui.errors.db.writeFailed',
   });
   if (!result.ok) return result;
 
-  const saved = normalizeAccountInstancePayload(result.value);
-  if (!saved) return invalidTokyoPayload('invalid Tokyo create instance payload');
-  return { ok: true, value: saved };
+  return { ok: true, value: composeTokyoAccountInstance(result.value) };
 }
 
 export async function saveAccountInstanceInTokyo(args: {
   accountId: string;
   instanceId: string;
   accountCapsule?: string | null;
-  widgetType: string;
-  baseLocale: string;
   config: Record<string, unknown>;
   content: AccountInstanceContentDocument;
-  publicPackage: {
-        indexHtml: string;
-    stylesCss: string;
-    runtimeJs: string;
-  };
-  displayName?: string | null;
   internalServiceName?: string | null;
   requestId?: string | null;
-}): Promise<
-  | {
-      ok: true;
-      value: {
-        live: boolean;
-      };
-    }
-  | RouteFailure
-> {
+}): Promise<{ ok: true } | RouteFailure> {
   const result = await callTokyo(tokyoCallContext(args), {
     path: `/__internal/instances/${encodeURIComponent(args.instanceId)}`,
     method: 'PUT',
     body: {
-      widgetType: args.widgetType,
-      baseLocale: args.baseLocale,
       source: {
         config: args.config,
         content: args.content,
       },
-      publicPackage: args.publicPackage,
-      ...(args.displayName !== undefined ? { displayName: args.displayName } : {}),
     },
-    decode: (payload) => payload,
+    decode: (payload) => payload as { ok: true },
     errorDetail: 'tokyo_instance_save_http_error',
     errorKey: 'coreui.errors.db.writeFailed',
   });
   if (!result.ok) return result;
-  const payload = isRecord(result.value) ? result.value : {};
-  return {
-    ok: true,
-    value: {
-      live: payload.live === true,
-    },
-  };
+  return { ok: true };
 }
 
 async function postInstanceStatusTransition(args: {
@@ -436,7 +221,6 @@ async function postInstanceStatusTransition(args: {
   internalServiceName?: string | null;
   requestId?: string | null;
   action: 'publish' | 'unpublish';
-  expectedStatus: AccountInstanceLiveStatus;
   body?: Record<string, unknown>;
 }): Promise<
   | { ok: true; value: { instanceId: string; status: AccountInstanceLiveStatus; changed: boolean } }
@@ -446,48 +230,42 @@ async function postInstanceStatusTransition(args: {
     path: `/__internal/instances/${encodeURIComponent(args.instanceId)}/${args.action}`,
     method: 'POST',
     body: args.body ?? {},
-    decode: (payload) => payload,
+    decode: (payload) =>
+      payload as {
+        instanceId: string;
+        status: AccountInstanceLiveStatus;
+        changed: boolean;
+      },
     errorDetail: `tokyo_instance_${args.action}_http_error`,
     errorKey: 'roma.errors.proxy.tokyo_unavailable',
   });
   if (!result.ok) return result;
-  const payload = isRecord(result.value) ? result.value : null;
-  const instanceId = asTrimmedString(payload?.instanceId);
-  if (!instanceId || payload?.status !== args.expectedStatus) {
-    return invalidTokyoPayload(`invalid Tokyo ${args.action} payload`);
-  }
-  return {
-    ok: true,
-    value: {
-      instanceId,
-      status: args.expectedStatus,
-      changed: payload?.changed === true,
-    },
-  };
+  return { ok: true, value: result.value };
 }
 
 export async function publishAccountInstanceInTokyo(args: {
   accountId: string;
   instanceId: string;
+  publishedLimit: number;
   accountCapsule?: string | null;
   internalServiceName?: string | null;
   requestId?: string | null;
+  publicPackage: AccountInstancePublicPackage;
 }): Promise<
   { ok: true; value: { instanceId: string; status: 'published'; changed: boolean } } | RouteFailure
 > {
   const result = await postInstanceStatusTransition({
     ...args,
     action: 'publish',
-    expectedStatus: 'published',
+    body: {
+      publishedLimit: args.publishedLimit,
+      publicPackage: args.publicPackage,
+    },
   });
   if (!result.ok) return result;
-  return {
-    ok: true,
-    value: {
-      instanceId: result.value.instanceId,
-      status: 'published',
-      changed: result.value.changed,
-    },
+  return result as {
+    ok: true;
+    value: { instanceId: string; status: 'published'; changed: boolean };
   };
 }
 
@@ -504,16 +282,11 @@ export async function unpublishAccountInstanceInTokyo(args: {
   const result = await postInstanceStatusTransition({
     ...args,
     action: 'unpublish',
-    expectedStatus: 'unpublished',
   });
   if (!result.ok) return result;
-  return {
-    ok: true,
-    value: {
-      instanceId: result.value.instanceId,
-      status: 'unpublished',
-      changed: result.value.changed,
-    },
+  return result as {
+    ok: true;
+    value: { instanceId: string; status: 'unpublished'; changed: boolean };
   };
 }
 
@@ -527,19 +300,12 @@ export async function deleteAccountInstanceFromTokyo(args: {
   const result = await callTokyo(tokyoCallContext(args), {
     path: `/__internal/instances/${encodeURIComponent(args.instanceId)}`,
     method: 'DELETE',
-    decode: (payload) => payload,
+    decode: (payload) => payload as { ok: true; existed: boolean },
     errorDetail: 'tokyo_account_instance_delete_http_error',
     errorKey: 'coreui.errors.db.writeFailed',
   });
   if (!result.ok) return result;
-  const payload = result.ok && isRecord(result.value) ? result.value : null;
-  if (payload?.existed === false || payload?.deleted === false) {
-    return notFoundFailure({ reasonKey: 'coreui.errors.instance.notFound' });
-  }
-  if (payload?.existed !== true && payload?.deleted !== true) {
-    return invalidTokyoPayload('invalid Tokyo delete instance payload');
-  }
-  return { ok: true, value: { existed: true } };
+  return { ok: true, value: { existed: result.value.existed } };
 }
 
 export async function loadTokyoAccountInstanceDocument<TRow extends AccountInstanceCoreRow>(args: {
@@ -551,53 +317,27 @@ export async function loadTokyoAccountInstanceDocument<TRow extends AccountInsta
 }): Promise<
   | {
       ok: true;
-      value: { row: TRow; config: Record<string, unknown> };
+      value: {
+        row: TRow;
+        config: Record<string, unknown>;
+        source: {
+          config: Record<string, unknown>;
+          content: AccountInstanceContentDocument;
+        };
+      };
     }
   | RouteFailure
 > {
   const saved = await openAccountInstanceFromTokyo(args);
   if (!saved.ok) return saved;
-  if (!saved.value) {
-    return {
-      ok: false,
-      status: 404,
-      error: {
-        kind: 'NOT_FOUND',
-        reasonKey: 'coreui.errors.instance.notFound',
-      },
-    };
-  }
   return {
     ok: true,
     value: {
       row: saved.value.row as TRow,
       config: saved.value.config,
+      source: saved.value.source,
     },
   };
-}
-
-export async function loadTokyoAccountInstancePublicPackage(args: {
-  accountId: string;
-  instanceId: string;
-  accountCapsule?: string | null;
-  internalServiceName?: string | null;
-  requestId?: string | null;
-}): Promise<{ ok: true; value: AccountInstancePublicPackageRead } | RouteFailure> {
-  const result = await callTokyo(tokyoCallContext(args), {
-    path: `/__internal/instances/${encodeURIComponent(args.instanceId)}/package`,
-    method: 'GET',
-    decode: (payload) => payload,
-    errorDetail: 'tokyo_instance_package_read_http_error',
-    errorKey: 'coreui.errors.db.readFailed',
-  });
-  if (!result.ok) return result;
-  const publicPackage = normalizeAccountInstancePublicPackagePayload(
-    result.value,
-    args.accountId,
-    args.instanceId,
-  );
-  if (!publicPackage) return invalidTokyoPayload('invalid Tokyo account instance package payload');
-  return { ok: true, value: publicPackage };
 }
 
 export async function listAccountWidgetInstanceIds(args: {
@@ -609,17 +349,19 @@ export async function listAccountWidgetInstanceIds(args: {
   const result = await callTokyo(tokyoCallContext(args), {
     path: `/__internal/accounts/${encodeURIComponent(args.accountId)}/instances`,
     method: 'GET',
-    decode: (payload) => payload,
+    decode: (payload) => payload as { ok: true } & AccountWidgetInstanceIds,
     errorDetail: 'tokyo_account_instance_ids_list_http_error',
     errorKey: 'coreui.errors.db.readFailed',
   });
   if (!result.ok) return result;
 
-  const payload = normalizeAccountWidgetInstanceIdsPayload(result.value, args.accountId);
-  if (!payload) {
-    return invalidTokyoPayload('invalid Tokyo account instance ids payload');
-  }
-  return { ok: true, value: payload };
+  return {
+    ok: true,
+    value: {
+      accountId: result.value.accountId,
+      instanceIds: result.value.instanceIds,
+    },
+  };
 }
 
 async function loadAccountWidgetInstanceListFact(args: {
@@ -632,21 +374,13 @@ async function loadAccountWidgetInstanceListFact(args: {
   const result = await callTokyo(tokyoCallContext(args), {
     path: `/__internal/instances/${encodeURIComponent(args.instanceId)}/list-facts`,
     method: 'GET',
-    decode: (payload) => payload,
+    decode: (payload) => payload as { ok: true } & AccountWidgetInstanceListFact,
     errorDetail: 'tokyo_account_instance_list_fact_http_error',
     errorKey: 'coreui.errors.db.readFailed',
   });
   if (!result.ok) return result;
 
-  const payload = normalizeAccountWidgetInstanceListFactPayload(
-    result.value,
-    args.accountId,
-    args.instanceId,
-  );
-  if (!payload) {
-    return invalidTokyoPayload('invalid Tokyo account instance list-facts payload');
-  }
-  return { ok: true, value: payload };
+  return { ok: true, value: result.value };
 }
 
 export async function loadAccountWidgetInstanceFacts(args: {
@@ -664,7 +398,6 @@ export async function loadAccountWidgetInstanceFacts(args: {
   const instanceIds = ids.value.instanceIds;
   const concurrency = 8;
   const facts: AccountWidgetInstanceListFact[] = [];
-  const seen = new Set<string>();
   let nextIndex = 0;
   let failure: RouteFailure | null = null;
 
@@ -672,8 +405,8 @@ export async function loadAccountWidgetInstanceFacts(args: {
     while (!failure) {
       const index = nextIndex;
       nextIndex += 1;
+      if (index >= instanceIds.length) return;
       const instanceId = instanceIds[index];
-      if (!instanceId) return;
       const fact = await loadAccountWidgetInstanceListFact({
         accountId: args.accountId,
         instanceId,
@@ -685,11 +418,6 @@ export async function loadAccountWidgetInstanceFacts(args: {
         failure = fact;
         return;
       }
-      if (seen.has(fact.value.instanceId)) {
-        failure = invalidTokyoPayload('duplicate Tokyo account instance list-facts payload');
-        return;
-      }
-      seen.add(fact.value.instanceId);
       facts.push(fact.value);
     }
   }
@@ -714,18 +442,14 @@ export async function listTokyoWidgetDefinitions(args: {
   const result = await callTokyo(tokyoCallContext(args), {
     path: '/__internal/widgets/definitions',
     method: 'GET',
-    decode: (payload) => payload,
+    decode: (payload) =>
+      payload as { ok: true; widgetDefinitions: TokyoWidgetDefinition[] },
     errorDetail: 'tokyo_widget_definitions_http_error',
     errorKey: 'coreui.errors.db.readFailed',
   });
   if (!result.ok) return result;
 
-  const payload = isRecord(result.value) ? result.value : {};
-  const widgetDefinitions = normalizeTokyoWidgetDefinitions(payload.widgetDefinitions);
-  if (!widgetDefinitions) {
-    return invalidTokyoPayload('invalid Tokyo widget definitions payload');
-  }
-  return { ok: true, value: { widgetDefinitions } };
+  return { ok: true, value: { widgetDefinitions: result.value.widgetDefinitions } };
 }
 
 export async function renameAccountInstanceInTokyo(args: {
@@ -742,16 +466,17 @@ export async function renameAccountInstanceInTokyo(args: {
     body: {
       displayName: args.displayName,
     },
-    decode: (payload) => payload,
+    decode: (payload) =>
+      payload as { ok: true; instanceId: string; displayName: string },
     errorDetail: 'tokyo_instance_rename_http_error',
     errorKey: 'coreui.errors.db.writeFailed',
   });
   if (!result.ok) return result;
-  const payload = isRecord(result.value) ? result.value : null;
-  const instanceId = asTrimmedString(payload?.instanceId);
-  const displayName = asTrimmedString(payload?.displayName);
-  if (!instanceId || !displayName) {
-    return invalidTokyoPayload('invalid Tokyo rename instance payload');
-  }
-  return { ok: true, value: { instanceId, displayName } };
+  return {
+    ok: true,
+    value: {
+      instanceId: result.value.instanceId,
+      displayName: result.value.displayName,
+    },
+  };
 }

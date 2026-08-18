@@ -50,7 +50,7 @@ async function testExplicitTranslationRouteSurvives(): Promise<void> {
   assert.doesNotMatch(panelSource, /localePackages|localized package|public package/i);
   assert.match(translationValuesRouteSource, /export async function PUT/);
   assert.match(translationValuesRouteSource, /writeAccountInstanceTranslationValues/);
-  assert.match(tokyoTranslationValuesSource, /locale === stored\.configDoc\.baseLocale/);
+  assert.match(tokyoTranslationValuesSource, /locale === stored\.baseLocale/);
   assert.match(tokyoTranslationValuesSource, /tokyo\.translation\.locale\.base_forbidden/);
 }
 

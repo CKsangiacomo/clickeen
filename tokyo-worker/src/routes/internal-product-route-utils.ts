@@ -24,16 +24,6 @@ export function normalizeAccountPublicId(value: unknown): string {
   return isCompactAccountPublicId(accountId) ? accountId : '';
 }
 
-export function normalizeTranslatedValues(value: unknown): Record<string, string> | null {
-  if (!isRecord(value)) return null;
-  const values: Record<string, string> = {};
-  for (const [path, text] of Object.entries(value)) {
-    if (!path || typeof text !== 'string') return null;
-    values[path] = text;
-  }
-  return values;
-}
-
 function asTrimmedString(value: unknown): string | null {
   const normalized = typeof value === 'string' ? value.trim() : '';
   return normalized || null;
@@ -126,6 +116,7 @@ export function transitionErrorResponse(error: unknown): Response {
           reasonKey: error.reasonKey,
           detail: error.message,
           ...(error.paths?.length ? { paths: error.paths } : {}),
+          ...(error.capacity ?? {}),
         },
       },
       { status: error.status },

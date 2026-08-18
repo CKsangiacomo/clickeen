@@ -1,5 +1,7 @@
-import type { WidgetEditableFieldsContract } from '@clickeen/ck-contracts/translated-value-primitives';
-import { extractSavedTextFieldsForEditableFields } from '@clickeen/ck-contracts/translated-value-primitives';
+import type {
+  WidgetEditableField,
+  WidgetEditableFieldsContract,
+} from '@clickeen/ck-contracts/translated-value-primitives';
 
 export type AccountInstanceContentDocument = {
   id: string;
@@ -22,84 +24,156 @@ export type AccountInstanceSourceArtifacts = {
   content: AccountInstanceContentDocument;
 };
 
-export type AccountInstanceSourceArtifactsFailure = {
-  ok: false;
-  status: 422;
-  error: {
-    kind: 'VALIDATION';
-    reasonKey: string;
-    detail?: string;
-  };
-};
-
 function cloneRecord(value: Record<string, unknown>): Record<string, unknown> {
-  return JSON.parse(JSON.stringify(value)) as Record<string, unknown>;
+  return structuredClone(value);
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+type TrustedPathStep = {
+  key: string;
+  repeat: boolean;
+};
+
+type TrustedSavedTextField = {
+  identityKey: string;
+  fieldPattern: string;
+  path: string;
+  baseText: string;
+};
+
+function trustedPathSteps(path: string): TrustedPathStep[] {
+  return path.split('.').map((segment) => ({
+    key: segment.endsWith('[]') ? segment.slice(0, -2) : segment,
+    repeat: segment.endsWith('[]'),
+  }));
+}
+
+function trustedPattern(steps: TrustedPathStep[]): string {
+  return steps.map((step) => `${step.key}${step.repeat ? '[]' : ''}`).join('.');
+}
+
+function trustedValueAtPath(root: unknown, parts: string[]): unknown {
+  let current = root;
+  for (const part of parts) {
+    current = /^\d+$/.test(part)
+      ? (current as unknown[])[Number(part)]
+      : (current as Record<string, unknown>)[part];
+  }
+  return current;
+}
+
+function trustedIdentityKey(args: {
+  widgetType: string;
+  field: WidgetEditableField;
+  root: Record<string, unknown>;
+  repeatContexts: Map<string, string[]>;
+}): string {
+  if (!args.field.path.includes('[]')) {
+    return [args.widgetType, args.field.role, args.field.path].join('|');
+  }
+  const identities = args.field.arrayItemIdentity.map((identityPath) => {
+    const steps = trustedPathSteps(identityPath);
+    const owner = trustedPattern(steps.slice(0, -1));
+    const concreteOwner = args.repeatContexts.get(owner)!;
+    const value = trustedValueAtPath(args.root, [
+      ...concreteOwner,
+      steps[steps.length - 1]!.key,
+    ]);
+    return `${identityPath}=${String(value)}`;
+  });
+  return [args.widgetType, args.field.role, args.field.path, ...identities].join('|');
+}
+
+function extractTrustedFieldValues(args: {
+  widgetType: string;
+  field: WidgetEditableField;
+  root: Record<string, unknown>;
+  steps: TrustedPathStep[];
+  stepIndex: number;
+  concreteParts: string[];
+  patternParts: TrustedPathStep[];
+  repeatContexts: Map<string, string[]>;
+  output: TrustedSavedTextField[];
+}): void {
+  if (args.stepIndex === args.steps.length) {
+    args.output.push({
+      identityKey: trustedIdentityKey(args),
+      fieldPattern: args.field.path,
+      path: args.concreteParts.join('.'),
+      baseText: trustedValueAtPath(args.root, args.concreteParts) as string,
+    });
+    return;
+  }
+  const step = args.steps[args.stepIndex]!;
+  const next = (trustedValueAtPath(args.root, args.concreteParts) as Record<string, unknown>)[
+    step.key
+  ];
+  if (step.repeat) {
+    (next as unknown[]).forEach((_value, index) => {
+      const concreteParts = [...args.concreteParts, step.key, String(index)];
+      const patternParts = [...args.patternParts, step];
+      const repeatContexts = new Map(args.repeatContexts);
+      repeatContexts.set(trustedPattern(patternParts), concreteParts);
+      extractTrustedFieldValues({
+        ...args,
+        stepIndex: args.stepIndex + 1,
+        concreteParts,
+        patternParts,
+        repeatContexts,
+      });
+    });
+    return;
+  }
+  extractTrustedFieldValues({
+    ...args,
+    stepIndex: args.stepIndex + 1,
+    concreteParts: [...args.concreteParts, step.key],
+    patternParts: [...args.patternParts, step],
+  });
+}
+
+function extractTrustedSavedTextFields(args: {
+  contract: WidgetEditableFieldsContract;
+  config: Record<string, unknown>;
+}): TrustedSavedTextField[] {
+  const output: TrustedSavedTextField[] = [];
+  for (const field of args.contract.fields) {
+    extractTrustedFieldValues({
+      widgetType: args.contract.widgetType,
+      field,
+      root: args.config,
+      steps: trustedPathSteps(field.path),
+      stepIndex: 0,
+      concreteParts: [],
+      patternParts: [],
+      repeatContexts: new Map(),
+      output,
+    });
+  }
+  return output;
 }
 
 function deleteExistingPath(root: Record<string, unknown>, path: string): void {
-  const parts = path
-    .split('.')
-    .map((part) => part.trim())
-    .filter(Boolean);
+  const parts = path.split('.');
   let current: unknown = root;
-  for (let index = 0; index < parts.length; index += 1) {
+  for (let index = 0; index < parts.length - 1; index += 1) {
     const part = parts[index]!;
-    const last = index === parts.length - 1;
-    const numeric = /^\d+$/.test(part);
-    if (numeric) {
-      if (!Array.isArray(current)) return;
-      const offset = Number(part);
-      if (offset < 0 || offset >= current.length) return;
-      if (last) return;
-      current = current[offset];
-      continue;
-    }
-    if (!isRecord(current) || !Object.prototype.hasOwnProperty.call(current, part)) return;
-    if (last) {
-      delete current[part];
-      return;
-    }
-    current = current[part];
+    current = /^\d+$/.test(part)
+      ? (current as unknown[])[Number(part)]
+      : (current as Record<string, unknown>)[part];
   }
+  delete (current as Record<string, unknown>)[parts[parts.length - 1]!];
 }
 
 function setValueAtPath(root: Record<string, unknown>, path: string, value: string): void {
-  const parts = path
-    .split('.')
-    .map((part) => part.trim())
-    .filter(Boolean);
+  const parts = path.split('.');
   let current: unknown = root;
-  for (let index = 0; index < parts.length; index += 1) {
+  for (let index = 0; index < parts.length - 1; index += 1) {
     const part = parts[index]!;
-    const last = index === parts.length - 1;
-    const numeric = /^\d+$/.test(part);
-    if (numeric) {
-      if (!Array.isArray(current))
-        throw new Error(`coreui.errors.instance.content.invalid:${path}`);
-      const offset = Number(part);
-      if (offset < 0 || offset >= current.length) {
-        throw new Error(`coreui.errors.instance.content.invalid:${path}`);
-      }
-      if (last) {
-        current[offset] = value;
-        return;
-      }
-      current = current[offset];
-      continue;
-    }
-    if (!isRecord(current)) throw new Error(`coreui.errors.instance.content.invalid:${path}`);
-    if (last) {
-      current[part] = value;
-      return;
-    }
-    if (!Object.prototype.hasOwnProperty.call(current, part) || current[part] == null)
-      throw new Error(`coreui.errors.instance.content.invalid:${path}`);
-    current = current[part];
+    current = /^\d+$/.test(part)
+      ? (current as unknown[])[Number(part)]
+      : (current as Record<string, unknown>)[part];
   }
+  (current as Record<string, unknown>)[parts[parts.length - 1]!] = value;
 }
 
 export function composeConfigWithInstanceContent(args: {
@@ -113,54 +187,37 @@ export function composeConfigWithInstanceContent(args: {
   return next;
 }
 
-export function materializeAccountInstanceSourceArtifacts(args: {
+export function prepareAccountInstanceSourceArtifacts(args: {
   accountId: string;
   instanceId: string;
   widgetType: string;
   config: Record<string, unknown>;
-  editableFields?: WidgetEditableFieldsContract | null;
+  editableFields: WidgetEditableFieldsContract;
   initialStatus: 'ok' | 'changed';
-}): { ok: true; value: AccountInstanceSourceArtifacts } | AccountInstanceSourceArtifactsFailure {
+}): AccountInstanceSourceArtifacts {
   const updatedAt = new Date().toISOString();
   const config = cloneRecord(args.config);
   const fields: AccountInstanceContentDocument['fields'] = {};
-  try {
-    if (args.editableFields) {
-      for (const field of extractSavedTextFieldsForEditableFields({
-        contract: args.editableFields,
-        config: args.config,
-      })) {
-        fields[field.path] = {
-          identityKey: field.identityKey,
-          fieldPattern: field.fieldPattern,
-          value: field.baseText,
-          status: args.initialStatus,
-        };
-        deleteExistingPath(config, field.path);
-      }
-    }
-  } catch (error) {
-    return {
-      ok: false,
-      status: 422,
-      error: {
-        kind: 'VALIDATION',
-        reasonKey: 'coreui.errors.instance.content.invalid',
-        detail: error instanceof Error ? error.message : String(error),
-      },
+  for (const field of extractTrustedSavedTextFields({
+    contract: args.editableFields,
+    config: args.config,
+  })) {
+    fields[field.path] = {
+      identityKey: field.identityKey,
+      fieldPattern: field.fieldPattern,
+      value: field.baseText,
+      status: args.initialStatus,
     };
+    deleteExistingPath(config, field.path);
   }
   return {
-    ok: true,
-    value: {
-      config,
-      content: {
-        id: args.instanceId,
-        accountId: args.accountId,
-        widgetType: args.widgetType,
-        fields,
-        updatedAt,
-      },
+    config,
+    content: {
+      id: args.instanceId,
+      accountId: args.accountId,
+      widgetType: args.widgetType,
+      fields,
+      updatedAt,
     },
   };
 }

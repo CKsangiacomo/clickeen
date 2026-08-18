@@ -1,0 +1,30 @@
+{
+  "widgetType": "big-bang",
+  "kind": "statement",
+  "baseline": {
+    "title": "Big Bang by Clickeen",
+    "description": "A prominent statement published with Clickeen."
+  },
+  "parts": [
+    {
+      "id": "statement",
+      "path": "bigBang.statement",
+      "role": "headline",
+      "identityPaths": []
+    },
+    {
+      "id": "supporting-copy",
+      "path": "bigBang.supportingCopy",
+      "role": "supporting-copy",
+      "identityPaths": []
+    }
+  ],
+  "relationships": [
+    {
+      "kind": "supports",
+      "from": "supporting-copy",
+      "to": "statement",
+      "identityPaths": []
+    }
+  ]
+}

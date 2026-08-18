@@ -48,13 +48,16 @@ export type Usage = {
   latencyMs: number;
 };
 
-export type AIError =
+type AIErrorDetails =
   | { code: 'GRANT_INVALID'; message: string }
   | { code: 'GRANT_EXPIRED'; message: string }
   | { code: 'CAPABILITY_DENIED'; message: string }
   | { code: 'BUDGET_EXCEEDED'; message: string }
-  | { code: 'BAD_REQUEST'; message: string; reasonKey?: string; issues?: Array<{ path: string; message: string }> }
+  | { code: 'BAD_REQUEST'; message: string; issues?: Array<{ path: string; message: string }> }
   | { code: 'PROVIDER_ERROR'; message: string; provider: string; upstreamStatus?: number };
+
+export type AIError = AIErrorDetails & { reasonKey: string };
+export type AIErrorInput = AIErrorDetails & { reasonKey?: string };
 
 export type Env = {
   ENVIRONMENT?: string;

@@ -13,7 +13,6 @@ import type { AccountAssetsClient } from '../../../dieter/components/shared/acco
 export type WidgetDocumentSessionValue = {
   compiled: SessionState['compiled'];
   instanceData: SessionState['instanceData'];
-  publicPackage: SessionState['publicPackage'];
   isDirty: SessionState['isDirty'];
   isSaving: SessionState['isSaving'];
   lastUpdate: SessionState['lastUpdate'];
@@ -21,6 +20,7 @@ export type WidgetDocumentSessionValue = {
   fontLibrary: AccountFontLibrary | null;
   accountAssets: AccountAssetsClient;
   apiFetch: ReturnType<typeof useSessionTransport>['fetchApi'];
+  requestSystemUpsell: ReturnType<typeof useSessionTransport>['requestSystemUpsell'];
   applyOps: ReturnType<typeof useSessionEditing>['applyOps'];
   save: ReturnType<typeof useSessionSaving>['save'];
   setInstanceLabel: ReturnType<typeof useSessionEditing>['setInstanceLabel'];
@@ -46,12 +46,16 @@ export function WidgetDocumentSessionProvider({ children }: { children: ReactNod
   stateRef.current = state;
   const metaRef = useRef(chrome.meta);
   metaRef.current = chrome.meta;
+  const policyRef = useRef(chrome.policy);
+  policyRef.current = chrome.policy;
 
   const transport = useSessionTransport({ metaRef });
   const editing = useSessionEditing({
     stateRef,
+    policyRef,
     setState,
     setMeta: chrome.setMeta,
+    requestWidgetUpsell: transport.requestWidgetUpsell,
   });
   const boot = useSessionBoot({
     stateRef,
@@ -65,7 +69,6 @@ export function WidgetDocumentSessionProvider({ children }: { children: ReactNod
   const saving = useSessionSaving({
     stateRef,
     metaRef,
-    setUpsell: chrome.setUpsell,
     setState,
     executeAccountCommand: transport.executeAccountCommand,
   });
@@ -115,7 +118,6 @@ export function WidgetDocumentSessionProvider({ children }: { children: ReactNod
     () => ({
       compiled: state.compiled,
       instanceData: state.instanceData,
-      publicPackage: state.publicPackage,
       isDirty: state.isDirty,
       isSaving: state.isSaving,
       lastUpdate: state.lastUpdate,
@@ -123,6 +125,7 @@ export function WidgetDocumentSessionProvider({ children }: { children: ReactNod
       fontLibrary: chrome.meta?.fontLibrary ?? null,
       accountAssets,
       apiFetch: transport.fetchApi,
+      requestSystemUpsell: transport.requestSystemUpsell,
       applyOps: editing.applyOps,
       save: saving.save,
       setInstanceLabel: editing.setInstanceLabel,
@@ -137,6 +140,7 @@ export function WidgetDocumentSessionProvider({ children }: { children: ReactNod
       state,
       chrome.meta,
       transport.fetchApi,
+      transport.requestSystemUpsell,
     ],
   );
 

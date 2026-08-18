@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
   finalizeAccountAssetResponse,
-  isAccountAssetDeleteSuccessPayload,
   proxyAccountAssetJson,
   resolveCurrentAccountAssetGatewayContext,
 } from '@roma/lib/account-assets-gateway';
@@ -43,9 +42,5 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     method: 'DELETE',
     path: `/__internal/assets/account/${encodeURIComponent(gateway.value.accountId)}/asset/${encodeURIComponent(assetRef)}`,
     passthroughSearchParams: request.nextUrl.searchParams,
-    validateSuccessPayload: (payload) => isAccountAssetDeleteSuccessPayload(payload, {
-      accountId: gateway.value.accountId,
-      assetRef,
-    }),
   });
 }
