@@ -452,12 +452,12 @@ audit is the implementation evidence.
 PRD writing: reconciled to the deployed all-Widget implementation
 architecture implementation: present in cloud-dev for all five current Widgets
 public multi-locale switcher: Edge-authored exact locale options present in cloud-dev
-runtime code: deployed from product commit e2ac3589
-account product data: unchanged
+runtime code: deployed from product commit `36e65d8a`
+account product data: CLICKEEN Widget Defaults explicitly updated through Roma's authenticated defaults route to include the canonical shared `behavior.seoGeo.enabled:false`; QA Save/Republish was restored to the original VUWUJ7OQ0Y source/package state; the prior QD1G068MX7 instance was accidentally removed during a QA probe and replaced through normal Big Bang Create/Publish as LWZZR7JSG8
 Tokyo git-authored product root: synced; 15 retired flat/legacy objects deleted and verified 404
 main push: performed
-deploy: cloud-dev Worker/R2 run 32087699030 and Bob/Roma Pages deployments passed
-live product: cloud-dev deployed from product commit `e2ac3589`; owner QA pending
+deploy: cloud-dev Worker deploy run `32177053173`, Roma verification run `32177053128`, and reachability run `32177415308` passed for commit `36e65d8a`
+live product: cloud-dev deployed from product commit `36e65d8a`; Worker-owned cache-tag freshness proof passed on VUWUJ7OQ0Y for base, `?locale=fr`, tracking-query, CSS, and runtime variants; full 28-locale Generate lifecycle remains deferred to 127/128 after its cloud proof exceeded the 15-minute E2E allowance; owner QA remains pending
 retired flat Widget source paths: removed and inactive in deployed code
 Template catalog: normal listed CLICKEEN-admin saved instances
 Template cross-account Duplicate: not implemented follow-on
@@ -469,10 +469,10 @@ authored exact attribute localization: present in cloud-dev
 pre-GA positional-overlay compatibility path: absent; explicit Generate/delete cutover is required for previously stored positional overlays
 stored positional-overlay Generate/delete cutover: pending
 republish of affected pre-stable-slot public packages: pending
-Worker-owned account-instance Cache-Tag invalidation proof for base and locale variants: pending
+Worker-owned account-instance Cache-Tag invalidation proof for base and locale variants: passed live on `dev.clk.live/CLICKEEN/VUWUJ7OQ0Y` (first post-Republish reads were MISS for base, `?locale=fr`, tracking-query, CSS, and runtime)
 prior zone-API tag purge runtime result: proved silent no-op after warm base/locale HIT responses and successful Republish
 prior zone-API prefix purge runtime result: proved silent no-op because zone-level purge cannot invalidate Workers Caching
-current invalidation: default-entrypoint `ctx.cache.purge({ tags: [accountInstanceCacheTag] })` implemented locally; post-deploy proof pending
-post-commit publication/purge result correction: implemented locally; cloud-dev deploy proof pending
+current invalidation: default-entrypoint `ctx.cache.purge({ tags: [accountInstanceCacheTag] })` implemented and live-proven on cloud-dev
+post-commit publication/purge result correction: deployed in `36e65d8a`; cloud-dev deploy and reachability proofs passed
 independent V1-V8 audits: Pass for all-Widget source/materialization, stable localization, atomic Publish, exact product-root cutover, and the cloud-dev deploy; owner QA pending
 ```

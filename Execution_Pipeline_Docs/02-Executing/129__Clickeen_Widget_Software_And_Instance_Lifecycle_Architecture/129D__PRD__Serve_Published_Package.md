@@ -299,15 +299,15 @@ stable scalar/repeated overlay identity: present in cloud-dev
 authored exact attribute localization: present in cloud-dev
 pre-GA positional-overlay compatibility path: absent; explicit Generate/delete cutover required for previously stored positional overlays
 account suspension lifecycle runner/full deletion: documented follow-on account work, not a PRD 129 blocker
-account product data: unchanged
+account product data: CLICKEEN Widget Defaults explicitly updated through Roma's authenticated defaults route to include the canonical shared `behavior.seoGeo.enabled:false`; QA VUWUJ7OQ0Y source/package restored
 stored positional-overlay Generate/delete cutover: pending
 republish of affected pre-stable-slot public packages: pending
-Worker-owned account-instance Cache-Tag invalidation proof for base and locale variants: pending
+Worker-owned account-instance Cache-Tag invalidation proof for base and locale variants: passed live on `dev.clk.live/CLICKEEN/VUWUJ7OQ0Y` (first post-Republish reads were MISS for base, `?locale=fr`, tracking-query, CSS, and runtime)
 prior zone-API tag purge runtime result: proved silent no-op after warm base/locale HIT responses and successful Republish
 prior zone-API prefix purge runtime result: proved silent no-op because zone-level purge cannot invalidate Workers Caching
-current invalidation: default-entrypoint `ctx.cache.purge({ tags: [accountInstanceCacheTag] })` implemented locally; post-deploy proof pending
-product commit: e2ac3589
+current invalidation: default-entrypoint `ctx.cache.purge({ tags: [accountInstanceCacheTag] })` implemented and live-proven on cloud-dev
+product commit: 36e65d8a
 main push: performed
-deploy: cloud-dev Worker/R2 run 32087699030 and Bob/Roma Pages deployments passed
+deploy: cloud-dev Worker deploy run `32177053173`, Roma verification run `32177053128`, and reachability run `32177415308` passed for commit `36e65d8a`
 live product: cloud-dev active; owner QA pending
 ```

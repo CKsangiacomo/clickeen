@@ -503,6 +503,6 @@ stored positional-overlay Generate/delete cutover: pending
 republish of affected pre-stable-slot public packages: pending
 product commit: e2ac3589
 main push: performed
-deploy: cloud-dev Worker/R2 run 32087699030 and Bob/Roma Pages deployments passed
+deploy: cloud-dev Worker deploy run `32177053173`, Roma verification run `32177053128`, and reachability run `32177415308` passed for commit `36e65d8a`
 live product: cloud-dev active; owner QA pending
 ```
