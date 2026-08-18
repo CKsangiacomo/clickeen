@@ -293,8 +293,9 @@ authored exact attribute localization: present locally
 pre-GA positional-overlay compatibility path: absent; explicit Generate/delete cutover required after deploy
 account suspension lifecycle runner/full deletion: documented follow-on account work, not a PRD 129 blocker
 product data: unchanged
-commit: not created
-push: not performed
+commit: created on agent/close-prd-129
+push: performed to github/agent/close-prd-129
+draft QA PR: #16 opened
 deploy: not performed
 live product: unchanged
 ```
