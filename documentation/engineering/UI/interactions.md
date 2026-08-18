@@ -159,13 +159,13 @@ Inline monetization copy remains appropriate only when the product situation is
 genuinely inline and the user has a clear next action. It does not replace the
 ownership or one-decision rules above.
 
-Current local implementation: all five current Widget artifacts carry their
+Current cloud-dev implementation: all five current Widget artifacts carry their
 exact bound English message maps. Bob's common pre-mutation Widget-limit gate
 leaves a denied draft unchanged and sends the exact denial identity to Roma.
 Bob's local upsell Popup is removed; Roma hosts the one shared Popup and
 combines exact Widget context with system plan/action truth. Save persists
-editable source only and does not re-evaluate the Widget limit. Owner QA and
-deploy proof remain pending.
+editable source only and does not re-evaluate the Widget limit. Cloud-dev
+deploy proof passes; owner QA remains pending.
 
 ## Agent Activity
 

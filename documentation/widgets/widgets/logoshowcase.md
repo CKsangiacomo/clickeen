@@ -1,6 +1,6 @@
 # Logo Showcase Widget
 
-STATUS: CURRENT LOCAL CANONICAL IMPLEMENTATION — PRODUCT QA/DEPLOY PENDING
+STATUS: CANONICAL CORE DEPLOYED TO CLOUD-DEV — OWNER QA PENDING
 
 ## Purpose
 
@@ -9,7 +9,7 @@ carousel, or continuous carousel inside the shared Widget Shell.
 
 ## Architecture Status
 
-Logo Showcase now uses the canonical Widget contract locally. `widget.html`
+Logo Showcase uses the canonical Widget contract in cloud-dev. `widget.html`
 composes shared Stage, Pod, Header, and shared capabilities with one Logo
 Showcase Core. `core/core.html` owns complete semantic strip/logo content,
 `core/core.css` owns its presentation, and `core/core.js` owns only
@@ -21,8 +21,8 @@ order before JavaScript runs. Core JavaScript does not reconstruct saved state,
 localize content, invoke shared utilities, or receive Bob state updates. There
 is no flat-source compatibility path or Widget-specific shared-service branch.
 
-The local source and generated artifacts are complete. Product QA, deploy,
-stored-package verification, and live cloud-dev proof remain pending.
+The source, generated artifacts, and cloud-dev deploy proof are complete.
+Owner QA and a fresh Logo Showcase Publish/Republish exercise remain pending.
 
 ## Source
 

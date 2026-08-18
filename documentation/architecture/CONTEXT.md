@@ -72,14 +72,16 @@ filter, normalization, or repair pass. Authentication/authorization and
 acceptance of raw human, browser, or third-party input stay at the ingress
 boundary where that input first becomes Clickeen truth.
 
-Local implementation state: all five current Widgets implement PRD 129
-locally. Each source uses mandatory Core HTML/CSS/JavaScript; New/Duplicate and
+Cloud-dev implementation state: all five current Widgets implement PRD 129.
+Each source uses mandatory Core HTML/CSS/JavaScript; New/Duplicate and
 Save write editable source only; Builder preview uses compiled Widget software
 plus Bob's draft; Publish alone materializes the public package; and
 selected-locale serving uses the trusted overlay in Edge HTML before
 JavaScript. The retired flat sources have no compatibility path. Public index
 responses author the exact base and stored-overlay locale options at the Edge.
-These local changes have not been deployed or verified in cloud-dev.
+The Worker/R2 deploy, Bob/Roma Pages deploys, live surface checks, and
+authenticated Builder-open smoke pass for the cloud-dev release; owner QA is
+pending.
 
 ## Operating Model
 

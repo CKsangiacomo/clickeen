@@ -282,20 +282,19 @@ audit is the implementation evidence.
 ## 14. Reconciliation State
 
 ```text
-stored base package serving: present locally
-selected-locale Edge HTML expression: present locally
-client localization context/runtime: removed from the local path
-public multi-locale switcher options: authored from exact Edge coordinates locally
-package/source fingerprint readiness checks: removed from the local path
+stored base package serving: present in cloud-dev
+selected-locale Edge HTML expression: present in cloud-dev
+client localization context/runtime: removed from the deployed path
+public multi-locale switcher options: authored from exact Edge coordinates in cloud-dev
+package/source fingerprint readiness checks: removed from the deployed path
 per-request tier/account-lifecycle work: absent
-stable scalar/repeated overlay identity: present locally
-authored exact attribute localization: present locally
-pre-GA positional-overlay compatibility path: absent; explicit Generate/delete cutover required after deploy
+stable scalar/repeated overlay identity: present in cloud-dev
+authored exact attribute localization: present in cloud-dev
+pre-GA positional-overlay compatibility path: absent; explicit Generate/delete cutover required for previously stored positional overlays
 account suspension lifecycle runner/full deletion: documented follow-on account work, not a PRD 129 blocker
-product data: unchanged
-commit: created on agent/close-prd-129
-push: performed to github/agent/close-prd-129
-draft QA PR: #16 opened
-deploy: not performed
-live product: unchanged
+account product data: unchanged
+product commit: e2ac3589
+main push: performed
+deploy: cloud-dev Worker/R2 run 32087699030 and Bob/Roma Pages deployments passed
+live product: cloud-dev active; owner QA pending
 ```

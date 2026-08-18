@@ -104,14 +104,14 @@ set appears in every index response, Publish, unpublish, Delete, and overlay
 mutation purge the instance's one Cloudflare cache tag after the owning truth
 mutation. The tag covers every package file and locale/query variant.
 
-Local implementation: public serving trusts every current Widget's Roma
+Current cloud-dev implementation: public serving trusts every current Widget's Roma
 package and exact overlay, then uses Cloudflare `HTMLRewriter` over materialized
 stable-identity `data-ck-content-path` slots and sets `<html lang>` before
 JavaScript. An authored `data-ck-content-attribute` names the exact HTML
 attribute target; otherwise Tokyo replaces inner content. It does not compare
 a package/source fingerprint, inject browser locale context, or revalidate
-overlay meaning. These changes have not been deployed or verified in
-cloud-dev.
+overlay meaning. The deployment and live cloud-dev serving checks pass; owner
+QA remains pending.
 
 ## Static Read Paths
 

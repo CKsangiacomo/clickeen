@@ -113,10 +113,11 @@ inactive Billing, or invent a sales/contact destination. Opening or dismissing
 the Popup preserves unsaved Builder work; it must not invoke a discard
 confirmation because the denied action did not mutate the draft.
 
-Current local implementation: Bob's local generic upsell Popup and the second
+Current cloud-dev implementation: Bob's local generic upsell Popup and the second
 Upgrade-intent scaffold are removed. Bob sends the exact denied capability and
 compiled Widget message identity; Roma directly opens the one shared
-Roma/Dieter Popup described above. Owner QA and deploy proof remain pending.
+Roma/Dieter Popup described above. Cloud-dev deploy proof passes; owner QA
+remains pending.
 
 ## Execution Rule
 

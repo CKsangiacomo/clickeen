@@ -1,6 +1,6 @@
 # FAQ Widget
 
-STATUS: LOCAL CANONICAL CORE IMPLEMENTATION — NOT DEPLOYED
+STATUS: CANONICAL CORE DEPLOYED TO CLOUD-DEV — OWNER QA PENDING
 
 ## Purpose
 
@@ -190,7 +190,7 @@ an accordion toggle.
   overlay to semantic content slots through Cloudflare `HTMLRewriter` before
   JavaScript.
 
-## Local Verification
+## Verification
 
 ```bash
 node scripts/widgets/generate-artifacts.mjs --widget faq
@@ -199,9 +199,9 @@ git diff --check -- tokyo/product/widgets/faq documentation/widgets/widgets/faq.
 ```
 
 Inspect the focused generated editor/materializer artifacts and materialized
-FAQ HTML/CSS/JavaScript. Cloud-dev and live product truth require an authorized
-deploy and owner-surface verification; neither has been performed by the local
-PRD 129 pass.
+FAQ HTML/CSS/JavaScript. The authorized cloud-dev deployment and live
+Builder-open verification pass; owner QA and a fresh FAQ Publish/Republish
+exercise remain pending.
 
 ## Hard Stops
 

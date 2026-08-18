@@ -394,10 +394,10 @@ fingerprints or validate the overlay against saved source in the public
 request. The route coordinate, locale syntax, and publication gate remain real
 external/product boundaries.
 
-The all-Widget changes have not been deployed or verified in cloud-dev. Authenticated
-translation list/read/write operations now also trust the exact stored overlay
-coordinates and values locally; they do not project or compare them against
-saved source.
+The all-Widget changes are deployed and verified in cloud-dev; owner QA remains
+pending. Authenticated translation list/read/write operations also trust the
+exact stored overlay coordinates and values; they do not project or compare
+them against saved source.
 
 ## Verification
 

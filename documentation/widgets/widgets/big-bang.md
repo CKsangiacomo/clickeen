@@ -1,6 +1,6 @@
 # Big Bang Widget
 
-STATUS: CURRENT LOCAL CANONICAL IMPLEMENTATION — PRODUCT QA/DEPLOY PENDING
+STATUS: CANONICAL CORE DEPLOYED TO CLOUD-DEV — OWNER QA PENDING
 
 ## Purpose
 
@@ -9,7 +9,7 @@ the shared Widget Shell.
 
 ## Architecture Status
 
-Big Bang now uses the canonical Widget contract locally. `widget.html`
+Big Bang uses the canonical Widget contract in cloud-dev. `widget.html`
 composes the shared Stage, Pod, Header, branding, locale-switcher, and
 social-share services with one Big Bang Core. `core/core.html` owns the unique
 semantic statement structure, `core/core.css` owns its presentation and
@@ -22,8 +22,8 @@ copy into semantic HTML; public JavaScript does not render or localize the
 initial content. There is no flat-source compatibility path or Widget-specific
 branch in Bob, Roma, the materializer, or Tokyo-worker.
 
-The local source and generated artifacts are complete. Product QA, deploy,
-stored-package verification, and live cloud-dev proof remain pending.
+The source, generated artifacts, and cloud-dev deploy proof are complete.
+Owner QA and a fresh Big Bang Publish/Republish exercise remain pending.
 
 ## Source
 

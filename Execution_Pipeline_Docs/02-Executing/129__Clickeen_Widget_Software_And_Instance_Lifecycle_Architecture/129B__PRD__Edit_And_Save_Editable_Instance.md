@@ -490,17 +490,16 @@ audit is the implementation evidence.
 ## 18. Reconciliation State
 
 ```text
-all-Widget source-based Bob open/preview: present locally
-one browser-memory draft and generic edit decision: present locally
-one Roma upsell Popup: present locally
-source-only Save: present locally
-stored public package use by Bob preview: removed from the local path
-stable overlay identity after repeated-content Save: present locally
-positional overlay compatibility path: absent; explicit Generate/delete cutover required after deploy
-product data: unchanged
-commit: created on agent/close-prd-129
-push: performed to github/agent/close-prd-129
-draft QA PR: #16 opened
-deploy: not performed
-live product: unchanged
+all-Widget source-based Bob open/preview: present in cloud-dev
+one browser-memory draft and generic edit decision: present in cloud-dev
+one Roma upsell Popup: present in cloud-dev
+source-only Save: present in cloud-dev
+stored public package use by Bob preview: removed from the deployed path
+stable overlay identity after repeated-content Save: present in cloud-dev
+positional overlay compatibility path: absent; explicit Generate/delete cutover required for previously stored positional overlays
+account product data: unchanged
+product commit: e2ac3589
+main push: performed
+deploy: cloud-dev Worker/R2 run 32087699030 and Bob/Roma Pages deployments passed
+live product: cloud-dev active; owner QA pending
 ```

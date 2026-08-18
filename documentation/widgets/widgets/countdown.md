@@ -1,6 +1,6 @@
 # Countdown Widget
 
-STATUS: CURRENT LOCAL CANONICAL IMPLEMENTATION — PRODUCT QA/DEPLOY PENDING
+STATUS: CANONICAL CORE DEPLOYED TO CLOUD-DEV — OWNER QA PENDING
 
 ## Purpose
 
@@ -9,7 +9,7 @@ behavior inside the shared Widget Shell.
 
 ## Architecture Status
 
-Countdown now uses the canonical Widget contract locally. `widget.html`
+Countdown uses the canonical Widget contract in cloud-dev. `widget.html`
 composes shared Stage, Pod, Header, and shared capabilities with one Countdown
 Core. `core/core.html` owns the complete initial timer, labels, and actions;
 `core/core.css` owns Countdown presentation and its Timer/Unit label typography
@@ -23,8 +23,8 @@ the saved state, localize content, invoke shared utilities, or receive Bob
 state updates. There is no flat-source compatibility path or Widget-specific
 shared-service branch.
 
-The local source and generated artifacts are complete. Product QA, deploy,
-stored-package verification, and live cloud-dev proof remain pending.
+The source, generated artifacts, and cloud-dev deploy proof are complete.
+Owner QA and a fresh Countdown Publish/Republish exercise remain pending.
 
 ## Source
 

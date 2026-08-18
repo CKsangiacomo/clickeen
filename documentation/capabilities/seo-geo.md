@@ -147,13 +147,14 @@ JavaScript.
 ## Current Repository And Deploy State
 
 - Big Bang, Cards, Countdown, FAQ, and Logo Showcase have canonical source,
-  `discovery.json`, and generated artifacts locally.
+  `discovery.json`, and generated artifacts deployed to cloud-dev.
 - All five use the same Bob preview, Save, Publish, Discovery-output, and Edge
   locale contracts. FAQ additionally authors its FAQPage/Question/Answer
   microdata in Core.
 - The retired flat Widget clients have no compatibility path.
-- These changes have not been committed, pushed, deployed, or verified in
-  cloud-dev/live product.
+- Product commit `e2ac3589` is deployed to cloud-dev; Worker/R2, Pages,
+  reachability, and authenticated Builder-open evidence pass. Owner QA remains
+  pending.
 
 ## Prague Boundary
 

@@ -61,8 +61,8 @@ logoshowcase
 
 | Widget | Current source status |
 | --- | --- |
-| Big Bang | Canonical local Core implementation; product QA/deploy proof pending |
-| Cards | Canonical local Core implementation; product QA/deploy proof pending |
-| Countdown | Canonical local Core implementation; product QA/deploy proof pending |
-| FAQ | Canonical local Core implementation; product QA/deploy proof pending |
-| Logo Showcase | Canonical local Core implementation; product QA/deploy proof pending |
+| Big Bang | Canonical Core deployed to cloud-dev; owner QA pending |
+| Cards | Canonical Core deployed to cloud-dev; owner QA pending |
+| Countdown | Canonical Core deployed to cloud-dev; owner QA pending |
+| FAQ | Canonical Core deployed to cloud-dev; owner QA pending |
+| Logo Showcase | Canonical Core deployed to cloud-dev; owner QA pending |

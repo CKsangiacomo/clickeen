@@ -280,7 +280,7 @@ operation fails explicitly rather than treating corruption as absence. Tokyo
 does not run a second saved-field-equality or overlay-shape validator on every
 visitor request.
 
-Local implementation: the public index route trusts every current Widget's
+Current cloud-dev implementation: the public index route trusts every current Widget's
 exact stored base HTML and requested overlay. Cloudflare `HTMLRewriter`
 replaces exact stable-identity `data-ck-content-path` slots, respects their
 exact text/HTML mode, writes the exact authored HTML attribute when
@@ -288,8 +288,8 @@ exact text/HTML mode, writes the exact authored HTML attribute when
 response. No package fingerprint, browser locale context, client localization,
 overlay schema validator, or saved-field equality check runs in public
 serving. Missing overlay truth is `404`; an R2 or JSON read failure is `500`;
-neither falls back to base. These local changes have not been deployed or
-verified in cloud-dev.
+neither falls back to base. The Worker/R2 deployment and live serving checks
+pass in cloud-dev; owner QA remains pending.
 
 ## Private Roma Routes
 

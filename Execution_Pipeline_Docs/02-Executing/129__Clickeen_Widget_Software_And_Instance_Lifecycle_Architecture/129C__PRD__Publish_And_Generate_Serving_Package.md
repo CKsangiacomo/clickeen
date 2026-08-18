@@ -525,24 +525,23 @@ audit is the implementation evidence.
 ## 22. Reconciliation State
 
 ```text
-all-Widget explicit Publish/Republish UI: present locally
-publication-capacity decision before materialization: present locally
-Roma-only complete HTML/CSS/JavaScript generation: present locally
-all-Widget baseline Discovery and authored enabled output: present locally
-Tokyo exact package/publication write: present locally
-Unpublish without source deletion: present locally
-atomic account publication-capacity transition: present locally
+all-Widget explicit Publish/Republish UI: present in cloud-dev
+publication-capacity decision before materialization: present in cloud-dev
+Roma-only complete HTML/CSS/JavaScript generation: present in cloud-dev
+all-Widget baseline Discovery and authored enabled output: present in cloud-dev
+Tokyo exact package/publication write: present in cloud-dev
+Unpublish without source deletion: present in cloud-dev
+atomic account publication-capacity transition: present in cloud-dev
 account coordinator: one lifecycle-fenced Tokyo Durable Object per account; no durable policy/count/publication truth
 live overlap result: 409 PUBLISH_IN_PROGRESS; no package/publication persistence
 later over-capacity result: 402 UPGRADE_REQUIRED
-stable scalar/repeated overlay identity: present locally
-authored exact attribute localization target: present locally
-pre-GA positional-overlay compatibility path: absent; explicit Generate/delete cutover required after deploy
+stable scalar/repeated overlay identity: present in cloud-dev
+authored exact attribute localization target: present in cloud-dev
+pre-GA positional-overlay compatibility path: absent; explicit Generate/delete cutover required for previously stored positional overlays
 account suspension lifecycle runner/full deletion: documented follow-on account work, not a PRD 129 blocker
-product data: unchanged
-commit: created on agent/close-prd-129
-push: performed to github/agent/close-prd-129
-draft QA PR: #16 opened
-deploy: not performed
-live product: unchanged
+account product data: unchanged
+product commit: e2ac3589
+main push: performed
+deploy: cloud-dev Worker/R2 run 32087699030 and Bob/Roma Pages deployments passed
+live product: cloud-dev active; owner QA pending
 ```

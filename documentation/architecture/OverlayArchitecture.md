@@ -174,7 +174,8 @@ owner-produced overlays; they do not project or compare values against saved
 content. The public route and publication gate remain real, and no requested
 locale falls back to base.
 
-The local all-Widget changes have not been deployed or verified in cloud-dev.
+The all-Widget changes are deployed and verified in cloud-dev; owner QA remains
+pending.
 
 ## Verification
 

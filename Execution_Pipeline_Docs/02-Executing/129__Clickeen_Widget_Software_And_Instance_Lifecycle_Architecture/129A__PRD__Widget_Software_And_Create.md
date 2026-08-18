@@ -729,11 +729,11 @@ runtime recognizes two Widget architectures.
 - migration of remote account instances or Widget Defaults;
 - deployment.
 
-## 18. Local Implementation Boundary
+## 18. Deployed Implementation Boundary
 
 All five current Widget source compositions, focused and all-Widget generation,
 Discovery, limit/message bindings, the shared SEO/GEO coordinate, upsell copy,
-New, and Duplicate are implemented locally.
+New, and Duplicate are implemented and deployed to cloud-dev.
 
 Template creation is not an active product surface and the cross-account copy
 was not implemented. Its architecture is settled: the catalog is a list of
@@ -779,17 +779,16 @@ audit is the implementation evidence.
 ## 21. Reconciliation State
 
 ```text
-all five canonical Widget sources: present locally
-focused and all-Widget generated artifacts: present locally
-New source-only Create: present locally
-Duplicate source-only Create and Bob open: present locally
+all five canonical Widget sources: present in cloud-dev
+focused and all-Widget generated artifacts: present in cloud-dev
+New source-only Create: present in cloud-dev
+Duplicate source-only Create and Bob open: present in cloud-dev
 Template catalog model: normal listed CLICKEEN-admin saved instances
 Template cross-account Duplicate: not implemented
-retired flat Widget source paths: removed locally
-product data: unchanged
-commit: created on agent/close-prd-129
-push: performed to github/agent/close-prd-129
-draft QA PR: #16 opened
-deploy: not performed
-live product: unchanged
+retired flat Widget source paths: removed from git and cloud-dev R2; exact URLs return 404
+account product data: unchanged
+product commit: e2ac3589
+main push: performed
+deploy: cloud-dev Worker/R2 run 32087699030 and Bob/Roma Pages deployments passed
+live product: cloud-dev active; owner QA pending
 ```

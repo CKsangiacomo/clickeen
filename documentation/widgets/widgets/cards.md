@@ -1,6 +1,6 @@
 # Cards Widget
 
-STATUS: CURRENT LOCAL CANONICAL IMPLEMENTATION — PRODUCT QA/DEPLOY PENDING
+STATUS: CANONICAL CORE DEPLOYED TO CLOUD-DEV — OWNER QA PENDING
 
 ## Purpose
 
@@ -10,7 +10,7 @@ shared Widget Shell.
 
 ## Architecture Status
 
-Cards now uses the canonical Widget contract locally. `widget.html` composes
+Cards uses the canonical Widget contract in cloud-dev. `widget.html` composes
 shared Stage, Pod, Header, and shared capabilities with one Cards Core.
 `core/core.html` owns the complete semantic card list, `core/core.css` owns
 Cards presentation and its Card title/Card copy typography roles, and
@@ -22,8 +22,8 @@ into initial semantic HTML. Core JavaScript does not reconstruct card state,
 localize content, invoke shared utilities, or receive Bob state updates. There
 is no flat-source compatibility path or Widget-specific shared-service branch.
 
-The local source and generated artifacts are complete. Product QA, deploy,
-stored-package verification, and live cloud-dev proof remain pending.
+The source, generated artifacts, and cloud-dev deploy proof are complete.
+Owner QA and a fresh Cards Publish/Republish exercise remain pending.
 
 ## Source
 

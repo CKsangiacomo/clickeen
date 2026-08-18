@@ -345,10 +345,10 @@ exact replacement and publication-write mechanics belong to 129C.
 ## 13. All Current Widgets
 
 PRD 129 defines one architecture for every Widget. Big Bang, Cards, Countdown,
-FAQ, and Logo Showcase are the complete current local implementation and proof
-set. Clickeen is pre-GA, so the old flat source shape has no compatibility
-workflow. This local pass does not claim deploy, cloud-dev, stored-product-data,
-or live-product proof.
+FAQ, and Logo Showcase are the complete current cloud-dev implementation and
+proof set. Clickeen is pre-GA, so the old flat source shape has no compatibility
+workflow. Worker/R2, Pages, reachability, exact product-root, and authenticated
+Builder-open deployment evidence pass; owner QA remains pending.
 
 ## 14. Execution Order Used
 
@@ -426,15 +426,14 @@ audit is the implementation evidence.
 ## 18. Reconciliation State
 
 ```text
-PRD writing: reconciled to the local all-Widget implementation
-architecture implementation: present locally for all five current Widgets
-public multi-locale switcher: Edge-authored exact locale options present locally
-runtime code: changed locally
-product data: unchanged
-commit: created on agent/close-prd-129
-push: performed to github/agent/close-prd-129
-draft QA PR: #16 opened
-deploy: not performed
+PRD writing: reconciled to the deployed all-Widget implementation
+architecture implementation: present in cloud-dev for all five current Widgets
+public multi-locale switcher: Edge-authored exact locale options present in cloud-dev
+runtime code: deployed from product commit e2ac3589
+account product data: unchanged
+Tokyo git-authored product root: synced; 15 retired flat/legacy objects deleted and verified 404
+main push: performed
+deploy: cloud-dev Worker/R2 run 32087699030 and Bob/Roma Pages deployments passed
 live product: cloud-dev deployed from product commit `e2ac3589`; owner QA pending
 retired flat Widget source paths: removed and inactive in deployed code
 Template catalog: normal listed CLICKEEN-admin saved instances
@@ -445,5 +444,5 @@ account coordinator: one lifecycle-fenced Tokyo Durable Object per account; no d
 stable scalar/repeated overlay identity: present in cloud-dev
 authored exact attribute localization: present in cloud-dev
 pre-GA positional-overlay compatibility path: absent; explicit Generate/delete cutover is required for previously stored positional overlays
-independent V1-V8 audits: Pass for all-Widget source/materialization, stable localization, atomic Publish, and the cloud-dev deploy; owner QA pending
+independent V1-V8 audits: Pass for all-Widget source/materialization, stable localization, atomic Publish, exact product-root cutover, and the cloud-dev deploy; owner QA pending
 ```

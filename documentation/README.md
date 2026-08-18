@@ -219,8 +219,8 @@ Widget and shared software source
 
 All five current Widgets now use canonical Core HTML/CSS/JavaScript,
 source-based Bob preview, Publish-only materialization, and Edge locale
-expression. Their retired flat sources have no compatibility path. These local
-changes have not been deployed or verified in cloud-dev.
+expression. Their retired flat sources have no compatibility path. The PRD 129
+implementation is deployed and verified in cloud-dev; owner QA remains pending.
 
 ## Baseline Repository Commands
 
