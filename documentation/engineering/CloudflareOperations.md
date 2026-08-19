@@ -265,6 +265,10 @@ expected live contract in `CloudflarePagesCloudDevChecklist.md`.
 See [CloudflarePagesCloudDevChecklist.md](./CloudflarePagesCloudDevChecklist.md)
 for the full Pages project/env/binding inventory.
 
+Prague's Git build watch include is repository-wide `*`. Prague consumes
+shared packages and deploy-time product content outside `prague/`; a partial
+service-local watch list can skip a required production build.
+
 ## Mutation Evidence
 
 | Mutation | Required evidence |

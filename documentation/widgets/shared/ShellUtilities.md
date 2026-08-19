@@ -176,7 +176,7 @@ The switcher is runtime UI only. Translation generation belongs to the
 Translation Agent; account active-locale changes belong to Roma settings and
 Tokyo-worker overlay storage.
 
-Current local all-Widget truth: Bob preview supplies the exact delivered locale
+Current deployed all-Widget truth: Bob preview supplies the exact delivered locale
 choices through its preview document. Public index responses contain
 Edge-authored `<option>` elements for the exact base locale and stored overlay
 coordinates. The shared switcher reads those elements and does not require a

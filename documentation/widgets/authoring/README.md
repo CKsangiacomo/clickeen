@@ -28,6 +28,7 @@ Files:
 | `WidgetAuthoringChecklist.md` | Required read order, authority gate, edit boundaries, and checks. |
 
 The Core structure is the canonical authoring model for every built Widget.
-Big Bang, Cards, Countdown, FAQ, and Logo Showcase all implement it locally and
-compile through the same all-Widget generator. Product QA, deploy, and live
-verification remain pending; there is no flat-source compatibility architecture.
+Big Bang, Cards, Countdown, FAQ, and Logo Showcase all implement it in the
+deployed cloud-dev product and compile through the same all-Widget generator.
+Technical deployment and live package verification pass; human owner product
+QA remains pending. There is no flat-source compatibility architecture.

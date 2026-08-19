@@ -1,6 +1,6 @@
 # PRD 129A — Widget Software And Start
 
-Status: **LOCAL NEW-DRAFT CORRECTION IMPLEMENTED — CLOUD-DEV VERIFICATION PENDING**
+Status: **NEW-DRAFT CORRECTION DEPLOYED AND TECHNICALLY VERIFIED IN CLOUD-DEV 2026-08-19 — OWNER QA PENDING**
 
 Parent: `129__PRD__Clickeen_Widget_Software_And_Instance_Lifecycle_Architecture.md`
 
@@ -755,8 +755,9 @@ runtime recognizes two Widget architectures.
 All five current Widget source compositions, focused and all-Widget generation,
 Discovery, limit/message bindings, the shared SEO/GEO coordinate, upsell copy,
 Duplicate and the Widget software are present in cloud-dev. The corrected
-non-persisting New path is implemented locally and still requires cloud-dev
-verification.
+non-persisting New path is deployed; an authenticated New-open request left the
+four-instance inventory unchanged on 2026-08-19. Owner interaction QA remains
+pending.
 
 Template creation is not an active product surface and the cross-account copy
 was not implemented. Its architecture is settled: the catalog is a list of
@@ -805,24 +806,21 @@ audit is the implementation evidence.
 ## 21. Reconciliation State
 
 ```text
-all five canonical Widget sources: present in cloud-dev
-focused and all-Widget generated artifacts: present in cloud-dev
-New non-persisting draft: implemented locally; cloud-dev verification pending
-prior Duplicate user flow and Bob open: present in cloud-dev; atomic source-record storage is part of the unverified local correction
+all five canonical Widget sources and generated artifacts: deployed in cloud-dev
+New non-persisting draft: deployed; authenticated New-open left inventory at exactly four saved instances
+prior Duplicate user flow and Bob open: deployed; authenticated saved-instance Builder open passed
 Template catalog model: normal listed CLICKEEN-admin saved instances
 Template cross-account Duplicate: not implemented
 retired flat Widget source paths: removed from git and cloud-dev R2; exact URLs return 404
-account product data: no remote product-data work performed in this pass
-atomic editable source: one instance.source.json containing metadata/config/content is implemented locally; first Save and Duplicate commit that source record last after initial unpublished serve-state
+account product data: all four legacy saved CLICKEEN instances cut over to exact instance.source.json; legacy split objects retained but unreachable
+atomic editable source: deployed as one instance.source.json containing metadata/config/content; first Save and Duplicate commit that source record last after initial unpublished serve-state
 instance visibility: only exact instance.source.json keys enumerate; partial create prefixes are not instances
-first-Save result adoption: existing 201 result returns exact new instanceId and persisted account baseLocale for Bob session metadata plus translationSetup adoption, with no reopen/new message; implemented locally, cloud-dev verification pending; simultaneous first-Save/account-locale PATCH remains a separate unsolved race
-instance Delete commit: exact instance.source.json deletion is the logical result; residual serve-state/overlay prefix cleanup and cache eviction run afterward through waitUntil and cannot alter it; implemented locally, cloud-dev verification pending
-legacy cloud-dev source topology: every saved instance using instance.config.json plus instance.content.json needs an explicit pre-GA source cutover or recreation decision; no compatibility fallback or remote action in this pass
+first-Save result adoption: deployed; owner first-Save interaction QA remains pending; simultaneous first-Save/account-locale PATCH remains a separate unsolved race
+instance Delete commit: deployed; owner Delete interaction QA remains pending
+legacy cloud-dev source topology: cutover complete for all four saved instances; no compatibility fallback
 stored positional-overlay Generate/delete cutover: pending
-pre-GA atomic-publication cutover: deploy the corrected runtime, explicitly cut over or recreate every legacy saved instance, then explicitly Publish/Republish each instance intended to remain published so its `serve-state.json` contains the exact logical publicPackage; no compatibility fallback reads the prior separate package objects
-republish of currently published cloud-dev instances: pending; no remote product-data or Republish work performed in this pass
-prior baseline product commit: e2ac3589; current correction remains uncommitted
-main push: not performed for the corrected New path
-deploy: not performed for the corrected New path
-live product: prior source-only-Create baseline remains active; corrected New path and owner QA pending
+pre-GA atomic-publication cutover: complete; both intended-public instances Republished through Roma
+product commit and main push: a6678966
+deploy: Worker deployment, Roma/Bob runtime reachability, and Tokyo R2 product-root sync passed
+live product: corrected New path is active; technical cloud-dev verification passed; owner QA pending
 ```

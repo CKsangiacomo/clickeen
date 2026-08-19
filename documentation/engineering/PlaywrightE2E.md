@@ -268,12 +268,12 @@ pnpm e2e:smoke:copilot-runtime
 The smoke uses the authenticated Roma storage state and the `CLICKEEN` account.
 It verifies three things:
 
-- authenticated Roma -> Product Copilot route returns `kind: answer` with a
-  `meta.requestId`;
+- authenticated Roma -> Product Copilot returns an SSE stream ending in
+  `agent_turn_finished`;
 - an unmanaged selected model is rejected with HTTP 422 instead of silently
   substituting another model;
-- Bob receives the Builder instance, Copilot returns a `draft_edit`, Bob applies
-  it in browser memory, exposes `Undo`, and Undo completes.
+- Bob receives the Builder instance, Copilot streams an `apply_widget_ops` tool
+  step, Bob applies it in browser memory, exposes `Undo`, and Undo completes.
 
 Pass evidence is the command exiting `0` and printing JSON with:
 
@@ -287,12 +287,12 @@ Pass evidence is the command exiting `0` and printing JSON with:
     "displayName": "[display name]"
   },
   "route": {
-    "requestId": "[San Francisco request id]",
-    "kind": "answer"
+    "status": 200,
+    "terminalEvent": "agent_turn_finished"
   },
   "noFallback": {
     "status": 422,
-    "issue": "[selected model rejection]"
+    "reasonKey": "coreui.errors.copilot.invalidRequest"
   },
   "bob": {
     "builderUrl": "[Roma Builder URL]"

@@ -163,7 +163,7 @@ package contain no tier, entitlement, denial, Popup, CTA, or upsell behavior.
 enforcement occurs on edit, load, Save, publish, or serve. The shared system
 capability owns that user-intent boundary.
 
-Current local implementation: every built Widget has exact `limits.json`
+Current deployed implementation: every built Widget has exact `limits.json`
 message identities and `upsell/en.json`. Bob applies one decision before draft
 mutation and sends Roma `{ capability, messageId, required }`; Roma selects the
 first qualifying higher tier and opens one Popup. There is no compatibility
@@ -219,26 +219,24 @@ visible. Save/Rename each replace source once. Publish writes status,
 `publishedAt`, and logical `{ indexHtml, stylesCss, runtimeJs }` together in one
 atomic `serve-state.json`; the three public paths are not separate R2 objects.
 
-This is a pre-GA cutover. After deployment, all legacy cloud-dev saved
-instances require explicit source cutover or recreation; those retained as
-public then require explicit Publish/Republish. There is no compatibility
-reader or migration-on-read, and this documentation pass performed no remote
-operation.
+The pre-GA cutover is complete for all four legacy saved cloud-dev instances
+under `CLICKEEN`; the two public instances were Republished through Roma. There
+is no compatibility reader or migration-on-read, and retained split legacy
+objects are unreachable.
 
 Dieter icon URLs and account asset references remain external delivery
 references owned by their own roots. Dieter CSS and JavaScript do not.
 
-Current local implementation: all five built Widgets use the canonical Core
+Current deployed implementation: all five built Widgets use the canonical Core
 topology, compiled-source Bob preview, non-persisting New plus source-only Save,
 Publish-only
 complete materialization, and Edge locale expression. The all-Widget generator
 builds and verifies one artifact pair per Widget with no compatibility source
 kind or Widget-specific materializer path.
 
-Runtime code and generated artifacts prove local implementation truth. Product
-QA, deploy, stored-package verification, and live cloud-dev proof remain
-pending; deployed configuration and the serving surface separately prove live
-product truth.
+Runtime code, generated artifacts, cloud-dev deployment, the completed legacy
+source/publication cutover, and public package responses prove technical product
+truth. Human owner product QA remains pending.
 
 ## Current Widgets
 

@@ -321,17 +321,17 @@ Current entitlement keys:
 | Key | Kind | Enforcement owner | Status |
 | --- | --- | --- | --- |
 | `l10n.locales.max` | limit | Roma account locale settings | enforced |
-| `branding.remove` | flag | Bob generic edit boundary for canonical Widget bindings | locally implemented for all five current Widgets |
-| `embed.seoGeo.enabled` | flag | Bob generic **Enable SEO/GEO** edit boundary; Publish materializer consumes the exact saved result | locally implemented for all five current Widgets |
-| `widget.socialShare.enabled` | flag | Bob generic edit boundary for canonical Widget bindings | locally implemented for all five current Widgets |
+| `branding.remove` | flag | Bob generic edit boundary for canonical Widget bindings | deployed for all five current Widgets |
+| `embed.seoGeo.enabled` | flag | Bob generic **Enable SEO/GEO** edit boundary; Publish materializer consumes the exact saved result | deployed for all five current Widgets |
+| `widget.socialShare.enabled` | flag | Bob generic edit boundary for canonical Widget bindings | deployed for all five current Widgets |
 | `copilot.turns.monthly.max` | limit | Roma copilot grant issuance | enforced |
 | `storage.bytes.max` | limit | Roma policy decision; Tokyo-worker exact storage execution | enforced |
 | `views.monthly.max` | limit | clk.live public-serving telemetry | gap |
-| `instances.published.max` | limit | Roma publish policy; Tokyo-worker final account transition | locally enforced inside the existing-instance account coordinator; Republish consumes no slot |
+| `instances.published.max` | limit | Roma publish policy; Tokyo-worker final account transition | deployed inside the existing-instance account coordinator; Republish consumes no slot |
 | `uploads.size.max` | limit | Roma policy decision; Tokyo-worker exact received-byte execution | enforced |
-| `items.group.small.max` | limit | Bob generic edit boundary for applicable canonical Widget bindings | locally implemented for Cards, FAQ, and Logo Showcase |
-| `items.group.medium.max` | limit | Bob generic edit boundary for applicable canonical Widget bindings | locally implemented for FAQ and Logo Showcase |
-| `items.group.large.max` | limit | Bob generic edit boundary for applicable canonical Widget bindings | locally implemented for FAQ and Logo Showcase |
+| `items.group.small.max` | limit | Bob generic edit boundary for applicable canonical Widget bindings | deployed for Cards, FAQ, and Logo Showcase |
+| `items.group.medium.max` | limit | Bob generic edit boundary for applicable canonical Widget bindings | deployed for FAQ and Logo Showcase |
+| `items.group.large.max` | limit | Bob generic edit boundary for applicable canonical Widget bindings | deployed for FAQ and Logo Showcase |
 
 Current public-capacity values:
 

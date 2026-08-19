@@ -181,12 +181,10 @@ locale falls back to base.
 The all-Widget changes are deployed and verified in cloud-dev; owner QA remains
 pending.
 
-The atomic source and published serve-state storage shapes are a separate
-pre-GA cutover. After their deployment, all legacy cloud-dev saved instances
-require an explicit source cutover or recreation; any that should remain public
-then require explicit Publish/Republish. No compatibility reader or
-migration-on-read exists, and this documentation pass performed no remote
-work.
+The separate pre-GA atomic source/published-serve-state cutover is complete for
+all four legacy saved cloud-dev instances under `CLICKEEN`; the two public
+instances were Republished through Roma. No compatibility reader or
+migration-on-read exists, and retained split legacy objects are unreachable.
 
 ## Verification
 

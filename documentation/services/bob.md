@@ -579,7 +579,7 @@ existing generated editor-artifact path carries the deploy-built Widget
 software in addition to the compiled controls. Bob combines that software with
 the one browser-memory draft in Workspace.
 
-Every current local editor artifact carries its Widget software. Workspace
+Every current editor artifact carries its deploy-built Widget software. Workspace
 renders that software with the exact current draft and never boots the
 instance's stored package or sends draft state to public `runtime.js`.
 
@@ -821,10 +821,11 @@ no item identity.
 
 The CopilotPane tracks two facts per active turn: the active turn state
 (`userTurnId`, current `modelStepId`, buffered tool call, accumulated undo ops,
-step count, stop flag) and the active HTTP request handle. `session.runCopilot`
-returns a `CopilotRequestHandle` carrying the `requestId` and a `completed`
-promise; it does not block on the whole agent turn. `session.cancelCopilot`
-dispatches the `cancel-copilot` host command for that `requestId`.
+step count, stop flag) and the active HTTP request handle. It consumes the
+existing Widget session transport directly. `transport.runCopilot` returns a
+`CopilotRequestHandle` carrying the `requestId` and a `completed` promise; it
+does not block on the whole agent turn. `transport.cancelCopilot` dispatches the
+`cancel-copilot` host command for that `requestId`.
 
 The input control is a single Send/Stop toggle. Send opens an initial turn;
 Stop is UI truth. Bob marks the active turn stopped immediately on its own Stop
@@ -868,7 +869,7 @@ endpoint, or account storage object. The source
 contract used to express state in authored HTML is the same contract used later
 by Publish; Bob contains no second FAQ renderer.
 
-Every current local Widget preview renders authored HTML and CSS into the
+Every current deployed Widget preview renders authored HTML and CSS into the
 isolated iframe from `compiled.widgetSoftware` and the exact draft. It executes
 the authored preview behavior inside that temporary document. Ordinary edits
 update that same preview from Bob's draft; there is no stored-package read,

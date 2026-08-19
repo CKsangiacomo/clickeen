@@ -1,6 +1,6 @@
 # PRD 129B — Edit And Save Editable Instance
 
-Status: **LOCAL FIRST-SAVE CORRECTION IMPLEMENTED — CLOUD-DEV VERIFICATION PENDING**
+Status: **FIRST-SAVE CORRECTION DEPLOYED WITH TECHNICAL CLOUD-DEV VERIFICATION 2026-08-19 — FIRST-SAVE OWNER QA PENDING**
 
 Parent: `129__PRD__Clickeen_Widget_Software_And_Instance_Lifecycle_Architecture.md`
 
@@ -576,25 +576,20 @@ audit is the implementation evidence.
 all-Widget source-based Bob open/preview: present in cloud-dev
 one browser-memory draft and generic edit decision: present in cloud-dev
 one Roma upsell Popup: present in cloud-dev
-first/later source-only Save split and in-place ID adoption: implemented locally; cloud-dev verification pending
-first-Save result locale coherence: existing 201 result returns exact new instanceId and persisted account baseLocale; Bob adopts both into session metadata and translationSetup without reopen or new message; implemented locally, cloud-dev verification pending
+first/later source-only Save split and in-place ID adoption: deployed; owner first-Save interaction QA pending
+first-Save result locale coherence: deployed contract; owner first-Save interaction QA pending
 simultaneous first-Save/account-locale PATCH: separate race not serialized or solved by result adoption; no resolution claimed in this pass
-Save ingress ownership: first Save carries widgetType plus config; existing Save body is config-only; Roma admits record config, loads Tokyo's exact account-scoped saved-instance list fact, and selects the compiled artifact from stored widgetType without caller widgetType comparison/revalidation; implemented locally, cloud-dev verification pending
-atomic editable source: one instance.source.json containing metadata/config/content, replaced by one PUT; implemented locally, cloud-dev verification pending
-first-Save visibility: initial unpublished serve-state writes first and instance.source.json commits last; only exact source keys enumerate; implemented locally
-instance Delete commit: exact instance.source.json deletion is the logical product result; serve-state/overlay prefix cleanup and cache eviction are scheduled afterward through waitUntil and remain product-inert; implemented locally, cloud-dev verification pending
-legacy cloud-dev source topology: every saved instance using instance.config.json plus instance.content.json requires an explicit pre-GA source cutover or recreation decision; no compatibility input or remote action in this pass
-existing-instance command coordinator: implemented locally for Save/Rename/Publish/Unpublish/Delete; cloud-dev verification pending
-revision coordinates: implemented locally so Save/Rename updatedAt is strictly later than prior updatedAt and publishedAt, while Publish/Republish publishedAt is strictly later than both committed sourceUpdatedAt and prior publishedAt; no cloud-dev verification performed
+Save ingress ownership: deployed; existing Save uses Tokyo's stored widgetType and consumes no caller widgetType
+atomic editable source and source-key visibility: deployed; all four legacy saved instances cut over
+instance Delete commit: deployed; owner Delete interaction QA pending
+existing-instance command coordinator and strict revision coordinates: deployed; Republish produced strictly newer publishedAt for both public instances
 stored public package use by Bob preview: removed from the deployed path
 stable overlay identity after repeated-content Save: present in cloud-dev
 positional overlay compatibility path: absent; explicit Generate/delete cutover required for previously stored positional overlays
-account product data: no remote product-data work performed in this pass
+account product data: four saved instances cut over; two public instances Republished through Roma
 stored positional-overlay Generate/delete cutover: pending
-pre-GA atomic-publication cutover: deploy the corrected runtime, explicitly cut over or recreate every legacy saved instance, then explicitly Publish/Republish each instance intended to remain published so its `serve-state.json` contains the exact logical publicPackage; no compatibility fallback exists
-republish of currently published cloud-dev instances: pending; no remote product-data or Republish work performed in this pass
-prior baseline product commit: e2ac3589; current correction remains uncommitted
-main push: not performed for the current correction
-deploy: not performed for the current correction
-live product: prior Save baseline remains active; corrected first-Save path and owner QA pending
+pre-GA atomic-publication cutover: complete; no compatibility fallback exists
+product commit and main push: a6678966
+deploy: Worker deployment, Roma/Bob runtime reachability, and Tokyo R2 product-root sync passed
+live product: corrected Save path is active; authenticated saved-instance Builder open passed; first-Save owner QA pending
 ```

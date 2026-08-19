@@ -266,21 +266,19 @@ relationship without a second SEO/Discovery renderer.
 - Remote account product data was not changed by those code deployments.
   Previously stored positional overlays still require the documented explicit
   Generate Translations or deletion cutover.
-- Atomic source and published serve-state are a newer pre-GA storage cutover.
-  After deployment, all legacy cloud-dev saved instances require an explicit
-  source cutover or recreation; any that should remain public then require
-  explicit Publish/Republish. There is no compatibility reader or
-  migration-on-read, and this documentation reconciliation performed no remote
-  operation.
+- The newer pre-GA atomic source/published-serve-state cutover is complete for
+  all four legacy saved cloud-dev instances under `CLICKEEN`; the two public
+  instances were Republished through Roma. There is no compatibility reader or
+  migration-on-read, and retained split legacy objects are unreachable.
 - Both prior zone-API invalidation attempts were proved silent no-ops for
   Workers Caching. The original zone `tags` request left warm base and French
   responses at cache `HIT` after Republish returned `200`; the later accepted
   zone `prefixes: [host/account/instance]` request cannot invalidate cache owned
-  by the Worker entrypoint. The current local source schedules Tokyo's owning
+  by the Worker entrypoint. The deployed source schedules Tokyo's owning
   default-entrypoint tag eviction through `waitUntil` and makes its outcome
-  product-inert. That source is not yet deployed. Cache HIT/MISS or purge
-  success is intentionally not an acceptance gate; ordinary localization and
-  public-serving owner QA remains pending.
+  product-inert. Cache HIT/MISS or purge success is intentionally not an
+  acceptance gate; ordinary localization and public-serving owner QA remains
+  pending.
 
 ## Verification
 

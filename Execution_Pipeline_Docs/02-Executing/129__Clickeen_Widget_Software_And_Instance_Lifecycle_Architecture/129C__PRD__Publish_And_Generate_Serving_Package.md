@@ -1,6 +1,6 @@
 # PRD 129C — Publish And Generate Serving Package
 
-Status: **LOCAL PUBLICATION/ATOMIC-STORAGE/CACHE CORRECTION IMPLEMENTED — CLOUD-DEV VERIFICATION PENDING**
+Status: **PUBLICATION/ATOMIC-STORAGE/CACHE CORRECTION DEPLOYED AND TECHNICALLY VERIFIED IN CLOUD-DEV 2026-08-19 — OWNER QA PENDING**
 
 Parent: `129__PRD__Clickeen_Widget_Software_And_Instance_Lifecycle_Architecture.md`
 
@@ -604,10 +604,10 @@ those operations exist.
   and editable attributes use their exact authored target;
 - no Widget-specific shared-service branch or alternate release workflow exists;
   and
-- focused local implementation checks pass. Prior PRD 129 baseline
-  Worker/R2/Pages/reachability proof exists; the corrected Roma-only
-  publication UI and background-eviction boundary are not deployed, and owner
-  QA remains pending.
+- focused implementation checks, exact-SHA Worker deployment, Roma/Bob
+  reachability, atomic storage cutover, two Roma Republish commands, and all
+  six public package-file responses pass in cloud-dev; owner QA remains
+  pending.
 
 ## 21. Required Final V1-V8 Audit
 
@@ -628,34 +628,33 @@ audit is the implementation evidence.
 ## 22. Reconciliation State
 
 ```text
-shared Roma-only Publish/Republish/Unpublish UI: implemented locally; cloud-dev verification pending
+shared Roma-only Publish/Republish/Unpublish UI: deployed; owner interaction QA pending
 publication-capacity decision before materialization: present in cloud-dev
 Roma-only complete HTML/CSS/JavaScript generation: present in cloud-dev
 all-Widget baseline Discovery and authored enabled output: present in cloud-dev
-Tokyo exact package/publication write: one atomic serve-state.json containing status, publishedAt, and exact logical publicPackage implemented locally; cloud-dev verification pending
-separate index.html/styles.css/runtime.js storage objects: removed locally; public filename URLs remain and read logical package members
-Unpublish without source deletion: present in prior cloud-dev baseline; current one-artifact behavior requires verification
-account coordinator: one lifecycle-fenced Tokyo Durable Object per account serializing existing-instance Save/Rename/Publish/Unpublish/Delete; implemented locally, with no durable policy/count/publication truth
+Tokyo exact package/publication write: deployed as one atomic serve-state.json containing status, publishedAt, and exact logical publicPackage
+separate index.html/styles.css/runtime.js storage objects: removed from runtime; public filename URLs read logical package members
+Unpublish without source deletion: deployed; owner interaction QA pending
+account coordinator: deployed as one lifecycle-fenced Tokyo Durable Object per account serializing existing-instance Save/Rename/Publish/Unpublish/Delete; no durable policy/count/publication truth
 live command overlap result: 409 coreui.errors.instance.commandInProgress; no mutation or automatic retry
 stale materialized source result: 409 coreui.errors.instance.sourceChanged from exact sourceUpdatedAt comparison; no publication write
-revision coordinates: Save/Rename updatedAt strictly later than prior updatedAt and publishedAt; Publish/Republish publishedAt strictly later than both committed sourceUpdatedAt and prior publishedAt; implemented locally
+revision coordinates: deployed; both live Republish commands produced publishedAt strictly later than sourceUpdatedAt and prior publishedAt
 later over-capacity result: 402 UPGRADE_REQUIRED
 stable scalar/repeated overlay identity: present in cloud-dev
 authored exact attribute localization target: present in cloud-dev
 pre-GA positional-overlay compatibility path: absent; explicit Generate/delete cutover required for previously stored positional overlays
 account suspension lifecycle runner/full deletion: documented follow-on account work, not a PRD 129 blocker
-account product data: no remote product-data work performed in this pass; previously documented cloud-dev state remains unchanged
-atomic editable source: one instance.source.json containing metadata/config/content is implemented locally; Save/Rename each replace it in one PUT
+account product data: all four saved CLICKEEN instances cut over; two public instances Republished through Roma
+atomic editable source: deployed as one instance.source.json containing metadata/config/content; Save/Rename each replace it in one PUT
 first-Save source visibility: initial unpublished serve-state writes first and instance.source.json commits last; only exact source keys enumerate
-instance Delete commit: exact instance.source.json deletion inside the account coordinator is the logical product result; default-entrypoint serve-state/overlay prefix cleanup and cache eviction are scheduled afterward through waitUntil and are product-inert; implemented locally, cloud-dev verification pending
-legacy cloud-dev source topology: every saved instance using instance.config.json plus instance.content.json requires an explicit pre-GA source cutover or recreation decision; no compatibility reader or remote action in this pass
+instance Delete commit: deployed; owner Delete interaction QA pending
+legacy cloud-dev source topology: cutover complete for all four saved instances; no compatibility reader
 stored positional-overlay Generate/delete cutover: pending
-pre-GA atomic-publication cutover: deploy the corrected runtime, explicitly cut over or recreate every legacy saved instance, then explicitly Publish/Republish each instance intended to remain published so its serve-state.json contains the logical publicPackage; no prior-object compatibility fallback exists
-republish of currently published cloud-dev instances: pending; no Republish or other remote cutover work performed in this pass
-cache eviction non-interference: implemented and locally tested for missing, false, synchronous throw, rejection, and pending outcomes
+pre-GA atomic-publication cutover: complete; no prior-object compatibility fallback exists
+republish of currently published cloud-dev instances: complete for LWZZR7JSG8 and VUWUJ7OQ0Y through Roma
+cache eviction non-interference: deployed and deterministically tested for missing, false, synchronous throw, rejection, and pending outcomes
 generated package cache policy: `public, max-age=60, s-maxage=300, must-revalidate`
-product commit: not created for the current correction
-main push: not performed for the current correction
-deploy: not performed for the current correction
-live product: prior PRD 129 publication/storage/cache baseline remains active; current coordinator, strict timestamps, atomic serve-state package, Roma UI, and cache behavior have not been cloud-dev verified; owner QA pending
+product commit and main push: a6678966
+deploy: Worker deployment, Roma/Bob runtime reachability, and Tokyo R2 product-root sync passed
+live product: corrected publication/storage/cache runtime is active; technical verification passed; owner QA pending
 ```

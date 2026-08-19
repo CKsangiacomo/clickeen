@@ -44,17 +44,21 @@ async function loadFirstInstance(romaBase, cookies) {
 
 async function runRouteSmoke(romaBase, cookies, instance) {
   const sessionId = `smoke-${crypto.randomUUID()}`;
+  const userTurnId = crypto.randomUUID();
+  const userMessage = 'In one short sentence, tell me what widget I am editing.';
   const body = {
-    instanceId: instance.instanceId,
+    version: 1,
+    kind: 'initial',
     sessionId,
-    userMessage: 'In one short sentence, tell me what widget I am editing.',
-    context: {
+    userTurnId,
+    userMessage,
+    conversationHistory: [{ role: 'user', text: userMessage }],
+    currentDraftContext: {
       instanceId: instance.instanceId,
       widgetType: instance.widgetType,
       displayName: instance.displayName || 'Widget',
       activeLocale: 'en',
       draftSignature: `smoke-${instance.instanceId}`,
-      traceRequestId: sessionId,
       controls: [],
       availableActions: [],
       unavailableCapabilities: [],
@@ -64,34 +68,38 @@ async function runRouteSmoke(romaBase, cookies, instance) {
   const response = await fetch(new URL(`/api/account/instances/${encodeURIComponent(instance.instanceId)}/copilot`, romaBase), {
     method: 'POST',
     headers: {
-      accept: 'application/json',
+      accept: 'text/event-stream',
       'content-type': 'application/json',
       cookie: cookies,
     },
     body: JSON.stringify(body),
   });
-  const payload = await readJson(response);
-  const requestId = payload?.meta?.requestId;
-  if (!response.ok || payload?.kind !== 'answer' || typeof requestId !== 'string' || !requestId) {
+  const stream = await response.text();
+  const contentType = response.headers.get('content-type') || '';
+  if (!response.ok || !contentType.includes('text/event-stream') || !stream.includes('event: agent_turn_finished')) {
     throw new Error(`Copilot route smoke failed: HTTP ${response.status}`);
   }
-  return { requestId, kind: payload.kind };
+  return { status: response.status, terminalEvent: 'agent_turn_finished' };
 }
 
 async function runNoFallbackSmoke(romaBase, cookies, instance) {
   const sessionId = `negative-${crypto.randomUUID()}`;
+  const userTurnId = crypto.randomUUID();
+  const userMessage = 'Tell me what widget this is.';
   const body = {
-    instanceId: instance.instanceId,
+    version: 1,
+    kind: 'initial',
     sessionId,
-    userMessage: 'Tell me what widget this is.',
+    userTurnId,
+    userMessage,
     selectedModel: { provider: 'openai', model: 'not-a-managed-model' },
-    context: {
+    conversationHistory: [{ role: 'user', text: userMessage }],
+    currentDraftContext: {
       instanceId: instance.instanceId,
       widgetType: instance.widgetType,
       displayName: instance.displayName || 'Widget',
       activeLocale: 'en',
       draftSignature: `negative-${instance.instanceId}`,
-      traceRequestId: sessionId,
       controls: [],
       availableActions: [],
       unavailableCapabilities: [],
@@ -108,11 +116,15 @@ async function runNoFallbackSmoke(romaBase, cookies, instance) {
     body: JSON.stringify(body),
   });
   const payload = await readJson(response);
-  const issue = Array.isArray(payload?.issues) ? payload.issues[0] : null;
-  if (response.status !== 422 || issue?.path !== 'selectedModel') {
+  const error = payload?.error;
+  if (
+    response.status !== 422
+    || error?.reasonKey !== 'coreui.errors.copilot.invalidRequest'
+    || !String(error?.detail || '').includes('not managed')
+  ) {
     throw new Error(`Copilot no-fallback smoke failed: HTTP ${response.status}`);
   }
-  return { status: response.status, issue: issue.message };
+  return { status: response.status, reasonKey: error.reasonKey };
 }
 
 async function runBobDraftEditUndoSmoke(romaBase, authStatePath) {
@@ -125,16 +137,20 @@ async function runBobDraftEditUndoSmoke(romaBase, authStatePath) {
     await page.waitForURL(/\/builder\/[A-Z0-9]+/, { timeout: 30_000 });
 
     const frame = page.frameLocator('iframe[title="Bob Builder"]');
-    await frame.getByRole('button', { name: /Manual/i }).waitFor({ timeout: 30_000 });
-    await frame.getByText('BigBang Test').waitFor({ timeout: 30_000 });
-    await frame.getByRole('button', { name: /^Title:/ }).waitFor({ timeout: 30_000 });
+    await frame.getByRole('radio', { name: 'Manual' }).waitFor({ timeout: 30_000 });
+    await frame.locator('section.workspace[data-widget-ready="true"]').waitFor({ timeout: 30_000 });
     await frame.locator('input[name="assist-mode"][value="copilot"]').click({ force: true });
-    const prompt = frame.getByLabel('Copilot prompt');
+    const prompt = frame.getByLabel('Copilot message');
     await prompt.waitFor({ timeout: 30_000 });
-    await prompt.fill('Change the header title to Runtime Smoke Title');
-    await frame.getByRole('button', { name: 'Send' }).click();
+    await prompt.fill('Use apply_widget_ops now to set the visible Header Title control to Runtime Smoke Title. Do not answer without applying the edit.');
+    await frame.getByRole('button', { name: 'Send to Copilot' }).click();
     const undoButton = frame.getByRole('button', { name: 'Undo' });
-    await undoButton.waitFor({ timeout: 90_000 });
+    try {
+      await undoButton.waitFor({ timeout: 90_000 });
+    } catch (error) {
+      const conversation = await frame.getByLabel('Copilot conversation').innerText().catch(() => '');
+      throw new Error(`Copilot did not apply an undoable edit. Conversation: ${conversation || '[empty]'}`, { cause: error });
+    }
     await undoButton.click();
     await frame.getByText('Undone.').waitFor({ timeout: 20_000 });
     return { builderUrl: page.url() };

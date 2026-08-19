@@ -24,10 +24,11 @@ materialize complete HTML, CSS, and JavaScript. Core JavaScript owns Widget
 behavior and is never the initial-content renderer, materializer, localizer,
 preview host, validator, or serving engine.
 
-All five built Widgets now implement this topology locally. The all-Widget
-generator compiles each through the same Bob and Roma artifact path; there is
-no flat-source compatibility path or Widget discriminator. Product QA, deploy,
-and live cloud verification remain pending.
+All five built Widgets implement this topology in the deployed cloud-dev
+product. The all-Widget generator compiles each through the same Bob and Roma
+artifact path; there is no flat-source compatibility path or Widget
+discriminator. Technical deployment and live package verification pass; human
+owner product QA remains pending.
 
 Each Widget's internal `discovery.json` declares its system baseline, Widget
 kind, important customer-content parts, and their relationships. Users do not

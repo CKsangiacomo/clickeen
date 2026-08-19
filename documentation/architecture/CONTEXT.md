@@ -92,16 +92,16 @@ Bob sends `widgetType` only while no saved identity exists. Existing Save sends
 the exact account-scoped saved list fact, and trusts Tokyo's stored
 `widgetType` when selecting the compiled artifact. It does not compare or
 revalidate a caller Widget type.
-The corrected New/Save/publication and background cache-eviction flow is local
-and uncommitted; its Worker/Pages deploy, live surface checks, authenticated
-Builder smoke, and owner QA remain pending.
+The corrected New/Save/publication and background cache-eviction flow is
+deployed from commit `a6678966`. Worker health, Roma and Bob reachability,
+authenticated saved-instance Builder open, non-persisting New-open inventory
+truth, live Copilot streaming, and public `dev.clk.live` package serving passed
+technical cloud-dev verification on 2026-08-19; owner QA remains pending.
 
-Atomic `instance.source.json` and published `serve-state.json` are a pre-GA
-storage cutover. After deployment, all legacy cloud-dev saved instances need an
-explicit source cutover or recreation; any that should remain public then need
-explicit Publish/Republish. There is no compatibility reader or
-migration-on-read. This documentation reconciliation performed no deployment,
-remote product-data mutation, or live verification.
+The pre-GA atomic-storage cutover is complete for all four legacy saved
+cloud-dev instances under `CLICKEEN`. Their source records were cut over, and
+the two public instances were Republished through Roma. Retained legacy split
+objects are unreachable; there is no compatibility reader or migration-on-read.
 
 ## Operating Model
 

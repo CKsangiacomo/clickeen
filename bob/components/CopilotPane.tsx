@@ -16,7 +16,12 @@ import {
   type CopilotModelHistory,
 } from '../lib/copilot/model-history';
 import { buildCopilotUndoOps } from '../lib/copilot/undo';
-import { useWidgetSession, useWidgetSessionChrome, useWidgetSessionCopilot } from '../lib/session/useWidgetSession';
+import {
+  useWidgetSession,
+  useWidgetSessionChrome,
+  useWidgetSessionCopilot,
+  useWidgetSessionTransport,
+} from '../lib/session/useWidgetSession';
 import { serializeInstanceDataSignature } from '../lib/session/sessionTypes';
 import type { CompiledControl } from '../lib/types';
 import { getAt } from '../lib/utils/paths';
@@ -204,6 +209,7 @@ export function AccountCopilotPane() {
 function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps) {
   const chrome = useWidgetSessionChrome();
   const copilot = useWidgetSessionCopilot();
+  const transport = useWidgetSessionTransport();
   const compiled = session.compiled;
 
   const widgetType = compiled?.widgetname ?? null;
@@ -507,22 +513,6 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
   // -------------------------------------------------------------------------
 
   const startTurnRequest = useCallback((turn: ActiveTurnState, body: unknown): void => {
-    const transport = session as unknown as {
-      runCopilot?: (args: {
-        instanceId: string;
-        body: unknown;
-        onCopilotEvent: (event: ProductCopilotTurnEvent) => void;
-      }) => { requestId: string; completed: Promise<{ ok: boolean; status: number; payload: unknown }> };
-      cancelCopilot?: (requestId: string) => void;
-    };
-
-    if (!transport.runCopilot) {
-      pushMessage({ role: 'assistant', text: 'Copilot streaming is not available in this session.' });
-      setStatus('idle');
-      activeTurnRef.current = null;
-      return;
-    }
-
     const currentInstanceId = chrome.meta?.instanceId;
     if (!currentInstanceId) {
       pushMessage({ role: 'assistant', text: 'Editor context is not ready. Try again in a moment.' });
@@ -542,7 +532,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
 
     activeHandleRef.current = {
       requestId: handle.requestId,
-      cancel: () => transport.cancelCopilot?.(handle.requestId),
+      cancel: () => transport.cancelCopilot(handle.requestId),
     };
 
     handle.completed.then(
@@ -566,7 +556,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
         }
       },
     );
-  }, [session, chrome, pushMessage]);
+  }, [chrome, pushMessage, transport]);
 
   // -------------------------------------------------------------------------
   // Event handler: dispatch each ProductCopilotTurnEvent

@@ -111,9 +111,11 @@ The public route coordinate, locale syntax, and publication state remain real
 external/product gates. The implementation does not use them to revalidate
 Roma's package or Translation Agent's overlay. The package/locale baseline was
 deployed and live-verified at product commit `e2ac3589`. The corrected
-New/first-Save/Roma-publication and product-inert cache-eviction flow is local
-and uncommitted; cloud-dev deployment, live surface verification, and owner QA
-remain pending.
+New/first-Save/Roma-publication and product-inert cache-eviction flow is
+deployed from commit `a6678966`. Technical cloud-dev reachability,
+authenticated saved-instance Builder open, non-persisting New-open inventory
+truth, live Copilot streaming, and public serving passed on 2026-08-19; owner
+QA remains pending.
 
 ## Verification
 
@@ -130,8 +132,7 @@ remain pending.
 - R2: exactly one atomic source record, one atomic serve-state, and exact
   overlay JSON; no separate package or locale-derived runtime objects.
 
-The atomic source and published serve-state shapes are a pre-GA cutover. After
-deployment, all legacy cloud-dev saved instances require an explicit source
-cutover or recreation; any that should remain public then require explicit
-Publish/Republish. There is no compatibility reader or migration-on-read. No
-remote work or live verification was performed in this documentation pass.
+The pre-GA atomic source/published-serve-state cutover is complete for all four
+legacy saved cloud-dev instances under `CLICKEEN`; the two public instances
+were Republished through Roma. No compatibility reader or migration-on-read
+exists, and retained split legacy objects are unreachable.

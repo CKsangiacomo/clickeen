@@ -230,16 +230,19 @@ All five current Widgets now use canonical Core HTML/CSS/JavaScript,
 source-based Bob preview, Publish-only materialization, and Edge locale
 expression. Their retired flat sources have no compatibility path. The prior
 PRD 129 package/locale baseline is deployed at product commit `e2ac3589`. The
-corrected non-persisting New, first-Save creation, Roma-only publication, and
-background cache-eviction flow is implemented locally but is not committed,
-pushed, deployed, or live-verified; owner QA remains pending.
+corrected non-persisting New, first-Save creation, Roma-only publication,
+atomic source/publication storage, and product-inert background cache eviction
+are deployed from commit `a6678966`. Worker health, Roma and Bob reachability,
+authenticated saved-instance Builder open, non-persisting New-open inventory
+truth, the live Copilot stream, and public `dev.clk.live` package serving passed
+technical cloud-dev verification on 2026-08-19; owner QA remains pending.
 
-Atomic `instance.source.json` and published `serve-state.json` are a pre-GA
-storage cutover. After deployment, all legacy cloud-dev saved instances need an
-explicit source cutover or recreation; any that should remain public then need
-explicit Publish/Republish. There is no legacy read fallback or
-migration-on-read. This documentation reconciliation performs no deploy, remote
-product-data mutation, or live verification.
+The pre-GA storage cutover is complete for the four legacy saved cloud-dev
+instances under account `CLICKEEN`: each now has atomic
+`instance.source.json`; the two instances that were public were Republished
+through Roma and now have atomic `serve-state.json` package truth. The retained
+legacy split objects are ignored by runtime and no legacy read fallback or
+migration-on-read exists.
 
 ## Baseline Repository Commands
 

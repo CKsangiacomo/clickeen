@@ -1,6 +1,6 @@
 # PRD 129 — Clickeen Widget Software And Instance Lifecycle
 
-Status: **LOCAL LIFECYCLE CORRECTION IMPLEMENTED — CLOUD-DEV VERIFICATION PENDING**
+Status: **LIFECYCLE CORRECTION DEPLOYED AND TECHNICALLY VERIFIED IN CLOUD-DEV 2026-08-19 — OWNER QA PENDING**
 
 Owner: Clickeen product owner/architect
 
@@ -451,12 +451,11 @@ replacement mechanics belong to 129C.
 ## 13. All Current Widgets
 
 PRD 129 defines one architecture for every Widget. Big Bang, Cards, Countdown,
-FAQ, and Logo Showcase are the complete current local implementation and proof
-set. Prior cloud-dev evidence covers the earlier PRD 129 baseline, but the
-current New/Save/publication-coordinator/atomic-package/cache correction has not
-been deployed or verified there. Clickeen is pre-GA, so neither the old flat
-Widget source shape nor the prior separate-package-object storage shape has a
-compatibility workflow. Owner cloud-dev QA remains pending.
+FAQ, and Logo Showcase are the complete deployed implementation and proof set.
+The New/Save/publication-coordinator/atomic-package/cache correction is deployed
+from `a6678966` and technically verified in cloud-dev. Clickeen is pre-GA, so
+neither the old flat Widget source shape nor the prior separate-package-object
+storage shape has a compatibility workflow. Owner QA remains pending.
 
 ## 14. Execution Order Used
 
@@ -477,9 +476,10 @@ Product Copilot/San Francisco handoff, and Prague embed availability. Those
 deletions do not redefine or gate the four lifecycle phases; they have their
 own focused checks before the final audit.
 
-The implementation does not execute Template cross-account duplication, the
-account lifecycle runner/deletion operation, deployment, or remote product-data
-work.
+The implementation does not execute Template cross-account duplication or the
+account lifecycle runner/deletion operation. Its later deployment and explicit
+pre-GA cloud-dev instance cutover are recorded in §18; no unrelated remote
+product-data work was performed.
 
 ## 15. Preservation
 
@@ -553,38 +553,38 @@ audit is the implementation evidence.
 ## 18. Reconciliation State
 
 ```text
-PRD writing: reconciled to the corrected local four-phase implementation
-architecture implementation: corrected locally; prior PRD 129 baseline remains the last cloud-dev deployment
+PRD writing: reconciled to the deployed four-phase implementation
+architecture implementation: deployed from a6678966
 public multi-locale switcher: Edge-authored exact locale options present in cloud-dev
-runtime code: local uncommitted lifecycle/coordinator/atomic-publication/cache correction; no deploy in this pass
-account product data: no remote product-data work performed in this pass; previously documented cloud-dev state remains unchanged
-atomic editable source: implemented locally as one instance.source.json containing metadata/config/content; Save/Rename replace it in one PUT
+runtime code: lifecycle/coordinator/atomic-publication/cache correction deployed to cloud-dev
+account product data: all four saved CLICKEEN instances cut over; two public instances Republished through Roma
+atomic editable source: deployed as one instance.source.json containing metadata/config/content; Save/Rename replace it in one PUT
 first-Save visibility: initial unpublished serve-state writes first and instance.source.json commits last; only exact source-record keys enumerate as instances
-first-Save result adoption: the existing 201 Save result returns the exact new instanceId and persisted account baseLocale; Bob adopts both into session metadata and translationSetup without reopen or a new message; implemented locally, cloud-dev verification pending; this does not serialize or solve a simultaneous first-Save/account-locale PATCH race
-Save ingress ownership: Bob sends widgetType only on first Save and sends config-only for an existing instance; Roma admits record config, loads Tokyo's exact account-scoped saved-instance list fact, and selects the compiled artifact from its stored widgetType without caller widgetType comparison/revalidation; implemented locally, cloud-dev verification pending
-instance Delete commit: coordinated deletion of exact instance.source.json is the logical product result; serve-state/overlay prefix cleanup and cache eviction are scheduled afterward through waitUntil and are product-inert; implemented locally, cloud-dev verification pending
-legacy cloud-dev source topology: every saved instance using instance.config.json plus instance.content.json requires an explicit pre-GA source cutover or recreation decision; no compatibility input or remote action in this pass
+first-Save result adoption: deployed contract; owner first-Save interaction QA pending; simultaneous first-Save/account-locale PATCH remains a separate unsolved race
+Save ingress ownership: deployed; existing Save consumes Tokyo's stored widgetType and no caller widgetType
+instance Delete commit: deployed; owner Delete interaction QA pending
+legacy cloud-dev source topology: cutover complete for all four saved instances; no compatibility reader
 Tokyo git-authored product root: synced; 15 retired flat/legacy objects deleted and verified 404
-main push: not performed for the current correction
-deploy: not performed for the current correction
-live product: prior PRD 129 baseline remains deployed; corrected New/Save/Roma-publication/cache behavior requires cloud-dev verification and owner QA
+main push and product commit: a6678966
+deploy: Worker deployment, Roma/Bob runtime reachability, and Tokyo R2 product-root sync passed
+live product: corrected New/Save/Roma-publication/cache behavior is active; technical verification passed; owner QA pending
 retired flat Widget source paths: removed and inactive in deployed code
 Template catalog: normal listed CLICKEEN-admin saved instances
 Template cross-account Duplicate: not implemented follow-on
 account suspension lifecycle runner/full deletion: documented follow-on account work, not a PRD 129 blocker
-atomic account publication transition: implemented locally as one `serve-state.json` write containing status, publishedAt, and exact logical publicPackage; cloud-dev verification pending
-account coordinator: implemented locally as one lifecycle-fenced Tokyo Durable Object per account serializing existing-instance Save/Rename/Publish/Unpublish/Delete; no durable policy/count/publication truth
+atomic account publication transition: deployed as one serve-state.json write containing status, publishedAt, and exact logical publicPackage
+account coordinator: deployed as one lifecycle-fenced Tokyo Durable Object per account serializing existing-instance Save/Rename/Publish/Unpublish/Delete; no durable policy/count/publication truth
 coordinator contention: `409 coreui.errors.instance.commandInProgress`; no operation, queue, poll, or automatic retry
 publish source contention: exact sourceUpdatedAt mismatch returns `409 coreui.errors.instance.sourceChanged`; no publication write
-revision coordinates: local Tokyo single-writer implementation makes Save/Rename updatedAt strictly later than prior updatedAt and publishedAt, and Publish/Republish publishedAt strictly later than both committed sourceUpdatedAt and prior publishedAt
+revision coordinates: deployed Tokyo single-writer implementation; both public-instance Republish commands produced publishedAt strictly later than sourceUpdatedAt and prior publishedAt
 stable scalar/repeated overlay identity: present in cloud-dev
 authored exact attribute localization: present in cloud-dev
 pre-GA positional-overlay compatibility path: absent; explicit Generate/delete cutover is required for previously stored positional overlays
 stored positional-overlay Generate/delete cutover: pending
-pre-GA atomic-publication cutover: deploy the corrected runtime, explicitly cut over or recreate every legacy saved instance, then explicitly Publish/Republish each instance intended to remain published so `serve-state.json` receives its logical publicPackage; no separate-object compatibility fallback exists
-republish of currently published cloud-dev instances: pending; no Republish or other remote cutover work performed in this pass
-cache eviction: local source schedules the exact account-instance Cache-Tag after owning mutations through `waitUntil`; product results never await or inspect it
-cache policy: local source uses `public, max-age=60, s-maxage=300, must-revalidate` for generated public package responses
-cache live QA: intentionally not a product acceptance gate; no live cache verification performed in this pass
-independent V1-V8 audit: pending after all local slices finish
+pre-GA atomic-publication cutover: complete; no separate-object compatibility fallback exists
+republish of currently published cloud-dev instances: complete for LWZZR7JSG8 and VUWUJ7OQ0Y through Roma
+cache eviction: deployed source schedules the exact account-instance Cache-Tag after owning mutations through waitUntil; product results never await or inspect it
+cache policy: deployed source uses public, max-age=60, s-maxage=300, must-revalidate for generated public package responses
+cache live QA: intentionally not a product acceptance gate
+independent V1-V8 audit: passed for the implementation; remote verification introduced no V1-V8 violation
 ```

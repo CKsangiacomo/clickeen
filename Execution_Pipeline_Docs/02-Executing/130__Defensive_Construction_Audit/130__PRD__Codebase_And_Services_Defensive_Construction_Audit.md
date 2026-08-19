@@ -1,6 +1,6 @@
 # PRD 130 — Codebase And Services Defensive-Construction Audit
 
-Status: **FIRST FULL AUDIT PASS COMPLETE 2026-08-19 (HISTORICAL FINDINGS IN §8) — OWNER-AUTHORIZED BOUNDED REMEDIATION B1–B5 IMPLEMENTED LOCALLY (§9) — NOT COMMITTED, PUSHED, DEPLOYED, OR LIVE-VERIFIED; REMAINING FINDINGS UNADJUDICATED**
+Status: **FIRST FULL AUDIT PASS COMPLETE 2026-08-19 (HISTORICAL FINDINGS IN §8) — OWNER-AUTHORIZED BOUNDED REMEDIATION B1–B5 COMMITTED AND PUSHED; B1–B4 DEPLOYED AND TECHNICALLY VERIFIED IN CLOUD-DEV, B5 LOCALLY VERIFIED WITH PRAGUE DEPLOYMENT OUTSIDE THIS PASS (§9) — P1 FOLLOW-UP CORRECTED LOCALLY WITH DEPLOYED BEHAVIOR VERIFICATION PENDING — OWNER QA PENDING; REMAINING FINDINGS UNADJUDICATED**
 
 Owner: Clickeen product owner/architect
 
@@ -22,9 +22,9 @@ or demotable defensive construction for owner triage. It changes nothing
 itself.
 
 The audit and matrix below remain the historical evidence captured by that
-read-only pass. The owner later authorized only the bounded B1–B5 remediation
-recorded in §9. That later authorization does not turn the remaining matrix
-rows into approved work.
+read-only pass. The owner later authorized the bounded B1–B5 remediation and
+the P1 follow-up recorded in §9. Those later authorizations do not turn the
+remaining matrix rows into approved work.
 
 This is not a 129-scoped review. It covers every surface: bob, roma,
 tokyo-worker, berlin, prague, admin (DevStudio), agents (product-copilot,
@@ -121,9 +121,9 @@ Nothing in the matrix executes by itself.
 ## 6. Execution Rules For Any Later Remediation
 
 This document originally authorized auditing only. The owner separately
-authorized the bounded B1–B5 implementation reconciled in §9. Any further
-remediation still requires separate owner authorization and proceeds in
-batches ordered by blast radius, smallest first:
+authorized the bounded B1–B5 implementation and P1 follow-up reconciled in §9.
+Any further remediation still requires separate owner authorization and
+proceeds in batches ordered by blast radius, smallest first:
 
 1. **Feedback fixes** — in-place progress, lock-narrowing: near-zero risk,
    immediately felt.
@@ -415,8 +415,10 @@ found).
 
 After the read-only audit, the owner explicitly authorized five bounded
 closed-system trust-debt slices. This is not a blanket disposition of §8 and
-does not authorize the remaining findings. B1–B5 are implemented only in the
-current shared local working tree.
+does not authorize the remaining findings. B1–B5 are committed and pushed in
+runtime commit `a6678966`. B1–B4 are deployed and technically verified in
+cloud-dev. B5 is locally verified; Prague deployment and live verification were
+not part of this pass.
 
 ### 9.1 Implemented Scope
 
@@ -428,7 +430,7 @@ current shared local working tree.
 | **B4 — Product Copilot internal trust chain** | Roma remains the one external browser parser and the one selected-managed-model admission boundary. Product Copilot aliases the shared typed request/context/history contract instead of reparsing it; Roma's grant helper trusts the admitted model/policy and requires exact session/instance trace; San Francisco verifies the signed grant and then consumes the typed internal model-turn request without a second semantic request parser. The downstream turn-event type guard, duplicate policy/model proofs, empty/default identity substitutions, and repeated internal stream-shape checks were removed. Bob consumes exact compiled draft/policy facts without invented config, control-kind, action, or turn-limit defaults. | Auth/authz, route-instance binding, selected-model admission, signed-grant verification, provider transport parsing, Product Copilot's one-tool-call rule, finish/tool-count consistency, EOF terminal reconciliation, cancellation, and Bob's edit/apply/undo boundary remain load-bearing. |
 | **B5 — Prague account-instance reference revalidation** | Prague page loading no longer recursively reparses `accountInstanceRef`, maintains a validation cache, or performs a build/dev-time `clk.live` existence probe with strict/non-strict environment branches. | Git-authored page/block metadata, required copy strings, translation operations, and normal public embed/serving failures remain with their owning boundaries; no fallback reference is introduced. |
 
-### 9.2 Focused Local Verification
+### 9.2 Focused And Cloud-Dev Verification
 
 All commands below passed against the shared local tree:
 
@@ -451,15 +453,45 @@ fallback machinery. No silent substitution, healing, omission, fail-open
 control, corruption-as-absence, partial-success masquerade, redress wrapper,
 or runtime test dependency was introduced in the B1–B5 reconciliation.
 
+Cloud-dev deployment and runtime evidence on 2026-08-19 additionally proves:
+
+- the exact-SHA Worker workflow deployed Berlin, San Francisco, Tokyo-worker,
+  Product Copilot, and Translation Agent and synced all 588 Tokyo product-root
+  objects;
+- Bob and Roma served the runtime commit and their canonical surfaces returned
+  successfully; Prague's local build passed, but no Prague deployment or live
+  Prague verification is claimed by this pass;
+- Tokyo, San Francisco, and Product Copilot health routes returned `200`;
+- the authenticated Roma saved-instance Builder smoke passed; and
+- a real Roma → Product Copilot → San Francisco turn returned a terminal SSE
+  `agent_turn_finished` event with no saved customer-data mutation.
+
 ### 9.3 Commit, Deploy, Product Data, And Live State
 
-- Code and documentation are modified only in the shared local working tree.
-- No B1–B5 commit or push has been performed.
-- No Worker, Pages, R2 product-root, or other cloud-dev deployment has been
-  performed for this reconciliation.
-- No remote product data was read, migrated, repaired, or mutated.
-- No authenticated cloud-dev journey, owner QA, or live runtime verification
-  has been performed for B1–B5.
+- B1–B5 runtime code is committed and pushed in `a6678966`.
+- Worker deployment, Roma/Bob runtime delivery, and R2 product-root sync
+  completed in cloud-dev. Prague deployment was outside this pass.
+- B1–B5 required no remote customer-product-data mutation; the separate PRD
+  129 storage cutover is recorded by PRD 129, not reclassified as B1–B5 work.
+- Authenticated technical cloud-dev verification passed. Human owner QA remains
+  pending and is not claimed by this agent-run verification.
 - The §8 findings matrix remains historical evidence. Findings outside the
-  exact B1–B5 scope remain unadjudicated rather than implicitly fixed,
-  rejected, or authorized.
+  exact B1–B5 and P1 follow-up scopes remain unadjudicated rather than
+  implicitly fixed, rejected, or authorized.
+
+### 9.4 P1 Product Copilot Transport Follow-Up
+
+The later authenticated Builder smoke exposed the exact P1 failure recorded in
+§8: Bob read Copilot transport methods from its editing-session value even
+though `WidgetDocumentSession` provides them through the existing transport
+context. `CopilotPane` now consumes that transport context directly and uses
+its exact `runCopilot` and `cancelCopilot` operations. No persistence,
+publication, protocol, or service authority moved into Bob.
+
+The source-text assertion added during diagnosis was removed because it could
+repeat the false-green class that originally masked P1. The owning regression
+is `scripts/e2e/roma-copilot-runtime-smoke.mjs`: an authenticated deployed
+Builder sends a turn, observes the Roma → Product Copilot → San Francisco SSE
+result in Bob, applies the returned draft operation, and exercises Undo without
+saving customer data. Local Bob typecheck and focused gates pass; deployment
+and that live Builder behavior verification are pending the current push.

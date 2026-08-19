@@ -68,11 +68,13 @@ block padding and `--space-2` internal gaps, while secondary cards use
 remains roomier. These are direct uses of the
 existing structural spacing scale, not a second density system.
 
-The active `/builder/:instanceId` route is the explicit editor exception. Its
-`page` omits the Roma Page header and gives its padding-free, unconstrained
-body entirely to Bob. Bob's own TopDrawer supplies editor context and actions;
-Roma does not add another title or action band above the iframe. The `/builder`
-landing route remains an ordinary Roma page because no editor is open there.
+The active `/builder/:instanceId` and `/builder/new/:widgetType` routes are the
+explicit editor exceptions. Their pages omit the ordinary Roma Page header and
+give the remaining padding-free, unconstrained body to Bob. Roma renders one
+slim header above the iframe for instance identity and Roma-owned publication
+controls. Bob's TopDrawer remains editing-only and supplies tools plus Save.
+The `/builder` landing route remains an ordinary Roma page because no editor is
+open there.
 
 Roma's single-line text controls use Dieter Textfield, choice controls use
 Dropdown Actions, and semantic table definitions use Dieter Table. Roma
@@ -163,6 +165,7 @@ Roma account-shell routes include:
 - `/widgets/:instanceId`
 - `/builder`
 - `/builder/:instanceId`
+- `/builder/new/:widgetType`
 - `/assets`
 - `/team`
 - `/billing`
@@ -173,8 +176,9 @@ Roma account-shell routes include:
 `/home` currently preserves the Roma shell and navigation but renders no
 domain-specific header, actions, placeholders, or page content.
 
-The Widgets routes own account widget lifecycle actions.
-`/builder/:instanceId` opens one widget instance in Bob for editing.
+The Widgets routes own account widget lifecycle actions. `/builder/:instanceId`
+opens one saved widget instance in Bob; `/builder/new/:widgetType` composes one
+non-persisted New draft.
 
 ## Auth And Account Bootstrap
 
@@ -184,19 +188,20 @@ Roma bootstraps account context from:
 GET /api/bootstrap
 ```
 
-That route proxies to Berlin session bootstrap with the user bearer token and
-returns:
+That route proxies to Berlin session bootstrap with the user bearer token. Its
+browser JSON returns:
 
 - user identity
 - current account
 - account role
 - account public id
-- signed account authz capsule
 - account entitlement snapshot
 
-Roma uses the Berlin-issued current account as the product account context.
-Browser code uses same-origin Roma APIs. Shared httpOnly cookies carry session
-truth across Roma and Bob on the custom `*.clickeen.com` domain.
+Roma removes Berlin's signed account authz capsule from the JSON response and
+writes it to the shared secure account-authz cookie. Roma uses the Berlin-issued
+current account as the product account context. Browser code uses same-origin
+Roma APIs. Shared httpOnly cookies carry session and account-authorization truth
+across Roma and Bob on the custom `*.clickeen.com` domain.
 
 The Berlin profile also carries `primaryLanguage` and dormant
 `usePrimaryLanguageForUi`. Roma currently displays/edits primary language but
@@ -606,11 +611,10 @@ Publish replaces one
 `publicPackage` `{ indexHtml, stylesCss, runtimeJs }`. The public file paths
 remain logical views of those members, not separate R2 objects.
 
-These storage shapes are a pre-GA cutover. After deployment, all legacy
-cloud-dev saved instances require an explicit source cutover or recreation;
-any that should remain public then require explicit Publish/Republish. No
-compatibility reader or migration-on-read exists, and this documentation pass
-performed no remote operation.
+The pre-GA storage cutover is complete for all four legacy saved cloud-dev
+instances under `CLICKEEN`; the two public instances were Republished through
+Roma. No compatibility reader or migration-on-read exists, and retained split
+legacy objects are unreachable.
 
 ## Assets Domain
 

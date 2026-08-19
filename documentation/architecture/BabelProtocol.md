@@ -98,12 +98,10 @@ compatibility path. After deployment, they require explicit Generate
 Translations or explicit deletion. Serve never migrates or falls back to the
 old format.
 
-Atomic `instance.source.json` is a separate pre-GA storage cutover. After its
-deployment, all legacy cloud-dev saved instances require an explicit source
-cutover or recreation before this protocol can read them; any retained public
-instance then requires explicit Publish/Republish. There is no legacy source
-reader or migration-on-read, and this documentation pass performed no remote
-operation.
+The separate pre-GA atomic `instance.source.json` cutover is complete for all
+four legacy saved cloud-dev instances under `CLICKEEN`; the two public
+instances were Republished through Roma. There is no legacy source reader or
+migration-on-read, and retained split legacy objects are unreachable.
 
 ## Verification
 

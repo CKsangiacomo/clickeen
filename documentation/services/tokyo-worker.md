@@ -197,10 +197,9 @@ Missing/locale-error responses are `no-store`. The tag is the exact invalidation
 identity consumed by the owning default entrypoint's `ctx.cache.purge()` call.
 
 Prior cloud-dev evidence showed zone-API invalidation does not own Workers
-Cache. The current local source instead schedules the owning default
-entrypoint's tag eviction through `waitUntil`, but live HIT/MISS or purge
-success is not a product acceptance gate. Deployment and ordinary public
-serving owner QA remain pending.
+Cache. The deployed source instead schedules the owning default entrypoint's
+tag eviction through `waitUntil`, but live HIT/MISS or purge success is not a
+product acceptance gate. Ordinary public-serving owner QA remains pending.
 
 Every existing-instance Save, Rename, Publish/Republish, Unpublish, and Delete
 routes through one Tokyo-owned Cloudflare Durable Object per account. The
@@ -332,11 +331,10 @@ serving. Missing overlay truth is `404`; an R2 or JSON read failure is `500`;
 neither falls back to base. The Worker/R2 deployment and live serving checks
 pass in cloud-dev; owner QA remains pending.
 
-The atomic source and published serve-state shapes are a pre-GA cutover. After
-deployment, all legacy cloud-dev saved instances require an explicit source
-cutover or recreation; any that should remain public then require explicit
-Publish/Republish. There is no compatibility reader or migration-on-read, and
-this documentation reconciliation performed no remote operation.
+The pre-GA atomic source/published-serve-state cutover is complete for all four
+legacy saved cloud-dev instances under `CLICKEEN`; the two public instances
+were Republished through Roma. No compatibility reader or migration-on-read
+exists, and retained split legacy objects are unreachable.
 
 ## Private Roma Routes
 

@@ -335,11 +335,10 @@ eviction of the instance's one Cloudflare cache tag. Eviction is not part of
 the Publish result. There is no release registry, alternate root, fingerprint
 path, package/status split commit, or compatibility package.
 
-This is a pre-GA storage cutover. After deployment, all legacy cloud-dev saved
-instances require an explicit source cutover or recreation; any that should
-remain public then require explicit Publish/Republish. No compatibility reader
-or migration-on-read exists, and this documentation pass performed no remote
-operation.
+The pre-GA storage cutover is complete for all four legacy saved cloud-dev
+instances under `CLICKEEN`; the two public instances were Republished through
+Roma. No compatibility reader or migration-on-read exists, and retained split
+legacy objects are unreachable.
 
 ## Uniform Shared-Service Law
 

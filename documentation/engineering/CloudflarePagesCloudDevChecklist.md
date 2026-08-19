@@ -224,7 +224,14 @@ Git settings:
 - Root directory: `prague`
 - Build command: `pnpm build`
 - Output directory: `dist`
+- Build watch include paths: `*`
+- Build watch exclude paths: none
 - Deploy trigger: Git-connected Cloudflare Pages build only
+
+Prague consumes shared repository packages and deploy-time product content in
+addition to files under `prague/`. Its watch include is therefore the exact
+repository-wide `*`, matching the dependency truth instead of maintaining a
+partial service-local path list.
 
 Public host:
 - Canonical host: `https://prague.dev.clickeen.com`
@@ -255,6 +262,7 @@ Pass criteria:
 - production branch is `main`;
 - build command is `pnpm build`;
 - output directory is `dist`;
+- source watch includes are exactly `*` with no excludes;
 - custom domain includes `prague.dev.clickeen.com`;
 - runtime responds at `https://prague.dev.clickeen.com/us/en/`;
 - live runtime env includes the required public base URLs listed above.

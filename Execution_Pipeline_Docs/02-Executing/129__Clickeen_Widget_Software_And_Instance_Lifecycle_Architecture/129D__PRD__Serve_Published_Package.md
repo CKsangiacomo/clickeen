@@ -1,6 +1,6 @@
 # PRD 129D — Serve Published Package
 
-Status: **LOCAL ATOMIC-SERVING/CACHE CORRECTION IMPLEMENTED — CLOUD-DEV VERIFICATION PENDING**
+Status: **ATOMIC-SERVING/CACHE CORRECTION DEPLOYED AND TECHNICALLY VERIFIED IN CLOUD-DEV 2026-08-19 — OWNER QA PENDING**
 
 Parent: `129__PRD__Clickeen_Widget_Software_And_Instance_Lifecycle_Architecture.md`
 
@@ -251,14 +251,14 @@ No public path gains Widget-specific logic.
   policy; and
 - no request reads account tier or performs account-lifecycle reconciliation.
 
-This is also a pre-GA storage cutover. The corrected runtime discovers an
-instance only through its exact `instance.source.json`, so every legacy saved
-cloud-dev instance using the former config/content split needs an explicit
-source cutover or recreation decision. After deploy, every instance intended
-to remain published must then be explicitly Published/Republished so its
-`serve-state.json` receives the logical `publicPackage`. Serve has no legacy
-source reader and no separate-package-object fallback. No cutover, Republish,
-or other remote work was performed in this pass.
+This required a pre-GA storage cutover. The corrected runtime discovers an
+instance only through its exact `instance.source.json`, so each legacy saved
+cloud-dev instance using the former config/content split required an explicit
+source cutover or recreation decision. Each instance intended to remain
+published then required an explicit Publish/Republish so its `serve-state.json`
+received the logical `publicPackage`. Serve has no legacy source reader and no
+separate-package-object fallback. The completed cloud-dev cutover and
+publication actions are recorded in §14.
 
 The scheduled suspension-lifecycle runner and full account-root deletion
 operation were not added. Serve consumes only the publication truth that
@@ -295,9 +295,10 @@ a fallback label source.
 - one default-entrypoint schedules the deterministic account-instance tag for
   eviction after owning mutations without awaiting or inspecting cache outcome;
 - no Widget-specific serving branch or alternate public route exists; and
-- focused local implementation checks pass; prior baseline cloud-dev evidence
-  remains historical, while the corrected source/publication artifacts,
-  coordinator, cache boundary, and owner QA remain unverified in cloud-dev.
+- focused implementation checks, exact-SHA deployment, atomic source and
+  publication cutover, authenticated inventory reads, two Roma Republish
+  commands, and live package serving pass in cloud-dev; owner QA remains
+  pending.
 
 ## 13. Required Final V1-V8 Audit
 
@@ -318,11 +319,11 @@ audit is the implementation evidence.
 ## 14. Reconciliation State
 
 ```text
-stored base package serving: prior separate-object baseline is present in cloud-dev; corrected one-artifact serving is implemented locally and unverified there
-atomic editable source discovery: exact instance.source.json is the only instance key; implemented locally
-instance Delete commit: exact instance.source.json deletion is the logical product result; serve-state/overlay prefix cleanup and cache eviction are scheduled afterward through waitUntil and remain product-inert; implemented locally, cloud-dev verification pending
-legacy saved cloud-dev instances: all require an explicit source cutover or recreation decision because instance.config.json plus instance.content.json has no compatibility reader; no remote action performed
-atomic publication artifact: serve-state.json contains status, publishedAt, and exact logical publicPackage; implemented locally
+stored base package serving: corrected one-artifact serving is deployed and returns all six public package-file responses for the two published instances
+atomic editable source discovery: exact instance.source.json is the only instance key; deployed and enumerates exactly four instances
+instance Delete commit: deployed; owner Delete interaction QA pending
+legacy saved cloud-dev instances: all four cut over to exact instance.source.json; no compatibility reader
+atomic publication artifact: deployed serve-state.json contains status, publishedAt, and exact logical publicPackage
 separate package-object compatibility: absent; public index.html/styles.css/runtime.js URLs read exact logical members
 selected-locale Edge HTML expression: present in cloud-dev
 client localization context/runtime: removed from the deployed path
@@ -333,15 +334,14 @@ stable scalar/repeated overlay identity: present in cloud-dev
 authored exact attribute localization: present in cloud-dev
 pre-GA positional-overlay compatibility path: absent; explicit Generate/delete cutover required for previously stored positional overlays
 account suspension lifecycle runner/full deletion: documented follow-on account work, not a PRD 129 blocker
-account product data: no remote product-data work performed in this pass; previously documented cloud-dev state remains unchanged
+account product data: all four saved CLICKEEN instances cut over; two public instances Republished through Roma
 stored positional-overlay Generate/delete cutover: pending
-pre-GA publication cutover: deploy the corrected runtime, explicitly cut over or recreate every legacy saved instance, then explicitly Publish/Republish each instance intended to remain published; no compatibility fallback exists
-publish/republish of current cloud-dev instances: pending; no remote publication work performed in this pass
-cache eviction non-interference: implemented and deterministically tested locally
-generated package cache policy: bounded revalidation implemented locally
+pre-GA publication cutover: complete; no compatibility fallback exists
+publish/republish of current cloud-dev instances: Republish complete for LWZZR7JSG8 and VUWUJ7OQ0Y
+cache eviction non-interference: deployed and deterministically tested
+generated package cache policy: bounded revalidation deployed
 cache HIT/MISS/purge live QA: intentionally not a product acceptance gate
-product commit: not created for the current correction
-main push: not performed for the current correction
-deploy: not performed for the current correction
-live product: prior serving/storage/cache baseline remains active; corrected source discovery, atomic publication serving, cache boundary, and owner QA have not been cloud-dev verified
+product commit and main push: a6678966
+deploy: Worker deployment, Roma/Bob runtime reachability, and Tokyo R2 product-root sync passed
+live product: corrected source discovery, atomic publication serving, and cache boundary are active; technical verification passed; owner QA pending
 ```

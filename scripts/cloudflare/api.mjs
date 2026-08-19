@@ -277,6 +277,8 @@ function summarizeProjectDetails(project) {
       owner: project.source?.config?.owner,
       repo_name: project.source?.config?.repo_name,
       production_branch: project.source?.config?.production_branch,
+      path_includes: project.source?.config?.path_includes ?? [],
+      path_excludes: project.source?.config?.path_excludes ?? [],
     },
     latest_deployment: summarizeLatestDeployment(project.latest_deployment),
     env_vars: {

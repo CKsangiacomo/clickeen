@@ -133,12 +133,14 @@ styles.css  complete shared and Core presentation
 runtime.js  mandatory Widget/shared visitor behavior
 ```
 
-Tokyo-worker stores those exact files. A base request returns the stored
-package. A selected non-base request applies the exact stored overlay into the
-semantic HTML and sets `<html lang>` before returning it. The response uses the
-existing public cache policy; the locale query is part of the request cache
-coordinate. Every index response also contains exact Edge-authored switcher
-options for the base locale and stored overlay coordinates. Publish,
+Tokyo-worker stores those exact logical members unchanged inside the one atomic
+published `serve-state.json`; they are not separate R2 objects. A base request
+selects the requested member from that stored package. A selected non-base
+request applies the exact stored overlay into the semantic HTML and sets
+`<html lang>` before returning it. The response uses the existing public cache
+policy; the locale query is part of the request cache coordinate. Every index
+response also contains exact Edge-authored switcher options for the base locale
+and stored overlay coordinates. Publish,
 unpublish, Delete, and overlay changes cause Tokyo's default Worker entrypoint
 to schedule its own Workers Cache eviction after the owning truth mutation
 through `waitUntil` and the exact account-instance tag. Eviction is outside the
@@ -158,7 +160,7 @@ JavaScript.
   locale contracts. FAQ additionally authors its FAQPage/Question/Answer
   microdata in Core.
 - The retired flat Widget clients have no compatibility path.
-- Product commit `e2ac3589` is deployed to cloud-dev; Worker/R2, Pages,
+- Product commit `e2ac3589` is deployed to cloud-dev; Worker/R2, Roma and Bob
   reachability, and authenticated Builder-open evidence pass. Owner QA remains
   pending.
 
@@ -178,7 +180,8 @@ automatic ranking optimizer in the current product.
 | Case | Result |
 | --- | --- |
 | Unpublished Widget instance | public `404` |
-| Missing stored public package object | public `404` |
+| Missing source anchor or stored publication truth | public `404`; no legacy package fallback |
+| Invalid stored publication truth | visible server failure; no repair or substitution |
 | Missing requested overlay | `404 Locale not available`; no base fallback |
 | Unreadable requested overlay | `500 Locale data invalid`; no repair or substitution |
 | Denied **Enable SEO/GEO** edit | draft unchanged; one exact Roma upsell Popup |

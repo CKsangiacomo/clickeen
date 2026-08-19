@@ -167,8 +167,11 @@ unpublished copy; explicit Publish alone generates the package; and
 Tokyo-worker applies requested locale overlays to semantic HTML at the Edge.
 Roma owns publication controls in Widgets and its slim Builder header; Bob owns
 editing and Save only. The corrected lifecycle and background cache-eviction
-flow is local and uncommitted. Cloud-dev Worker/Pages deployment, surface
-reachability, authenticated Builder smoke, and owner QA remain pending.
+flow is deployed from commit `a6678966`. Cloud-dev Worker health, Roma and Bob
+reachability, authenticated saved-instance Builder open, non-persisting
+New-open inventory truth, live Copilot streaming, and public `dev.clk.live`
+package serving passed technical verification on 2026-08-19; owner QA remains
+pending.
 
 The active cloud-dev admin account coordinate is:
 
@@ -401,12 +404,11 @@ Production public serving uses:
 https://clk.live/{accountPublicId}/{instanceId}
 ```
 
-This is a pre-GA storage cutover. After deployment, all legacy cloud-dev saved
-instances require an explicit source cutover or recreation. Legacy instances
-that should remain public then require an explicit Publish/Republish to write
-the atomic published serve-state. There is no legacy read fallback or
-migration-on-read, and this documentation reconciliation performed no remote
-work.
+The pre-GA storage cutover is complete for all four legacy saved cloud-dev
+instances under `CLICKEEN`. Their source records were cut over and the two
+intended-public instances were Republished through Roma. There is no legacy
+read fallback or migration-on-read; retained split legacy objects are
+unreachable.
 
 ### Account Assets
 

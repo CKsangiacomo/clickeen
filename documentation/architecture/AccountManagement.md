@@ -392,12 +392,12 @@ the capability/message identity to Roma. Bob does not resolve tiers, select a
 target plan, author upsell copy, own a second Popup, or send the already-gated
 draft through the same entitlement decision again at Save.
 
-Current local implementation: Bob applies each Widget's compiled bindings at
+Current deployed implementation: Bob applies each Widget's compiled bindings at
 one common operation boundary and sends Roma
 `{ capability, messageId, required }` on denial. The draft remains unchanged,
 Roma chooses the first qualifying higher tier and opens one shared Popup, and
 Save does not repeat the decision. Every current Widget has its canonical
-`upsell/{locale}.json` source locally.
+`upsell/{locale}.json` source in the deployed artifact set.
 
 ### Berlin
 
@@ -459,12 +459,10 @@ pending. Authenticated translation list/read/write operations also trust the
 exact stored overlay coordinates and values; they do not project or compare
 them against saved source.
 
-Atomic source and published serve-state are a newer pre-GA storage cutover.
-After deployment, all legacy cloud-dev saved instances require an explicit
-source cutover or recreation; any that should remain public then require
-explicit Publish/Republish. There is no compatibility reader or
-migration-on-read, and this documentation reconciliation performed no remote
-operation.
+The newer pre-GA atomic source/published-serve-state cutover is complete for
+all four legacy saved cloud-dev instances under `CLICKEEN`; the two public
+instances were Republished through Roma. There is no compatibility reader or
+migration-on-read, and retained split legacy objects are unreachable.
 
 ## Verification
 
