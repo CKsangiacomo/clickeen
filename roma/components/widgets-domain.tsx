@@ -810,8 +810,12 @@ export function WidgetsDomain({
                                 data-type="primary"
                                 type="button"
                                 disabled={!canMutateWidgets || Boolean(activeActionKey)}
+                                aria-busy={statusUpdating || undefined}
                                 onClick={() => void handleStatusChange(instance, 'published')}
                               >
+                                {statusUpdating ? (
+                                  <span className="diet-spinner" aria-hidden="true" />
+                                ) : null}
                                 <span className="diet-button__label">Update live widget</span>
                               </button>
                             ) : null}
