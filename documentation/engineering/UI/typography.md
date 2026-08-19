@@ -3,7 +3,7 @@
 STATUS: CURRENT SYSTEM OPERATOR SPEC
 
 Canonical doctrine: this document.
-Execution PRD: [`126D__PRD__Typography.md`](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126D__PRD__Typography.md).
+Execution PRD: [`126D__PRD__Typography.md`](../../../Execution_Pipeline_Docs/03-Executed/126__UI_Optimization/126D__PRD__Typography.md).
 Current source authorities are Dieter typography source, account widget
 defaults, and widget runtime typography.
 

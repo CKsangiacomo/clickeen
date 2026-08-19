@@ -3,7 +3,7 @@
 **Living, canonical reference - motion.**
 
 Canonical doctrine: this document.
-Execution PRD: [`126F__PRD__Motion.md`](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126F__PRD__Motion.md).
+Execution PRD: [`126F__PRD__Motion.md`](../../../Execution_Pipeline_Docs/03-Executed/126__UI_Optimization/126F__PRD__Motion.md).
 
 Source of truth: `dieter/tokens/dieter-foundation-tokens.css`, Dieter component
 CSS/JS, and system chrome CSS in Bob, Roma, and DevStudio/Admin.

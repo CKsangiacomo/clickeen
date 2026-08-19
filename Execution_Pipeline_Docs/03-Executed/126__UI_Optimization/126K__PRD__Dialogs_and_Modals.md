@@ -1,7 +1,7 @@
 # 126K - PRD: Dialogs And Modals
 
-Status: ORIGINAL STEP 9 COMPLETE; POPUP VISUAL-CONTRACT CORRECTION IMPLEMENTED
-AND DEPLOYED; FINAL POPUP-WORKFLOW QA AND PRODUCT-OWNER ACCEPTANCE PENDING.
+Status: EXECUTED — POPUP VISUAL-CONTRACT CONVERGENCE IMPLEMENTED, DEPLOYED,
+AND PRODUCT-OWNER ACCEPTED.
 Parent: `126__PRD__UI_Optimization_Program.md`.
 Audit: `audits/126K__Audit__Dialogs_and_Modals.md`.
 Living doctrine: `documentation/engineering/UI/dialogs-and-modals.md`.
@@ -88,8 +88,8 @@ This correction does not authorize broader keyboard support. Native `<dialog>`
 behavior and the already accepted lifecycle remain; no synthetic keyboard
 framework or new keyboard contract is added.
 
-Correction acceptance is the complete consumer/deletion/deployed-browser matrix
-in `126_DevQA.md`, not the original lifecycle evidence alone.
+Correction acceptance is the complete consumer, deletion, and deployed-browser
+matrix, not the original lifecycle evidence alone.
 
 ## Purpose
 

@@ -3,7 +3,7 @@
 Permanent, living home for Clickeen's UI product and design-system law. The
 parent program owns execution order and the reason this documentation home
 exists:
-[`126__PRD__UI_Optimization_Program.md` §12](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126__PRD__UI_Optimization_Program.md).
+[`126__PRD__UI_Optimization_Program.md` §12](../../../Execution_Pipeline_Docs/03-Executed/126__UI_Optimization/126__PRD__UI_Optimization_Program.md).
 
 Each domain doc links to its owning 126 PRD. Runtime source says what the product
 does now; living doctrine says the accepted standard. A mismatch between them

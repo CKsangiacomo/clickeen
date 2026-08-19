@@ -1,7 +1,7 @@
 # 126L - PRD: DevStudio UI
 
-Status: ORIGINAL L1/L2/L3 COMPLETE; DEVSTUDIO CONVERGENCE IMPLEMENTED AND
-DEPLOYED; PRODUCT-OWNER ACCEPTANCE PENDING.
+Status: EXECUTED — DEVSTUDIO CONVERGENCE IMPLEMENTED, DEPLOYED, AND
+PRODUCT-OWNER ACCEPTED.
 Parent: `126__PRD__UI_Optimization_Program.md`.
 Audit: `audits/126L__Audit__DevStudio_UI.md`.
 Service authority: `documentation/services/devstudio.md`.
@@ -331,7 +331,7 @@ Execution result:
 
 That matrix is point-in-time evidence for the original execution. The later
 inset-shell correction supersedes only DevStudio's portrait result: current
-narrow portrait uses Compact and is proven separately in `126_DevQA.md`.
+narrow portrait uses Compact.
 
 ## Exact Blast Radius
 

@@ -11,9 +11,8 @@ product-runtime credit.
 ## Authority And Scope
 
 Canonical doctrine is `documentation/engineering/UI/accessibility.md`. The
-execution boundary is `126A__PRD__Accessibility.md`. Product-owner decisions in
-`126__Product_Owner_Execution_Decisions.md` are binding where work crosses into
-126I Components or 126K Dialogs and Modals.
+execution boundary is `126A__PRD__Accessibility.md`. Cross-slice work follows
+the owning 126I Components and 126K Dialogs and Modals contracts.
 
 126A owns semantic product truth already visible in the UI: names, current and
 selected state, loading/saving/error status, partial-success truth, decorative

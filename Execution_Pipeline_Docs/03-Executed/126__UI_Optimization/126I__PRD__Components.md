@@ -1,7 +1,7 @@
 # 126I - PRD: Components
 
-Status: ORIGINAL STEP 9 COMPLETE; TABLE/POPUP CONVERGENCE IMPLEMENTED AND
-DEPLOYED; FINAL POPUP-WORKFLOW QA AND PRODUCT-OWNER ACCEPTANCE PENDING.
+Status: EXECUTED — DIETER TABLE/POPUP CONVERGENCE IMPLEMENTED, DEPLOYED, AND
+PRODUCT-OWNER ACCEPTED.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 Series order: 126I of 126A-126M.
 KB doc: `documentation/engineering/UI/components.md`.
@@ -64,9 +64,8 @@ No alias, dual selector, wrapper, or compatibility branch may keep
 permitted.
 
 Correction acceptance requires source, generated DevStudio example, every
-consumer, deletion searches, local checks, exact-SHA deployments, deployed
-browser evidence, current docs, and independent V1–V8 to reconcile in
-`126_DevQA.md`.
+consumer, deletion searches, focused checks, exact-SHA deployments, deployed
+browser evidence, current docs, and an independent V1–V8 review to agree.
 
 ### 2026-07-30 Table Styling And Typography Acceptance
 

@@ -3,7 +3,7 @@
 **Living, canonical reference - the system overview.**
 
 - Canonical doctrine: this document.
-- Execution PRD: [`126H__PRD__Dieter.md`](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126H__PRD__Dieter.md).
+- Execution PRD: [`126H__PRD__Dieter.md`](../../../Execution_Pipeline_Docs/03-Executed/126__UI_Optimization/126H__PRD__Dieter.md).
 - **Source of truth:** `dieter/tokens/*`, `dieter/layouts/*`,
   `dieter/components/*`, and `dieter/icons/svg/*`. `dieter/icons/icons.json`
   is input to the human-operated SF extraction tool. Consumers compile or

@@ -3,7 +3,7 @@
 Living reference for accessibility doctrine.
 
 - Canonical doctrine: this document.
-- Execution PRD: [`126A__PRD__Accessibility.md`](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126A__PRD__Accessibility.md).
+- Execution PRD: [`126A__PRD__Accessibility.md`](../../../Execution_Pipeline_Docs/03-Executed/126__UI_Optimization/126A__PRD__Accessibility.md).
 - Related docs: [`components.md`](components.md), [`dialogs-and-modals.md`](dialogs-and-modals.md), [`interactions.md`](interactions.md), [`motion.md`](motion.md), [`color.md`](color.md).
 
 This document is not a generic accessibility program. It owns semantic product truth:

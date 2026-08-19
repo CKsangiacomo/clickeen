@@ -1,7 +1,7 @@
 # 126H - PRD: Dieter
 
-Status: ORIGINAL STEP 9 COMPLETE; LAYOUT CONVERGENCE IMPLEMENTED AND DEPLOYED;
-PRODUCT-OWNER ACCEPTANCE PENDING.
+Status: EXECUTED — DIETER LAYOUT CONVERGENCE IMPLEMENTED, DEPLOYED, AND
+PRODUCT-OWNER ACCEPTED.
 Parent: `126__PRD__UI_Optimization_Program.md` (MAMA).
 Series order: 126H of 126A-126M.
 KB doc: `documentation/engineering/UI/dieter.md`.
@@ -135,7 +135,8 @@ Correction acceptance:
 - DevStudio examples and both real consumers use the exact source;
 - replaced `.docs-shell*`, `.devstudio-page-layout`, and `.roma-layout*` base
   layout CSS is deleted in the owning L/M slices;
-- source/governance/build/deployed evidence is recorded in `126_DevQA.md`.
+- source, governance, build, and deployed evidence are verified through their
+  owning surfaces.
 
 The correction does not reopen the original token cleanup and does not change
 token values, product data, routes, storage, or deployment architecture.

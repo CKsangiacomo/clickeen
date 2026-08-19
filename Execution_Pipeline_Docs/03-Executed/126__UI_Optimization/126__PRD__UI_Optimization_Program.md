@@ -1,11 +1,14 @@
 # PRD 126 — MAMA: UI Optimization Program
 
-Status: REOPENED — ORIGINAL A–M STEP-9 AND LOCALIZATION-CORRECTION EVIDENCE
-PRESERVED; D4 CONVERGENCE IMPLEMENTED AND DEPLOYED; FINAL POPUP-WORKFLOW QA
-AND PRODUCT-OWNER ACCEPTANCE PENDING.
+Status: EXECUTED — ONE SHARED DIETER COMPONENT SYSTEM IS IMPLEMENTED ACROSS
+DEVSTUDIO, ROMA, AND APPLICABLE BOB UI; PRODUCT-OWNER ACCEPTED.
 Owner: Clickeen product architecture + UI
 Date: 2026-06-26
-Stage: 02-Executing
+Stage: 03-Executed
+
+The execution history below is preserved as history. Current visual truth is the
+shared Dieter source, including `dieter/tokens/dieter-foundation-tokens.css` and
+`dieter/components/table/table.css`; it is not inferred from superseded prose.
 
 ## 2026-07-30 UI Convergence Correction
 
@@ -17,8 +20,8 @@ commits `2a070120`, `5e7c0266`, and `2b013925` are current-source input only;
 they are not convergence execution credit.
 
 The program is therefore reopened. No product code may be changed for this
-correction until the corrected H/I/K/L/M contracts and the acceptance matrix in
-`126_DevQA.md` are the agreed execution authority.
+correction until the corrected H/I/K/L/M contracts are the agreed execution
+authority.
 
 ### 2026-07-30 Visual Acceptance Correction
 
@@ -486,8 +489,7 @@ Do not rename `surfaces.md`; no such rename was approved.
 
 ### Execution And Closure Order
 
-The correction executes only after H/I/K/L/M and `126_DevQA.md` agree with this
-section:
+The correction executes only after H/I/K/L/M agree with this section:
 
 1. Dieter Layout;
 2. DevStudio Layouts reveal;
@@ -502,9 +504,9 @@ section:
     every affected Bob path;
 11. living-doc reconciliation and independent V1–V8 audit.
 
-126 cannot close while any correction row in `126_DevQA.md` is open. Historical
-Step-9 and localization evidence remains valid but cannot substitute for this
-new evidence.
+Closure required source, consumer, deployment, and product-owner visual
+acceptance to agree. That work is complete. Historical Step-9 and localization
+evidence remains preserved as history.
 
 Focused local gates:
 
@@ -597,8 +599,8 @@ affected root runtimes were rematerialized, cloud-dev base/translated/failure
 paths were verified, the exact 400 obsolete R2 objects were deleted, a final
 Generate Translations smoke preserved the 198-object keyset while changing only
 the expected 28 overlays, and the independent V1–V8 audit returned GREEN.
-`126_DevQA.md` owns the exact commit, deploy, R2, smoke, and failed purge-only
-run reconciliation.
+The exact commit, deploy, R2, smoke, and failed-purge-only run reconciliation
+remain in their owning execution evidence.
 
 `02-Executing` is the repository pipeline folder for this active program.
 Steps 1-8 are complete for every A-M domain. Step 9 executes one domain and one
@@ -627,8 +629,6 @@ Related:
   `documentation/services/bob.md`,
   `../../03-Executed/PRD__DevStudio_Cloudflare_Migration.md` (§3.5 write path,
   §3.6 design freeze, Appendix A hash-frozen baseline).
-- Human decision register:
-  `126__Product_Owner_Execution_Decisions.md`.
 
 ## 1. Purpose
 
@@ -730,9 +730,8 @@ reference chain from the center.
 The authority grounding and product-owner convergence are complete. D1 defines
 dialog dismissal, D2 defines global operational workspace capability, and D3
 keeps Upgrade entry points connected to one honest pre-GA upsell dialog
-scaffold. These accepted decisions in
-`126__Product_Owner_Execution_Decisions.md` now govern domain doctrine and the
-frozen execution contracts.
+scaffold. These accepted behaviors govern domain doctrine and the frozen
+execution contracts.
 
 ## 5. Authority (who owns what)
 
@@ -943,8 +942,7 @@ current authority; it does not invent a second documentation surface.
 
 ## 13. Pre-Execution Closure And Step-9 Start
 
-1. Complete: D1/D2/D3 are accepted in
-   `126__Product_Owner_Execution_Decisions.md` (step 4).
+1. Complete: D1/D2/D3 are accepted (step 4).
 2. Complete: every A-M domain has reconciled its settled product law into the
    owning living doctrine (step 5).
 3. Complete: every A-M domain has a current-source audit with exact mismatch,

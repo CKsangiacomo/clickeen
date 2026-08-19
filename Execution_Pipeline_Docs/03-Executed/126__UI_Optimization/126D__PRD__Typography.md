@@ -427,8 +427,8 @@ which prevents Bob from offering fonts that public widgets cannot load.
 
 Font support, account-library wiring, asset migration, package materialization,
 old-route removal, and public runtime delivery are complete. Authenticated Roma
-and public-runtime evidence is recorded in `126_DevQA.md`. No remote font
-migration remains. The seven untracked local copies under
+and public-runtime evidence established that no remote font migration remains.
+The seven untracked local copies under
 `tokyo/product/fonts/special/` are non-deployed workspace residue outside this
 Git execution. They remain untouched and receive no Step-9 credit.
 

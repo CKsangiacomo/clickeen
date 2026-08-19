@@ -55,12 +55,12 @@ Evidence:
 
 - MAMA Step 1 is independent as-built only: code owns current reality, no fixes,
   no convergence, no external research:
-  `Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126__PRD__UI_Optimization_Program.md:178-185`.
+  `Execution_Pipeline_Docs/03-Executed/126__UI_Optimization/126__PRD__UI_Optimization_Program.md:178-185`.
 - `CONTEXT.md` names Dieter as the design-system authority:
   `documentation/architecture/CONTEXT.md:164`.
 - 126C scope is the icon set, manifest, build pipeline, `diet-icon`, sizing, and
   color conventions:
-  `Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126C__PRD__Iconography.md:7`.
+  `Execution_Pipeline_Docs/03-Executed/126__UI_Optimization/126C__PRD__Iconography.md:7`.
 - Dieter source/output authority is documented as `dieter/` source and
   `tokyo/product/dieter/**` deploy output:
   `documentation/services/dieter.md:11` and `documentation/services/dieter.md:31`.
@@ -306,7 +306,7 @@ Evidence:
   Admin has its own `hydrateIcons()` in `admin/src/main.ts:242`.
 - `documentation/engineering/UI/README.md:26` labels iconography as `126B`,
   while MAMA maps iconography to 126C:
-  `Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126__PRD__UI_Optimization_Program.md:120-124`.
+  `Execution_Pipeline_Docs/03-Executed/126__UI_Optimization/126__PRD__UI_Optimization_Program.md:120-124`.
 
 ## Known Current Gaps
 

@@ -3,7 +3,7 @@
 Living reference for iconography doctrine.
 
 - Canonical doctrine: this document.
-- Execution PRD: [`126C__PRD__Iconography.md`](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126C__PRD__Iconography.md).
+- Execution PRD: [`126C__PRD__Iconography.md`](../../../Execution_Pipeline_Docs/03-Executed/126__UI_Optimization/126C__PRD__Iconography.md).
 - Source SVGs: `dieter/icons/svg/*`.
 - SF extraction input: `dieter/icons/icons.json`.
 - Human origination tool: `tooling/sf-symbols`.

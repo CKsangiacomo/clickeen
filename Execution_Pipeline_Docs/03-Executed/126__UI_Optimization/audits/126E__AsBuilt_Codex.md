@@ -65,10 +65,10 @@ Main current gaps:
 Evidence:
 
 - MAMA Step 1 is independent current-system read only:
-  `Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126__PRD__UI_Optimization_Program.md:182`.
+  `Execution_Pipeline_Docs/03-Executed/126__UI_Optimization/126__PRD__UI_Optimization_Program.md:182`.
 - 126E scope is cross-cutting behavior: loading/empty/error states, command
   flows, and feedback:
-  `Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126E__PRD__Interactions.md:7`.
+  `Execution_Pipeline_Docs/03-Executed/126__UI_Optimization/126E__PRD__Interactions.md:7`.
 - Roma owns the logged-in app shell, policy/tier enforcement, same-origin
   account routes, Builder host flow, and account commands:
   `documentation/services/roma.md:18`.

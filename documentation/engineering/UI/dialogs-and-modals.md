@@ -1,7 +1,7 @@
 # Dialogs And Modals In Clickeen
 
 Canonical doctrine: this document.
-Execution PRD: [`126K__PRD__Dialogs_and_Modals.md`](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126K__PRD__Dialogs_and_Modals.md).
+Execution PRD: [`126K__PRD__Dialogs_and_Modals.md`](../../../Execution_Pipeline_Docs/03-Executed/126__UI_Optimization/126K__PRD__Dialogs_and_Modals.md).
 Related doctrine: [`accessibility.md`](accessibility.md) for honest naming and
 semantic state. Interaction doctrine: [`interactions.md`](interactions.md) for when product
 behavior needs blocking, entitlement, destructive, or account-notice feedback.

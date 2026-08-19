@@ -7,7 +7,7 @@ This doc owns how Dieter moves through the system.
 
 - Canonical source: `dieter/**`.
 - Execution PRD:
-  [`126G__PRD__Ops.md`](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126G__PRD__Ops.md).
+  [`126G__PRD__Ops.md`](../../../Execution_Pipeline_Docs/03-Executed/126__UI_Optimization/126G__PRD__Ops.md).
 - Manual icon authoring: `tooling/sf-symbols/**`.
 
 ## Source And Consumers

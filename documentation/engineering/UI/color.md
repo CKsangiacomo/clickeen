@@ -3,7 +3,7 @@
 Living reference for color doctrine.
 
 - Canonical doctrine: this document.
-- Execution PRD: [`126B__PRD__Color.md`](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126B__PRD__Color.md).
+- Execution PRD: [`126B__PRD__Color.md`](../../../Execution_Pipeline_Docs/03-Executed/126__UI_Optimization/126B__PRD__Color.md).
 - Source of truth: `dieter/tokens/dieter-color-tokens.css`.
 - Consumers compile or materialize this source directly; there is no generated
   Tokyo token mirror.

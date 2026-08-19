@@ -723,7 +723,7 @@ Status on 2026-07-22: **126A.1 through 126A.4 GREEN; 126A complete.**
 Before each remaining 126A Step-9 slice starts, verify scope with:
 
 ```bash
-test -f Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/audits/126A__Audit__Accessibility.md
+test -f Execution_Pipeline_Docs/03-Executed/126__UI_Optimization/audits/126A__Audit__Accessibility.md
 rg -n "126A2__SUBPRD__Color_System|126C__PRD|126D__PRD|track 126A|track 126B|\\*\\(126A\\)|\\*\\(126B\\)|\\*\\(126C\\)|\\*\\(126B/126D\\)|\\*\\(126C/126D\\)|PRD 126D|during 126B|during 126C|126C corrections|126C's job|126D's job|126D Step|focus & keyboard|focus/keyboard|toasts|easing.*126A" documentation/engineering/UI documentation/services/bob.md
 rg -n "role=\"button\"|aria-label=\"\"|role=\"dialog\"|aria-modal|role=\"status\"|role=\"alert\"|aria-live|aria-current|aria-selected|aria-checked|aria-expanded|aria-haspopup" dieter/components bob/components roma/components roma/app/login/page.tsx admin/src --glob '*.{html,ts,tsx,js}'
 rg -n "coreui\\.|HTTP_|backend|Berlin|page package generation|\\.\\.\\.|tier[0-9]|->|Unavailable" bob/components roma/components roma/app/login/page.tsx admin/src --glob '*.{ts,tsx,html}'

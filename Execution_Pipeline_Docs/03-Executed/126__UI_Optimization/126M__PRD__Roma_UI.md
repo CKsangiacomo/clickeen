@@ -1,7 +1,7 @@
 # 126M - PRD: Roma UI And Final Workspace Integration
 
-Status: ORIGINAL M1-M4 COMPLETE; ROMA CONVERGENCE IMPLEMENTED AND DEPLOYED;
-FINAL ROMA/BOB POPUP-WORKFLOW QA AND PRODUCT-OWNER ACCEPTANCE PENDING.
+Status: EXECUTED — ROMA CONVERGENCE AND APPLICABLE BOB POPUP-WORKFLOW
+CONSUMPTION IMPLEMENTED, DEPLOYED, AND PRODUCT-OWNER ACCEPTED.
 Parent: `126__PRD__UI_Optimization_Program.md`.
 Audit: `audits/126M__Audit__Roma_UI.md`.
 Service authority: `documentation/services/roma.md`.
@@ -103,7 +103,7 @@ behavior changes. No R2 or Supabase mutation belongs to this correction.
 Correction acceptance requires focused checks plus exact-SHA deployed browser
 proof for every affected Roma route and applicable Bob path, preservation of
 all domain operations, zero replaced selector hits, current-doc reconciliation,
-and independent V1–V8 recorded in `126_DevQA.md`.
+and an independent V1–V8 review.
 
 ### 2026-07-30 Typography And Table Correction
 

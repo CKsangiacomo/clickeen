@@ -16,8 +16,7 @@ Related:
 - `tokyo-worker/src/domains/assets.ts` — `directAccountAssetRefFromKey` (the folder guard)
 - `tokyo-worker/src/asset-utils.ts` — `validateUploadFilename` (rejects path separators)
 - `roma/components/assets-domain.tsx` — current flat-list UI
-- `Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126M__PRD__Roma_UI.md` — sequenced predecessor
-- `Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126_DevQA.md` — foundation state
+- `Execution_Pipeline_Docs/03-Executed/126__UI_Optimization/126M__PRD__Roma_UI.md` — sequenced predecessor
 
 ---
 
@@ -44,9 +43,8 @@ this feature must not restore:
   provides the controlled Data Table composition that the folder UI should use
   from day one: Textfield for folder naming, Dropdown Actions for choices,
   Data Table for selection/batch work, and Table for ordinary tabular structure.
-- **The reopened 126 convergence gate is still authoritative**
-  (`126_DevQA.md`). Asset folders must be designed against the converged Roma
-  shell rather than carrying pre-126 drift.
+- **The converged Dieter/Roma source is authoritative.** Asset folders must be
+  designed against that shell rather than carrying pre-126 drift.
 
 The original 126M dependency is satisfied. Promotion to `02-Executing/` also
 depends on closing the reopened 126 convergence gate and the remaining

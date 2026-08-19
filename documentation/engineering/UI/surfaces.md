@@ -3,7 +3,7 @@
 **Living, canonical reference for the surface design primitive.**
 
 Canonical doctrine: this document.
-Execution PRD: [`126J__PRD__Surfaces.md`](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126J__PRD__Surfaces.md).
+Execution PRD: [`126J__PRD__Surfaces.md`](../../../Execution_Pipeline_Docs/03-Executed/126__UI_Optimization/126J__PRD__Surfaces.md).
 
 Surfaces are the containers and planes that hold content. They are not product
 apps, routes, or runtime surfaces.

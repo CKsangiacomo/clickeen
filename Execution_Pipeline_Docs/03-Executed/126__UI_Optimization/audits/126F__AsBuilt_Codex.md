@@ -60,9 +60,9 @@ The main current gaps are contract gaps:
 Evidence:
 
 - MAMA Step 1 is independent current-system read only:
-  `Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126__PRD__UI_Optimization_Program.md:182`.
+  `Execution_Pipeline_Docs/03-Executed/126__UI_Optimization/126__PRD__UI_Optimization_Program.md:182`.
 - 126F owns durations, easing, and reduced motion:
-  `Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126F__PRD__Motion.md:7`.
+  `Execution_Pipeline_Docs/03-Executed/126__UI_Optimization/126F__PRD__Motion.md:7`.
 - Dieter is the design-system source authority:
   `documentation/services/dieter.md:5`.
 - Dieter source is `dieter/`; generated output is `tokyo/product/dieter/**`:

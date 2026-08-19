@@ -45,14 +45,14 @@ fully healthy color token runtime from the text alone.
 Evidence:
 
 - 126 MAMA defines 126B as the color domain in the dependency series:
-  `Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126__PRD__UI_Optimization_Program.md:120-124`.
+  `Execution_Pipeline_Docs/03-Executed/126__UI_Optimization/126__PRD__UI_Optimization_Program.md:120-124`.
 - MAMA Step 1 is as-built only, with code owning current reality:
-  `Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126__PRD__UI_Optimization_Program.md:178-185`.
+  `Execution_Pipeline_Docs/03-Executed/126__UI_Optimization/126__PRD__UI_Optimization_Program.md:178-185`.
 - MAMA makes `documentation/engineering/UI/` the permanent UI truth home:
-  `Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126__PRD__UI_Optimization_Program.md:233-260`.
+  `Execution_Pipeline_Docs/03-Executed/126__UI_Optimization/126__PRD__UI_Optimization_Program.md:233-260`.
 - 126B delegates canonical color reference to
   `documentation/engineering/UI/color.md`:
-  `Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126B__PRD__Color.md:7-13`.
+  `Execution_Pipeline_Docs/03-Executed/126__UI_Optimization/126B__PRD__Color.md:7-13`.
 - Dieter source/output authority is documented as source under `dieter/` and
   generated/deployed output under `tokyo/product/dieter/**`:
   `documentation/services/dieter.md:7-18`.
@@ -298,7 +298,7 @@ Evidence:
   `--color-bg` as consumer bugs. Current audit also found
   `--color-system-gray-7`, `--color-system-gray-10`, and
   `--state-muted-opacity`.
-- `Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126B__PRD__Color.md:4`
+- `Execution_Pipeline_Docs/03-Executed/126__UI_Optimization/126B__PRD__Color.md:4`
   references stale/nonexistent `126A__PRD__Dieter_Tokens.md`.
 - `documentation/engineering/UI/color.md:7` references nonexistent
   `126A2__SUBPRD__Color_System.md`.

@@ -1,7 +1,7 @@
 # Interactions In Clickeen
 
 Canonical doctrine: this document.
-Execution PRD: [`126E__PRD__Interactions.md`](../../../Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126E__PRD__Interactions.md).
+Execution PRD: [`126E__PRD__Interactions.md`](../../../Execution_Pipeline_Docs/03-Executed/126__UI_Optimization/126E__PRD__Interactions.md).
 Related docs: [`color.md`](color.md), [`components.md`](components.md),
 [`dialogs-and-modals.md`](dialogs-and-modals.md), [`motion.md`](motion.md),
 [`accessibility.md`](accessibility.md).

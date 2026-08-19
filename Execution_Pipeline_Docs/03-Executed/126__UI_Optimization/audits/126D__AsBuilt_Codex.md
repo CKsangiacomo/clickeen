@@ -62,10 +62,10 @@ Evidence:
 
 - MAMA Step 1 is an independent current-system read: code owns current reality,
   no fixes, no convergence, no external research:
-  `Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126__PRD__UI_Optimization_Program.md:182`.
+  `Execution_Pipeline_Docs/03-Executed/126__UI_Optimization/126__PRD__UI_Optimization_Program.md:182`.
 - 126D owns typography mechanics: families, size scale, fluid display, line
   heights, and utility classes:
-  `Execution_Pipeline_Docs/02-Executing/126__UI_Optimization/126D__PRD__Typography.md:7`.
+  `Execution_Pipeline_Docs/03-Executed/126__UI_Optimization/126D__PRD__Typography.md:7`.
 - `CONTEXT.md` names Dieter as the design-system authority:
   `documentation/architecture/CONTEXT.md:164`.
 - `documentation/engineering/UI/typography.md:7` names
