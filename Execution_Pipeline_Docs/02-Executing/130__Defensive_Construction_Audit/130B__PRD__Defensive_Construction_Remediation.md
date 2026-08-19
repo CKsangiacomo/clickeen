@@ -1,7 +1,7 @@
 # PRD 130B — Defensive Construction Remediation
 
-**Status:** LOCAL IMPLEMENTATION AND INDEPENDENT AUDIT COMPLETE — commit/push,
-Roma/Bob deployment, and cloud-dev owner QA pending
+**Status:** IMPLEMENTED, AUDITED, PUSHED, AND DEPLOYED — signed-in cloud-dev
+owner QA pending because no product browser session was available
 
 **Date:** 2026-08-19
 
@@ -828,9 +828,10 @@ This PRD is complete only when all of the following are true:
 - product-data state is reported accurately; and
 - the independent V1–V8 audit passes with no unresolved blocker.
 
-## 13. Local execution reconciliation
+## 13. Execution reconciliation
 
-As of 2026-08-19, Slices 0–8 are complete locally:
+As of 2026-08-19, Slices 0–9 are complete and the safe non-UI portion of Slice
+10 is complete:
 
 - Roma composes one shared product-neutral confirmation and uses it for Widget
   Delete, Asset Delete, Unpublish in both Roma consumers, Remove member, and
@@ -857,14 +858,43 @@ the existing focused regression suites listed in Slice 8, Roma `build:cf`, Bob
 `build:cf`, and `git diff --check` pass. Bob lint still reports the same three
 pre-existing `CopilotPane` exhaustive-dependency warnings and exits `0`.
 
-No commit, push, Pages deployment, remote product-data mutation, or cloud-dev
-owner QA is claimed yet. Those remain Slices 9–10.
-
 The independent complete-diff audit found and closed two reachable Save-phase
 defects: edits during an active Save now keep the `saving` phase until the
 request terminates, and a failed request now exposes `Save` only when the current
 draft remains dirty. The corrected code, behavior tests, canonical docs, and
 production builds were re-audited. V1–V8 pass with no unresolved blocker.
 
-Until Slices 9–10 finish, the honest state is: **implemented, green, and
-independently audited locally; not yet shipped or owner-verified**.
+### 13.1 Push and deployment evidence
+
+The complete 44-file implementation, tests, canonical manuals, PRD, and
+execution plan were committed as
+`34444e5e646cc530514e0646d27f0795259ce96d` and pushed to `github/main`. Local
+HEAD, the remote branch, and that implementation revision matched with a clean
+worktree immediately after push.
+
+Only the affected Git-connected Pages projects were observed:
+
+- Roma deployment `9270d489-3886-4c95-ab6f-527a4a6c58e5` reached terminal
+  `deploy/success` for `34444e5e646cc530514e0646d27f0795259ce96d`.
+- Bob deployment `db5a4569-6836-4a96-b9b4-cea4d3857806` reached terminal
+  `deploy/success` for `34444e5e646cc530514e0646d27f0795259ce96d`.
+- Roma custom and deployment domains resolved to the signed-out login surface
+  with HTTP `200`; Bob custom and deployment `/bob` surfaces returned HTTP
+  `200`.
+
+No Worker deploy, remote product-data mutation, account mutation, or QA cleanup
+was required or performed.
+
+### 13.2 Cloud-dev owner QA status
+
+Signed-in owner-visible QA remains explicitly pending. The product browser
+runtime reported no available in-app or external browser session, so no honest
+visual or interaction evidence could be produced. The five real confirmation
+flows, Builder Save/header/compact behavior, cold Widgets and Widget Defaults
+presentation, and real Product Copilot turn states were not inferred from local
+tests or replaced by an unrelated browser mechanism. Member removal and
+ownership transfer also still require controlled disposable identities before
+their confirming mutations can be exercised safely.
+
+The honest current state is: **implementation deployed successfully; safe
+non-UI cloud checks complete; signed-in owner-visible QA pending**.

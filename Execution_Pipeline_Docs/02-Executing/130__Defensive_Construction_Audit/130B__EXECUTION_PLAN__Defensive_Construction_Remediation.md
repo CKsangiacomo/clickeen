@@ -1,7 +1,7 @@
 # PRD 130B — Defensive Construction Remediation Execution Plan
 
-**Status:** SLICES 0–8 COMPLETE — commit/push, Roma/Bob deployment, and
-cloud-dev owner QA pending
+**Status:** SLICES 0–9 COMPLETE — safe non-UI cloud verification complete;
+signed-in owner-visible Slice 10 QA pending because no browser session was available
 
 **Date:** 2026-08-19
 
@@ -780,30 +780,35 @@ This slice requires explicit execution/push authority at the time it runs.
 
 #### Step 9.1 — Reconcile the shared worktree
 
-- [ ] Re-read `git status --short`, diff stat, and every edited-file diff.
-- [ ] Include every intended edited file; do not leave half of an authority
+- [x] Re-read `git status --short`, diff stat, and every edited-file diff.
+- [x] Include every intended edited file; do not leave half of an authority
       conversion uncommitted.
-- [ ] Preserve and correctly include concurrent authorized work rather than
+- [x] Preserve and correctly include concurrent authorized work rather than
       discarding it.
-- [ ] Stop if an edited file cannot be attributed or safely reconciled.
+- [x] Stop if an edited file cannot be attributed or safely reconciled.
 
 #### Step 9.2 — Commit and push
 
-- [ ] Create one cohesive commit for code, tests, and canonical documentation.
-- [ ] Record the commit SHA.
-- [ ] Push `main` only under the current explicit authority.
-- [ ] Record the remote branch/SHA after push.
+- [x] Create one cohesive commit for code, tests, and canonical documentation.
+- [x] Record the commit SHA:
+      `34444e5e646cc530514e0646d27f0795259ce96d`.
+- [x] Push `main` only under the current explicit authority.
+- [x] Record the remote branch/SHA after push; `github/main` matched
+      `34444e5e646cc530514e0646d27f0795259ce96d`.
 
 #### Step 9.3 — Observe only the affected deploy plane
 
-- [ ] Observe the Git-connected Roma Cloudflare Pages build from the pushed SHA.
-- [ ] Observe the Git-connected Bob Cloudflare Pages build from the pushed SHA.
-- [ ] Confirm Dieter source is consumed by those successful builds; there is no
+- [x] Observe the Git-connected Roma Cloudflare Pages build from the pushed SHA.
+- [x] Observe the Git-connected Bob Cloudflare Pages build from the pushed SHA.
+- [x] Confirm Dieter source is consumed by those successful builds; there is no
       separate Dieter runtime deploy.
-- [ ] Do not invoke, debug, wait for, or report Prague deployment.
-- [ ] Do not deploy Berlin, Tokyo-worker, San Francisco, or Product Copilot
+- [x] Do not invoke, debug, wait for, or report Prague deployment.
+- [x] Do not deploy Berlin, Tokyo-worker, San Francisco, or Product Copilot
       Worker because this pass changes none of those runtime owners.
-- [ ] Record Pages deployment identifiers, status, and deployed revision.
+- [x] Record Pages deployment identifiers, status, and deployed revision:
+      Roma `9270d489-3886-4c95-ab6f-527a4a6c58e5` and Bob
+      `db5a4569-6836-4a96-b9b4-cea4d3857806`, both terminal
+      `deploy/success` for `34444e5e646cc530514e0646d27f0795259ce96d`.
 
 **Slice 9 exit gate:** the complete intended commit is on `main`, Roma and Bob
 Pages report the pushed revision, and no unrelated deploy was performed.
@@ -881,17 +886,24 @@ No keyboard acceptance checks are part of this pass.
 
 #### Step 10.6 — Final reconciliation
 
+The signed-in checks in Steps 10.1–10.5 remain pending because the product
+browser runtime had no available in-app or external browser session. They were
+not inferred from local tests or replaced by another browser mechanism. Safe
+non-UI checks proved HTTP `200` from Roma's signed-out custom/deployment login
+surfaces and Bob's custom/deployment `/bob` surfaces. No product data changed.
+
 Record separately:
 
-- [ ] local test/build evidence;
-- [ ] pushed commit and remote revision;
-- [ ] Roma Pages deployment;
-- [ ] Bob Pages deployment;
-- [ ] cloud-dev technical evidence;
-- [ ] owner-visible QA results;
-- [ ] product-data mutations and restoration;
-- [ ] independent V1-V8 result; and
-- [ ] only genuinely pending live checks.
+- [x] local test/build evidence;
+- [x] pushed commit and remote revision;
+- [x] Roma Pages deployment;
+- [x] Bob Pages deployment;
+- [x] cloud-dev technical evidence;
+- [x] owner-visible QA results recorded as pending because no browser was
+      available;
+- [x] product-data mutations and restoration: none;
+- [x] independent V1-V8 result; and
+- [x] only genuinely pending live checks.
 
 **Slice 10 exit gate:** deployed Roma/Bob behavior matches E1-E6, owner QA is
 recorded honestly, and no excluded surface or unrelated product data was
@@ -912,17 +924,18 @@ PRD 130B is complete only when every item below is true:
 - [x] Widget Defaults preserves exact compiled panel labels.
 - [x] Copilot visible status follows exact terminal/apply truth without a wire
       change.
-- [ ] Canonical documentation matches implemented and deployed behavior.
+- [x] Canonical documentation matches implemented and deployed behavior.
 - [x] Focused behavior checks, typechecks, lints, and Roma/Bob builds pass.
 - [x] Independent V1-V8 has no unresolved blocker.
-- [ ] The complete intended worktree is committed and pushed under explicit
+- [x] The complete intended worktree is committed and pushed under explicit
       authority.
-- [ ] Roma and Bob deployment revisions are recorded.
-- [ ] Cloud-dev technical verification and owner QA are recorded separately.
+- [x] Roma and Bob deployment revisions are recorded.
+- [x] Cloud-dev technical verification and owner QA are recorded separately.
 - [x] No invitation, Prague, Catalog/New Builder, PRD 129, or other excluded
       work entered the pass.
 
-Current reconciliation: Slices 0–8 are implemented, green, and independently
-audited. Slices 9–10 remain open. Until those gates pass, the honest status is:
-**implemented and independently audited locally, not yet shipped or
-owner-verified**.
+Current reconciliation: Slices 0–9 are implemented, green, independently
+audited, pushed, and deployed. Safe non-UI cloud verification is complete with
+no product-data mutation. Slice 10's signed-in owner-visible checks remain
+explicitly pending because no product browser session was available. The
+honest status is: **deployed successfully; signed-in owner-visible QA pending**.
