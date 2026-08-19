@@ -5,6 +5,7 @@ export type WidgetInstance = {
   widgetType: string;
   displayName: string;
   status: 'published' | 'unpublished';
+  publishedAt: string | null;
   updatedAt: string;
 };
 
@@ -20,6 +21,7 @@ type RawWidgetInstance = {
   displayName?: string | null;
   status?: string | null;
   updatedAt?: string | null;
+  publishedAt?: string | null;
 };
 
 type RawWidgetCatalogOption = {
@@ -71,12 +73,15 @@ export function normalizeWidgetInstance(raw: RawWidgetInstance): WidgetInstance 
   const status = raw.status;
   const updatedAt = typeof raw.updatedAt === 'string' ? raw.updatedAt.trim() : '';
   if (!updatedAt) return null;
+  const publishedAtRaw = typeof raw.publishedAt === 'string' ? raw.publishedAt.trim() : '';
+  const publishedAt = publishedAtRaw || null;
 
   return {
     instanceId,
     widgetType,
     displayName,
     status,
+    publishedAt,
     updatedAt,
   };
 }

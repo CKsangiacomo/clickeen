@@ -102,6 +102,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     NextResponse.json({
       ok: true,
       updatedAt: result.updatedAt,
+      publishStatus: result.publishStatus,
     }),
     current.value.setCookies,
   );

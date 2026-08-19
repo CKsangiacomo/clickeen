@@ -801,6 +801,20 @@ export function WidgetsDomain({
                                 <span className="diet-toggle__knob" />
                               </span>
                             </label>
+                            {instance.status === 'published' &&
+                            instance.publishedAt !== null &&
+                            instance.updatedAt > instance.publishedAt ? (
+                              <button
+                                className="diet-button"
+                                data-size="small"
+                                data-type="primary"
+                                type="button"
+                                disabled={!canMutateWidgets || Boolean(activeActionKey)}
+                                onClick={() => void handleStatusChange(instance, 'published')}
+                              >
+                                <span className="diet-button__label">Republish</span>
+                              </button>
+                            ) : null}
                             {instance.status === 'published' ? (
                               <button
                                 className="diet-button"

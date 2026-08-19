@@ -95,7 +95,7 @@ export type BobDirtyStateChangedMessage = {
 
 export type BobHostActionMessage = {
   type: 'bob:host-action';
-  action: 'open-navigation' | 'copy-code' | 'publish';
+  action: 'open-navigation' | 'copy-code';
 };
 
 export type BobWidgetUpsellMessage = {

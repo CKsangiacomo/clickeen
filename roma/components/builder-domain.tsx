@@ -26,6 +26,7 @@ import {
   type PublicationCapacityUpgrade,
   type UpsellPresentation,
 } from './roma-upsell-dialog';
+import { RomaRepublishNotice } from './roma-republish-notice';
 import { useRomaShellActions } from './roma-shell';
 import { WidgetCopyCodeDialog } from './widget-copy-code-dialog';
 
@@ -108,7 +109,7 @@ type BobUpsellMessage = BobWidgetUpsellMessage | BobSystemUpsellMessage;
 
 type BobHostActionMessage = {
   type: 'bob:host-action';
-  action: 'open-navigation' | 'copy-code' | 'publish';
+  action: 'open-navigation' | 'copy-code';
 };
 
 function resolveBobSystemUpsellBody(reasonKey: string): string {
@@ -571,6 +572,8 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
   const [unsavedDialogOpen, setUnsavedDialogOpen] = useState(false);
   const [upsell, setUpsell] = useState<UpsellPresentation | null>(null);
   const [publicationError, setPublicationError] = useState<string | null>(null);
+  const [republishNotice, setRepublishNotice] = useState<{ instanceId: string } | null>(null);
+  const [republishNoticeBusy, setRepublishNoticeBusy] = useState(false);
 
   const bobBaseUrl = useMemo(() => resolveBobBaseUrl(), []);
   const currentUrl = pathname;
@@ -809,6 +812,14 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
                   ? String((payload as { error?: { reasonKey?: unknown } }).error?.reasonKey)
                   : undefined,
         });
+        if (
+          args.command === 'update-instance' &&
+          status >= 200 &&
+          status < 300 &&
+          (payload as { publishStatus?: unknown } | null)?.publishStatus === 'published'
+        ) {
+          setRepublishNotice({ instanceId: scopedInstanceId || requestedInstanceId || '' });
+        }
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         reply({
@@ -1065,8 +1076,6 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         } else if (data.action === 'copy-code') {
           if (publicActionContext) setCopyCodeOpen(true);
           else setOpenError('coreui.errors.builder.publicActions.invalid');
-        } else if (data.action === 'publish') {
-          void publishActiveInstance();
         }
         return;
       }
@@ -1270,6 +1279,20 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         reason={upsell?.body}
         upgradeAvailable={upsell?.upgradeAvailable}
         onClose={() => setUpsell(null)}
+      />
+      <RomaRepublishNotice
+        open={Boolean(republishNotice)}
+        republishing={republishNoticeBusy}
+        onRepublish={async () => {
+          setRepublishNoticeBusy(true);
+          try {
+            await publishActiveInstance();
+          } finally {
+            setRepublishNoticeBusy(false);
+            setRepublishNotice(null);
+          }
+        }}
+        onLater={() => setRepublishNotice(null)}
       />
     </>
   );

@@ -414,12 +414,16 @@ status. Bob's ToolDrawer and the upsell
 Popup do not own this result, and no queue, polling loop, rollback, or alternate
 retry route is added.
 
-Bob TopDrawer exposes Publish for a clean unpublished instance and Republish for
-a clean published instance. It sends one host intent to Roma; it does not Save
-first. Roma's existing inventory action uses the same Publish/unpublish routes.
-After Publish succeeds, Roma reopens the same instance so Bob receives the new
-publication status and public actions. Unpublish remains the existing inventory
-action and generates no package.
+Publication UI lives in Roma, not in Bob's editing toolbar. When a Save
+succeeds on a published instance, Roma opens one notice — "changes are not
+live yet" — with Republish now or I'll do it later; Republish now invokes the
+same Publish command. The widgets inventory shows a Republish action on any
+published row whose saved source is newer than its published package, using
+the same Publish route, and Unpublish remains the existing inventory action
+and generates no package. Bob's toolbar shows editing actions only; its
+status chip notes "changes not live" while saved source is newer than the
+published package. After Publish succeeds, Roma reopens the same instance so
+Bob receives the new publication status and public actions.
 
 ## 14. Save Remains Unchanged By Publish
 

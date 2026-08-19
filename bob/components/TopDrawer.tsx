@@ -31,17 +31,10 @@ export function TopDrawer({
   const hasInstance = Boolean(currentInstanceId);
   const canSave = hasInstance && isDirty;
   const showSaveAction = canSave || isSaving;
-  const [publishInFlight, setPublishInFlight] = useState(false);
-  useEffect(() => {
-    setPublishInFlight(false);
-  }, [meta]);
   const publishedAt = meta?.publishedAt ?? null;
   const sourceUpdatedAt = meta?.sourceUpdatedAt ?? null;
   const changesNotLive =
     publishedAt !== null && sourceUpdatedAt !== null && sourceUpdatedAt > publishedAt;
-  const showPublishAction =
-    (hasInstance && !isDirty && !isSaving && (meta?.publishStatus !== 'published' || changesNotLive)) ||
-    publishInFlight;
   const currentLabel = meta?.label ?? '';
   const publicActions = meta?.publicActions ?? null;
 
@@ -117,7 +110,7 @@ export function TopDrawer({
                   ? `Published · ${new Date(publishedAt).toLocaleTimeString([], {
                       hour: '2-digit',
                       minute: '2-digit',
-                    })}`
+                    })}${changesNotLive ? ' · changes not live' : ''}`
                   : 'Published'
                 : 'Unpublished'}
             </span>
@@ -185,24 +178,6 @@ export function TopDrawer({
           >
             {isSaving ? <span className="diet-spinner" aria-hidden="true" /> : null}
             <span className="diet-button__label">{isSaving ? 'Saving…' : 'Save'}</span>
-          </button>
-        ) : null}
-        {showPublishAction ? (
-          <button
-            className="diet-button"
-            data-size="large"
-            data-type="primary"
-            type="button"
-            aria-busy={publishInFlight || undefined}
-            onClick={() => {
-              setPublishInFlight(true);
-              requestHostAction('publish');
-            }}
-          >
-            {publishInFlight ? <span className="diet-spinner" aria-hidden="true" /> : null}
-            <span className="diet-button__label">
-              {meta?.publishStatus === 'published' ? 'Republish' : 'Publish'}
-            </span>
           </button>
         ) : null}
       </div>

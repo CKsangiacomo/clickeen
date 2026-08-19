@@ -143,6 +143,7 @@ export async function tryHandleInternalInstanceRoutes(
         displayName: pointer.value.displayName,
         updatedAt: pointer.value.updatedAt,
         publishStatus: pointer.value.publishStatus,
+        publishedAt: pointer.value.publishedAt,
       }),
     );
   }
