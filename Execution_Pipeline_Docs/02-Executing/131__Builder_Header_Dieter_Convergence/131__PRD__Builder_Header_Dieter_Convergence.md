@@ -75,3 +75,17 @@ independent V1-V8 audit: PASS on all eight; one blocker found and fixed —
   h1.heading-2, copy-code scoped to header.page__header)
 owner visual acceptance: pending
 ```
+
+## 6. Grammar Correction (2026-08-19, owner-directed)
+
+The owner ruled the band's styling and layout out of grammar and invented.
+Correction (commit 64d7a15f): the local override block shrinks to the single
+forced-geometry line (`padding: var(--space-2) var(--layout-page-padding)` —
+the page rhythm the full-canvas page zeroed); the part's alignment, canvas
+treatment, margin, and width law stand untouched. Title is `h1.heading-2` per
+every page header. Actions are buttons only at `large` (Update/Republish
+primary, Copy code tertiary); badge and toggle return to the Widgets
+inventory; receipt/badge code is deleted (no surface renders it). The shared
+component gains `showToggle`/`controlSize` props with list-preserving
+defaults. Checks: typecheck 15/15, lint, widget-command-gates PASS,
+dieter governance PASS.
