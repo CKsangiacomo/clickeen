@@ -14,6 +14,7 @@ type WidgetInstance = {
   displayName: string;
   status: 'published' | 'unpublished';
   updatedAt: string;
+  publishedAt: string | null;
 };
 
 type WidgetCatalogOption = {
@@ -90,6 +91,7 @@ export async function GET(request: NextRequest) {
       widgetType: instance.widgetType,
       displayName: instance.displayName ?? DEFAULT_INSTANCE_DISPLAY_NAME,
       status: instance.publishStatus,
+      publishedAt: instance.publishedAt,
       updatedAt: instance.updatedAt,
     };
   });
