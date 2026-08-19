@@ -185,6 +185,8 @@ type BobOpenEditorMessage = {
   instanceData: Record<string, unknown>;
   fontLibrary: AccountFontLibrary;
   publishStatus: 'published' | 'unpublished';
+  publishedAt: string | null;
+  sourceUpdatedAt: string | null;
   publicActions: WidgetPublicActions | null;
   policy: unknown;
   copilot: unknown;
@@ -205,6 +207,8 @@ type BuilderOpenResponse = {
   config: Record<string, unknown>;
   fontLibrary: AccountFontLibrary;
   publishStatus: 'published' | 'unpublished';
+  publishedAt: string | null;
+  sourceUpdatedAt: string | null;
   copilot: unknown;
 };
 
@@ -927,6 +931,8 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         instanceData: config,
         fontLibrary: builderOpen.fontLibrary,
         publishStatus: builderOpen.publishStatus,
+        publishedAt: builderOpen.publishedAt,
+        sourceUpdatedAt: builderOpen.sourceUpdatedAt,
         publicActions: nextPublicActions,
         policy: accountPolicy,
         copilot: builderOpen.copilot,

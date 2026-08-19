@@ -38,6 +38,7 @@ export type AccountInstanceCoreRow = {
   instanceId: string;
   displayName: string | null;
   updatedAt?: string | null;
+  publishedAt?: string | null;
   widgetId?: string;
   accountId: string;
   widgetType: string;
@@ -97,6 +98,7 @@ type TokyoAccountInstancePayload = {
   widgetType: string;
   displayName: string | null;
   publishStatus: AccountInstanceLiveStatus;
+  publishedAt: string | null;
   updatedAt: string;
   baseLocale: string;
   source: {
@@ -118,6 +120,7 @@ function composeTokyoAccountInstance(payload: TokyoAccountInstancePayload): {
       instanceId: payload.instanceId,
       displayName: payload.displayName,
       updatedAt: payload.updatedAt,
+      publishedAt: payload.publishedAt,
       accountId: payload.accountId,
       widgetType: payload.widgetType,
       baseLocale: payload.baseLocale,
@@ -207,7 +210,7 @@ export async function saveAccountInstanceInTokyo(args: {
   content: AccountInstanceContentDocument;
   internalServiceName?: string | null;
   requestId?: string | null;
-}): Promise<{ ok: true } | RouteFailure> {
+}): Promise<{ ok: true; updatedAt: string | null } | RouteFailure> {
   const result = await callTokyo(tokyoCallContext(args), {
     path: `/__internal/instances/${encodeURIComponent(args.instanceId)}`,
     method: 'PUT',
@@ -217,12 +220,12 @@ export async function saveAccountInstanceInTokyo(args: {
         content: args.content,
       },
     },
-    decode: (payload) => payload as { ok: true },
+    decode: (payload) => payload as { ok: true; updatedAt?: string },
     errorDetail: 'tokyo_instance_save_http_error',
     errorKey: 'coreui.errors.db.writeFailed',
   });
   if (!result.ok) return result;
-  return { ok: true };
+  return { ok: true, updatedAt: result.value.updatedAt ?? null };
 }
 
 async function postInstanceStatusTransition(args: {

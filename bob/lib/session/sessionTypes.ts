@@ -44,6 +44,8 @@ export type SessionMeta = {
   baseLocale: string;
   widgetname: string;
   publishStatus: 'published' | 'unpublished';
+  publishedAt: string | null;
+  sourceUpdatedAt: string | null;
   label: string;
   publicActions: PublicActions | null;
   fontLibrary: AccountFontLibrary;
@@ -74,6 +76,8 @@ export type EditorOpenMessage = {
   accountPublicId: string;
   instanceId: string;
   publishStatus: 'published' | 'unpublished';
+  publishedAt: string | null;
+  sourceUpdatedAt: string | null;
   label: string;
   publicActions: PublicActions | null;
   copilot: CopilotRuntimeUi;

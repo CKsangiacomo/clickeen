@@ -350,6 +350,7 @@ export async function tryHandleInternalInstanceRoutes(
           widgetType: pointer.widgetType,
           displayName: pointer.displayName,
           publishStatus: pointer.publishStatus,
+          publishedAt: pointer.publishedAt,
           updatedAt: pointer.updatedAt,
           baseLocale: pointer.baseLocale,
           source: {

@@ -53,6 +53,8 @@ export function useSessionBoot(args: {
           baseLocale,
           widgetname: compiled.widgetname,
           publishStatus: message.publishStatus,
+          publishedAt: message.publishedAt,
+          sourceUpdatedAt: message.sourceUpdatedAt,
           label: nextLabel,
           publicActions,
           fontLibrary,

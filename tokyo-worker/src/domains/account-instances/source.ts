@@ -17,7 +17,8 @@ import type {
 } from './types';
 import {
   createInstanceServeState,
-  readInstanceServeState,
+  readInstanceServeStateRecord,
+  type InstanceServeStateRecord,
 } from './serve-state';
 
 function nowIso(): string {
@@ -35,7 +36,7 @@ export class AccountInstanceCoordinateError extends Error {
 
 function toAccountInstanceSourcePointer(args: {
   configDoc: AccountInstanceConfigDocument;
-  publishStatus: InstanceServeState;
+  serveState: InstanceServeStateRecord;
   updatedAt: string;
 }): AccountInstanceSourcePointer {
   const { configDoc } = args;
@@ -46,7 +47,8 @@ function toAccountInstanceSourcePointer(args: {
     widgetType: configDoc.widgetType,
     displayName: configDoc.displayName,
     baseLocale: configDoc.baseLocale,
-    publishStatus: args.publishStatus,
+    publishStatus: args.serveState.status,
+    publishedAt: args.serveState.publishedAt,
     createdAt: configDoc.createdAt,
     updatedAt: args.updatedAt,
   };
@@ -93,7 +95,7 @@ export async function writeAccountInstanceSource(args: {
   baseLocale: string;
   existing?: {
     createdAt: string;
-    publishStatus: InstanceServeState;
+    serveState: InstanceServeStateRecord;
   };
 }): Promise<{ pointer: AccountInstanceSourcePointer }> {
   const { instanceId, accountId, widgetCode, widgetType } = args;
@@ -128,7 +130,7 @@ export async function writeAccountInstanceSource(args: {
   return {
     pointer: toAccountInstanceSourcePointer({
       configDoc,
-      publishStatus: args.existing?.publishStatus ?? 'unpublished',
+      serveState: args.existing?.serveState ?? { status: 'unpublished', publishedAt: null },
       updatedAt: now,
     }),
   };
@@ -148,7 +150,7 @@ export async function readAccountInstanceSourcePointer(args: {
   if (!configDoc) {
     return { ok: false, kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' };
   }
-  const publishStatus = await readInstanceServeState({
+  const serveState = await readInstanceServeStateRecord({
     env: args.env,
     accountId: args.accountId,
     instanceId: args.instanceId,
@@ -158,7 +160,7 @@ export async function readAccountInstanceSourcePointer(args: {
     ok: true,
     value: toAccountInstanceSourcePointer({
       configDoc,
-      publishStatus,
+      serveState,
       updatedAt: configDoc.updatedAt,
     }),
   };
@@ -178,7 +180,7 @@ export async function readAccountInstanceDocument(args: {
   if (!configDoc) {
     return { ok: false, kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' };
   }
-  const publishStatus = await readInstanceServeState({
+  const serveState = await readInstanceServeStateRecord({
     env: args.env,
     accountId: args.accountId,
     instanceId: args.instanceId,
@@ -194,7 +196,8 @@ export async function readAccountInstanceDocument(args: {
       displayName: configDoc.displayName,
       config: configDoc.config,
       baseLocale: configDoc.baseLocale,
-      publishStatus,
+      publishStatus: serveState.status,
+      publishedAt: serveState.publishedAt,
       createdAt: configDoc.createdAt,
       updatedAt: configDoc.updatedAt,
     },
@@ -295,7 +298,7 @@ export async function readAccountInstanceSource(args: {
   if (!configDoc) {
     return { ok: false, kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' };
   }
-  const publishStatus = await readInstanceServeState({
+  const serveState = await readInstanceServeStateRecord({
     env: args.env,
     accountId: args.accountId,
     instanceId: args.instanceId,
@@ -303,7 +306,7 @@ export async function readAccountInstanceSource(args: {
   });
   const pointer = toAccountInstanceSourcePointer({
     configDoc,
-    publishStatus,
+    serveState,
     updatedAt: configDoc.updatedAt,
   });
   const content = await readContentDocumentByLocation({

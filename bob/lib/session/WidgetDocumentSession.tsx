@@ -70,6 +70,7 @@ export function WidgetDocumentSessionProvider({ children }: { children: ReactNod
     stateRef,
     metaRef,
     setState,
+    setMeta: chrome.setMeta,
     executeAccountCommand: transport.executeAccountCommand,
   });
 

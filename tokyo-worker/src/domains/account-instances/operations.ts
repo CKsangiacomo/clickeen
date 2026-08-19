@@ -165,7 +165,10 @@ export async function saveAccountInstanceSource(args: {
     baseLocale: existing.value.baseLocale,
     existing: {
       createdAt: existing.value.createdAt,
-      publishStatus: existing.value.publishStatus,
+      serveState: {
+        status: existing.value.publishStatus,
+        publishedAt: existing.value.publishedAt,
+      },
     },
   });
   return { pointer: saved.pointer };

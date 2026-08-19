@@ -31,7 +31,17 @@ export function TopDrawer({
   const hasInstance = Boolean(currentInstanceId);
   const canSave = hasInstance && isDirty;
   const showSaveAction = canSave || isSaving;
-  const showPublishAction = hasInstance && !isDirty && !isSaving;
+  const [publishInFlight, setPublishInFlight] = useState(false);
+  useEffect(() => {
+    setPublishInFlight(false);
+  }, [meta]);
+  const publishedAt = meta?.publishedAt ?? null;
+  const sourceUpdatedAt = meta?.sourceUpdatedAt ?? null;
+  const changesNotLive =
+    publishedAt !== null && sourceUpdatedAt !== null && sourceUpdatedAt > publishedAt;
+  const showPublishAction =
+    (hasInstance && !isDirty && !isSaving && (meta?.publishStatus !== 'published' || changesNotLive)) ||
+    publishInFlight;
   const currentLabel = meta?.label ?? '';
   const publicActions = meta?.publicActions ?? null;
 
@@ -102,7 +112,14 @@ export function TopDrawer({
           ) : null}
           {meta?.publishStatus ? (
             <span className="topdrawer-publish-status body-xs">
-              {meta.publishStatus === 'published' ? 'Published' : 'Unpublished'}
+              {meta.publishStatus === 'published'
+                ? publishedAt
+                  ? `Published · ${new Date(publishedAt).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}`
+                  : 'Published'
+                : 'Unpublished'}
             </span>
           ) : null}
         </div>
@@ -176,8 +193,13 @@ export function TopDrawer({
             data-size="large"
             data-type="primary"
             type="button"
-            onClick={() => requestHostAction('publish')}
+            aria-busy={publishInFlight || undefined}
+            onClick={() => {
+              setPublishInFlight(true);
+              requestHostAction('publish');
+            }}
           >
+            {publishInFlight ? <span className="diet-spinner" aria-hidden="true" /> : null}
             <span className="diet-button__label">
               {meta?.publishStatus === 'published' ? 'Republish' : 'Publish'}
             </span>

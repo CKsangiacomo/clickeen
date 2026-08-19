@@ -12,6 +12,8 @@ export type BuilderOpenEnvelope = {
   config: Record<string, unknown>;
   fontLibrary: AccountWidgetDefaultsDocument['fontLibrary'];
   publishStatus: 'published' | 'unpublished';
+  publishedAt: string | null;
+  sourceUpdatedAt: string | null;
 };
 
 export async function loadBuilderOpenEnvelope(args: {
@@ -80,6 +82,8 @@ export async function loadBuilderOpenEnvelope(args: {
       config: instance.value.config,
       fontLibrary: widgetDefaults.value.widgetDefaults.fontLibrary,
       publishStatus: instance.value.row.publishStatus,
+      publishedAt: instance.value.row.publishedAt ?? null,
+      sourceUpdatedAt: instance.value.row.updatedAt ?? null,
     },
   };
 }

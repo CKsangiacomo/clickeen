@@ -7,6 +7,7 @@ export type AccountInstanceDocument = {
   config: Record<string, unknown>;
   baseLocale: string;
   publishStatus: InstanceServeState;
+  publishedAt: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -63,6 +64,7 @@ export type AccountInstanceSourcePointer = {
   displayName: string | null;
   baseLocale: string;
   publishStatus: InstanceServeState;
+  publishedAt: string | null;
   createdAt: string;
   updatedAt: string;
 };

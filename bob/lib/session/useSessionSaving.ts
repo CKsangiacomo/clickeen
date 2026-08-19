@@ -12,9 +12,10 @@ export function useSessionSaving(args: {
   stateRef: MutableRefObject<SessionState>;
   metaRef: MutableRefObject<SessionMeta>;
   setState: Dispatch<SetStateAction<SessionState>>;
+  setMeta: Dispatch<SetStateAction<SessionMeta>>;
   executeAccountCommand: ExecuteAccountCommand;
 }) {
-  const { executeAccountCommand, metaRef, setState, stateRef } = args;
+  const { executeAccountCommand, metaRef, setMeta, setState, stateRef } = args;
 
   const save = useCallback(async () => {
     // Save persists the one widget the customer is actively editing.
@@ -97,6 +98,13 @@ export function useSessionSaving(args: {
         return;
       }
 
+      const savedAt = (json as { updatedAt?: unknown } | undefined)?.updatedAt;
+      if (typeof savedAt === 'string' && savedAt) {
+        setMeta((prev) => (prev ? { ...prev, sourceUpdatedAt: savedAt } : prev));
+        metaRef.current = metaRef.current
+          ? { ...metaRef.current, sourceUpdatedAt: savedAt }
+          : metaRef.current;
+      }
       const current = stateRef.current;
       const currentInstanceDataSignature = serializeInstanceDataSignature(current.instanceData);
       const hasEditsAfterSubmittedSave = currentInstanceDataSignature !== submittedInstanceDataSignature;

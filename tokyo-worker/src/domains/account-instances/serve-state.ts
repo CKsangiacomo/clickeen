@@ -23,17 +23,34 @@ function serveStatePayload(
   };
 }
 
-async function readStoredServeState(env: Env, coordinate: InstanceCoordinate): Promise<InstanceServeState> {
+export type InstanceServeStateRecord = {
+  status: InstanceServeState;
+  publishedAt: string | null;
+};
+
+async function readStoredServeStateRecord(
+  env: Env,
+  coordinate: InstanceCoordinate,
+): Promise<InstanceServeStateRecord> {
   const obj = await env.TOKYO_R2.get(
     accountInstanceServeStateKey(coordinate.accountId, coordinate.widgetCode, coordinate.instanceId),
   );
   if (!obj) throw new Error('coreui.errors.instance.serveStateMissing');
   try {
-    const record = await obj.json<{ status: InstanceServeState }>();
-    return record.status;
+    const record = await obj.json<{ status: InstanceServeState; publishedAt?: string }>();
+    return { status: record.status, publishedAt: record.publishedAt ?? null };
   } catch {
     throw new Error('coreui.errors.instance.serveStateInvalid');
   }
+}
+
+export async function readInstanceServeStateRecord(args: {
+  env: Env;
+  accountId: string;
+  instanceId: string;
+  widgetCode: string;
+}): Promise<InstanceServeStateRecord> {
+  return readStoredServeStateRecord(args.env, args);
 }
 
 export async function readInstanceServeState(args: {
@@ -42,7 +59,7 @@ export async function readInstanceServeState(args: {
   instanceId: string;
   widgetCode: string;
 }): Promise<InstanceServeState> {
-  return readStoredServeState(args.env, args);
+  return (await readStoredServeStateRecord(args.env, args)).status;
 }
 
 export async function createInstanceServeState(args: {
