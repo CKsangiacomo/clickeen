@@ -121,7 +121,7 @@ async function testRomaOwnsBuilderPublicationChrome(): Promise<void> {
   assert.doesNotMatch(builderLandingRoute, /rd-canvas--builder/);
   assert.match(builderLandingRoute, /RomaShellDefaultActions/);
 
-  assert.match(builderSource, /className="roma-builder-header"/);
+  assert.match(builderSource, /className="page__header"/);
   assert.match(builderSource, /<WidgetPublicationControls/);
   assert.match(builderSource, /activeInstanceId \? 'Loading widget…' : 'Untitled widget'/);
   assert.match(builderSource, /activeInstanceId \? 'Loading publication status…' : 'Save to create this widget'/);

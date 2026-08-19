@@ -119,15 +119,10 @@ export function WidgetPublicationControls({
   return (
     <div className="roma-widget-publication">
       {showReceipt ? (
-        <span className="body-xs roma-widget-publication__receipt">
-          {published
-            ? instance.publishedAt
-              ? `Published · ${new Date(instance.publishedAt).toLocaleTimeString([], {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}`
-              : 'Published'
-            : 'Unpublished'}
+        <span className="diet-badge label-xs" data-tone="neutral">
+          <span className="diet-badge__label">
+            {published ? (savedChangesNotLive ? 'Published · changes not live' : 'Published') : 'Unpublished'}
+          </span>
         </span>
       ) : null}
       <div className="roma-widget-publish-actions">

@@ -1291,29 +1291,29 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
           </div>
         </div>
       ) : null}
-      <div className="roma-builder-header">
-        <div className="roma-builder-header__identity">
-          <span className="heading-4">
-            {publicationInstance?.displayName || (activeInstanceId ? 'Loading widget…' : 'Untitled widget')}
-          </span>
-          {!publicationInstance ? (
-            <span className="body-xs">
-              {activeInstanceId ? 'Loading publication status…' : 'Save to create this widget'}
-            </span>
-          ) : null}
-        </div>
-        {publicationInstance ? (
-          <WidgetPublicationControls
-            instance={publicationInstance}
-            dirty={bobIsDirty}
-            showReceipt
-            onPendingChange={handlePublicationPendingChange}
-            onInstanceChange={(next) => {
-              setPublicationInstance(next);
-            }}
-          />
+      <header className="page__header">
+        <h1 className="heading-2">
+          {publicationInstance?.displayName || (activeInstanceId ? 'Loading widget…' : 'Untitled widget')}
+        </h1>
+        {!publicationInstance ? (
+          <p className="body-xs">
+            {activeInstanceId ? 'Loading publication status…' : 'Save to create this widget'}
+          </p>
         ) : null}
-      </div>
+        {publicationInstance ? (
+          <div className="page__actions">
+            <WidgetPublicationControls
+              instance={publicationInstance}
+              dirty={bobIsDirty}
+              showReceipt
+              onPendingChange={handlePublicationPendingChange}
+              onInstanceChange={(next) => {
+                setPublicationInstance(next);
+              }}
+            />
+          </div>
+        ) : null}
+      </header>
       <iframe
         ref={iframeRef}
         src={bobSrc}

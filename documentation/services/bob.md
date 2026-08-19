@@ -101,8 +101,11 @@ and closes without remounting the editor session or replacing any ToolDrawer
 operation.
 
 When Roma hosts an active Bob session, Roma's `page` contains the full-canvas
-Builder plus a slim Roma-owned header. That header carries the instance label
-and the same Roma publication control used by Widgets inventory. `TopDrawer`
+Builder plus a slim Roma-owned header composed from the frozen Dieter
+`page__header` part (`h1` instance label plus `page__actions` publication
+controls; no border, shadow, or local shell restatement). It carries the
+instance label and the same Roma publication control used by Widgets
+inventory. `TopDrawer`
 is Bob-owned editor chrome and contains editing tools, dirty state, and Save
 only; it has no publication state, Publish/Republish/Unpublish command, public
 URL/code action, or release receipt. In Compact mode TopDrawer also exposes the
