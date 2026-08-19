@@ -110,3 +110,17 @@ via `showToggle`). The header regains its loading line, so the pinned gate
 assertion passes again; the two `checked={published}` component pins follow
 the hook's exact new shape (`checked={status.published}`). Zero new CSS; the
 frozen part and its single padding line are untouched.
+
+Verification: typecheck, lint, widget-command-gates 6/6 PASS, dieter
+governance PASS. Commit b158b6dd pushed to main (no PR); roma-dev Pages
+deploy success on b158b6dd. Live proof: local `build:cf` chunk
+`6151-ca77a7338f9cb225.js` served live with `Loading publication status` +
+`roma-page-heading`; chunk `9578-bf98418e8a5f3b2e.js` served live with
+`changes not live`, `Unpublished`, `diet-badge`, `diet-toggle`,
+`roma-widget-publication`, `Republish` — hash-identical to local build.
+Independent V1-V8 audit: PASS on all eight; `changeStatus` byte-identical
+to the pre-strip logic; Widgets-row DOM identical. One latent non-violation
+noted (two mounted hook instances each own `pendingStatus`; a rapid
+toggle+Republish interleave double-POSTs and fails visibly through Tokyo's
+409 coordinator) — no machinery added absent an owner request.
+Owner visual acceptance: pending.
