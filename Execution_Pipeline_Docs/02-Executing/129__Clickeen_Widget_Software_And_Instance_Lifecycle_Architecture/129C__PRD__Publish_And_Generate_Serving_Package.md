@@ -414,15 +414,13 @@ status. Bob's ToolDrawer and the upsell
 Popup do not own this result, and no queue, polling loop, rollback, or alternate
 retry route is added.
 
-Publication UI lives in Roma, not in Bob's editing toolbar. When a Save
-succeeds on a published instance, Roma opens one notice — "changes are not
-live yet" — with Republish now or I'll do it later; Republish now invokes the
-same Publish command. The widgets inventory shows a Republish action on any
-published row whose saved source is newer than its published package, using
-the same Publish route, and Unpublish remains the existing inventory action
-and generates no package. Bob's toolbar shows editing actions only; its
-status chip notes "changes not live" while saved source is newer than the
-published package. After Publish succeeds, Roma reopens the same instance so
+Publication UI lives only on the widgets inventory page. The row's toggle
+remains the Publish/Unpublish control. Next to it, a published row whose
+saved source is newer than its published package shows one action —
+"Update live widget" — which invokes the same Publish command and route.
+The editor Saves; it hosts no publication controls or notices. Bob's status
+chip displays publication facts ("Published · time · changes not live") and
+demands nothing. After Publish succeeds, Roma reopens the same instance so
 Bob receives the new publication status and public actions.
 
 ## 14. Save Remains Unchanged By Publish

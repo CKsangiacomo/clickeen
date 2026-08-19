@@ -812,7 +812,7 @@ export function WidgetsDomain({
                                 disabled={!canMutateWidgets || Boolean(activeActionKey)}
                                 onClick={() => void handleStatusChange(instance, 'published')}
                               >
-                                <span className="diet-button__label">Republish</span>
+                                <span className="diet-button__label">Update live widget</span>
                               </button>
                             ) : null}
                             {instance.status === 'published' ? (

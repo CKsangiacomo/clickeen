@@ -211,7 +211,7 @@ export async function saveAccountInstanceInTokyo(args: {
   content: AccountInstanceContentDocument;
   internalServiceName?: string | null;
   requestId?: string | null;
-}): Promise<{ ok: true; updatedAt: string | null; publishStatus: string | null } | RouteFailure> {
+}): Promise<{ ok: true; updatedAt: string | null } | RouteFailure> {
   const result = await callTokyo(tokyoCallContext(args), {
     path: `/__internal/instances/${encodeURIComponent(args.instanceId)}`,
     method: 'PUT',
@@ -221,16 +221,12 @@ export async function saveAccountInstanceInTokyo(args: {
         content: args.content,
       },
     },
-    decode: (payload) => payload as { ok: true; updatedAt?: string; publishStatus?: string },
+    decode: (payload) => payload as { ok: true; updatedAt?: string },
     errorDetail: 'tokyo_instance_save_http_error',
     errorKey: 'coreui.errors.db.writeFailed',
   });
   if (!result.ok) return result;
-  return {
-    ok: true,
-    updatedAt: result.value.updatedAt ?? null,
-    publishStatus: result.value.publishStatus ?? null,
-  };
+  return { ok: true, updatedAt: result.value.updatedAt ?? null };
 }
 
 async function postInstanceStatusTransition(args: {
