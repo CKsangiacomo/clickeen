@@ -1,6 +1,6 @@
 # PRD 130 — Codebase And Services Defensive-Construction Audit
 
-Status: **FIRST FULL AUDIT PASS COMPLETE 2026-08-19 (HISTORICAL FINDINGS IN §8) — OWNER-AUTHORIZED BOUNDED REMEDIATION B1–B5 COMMITTED AND PUSHED; B1–B4 DEPLOYED AND TECHNICALLY VERIFIED IN CLOUD-DEV, B5 LOCALLY VERIFIED WITH PRAGUE DEPLOYMENT OUTSIDE THIS PASS (§9) — P1 FOLLOW-UP CORRECTED LOCALLY WITH DEPLOYED BEHAVIOR VERIFICATION PENDING — OWNER QA PENDING; REMAINING FINDINGS UNADJUDICATED**
+Status: **FIRST FULL AUDIT PASS COMPLETE 2026-08-19 (HISTORICAL FINDINGS IN §8) — OWNER-AUTHORIZED BOUNDED REMEDIATION B1–B5 COMMITTED AND PUSHED; B1–B4 DEPLOYED AND TECHNICALLY VERIFIED IN CLOUD-DEV, B5 LOCALLY VERIFIED WITH PRAGUE DEPLOYMENT OUTSIDE THIS PASS (§9) — P1 FOLLOW-UP DEPLOYED AND BEHAVIOR-VERIFIED IN CLOUD-DEV — OWNER QA PENDING; REMAINING FINDINGS UNADJUDICATED**
 
 Owner: Clickeen product owner/architect
 
@@ -493,5 +493,8 @@ repeat the false-green class that originally masked P1. The owning regression
 is `scripts/e2e/roma-copilot-runtime-smoke.mjs`: an authenticated deployed
 Builder sends a turn, observes the Roma → Product Copilot → San Francisco SSE
 result in Bob, applies the returned draft operation, and exercises Undo without
-saving customer data. Local Bob typecheck and focused gates pass; deployment
-and that live Builder behavior verification are pending the current push.
+saving customer data. Local Bob typecheck and focused gates pass. Bob Pages
+deployment `899487b6-3dc3-4807-90ea-5e17431c2090` served runtime commit
+`76ce6447`; the authenticated smoke then passed with route `200`, terminal
+`agent_turn_finished`, the exact no-fallback `422` reason, applied draft output,
+and successful Undo. No Save or customer-data mutation occurred.
