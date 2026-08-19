@@ -1,6 +1,6 @@
 # PRD 131 — Builder Header Dieter Convergence
 
-Status: **LOCAL UNIFIED-HEADER IMPLEMENTATION COMPLETE — CLOUD-DEV DEPLOYMENT AND OWNER VISUAL ACCEPTANCE PENDING**
+Status: **UNIFIED HEADER DEPLOYED AND VERIFIED IN CLOUD-DEV — OWNER VISUAL ACCEPTANCE PENDING**
 
 Owner: Clickeen product owner/architect
 
@@ -190,7 +190,25 @@ page__header[data-width="contained|full"]
   remain.
 
 The affected Dieter, Roma, DevStudio, browser-evidence, governance, current
-manual, and generated reveal files are one implementation set. Local checks,
-commit/push/deploy evidence, live verification, and the independent V1–V8
-result are recorded after the complete integrated pass rather than inferred
-from this plan text.
+manual, and generated reveal files are one implementation set. The completed
+implementation and runtime evidence are recorded in §11.
+
+## 11. Unified-Header Reconciliation
+
+```text
+implementation commit: 250c3cd3 (Unify Roma page headers)
+push: main -> github/main
+Roma Pages: production deployment 2f87e5eb on 250c3cd3 — success
+DevStudio Pages: production deployment f2de52f5 on 250c3cd3 — success
+cloud-dev Roma app verify: GitHub Actions run 32307620698 — success
+cloud-dev Worker/product-root path: GitHub Actions run 32307620772 — worker
+  binaries correctly skipped; required Tokyo product-root sync succeeded
+live authenticated evidence: e2e/widgets/builder-open.spec.ts — 2/2 PASS
+  - Builder header is full width and matches the editor canvas width
+  - Builder heading/actions share a center line within one CSS pixel
+  - User Settings uses the contained width and the same center-line law
+  - Roma Compact navigation retains open, focus, Escape, and close behavior
+independent V1-V8 audit: PASS on all eight; no remaining blocker
+product data: unchanged
+owner visual acceptance: pending
+```
