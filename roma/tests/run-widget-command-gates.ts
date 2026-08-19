@@ -155,7 +155,7 @@ async function testRomaOwnsBuilderPublicationChrome(): Promise<void> {
   assert.match(publicationControls, />Republish</);
   assert.match(publicationControls, /nextStatus === 'published' && dirty/);
   assert.match(publicationControls, /publishBlocked = dirty && !published/);
-  assert.match(publicationControls, /checked=\{published\}/);
+  assert.match(publicationControls, /checked=\{status\.published\}/);
   assert.match(publicationControls, /onPendingChange\?\.\(true\)/);
   assert.match(publicationControls, /onPendingChange\?\.\(false\)/);
   assert.match(widgetsSource, /const publicationActionKey = `publication:\$\{instance\.instanceId\}`/);
@@ -227,7 +227,7 @@ async function testWidgetsListComposition(): Promise<void> {
   assert.match(source, /<WidgetPublicationControls/);
   assert.match(renameRoute, /updatedAt: result\.value\.updatedAt/);
   assert.match(source, /displayName: resolvedDisplayName, updatedAt: payload\.updatedAt/);
-  assert.match(publicationControls, /checked=\{published\}/);
+  assert.match(publicationControls, /checked=\{status\.published\}/);
   assert.match(publicationControls, /changeStatus\(event\.target\.checked \? 'published' : 'unpublished'\)/);
   assert.match(publicationControls, /className="roma-widget-publish-actions"/);
   assert.match(publicationControls, />Copy code<\/span>/);

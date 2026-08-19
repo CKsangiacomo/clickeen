@@ -20,7 +20,7 @@ import {
   type UpsellPresentation,
 } from './roma-upsell-dialog';
 import { useRomaShellActions } from './roma-shell';
-import { WidgetPublicationControls } from './widget-publication-controls';
+import { WidgetPublicationControls, WidgetPublicationState } from './widget-publication-controls';
 import {
   upsertRomaWidgetInstanceCache,
   type WidgetInstance,
@@ -1292,9 +1292,25 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
         </div>
       ) : null}
       <header className="page__header">
-        <h1 className="heading-2">
-          {publicationInstance?.displayName || (activeInstanceId ? 'Loading widget…' : 'Untitled widget')}
-        </h1>
+        <div className="roma-page-heading">
+          <h1 className="heading-2">
+            {publicationInstance?.displayName || (activeInstanceId ? 'Loading widget…' : 'Untitled widget')}
+          </h1>
+          {publicationInstance ? (
+            <WidgetPublicationState
+              instance={publicationInstance}
+              dirty={bobIsDirty}
+              onPendingChange={handlePublicationPendingChange}
+              onInstanceChange={(next) => {
+                setPublicationInstance(next);
+              }}
+            />
+          ) : (
+            <p className="body-xs">
+              {activeInstanceId ? 'Loading publication status…' : 'Save to create this widget'}
+            </p>
+          )}
+        </div>
         {publicationInstance ? (
           <div className="page__actions">
             <WidgetPublicationControls

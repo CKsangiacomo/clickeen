@@ -89,3 +89,24 @@ inventory; receipt/badge code is deleted (no surface renders it). The shared
 component gains `showToggle`/`controlSize` props with list-preserving
 defaults. Checks: typecheck 15/15, lint, widget-command-gates PASS,
 dieter governance PASS.
+
+## 7. State Restored Beside The Name (2026-08-19, owner-directed)
+
+The §6 strip over-reached: deleting the badge and toggle as "row kit" was a
+functional removal inside a styling pass. The Builder lost its publication
+status display, unpublish, and the only publish affordance for an
+unpublished instance. `widget-command-gates` also shipped red on main — the
+strip removed the pinned `Loading publication status…` header line, so §6's
+gates-PASS claim was mistaken.
+
+Owner ruling: the toggle and badge return, placed directly after the widget
+name — state labels the named thing; `page__actions` stays verbs only.
+Correction: `widget-publication-controls.tsx` exposes the shared status
+machine through one local hook and two exports — `WidgetPublicationState`
+(`diet-badge` status word + `diet-toggle` publish switch at `md`, rendered
+beside the `h1` inside the existing `roma-page-heading` group) and
+`WidgetPublicationControls` (buttons only; Widgets rows keep the `sm` toggle
+via `showToggle`). The header regains its loading line, so the pinned gate
+assertion passes again; the two `checked={published}` component pins follow
+the hook's exact new shape (`checked={status.published}`). Zero new CSS; the
+frozen part and its single padding line are untouched.

@@ -27,6 +27,8 @@ test.describe('Roma Builder authenticated smoke', () => {
     await expect(bobFrame.getByText('Content').first()).toBeVisible();
     await expect(page.locator('header.page__header')).toBeVisible({ timeout: 30_000 });
     await expect(page.locator('header.page__header h1.heading-2')).toBeVisible();
+    await expect(page.locator('header.page__header .roma-page-heading .diet-badge')).toBeVisible();
+    await expect(page.locator('header.page__header .roma-page-heading .diet-toggle')).toBeVisible();
     await expect(bobFrame.locator('section.workspace[data-widget-ready="true"]')).toBeVisible({
       timeout: 30_000,
     });

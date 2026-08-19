@@ -19,45 +19,33 @@ import {
 } from './use-roma-widgets';
 import { WidgetCopyCodeDialog } from './widget-copy-code-dialog';
 
-export function WidgetPublicationControls({
-  instance,
-  dirty = false,
-  disabled = false,
-  showToggle = true,
-  controlSize = 'small',
-  onInstanceChange,
-  onPendingChange,
-}: {
+type PublicationStatusArgs = {
   instance: WidgetInstance;
-  dirty?: boolean;
-  disabled?: boolean;
-  showToggle?: boolean;
-  controlSize?: 'small' | 'medium' | 'large';
+  dirty: boolean;
+  disabled: boolean;
   onInstanceChange: (instance: WidgetInstance) => void;
   onPendingChange?: (pending: boolean) => void;
-}) {
+};
+
+function useWidgetPublicationStatus({
+  instance,
+  dirty,
+  disabled,
+  onInstanceChange,
+  onPendingChange,
+}: PublicationStatusArgs) {
   const accountApi = useRomaAccountApi();
   const { accountContext, accountPolicy } = useRomaAccountContext();
   const canMutate = accountPolicy.role !== 'viewer';
   const [pendingStatus, setPendingStatus] = useState<'published' | 'unpublished' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [upsell, setUpsell] = useState<UpsellPresentation | null>(null);
-  const [copyCodeOpen, setCopyCodeOpen] = useState(false);
 
   const published = instance.status === 'published';
   const savedChangesNotLive = published
     && instance.publishedAt !== null
     && instance.updatedAt > instance.publishedAt;
   const publishBlocked = dirty && !published;
-  const publicActions = useMemo(
-    () => published
-      ? buildWidgetPublicActions({
-          accountPublicId: accountContext.accountPublicId,
-          instanceId: instance.instanceId,
-        })
-      : null,
-    [accountContext.accountPublicId, instance.instanceId, published],
-  );
 
   const changeStatus = async (nextStatus: 'published' | 'unpublished') => {
     if (!canMutate || disabled || pendingStatus) return;
@@ -118,6 +106,119 @@ export function WidgetPublicationControls({
     }
   };
 
+  return {
+    canMutate,
+    published,
+    savedChangesNotLive,
+    publishBlocked,
+    pendingStatus,
+    error,
+    upsell,
+    setUpsell,
+    changeStatus,
+  };
+}
+
+export function WidgetPublicationState({
+  instance,
+  dirty = false,
+  disabled = false,
+  onInstanceChange,
+  onPendingChange,
+}: {
+  instance: WidgetInstance;
+  dirty?: boolean;
+  disabled?: boolean;
+  onInstanceChange: (instance: WidgetInstance) => void;
+  onPendingChange?: (pending: boolean) => void;
+}) {
+  const status = useWidgetPublicationStatus({
+    instance,
+    dirty,
+    disabled,
+    onInstanceChange,
+    onPendingChange,
+  });
+
+  return (
+    <div className="roma-widget-publication">
+      <span className="diet-badge label-xs" data-tone="neutral">
+        <span className="diet-badge__label">
+          {status.published
+            ? (status.savedChangesNotLive ? 'Published · changes not live' : 'Published')
+            : 'Unpublished'}
+        </span>
+      </span>
+      <label
+        className="diet-toggle roma-widget-status-toggle"
+        data-size="md"
+        aria-busy={Boolean(status.pendingStatus) || undefined}
+        title={status.publishBlocked ? 'Save first' : undefined}
+      >
+        <span className="diet-toggle__label sr-only">
+          Published: {instance.displayName}
+          {status.pendingStatus ? ', updating' : ''}
+        </span>
+        <input
+          className="diet-toggle__input sr-only"
+          type="checkbox"
+          role="switch"
+          checked={status.published}
+          disabled={!status.canMutate || disabled || Boolean(status.pendingStatus) || status.publishBlocked}
+          onChange={(event) => void status.changeStatus(event.target.checked ? 'published' : 'unpublished')}
+        />
+        <span className="diet-toggle__switch" aria-hidden="true">
+          <span className="diet-toggle__knob" />
+        </span>
+      </label>
+      {status.error ? <span className="body-xs" role="alert">{status.error}</span> : null}
+      <RomaUpsellDialog
+        open={Boolean(status.upsell)}
+        reason={status.upsell?.body}
+        upgradeAvailable={status.upsell?.upgradeAvailable}
+        onClose={() => status.setUpsell(null)}
+      />
+    </div>
+  );
+}
+
+export function WidgetPublicationControls({
+  instance,
+  dirty = false,
+  disabled = false,
+  showToggle = true,
+  controlSize = 'small',
+  onInstanceChange,
+  onPendingChange,
+}: {
+  instance: WidgetInstance;
+  dirty?: boolean;
+  disabled?: boolean;
+  showToggle?: boolean;
+  controlSize?: 'small' | 'medium' | 'large';
+  onInstanceChange: (instance: WidgetInstance) => void;
+  onPendingChange?: (pending: boolean) => void;
+}) {
+  const { accountContext } = useRomaAccountContext();
+  const status = useWidgetPublicationStatus({
+    instance,
+    dirty,
+    disabled,
+    onInstanceChange,
+    onPendingChange,
+  });
+  const [copyCodeOpen, setCopyCodeOpen] = useState(false);
+
+  const publicActions = useMemo(
+    () => status.published
+      ? buildWidgetPublicActions({
+          accountPublicId: accountContext.accountPublicId,
+          instanceId: instance.instanceId,
+        })
+      : null,
+    [accountContext.accountPublicId, instance.instanceId, status.published],
+  );
+
   return (
     <div className="roma-widget-publication">
       <div className="roma-widget-publish-actions">
@@ -125,38 +226,38 @@ export function WidgetPublicationControls({
         <label
           className="diet-toggle roma-widget-status-toggle"
           data-size="sm"
-          aria-busy={Boolean(pendingStatus) || undefined}
-          title={publishBlocked ? 'Save first' : undefined}
+          aria-busy={Boolean(status.pendingStatus) || undefined}
+          title={status.publishBlocked ? 'Save first' : undefined}
         >
           <span className="diet-toggle__label sr-only">
             Published: {instance.displayName}
-            {pendingStatus ? ', updating' : ''}
+            {status.pendingStatus ? ', updating' : ''}
           </span>
           <input
             className="diet-toggle__input sr-only"
             type="checkbox"
             role="switch"
-            checked={published}
-            disabled={!canMutate || disabled || Boolean(pendingStatus) || publishBlocked}
-            onChange={(event) => void changeStatus(event.target.checked ? 'published' : 'unpublished')}
+            checked={status.published}
+            disabled={!status.canMutate || disabled || Boolean(status.pendingStatus) || status.publishBlocked}
+            onChange={(event) => void status.changeStatus(event.target.checked ? 'published' : 'unpublished')}
           />
           <span className="diet-toggle__switch" aria-hidden="true">
             <span className="diet-toggle__knob" />
           </span>
         </label>
         ) : null}
-        {savedChangesNotLive ? (
+        {status.savedChangesNotLive ? (
           <button
             className="diet-button"
             data-size={controlSize}
             data-type="primary"
             type="button"
-            disabled={!canMutate || disabled || Boolean(pendingStatus) || dirty}
-            aria-busy={pendingStatus === 'published' || undefined}
+            disabled={!status.canMutate || disabled || Boolean(status.pendingStatus) || dirty}
+            aria-busy={status.pendingStatus === 'published' || undefined}
             title={dirty ? 'Save first' : undefined}
-            onClick={() => void changeStatus('published')}
+            onClick={() => void status.changeStatus('published')}
           >
-            {pendingStatus === 'published' ? (
+            {status.pendingStatus === 'published' ? (
               <span className="diet-spinner" aria-hidden="true" />
             ) : null}
             <span className="diet-button__label">Republish</span>
@@ -187,12 +288,12 @@ export function WidgetPublicationControls({
           </>
         ) : null}
       </div>
-      {error ? <span className="body-xs" role="alert">{error}</span> : null}
+      {status.error ? <span className="body-xs" role="alert">{status.error}</span> : null}
       <RomaUpsellDialog
-        open={Boolean(upsell)}
-        reason={upsell?.body}
-        upgradeAvailable={upsell?.upgradeAvailable}
-        onClose={() => setUpsell(null)}
+        open={Boolean(status.upsell)}
+        reason={status.upsell?.body}
+        upgradeAvailable={status.upsell?.upgradeAvailable}
+        onClose={() => status.setUpsell(null)}
       />
       <WidgetCopyCodeDialog
         open={copyCodeOpen}
