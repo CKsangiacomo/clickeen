@@ -1,6 +1,6 @@
 # PRD 130 — Codebase And Services Defensive-Construction Audit
 
-Status: **AUDIT ONLY — NO PRODUCT CHANGES AUTHORIZED BY THIS DOCUMENT**
+Status: **AUDIT ONLY — FIRST FULL PASS COMPLETE 2026-08-19 (FINDINGS IN §8) — OWNER TRIAGE PENDING; NO PRODUCT CHANGES AUTHORIZED BY THIS DOCUMENT**
 
 Owner: Clickeen product owner/architect
 
@@ -245,3 +245,161 @@ the temptation is to turn two mistakes into a taxonomy, a checklist, a
 self-scoring rubric — the same classification machinery §3 warns the audit
 itself not to grow. Two examples and one mechanism, on purpose, stopping
 here.
+
+## 8. Evidence Appendix — First Full Audit Pass (2026-08-19)
+
+Pass A: owner-session browser walk on cloud-dev (core journeys). Pass B: five
+independent service auditors (bob, roma, tokyo-worker, berlin+sanfrancisco+
+agents, admin+prague+packages+workflows), all read-only, each against its
+owning documentation. 60 code findings + 5 felt-product findings. Nothing was
+changed.
+
+### 8.0 Priority findings (cross-service, owner triage order suggested)
+
+- **P1 — Product Copilot is dead in the hosted Builder (observed).**
+  `bob/components/CopilotPane.tsx:511-536` duck-casts the session context for
+  `runCopilot`/`cancelCopilot`, which live on the separate transport context
+  (`WidgetDocumentSession.tsx:13-34`) the pane never consumes; the guard at
+  :521 fires on 100% of sends ("Copilot streaming is not available in this
+  session"). Masked by substring-grep gate tests
+  (`bob/tests/run-copilot-pane-gates.ts:25`) that match source text, not
+  behavior. Remedy: consume the transport context; replace the grep gate
+  with a behavior test.
+- **P2 — Invisible click-interceptor in Bob's toolbar (observed,
+  intermittent).** DOM hit-testing reports an unknown `<button>` covering
+  primary toolbar actions; reproduced on Republish (2026-08-18, real click
+  swallowed) and on Save (2026-08-19, real click passed). Out-of-flow overlay
+  not present in the a11y tree; needs one devtools `elementsFromPoint` at the
+  button to name it.
+- **P3 — N+1 facts fan-out taxes the median paths (observed).** Widgets list
+  = 1 + N per-instance list-facts calls; Publish = full account fan-out
+  before the document read, re-fetching the current instance
+  (`roma/.../publish/route.ts:49-94`); tokyo publish transition repeats the
+  scan (`operations.ts:185-211`).
+- **P4 — Serial round trips on every hot path (observed).** Serve = 4 serial
+  R2 ops (`clk-live-routes.ts:183-216`); save = 4 serial R2 ops
+  (`source.ts:115-129`); login = serial KV writes (`berlin/.../auth-session.ts:67`);
+  DevStudio token editor = serial GitHub reads (`dieter-tokens.js:209`);
+  Widgets page = serial definitions fetch (`widgets/route.ts:59`).
+- **P5 — Shape-policing gates and tests as a class (observed).** Regex
+  assertions over source text in bob/roma/tokyo tests and CI workflows froze
+  defensive constructs as invariants and masked P1; one already broke a
+  correct deploy (2026-08-19 save-boundary regex).
+- **P6 — Dead machinery inventory (theoretical, deletable).** Uncalled
+  `publishActiveInstance` + unreachable banner (builder-domain:972/1231),
+  `fetchApi` wrapper (sessionTransport:370), host-origin polling
+  (sessionTransport:194), ~120-line inspection helper kept alive by its own
+  test, CORS helper, fingerprint/lock residue in tokyo utils/storage,
+  dual CTA contract in prague, empty `ck-web-code-generator` husk, no-op
+  `build:l10n`, dead `widgetType` route param.
+
+### 8.1 Pass A — felt product (cloud-dev, 2026-08-19)
+
+| Journey | Observed |
+| --- | --- |
+| Widgets list | DCL ~0.3-0.9s; rows render after facts fan-out; no lock at rest |
+| Builder open | Full editor interactive ~6s; chip renders `Published · time` |
+| Edit + Save | Fill instant; Save click intercepted in DOM hit-test (P2) but real click completed; completion = Save disappears; chip gains `· changes not live` |
+| Update live widget | Owner-exercised 2026-08-18 (freeze) → in-place spinner shipped |
+| Translations generate | Partial-failure UI names locales but drops reasonKey/detail; no durable turn log (2026-08-18 session) |
+| Public widget | 200, cached, content before JS (repeatedly verified 2026-08-18) |
+| Not walked | Team/settings pages; asset upload (harness limitation) |
+
+### 8.2 Pass B — findings matrix
+
+Legend: pattern per §2; class per §3; remedy per §6.
+
+**bob (12)**
+
+| Location | # | Failure defended | Class | Tax | Remedy |
+| --- | --- | --- | --- | --- | --- |
+| CopilotPane.tsx:511 | 3/9 | transport absence (misdiagnosed) | observed | Copilot dead (P1) | demote-to-boundary |
+| tests/run-copilot-pane-gates.ts:25 | 9 | none (source-text grep) | observed | false-green masks P1 | delete |
+| ToolDrawer.tsx:92 | 1 | mid-upload navigation | reachable | one upload blocks all panels | keep-smaller |
+| CopilotPane.tsx:960 | 1 | concurrent send | observed | input locked whole turn (≤120s) | keep-smaller |
+| useSessionEditing.ts:79 | 4 | dirty divergence | observed | JSON.stringify per edit | keep-smaller |
+| CopilotPane.tsx:77 | 6 | degraded host output | reachable | masks failure identity | demote-to-boundary |
+| sessionTransport.ts:370 | 6 | none (zero consumers) | theoretical | dead compat layer | delete |
+| sessionTransport.ts:194 | 6 | host origin unknown | theoretical | up-to-3s silent hang | delete |
+| translations-preview.ts:181 | 9 | none (test-only consumer) | theoretical | dead surface implied | delete |
+| lib/api/cors.ts:1 | 7 | none (no importer) | theoretical | none | delete |
+| useTdMenuHydration.ts:74 | 3 | hydrator throw | latent | discards failure cause | demote-to-boundary |
+| lib/edit/ops.ts:125 | 3 | control/draft mismatch | theoretical (manual edits) | per-edit O(controls) revalidation | demote-to-boundary |
+
+**roma (12)**
+
+| Location | # | Failure defended | Class | Tax | Remedy |
+| --- | --- | --- | --- | --- | --- |
+| builder-domain.tsx:972 | 7 | removed publish flow | theoretical | dead state churn | delete |
+| api/account/widgets/route.ts:59 | 8 | none (independent) | observed | serial Tokyo fetch | keep-smaller |
+| use-roma-widgets.ts:108 | 6 | retired fields reappearing | theoretical | one stray field bricks list | delete |
+| use-roma-widgets.ts:181 | 3 | payload drift | theoretical | revalidation per row | delete |
+| use-roma-me.ts:173 | 3 | Berlin payload drift | theoretical | shell nuke on drift | demote-to-boundary |
+| publish/route.ts:49 | 8 | capacity race window | observed | N+1 fan-out pre-read (P3) | keep-smaller |
+| widget-defaults-domain.tsx:266 | 1 | unhydrated control save | latent | Save behind handshake set | demote-to-boundary |
+| usage-domain.tsx:37 | 4 | storage-number drift | theoretical | double validation | delete |
+| tests/run-widget-command-gates.ts:48 | 9 | source-shape drift | reachable | rename breaks gate (P5) | delete |
+| widgets-domain.tsx:393 | 6 | env misconfig | theoretical | hides deploy error | demote-to-boundary |
+| instances/[instanceId]/route.ts:158 | 6 | Tokyo throw | theoretical | double guard + alias fields | delete |
+| use-roma-widgets.ts:205 | 7 | removed route shape | theoretical | dead param | delete |
+
+**tokyo-worker (12)**
+
+| Location | # | Failure defended | Class | Tax | Remedy |
+| --- | --- | --- | --- | --- | --- |
+| operations.ts:185-211 | 8 | capacity overage | observed | O(account) scan per publish (P3) | keep-smaller |
+| clk-live-routes.ts:183-216 | 8 | none | observed | 4 serial R2 per serve (P4) | keep-smaller |
+| source.ts:115-129 | 8 | none | observed | 2 extra serial R2 per save (P4) | keep-smaller |
+| assets-handlers.ts:299 | 3 | quota overage | observed | account-wide listing per upload | demote-to-boundary |
+| assets-handlers.ts:247 | 3 | inactive account | observed-run | policy repeated in storage | demote-to-boundary |
+| assets.ts:119-129 | 3/4 | own metadata drift | observed | HEAD+GET per asset read | keep-smaller |
+| publication-coordinator.ts:28 | 1 | overlapping publishes | reachable | republish/different-instance 409 | keep-smaller |
+| internal-product-route-utils.ts:97 | 3 | duplicate locales in signed grant | theoretical | negligible | delete |
+| source.ts:241-254 | 3/7 | stray storage keys | latent | one odd key 422s account | delete |
+| utils/storage/route-helpers residue | 6 | removed lock scheme | theoretical | dead machinery | delete |
+| tests/run-publication-capacity.ts:449 | 9 | source-shape drift | observed | brittle CI gate (P5) | keep-smaller |
+| internal-instance-routes.ts:286 | 5 | none | observed | re-parse of DO response | keep-smaller |
+
+**berlin / sanfrancisco / agents (12)**
+
+| Location | # | Failure defended | Class | Tax | Remedy |
+| --- | --- | --- | --- | --- | --- |
+| sf model-turn-types.ts:200 | 3/9 | malformed agent request | latent | re-parse every message/tool | demote-to-boundary |
+| sf modelRouter.ts:27 + grants.ts | 4 | grant policy drift | latent | duplicate proofs per call | keep-smaller |
+| product-copilot worker.ts:321 | 3/9 | malformed turn | latent | drifting second validator | delete |
+| product-copilot worker.ts:138-291 | 3 | SF stream corruption | latent | 7 guards on hot path | delete |
+| product-copilot worker.ts:222 | 4/7 | SF multi-step stream | theoretical | dead reconciliation | delete |
+| product-copilot worker.ts:352 | 5/7 | absent grant | theoretical | shape-patch noise | keep-smaller |
+| translation-agent index.ts:318 | 9 | SF schema violation | latent | per-item revalidation | keep-smaller |
+| translation-agent worker.ts:357 | 8 | none | reachable | serial chunks per locale | keep-smaller |
+| translation-agent worker.ts:260 | 4 | missing binding | latent | repeated env checks | keep-smaller |
+| berlin auth-session.ts:67 | 8 | none | observed | serial KV writes per login (P4) | keep-smaller |
+| berlin bootstrap/state.ts:232 | 1 | corrupt membership row | latent | one row 500s bootstrap | keep-smaller |
+| berlin auth/routes.ts:632 | 3 | stale own session | reachable | extra KV read per finish | demote-to-boundary |
+
+**admin / prague / packages / workflows (12)**
+
+| Location | # | Failure defended | Class | Tax | Remedy |
+| --- | --- | --- | --- | --- | --- |
+| package.json:8-12 | 9 | stale artifacts | observed | codegen 2-4x per command | keep-smaller |
+| dieter-token-contracts.js:186 | 3/1 | off-contract sibling token | latent | one token bricks edit lane | keep-smaller |
+| prague actions.ts:90 | 6/5 | legacy CTA shape | theoretical | dual contract, no producer | delete |
+| ck-contracts translated-value-primitives.ts:348 | 4/7 | none (zero consumers) | theoretical | 80 dead shipped lines | delete |
+| governance-guards.mjs:131 | 9 | taxonomy drift | theoretical | magic-count CI lock | delete |
+| pr-architecture-gates.yml:65 | 9 | retired path reintroduction | theoretical | name-policing rg | keep-smaller |
+| scripts/l10n/build.mjs | 9 | l10n source returning | theoretical | no-op ritual in build | delete |
+| policy-github.js:191 | 4/6 | SHA conflict | theoretical | extra GitHub call | delete |
+| dieter-tokens.js:209 | 8 | none | observed | serial GitHub reads | keep-smaller |
+| ck-policy matrix.ts:141 | 3 | update-fn bug | theoretical | triple assertion | keep-smaller |
+| prague markdown.ts:4-79 | 6 | dead embed refs | reachable | prod-host probe per dev render | demote-to-boundary |
+| prague-blocks validate.mjs:6 | 4 | layout enum drift | latent | duplicate enum gate | keep-smaller |
+
+### 8.3 Coverage
+
+Pass B scanned ~330 source files across nine services plus packages,
+workflows, scripts, migrations, and tests; Pass A walked seven journeys
+(two deferred). Explicitly cleared as load-bearing: auth/authz ingress
+checks, signed-grant verification, public-path parsing, upload ingress
+validation, missing-locale 404, committed-transition error shapes. No
+model/provider fallback exists anywhere (pattern 6 runtime class: none
+found).
