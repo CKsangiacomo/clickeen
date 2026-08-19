@@ -16,7 +16,7 @@ async function testRomaSaveDoesNotRunLocalization(): Promise<void> {
   assert.doesNotMatch(routeSource, /localeCascade/);
   assert.doesNotMatch(routeSource, /resolvePolicyFromEntitlementsSnapshot/);
   assert.match(routeSource, /saveAccountInstanceInTokyo/);
-  assert.match(routeSource, /NextResponse\.json\(\{\s*ok: true,\s*\}\)/);
+  assert.match(routeSource, /NextResponse\.json\(\{\s*ok: true,\s*updatedAt: result\.updatedAt,\s*\}\)/);
 }
 
 async function testBobSaveHasNoPartialLocalizationBranch(): Promise<void> {
