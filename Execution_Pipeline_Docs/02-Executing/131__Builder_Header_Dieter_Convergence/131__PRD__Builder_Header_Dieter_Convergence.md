@@ -137,3 +137,17 @@ own geometry — `max-inline-size: none; margin-inline: 0; padding:
 var(--space-2)` (the exact inline inset `.builder-app` gives itself). Type
 law, alignment, and vertical rhythm are untouched; ordinary pages keep the
 80rem column.
+
+## 9. Width-Only Canvas Alignment (2026-08-19, owner-directed)
+
+Owner visual review refined §8: the Builder header follows Bob's outer width
+only. It remains full width (`max-inline-size: none; margin-inline: 0`) so the
+header and editor form one stacked surface, but the header is Roma application
+chrome and keeps Dieter's standard horizontal page inset. Bob's editor retains
+its independent tighter workspace inset.
+
+Correction: `.roma-builder-page .page__header` now uses `padding:
+var(--space-2) var(--layout-page-padding)`. No header markup, title, publication
+state, toggle, action, borrowed Save slot, Bob canvas, or product behavior
+changes. This supersedes only §8's claim that the header must copy Bob's
+`space-2` inline inset; §8's full-width decision remains in force.

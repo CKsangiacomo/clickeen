@@ -104,12 +104,13 @@ the instance's publication state directly after the label (`diet-badge`
 status word plus `diet-toggle` publish switch), and `page__actions` with
 large buttons only. The part's own alignment, type law, and transparent
 canvas treatment stand; on this full-canvas surface the header's width
-geometry follows Bob's canvas below it — full width with the same `space-2`
-inset Bob's own container uses, not the ordinary 80rem centered page
-column, matching the page's zeroed padding and stretched content. The Widgets
-inventory keeps its own row kit. Roma's header is the only Builder header and
-owns publication state/actions and compact Roma navigation. Bob has no header
-and receives no publication state, Publish/Republish/Unpublish command, public
+geometry follows Bob's canvas below it — full width rather than the ordinary
+80rem centered page column — while its internal horizontal inset remains the
+standard Roma/Dieter `--layout-page-padding`. Bob's own container keeps its
+independent `space-2` workspace inset. The Widgets inventory keeps its own row
+kit. Roma's header is the only Builder header and owns publication
+state/actions and compact Roma navigation. Bob has no header and receives no
+publication state, Publish/Republish/Unpublish command, public
 URL/code action, or release receipt. Bob owns Save truth and lends only its
 current Save presentation phase to the far-right Roma header slot. In Compact
 mode Bob's `Open tools` Button sits over `EditorContent` and opens the same
