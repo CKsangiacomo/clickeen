@@ -1292,20 +1292,16 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
         </div>
       ) : null}
       <header className="page__header">
-        <h1 className="heading-6">
+        <h1 className="heading-2">
           {publicationInstance?.displayName || (activeInstanceId ? 'Loading widget…' : 'Untitled widget')}
         </h1>
-        {!publicationInstance ? (
-          <p className="body-xs">
-            {activeInstanceId ? 'Loading publication status…' : 'Save to create this widget'}
-          </p>
-        ) : null}
         {publicationInstance ? (
           <div className="page__actions">
             <WidgetPublicationControls
               instance={publicationInstance}
               dirty={bobIsDirty}
-              showReceipt
+              showToggle={false}
+              controlSize="large"
               onPendingChange={handlePublicationPendingChange}
               onInstanceChange={(next) => {
                 setPublicationInstance(next);

@@ -23,14 +23,16 @@ export function WidgetPublicationControls({
   instance,
   dirty = false,
   disabled = false,
-  showReceipt = false,
+  showToggle = true,
+  controlSize = 'small',
   onInstanceChange,
   onPendingChange,
 }: {
   instance: WidgetInstance;
   dirty?: boolean;
   disabled?: boolean;
-  showReceipt?: boolean;
+  showToggle?: boolean;
+  controlSize?: 'small' | 'medium' | 'large';
   onInstanceChange: (instance: WidgetInstance) => void;
   onPendingChange?: (pending: boolean) => void;
 }) {
@@ -118,14 +120,8 @@ export function WidgetPublicationControls({
 
   return (
     <div className="roma-widget-publication">
-      {showReceipt ? (
-        <span className="diet-badge label-xs" data-tone="neutral">
-          <span className="diet-badge__label">
-            {published ? (savedChangesNotLive ? 'Published · changes not live' : 'Published') : 'Unpublished'}
-          </span>
-        </span>
-      ) : null}
       <div className="roma-widget-publish-actions">
+        {showToggle ? (
         <label
           className="diet-toggle roma-widget-status-toggle"
           data-size="sm"
@@ -148,10 +144,11 @@ export function WidgetPublicationControls({
             <span className="diet-toggle__knob" />
           </span>
         </label>
+        ) : null}
         {savedChangesNotLive ? (
           <button
             className="diet-button"
-            data-size="small"
+            data-size={controlSize}
             data-type="primary"
             type="button"
             disabled={!canMutate || disabled || Boolean(pendingStatus) || dirty}
@@ -170,7 +167,7 @@ export function WidgetPublicationControls({
           <>
             <a
               className="diet-button"
-              data-size="small"
+              data-size={controlSize}
               data-type="tertiary"
               href={publicActions.publicUrl}
               target="_blank"
@@ -180,7 +177,7 @@ export function WidgetPublicationControls({
             </a>
             <button
               className="diet-button"
-              data-size="small"
+              data-size={controlSize}
               data-type="tertiary"
               type="button"
               onClick={() => setCopyCodeOpen(true)}

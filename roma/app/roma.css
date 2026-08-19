@@ -152,11 +152,7 @@ a {
 }
 
 .roma-builder-page .page__header {
-  align-items: center;
-  margin-block-end: 0;
-  max-inline-size: none;
-  padding: var(--space-2) var(--space-4);
-  background: var(--role-surface);
+  padding: var(--space-2) var(--layout-page-padding);
 }
 
 .roma-widget-publication {
