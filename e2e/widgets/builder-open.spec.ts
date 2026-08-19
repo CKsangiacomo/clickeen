@@ -16,15 +16,17 @@ test.describe('Roma Builder authenticated smoke', () => {
     await expect(editLink).toBeVisible({ timeout: 20_000 });
     await editLink.click();
     await expect(page).toHaveURL(/\/builder\/[A-Z0-9]+/);
-    await expect(page.locator('.page__header')).toHaveCount(0);
+    // The ordinary shell page header is omitted on the full-canvas Builder;
+    // exactly one .page__header remains — Roma's publication header.
+    await expect(page.locator('.page__header')).toHaveCount(1);
 
     const bobIframe = page.locator('iframe[title="Bob Builder"]');
     const bobFrame = page.frameLocator('iframe[title="Bob Builder"]');
     await expect(bobFrame.locator('.topdrawer')).toBeVisible({ timeout: 20_000 });
     await expect(bobFrame.getByRole('radio', { name: 'Manual' })).toBeVisible({ timeout: 20_000 });
     await expect(bobFrame.getByText('Content').first()).toBeVisible();
-    await expect(page.locator('.roma-builder-header')).toBeVisible({ timeout: 30_000 });
-    await expect(page.locator('.roma-builder-header .heading-4')).toBeVisible();
+    await expect(page.locator('header.page__header')).toBeVisible({ timeout: 30_000 });
+    await expect(page.locator('header.page__header h1.heading-2')).toBeVisible();
     await expect(bobFrame.locator('section.workspace[data-widget-ready="true"]')).toBeVisible({
       timeout: 30_000,
     });
@@ -54,7 +56,7 @@ test.describe('Roma Builder authenticated smoke', () => {
     expect(bobCanvasBackground).toBe(outerCanvasBackground);
     expect(bobWorkspaceBackground).toBe(outerCanvasBackground);
 
-    const copyCodeAction = page.locator('.roma-builder-header').getByRole('button', { name: 'Copy code' });
+    const copyCodeAction = page.locator('header.page__header').getByRole('button', { name: 'Copy code' });
     await expect(copyCodeAction).toBeVisible();
     await copyCodeAction.click();
     const copyCodeDialog = page.getByRole('dialog', { name: 'Copy code' });

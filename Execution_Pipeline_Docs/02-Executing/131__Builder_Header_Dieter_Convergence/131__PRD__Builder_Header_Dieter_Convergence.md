@@ -1,6 +1,6 @@
 # PRD 131 — Builder Header Dieter Convergence
 
-Status: **EXECUTING — S1/S2 IMPLEMENTED LOCALLY; DEPLOY AND LIVE VERIFICATION IN PROGRESS**
+Status: **DEPLOYED AND VERIFIED IN CLOUD-DEV — OWNER VISUAL ACCEPTANCE PENDING**
 
 Owner: Clickeen product owner/architect
 
@@ -57,11 +57,18 @@ timestamp on any screen.
 
 ```text
 S0 evidence freeze: done (bob.md line verified; page__header contract pulled)
-S1 page__header consumption: implemented locally
-S2 receipt badge: implemented locally
-S3 deploy/live verify/audit: in progress
-commit: pending
-push: pending
-deploy: pending
-live product: unchanged
+S1 page__header consumption: done
+S2 receipt badge (timestamp deleted): done
+S3 deploy/live verify/audit: done
+commit: f0a15585 (header) + e2e spec follow-up
+push: performed (main)
+deploy: cloud-dev roma app verify + surface reachability PASS on f0a15585
+live product: deployed chunks contain page__header + diet-badge + 'changes not live';
+  roma-builder-header and toLocaleTimeString absent from served code; live API
+  returns publishedAt facts
+independent V1-V8 audit: PASS on all eight; one blocker found and fixed —
+  e2e/widgets/builder-open.spec.ts pinned the retired classes and the
+  header-absent assertion; updated to the frozen part (count-1 page__header,
+  h1.heading-2, copy-code scoped to header.page__header)
+owner visual acceptance: pending
 ```
