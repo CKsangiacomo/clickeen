@@ -124,3 +124,16 @@ noted (two mounted hook instances each own `pendingStatus`; a rapid
 toggle+Republish interleave double-POSTs and fails visibly through Tokyo's
 409 coordinator) — no machinery added absent an owner request.
 Owner visual acceptance: pending.
+
+## 8. Header Width Geometry (2026-08-19, owner-directed)
+
+The owner ruled the header must share the width geometry of Bob's canvas
+below it. It did not: the frozen part caps `.page__header` at a centered
+`80rem` column (ordinary page law) while the builder page stretches
+`.page__content` full-bleed for Bob — two stacked geometries on any viewport
+wider than 80rem, with the header title inset ~140px while Bob's ToolDrawer
+starts at 8px. Correction: the builder-page header override now joins Bob's
+own geometry — `max-inline-size: none; margin-inline: 0; padding:
+var(--space-2)` (the exact inline inset `.builder-app` gives itself). Type
+law, alignment, and vertical rhythm are untouched; ordinary pages keep the
+80rem column.

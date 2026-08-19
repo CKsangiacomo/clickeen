@@ -105,9 +105,12 @@ Builder plus a slim Roma-owned header composed from the frozen Dieter
 `page__header` part in its standard grammar: `h1.heading-2` instance label,
 the instance's publication state directly after the label (`diet-badge`
 status word plus `diet-toggle` publish switch), and `page__actions` with
-large buttons only. The part's own alignment, rhythm,
-width law, and transparent canvas treatment stand untouched; the Widgets
-inventory keeps its own row kit. `TopDrawer`
+large buttons only. The part's own alignment, type law, and transparent
+canvas treatment stand; on this full-canvas surface the header's width
+geometry follows Bob's canvas below it — full width with the same `space-2`
+inset Bob's own container uses, not the ordinary 80rem centered page
+column, matching the page's zeroed padding and stretched content. The
+Widgets inventory keeps its own row kit. `TopDrawer`
 is Bob-owned editor chrome and contains editing tools, dirty state, and Save
 only; it has no publication state, Publish/Republish/Unpublish command, public
 URL/code action, or release receipt. In Compact mode TopDrawer also exposes the
