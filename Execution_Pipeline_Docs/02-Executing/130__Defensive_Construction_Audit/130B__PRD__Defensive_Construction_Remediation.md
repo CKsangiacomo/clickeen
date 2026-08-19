@@ -1,6 +1,7 @@
 # PRD 130B — Defensive Construction Remediation
 
-**Status:** EXECUTION READY — evidence reconciled; implementation not started
+**Status:** LOCAL IMPLEMENTATION AND INDEPENDENT AUDIT COMPLETE — commit/push,
+Roma/Bob deployment, and cloud-dev owner QA pending
 
 **Date:** 2026-08-19
 
@@ -16,7 +17,7 @@ mechanism into work.
 
 When this PRD is complete:
 
-1. six current Roma commands that can remove access, content, or public state
+1. five current Roma commands that can remove access, content, or public state
    require one explicit click confirmation before the existing command is
    invoked;
 2. Bob's one Save button carries the whole result sequence: `Save`, in-button
@@ -29,9 +30,9 @@ When this PRD is complete:
 5. Product Copilot's visible assistant message cannot look complete or applied
    before the current turn and any requested Bob edit actually reach their
    terminal result;
-6. invitation acceptance has one real path—the existing Berlin login
-   transaction—instead of a signed-in Roma button whose backing route always
-   rejects; and
+6. the Builder has one Roma-owned page header; Bob's internal header is removed
+   and Bob borrows a small right-side Roma header slot only while its Save control
+   must be shown; and
 7. canonical documentation, local verification, deployment evidence, and
    cloud-dev owner QA agree with the shipped behavior.
 
@@ -84,12 +85,12 @@ The plan deliberately does not turn theoretical risk into machinery.
 
 | ID | Surface | Current cost | Classification |
 | --- | --- | --- | --- |
-| E1 | Roma destructive commands | Six consequential actions execute on the first ordinary click | Current and reachable |
+| E1 | Roma destructive commands | Five consequential actions execute on the first ordinary click | Current and reachable |
 | E2 | Bob Save | Successful Save removes its action but leaves no positive completion receipt | Current and observed |
 | E3 | Roma Widgets initial load | Two independent Tokyo reads run serially; the wait is rendered as a loose text module | Current and observed |
 | E4 | Roma Widget Defaults | Projection keeps control HTML but drops each trusted compiled panel label | Current and observed |
 | E5 | Bob Product Copilot transcript | Streamed narration can visually assert completion before a requested edit is applied; a later error can leave contradictory text | Latent but concretely reachable |
-| E6 | Invitation acceptance | Roma presents a signed-in POST action even though Berlin intentionally accepts invitations only inside login | Current and reachable |
+| E6 | Roma/Bob Builder header | Bob still renders a second bar whose ordinary desktop purpose is now only Save | Current and observed in code/product structure |
 
 ### 4.2 Explicit exclusions
 
@@ -98,6 +99,7 @@ The following remain outside this pass even when an audit mentions them:
 - all Prague code, routes, Pages deployment, signed-in intent, and public-page
   behavior;
 - the Bob Catalog/New Builder surface, its copy, and its creation journey;
+- all invitation creation, revocation, acceptance, and login-handoff behavior;
 - changes to the PRD 129 instance lifecycle, publication, cache-eviction, source,
   or serving architecture;
 - changes to the PRD 131 Builder header grammar;
@@ -112,10 +114,10 @@ These exclusions are boundaries, not deferred findings in this PRD.
 
 | Concern | Existing authority and coordinate | Rule for this pass |
 | --- | --- | --- |
-| Product surface | Roma account domains and Bob browser-memory editor | Correct the consumer that owns the visible decision or result state |
+| Product surface | Roma account domains and Bob browser-memory editor | Roma owns the one page header; Bob owns Save truth and temporarily occupies Roma's Save slot |
 | Account/session | Existing Roma current-account context; existing Bob session | No new identity, permission, or session coordinate |
 | Storage | Existing Tokyo instance/asset storage and Michael account/member truth | No storage shape or data migration |
-| Route/API | Existing Roma command routes, Berlin login-time invitation acceptance, and Bob's existing `save-instance` / Copilot transport | Do not add a route or wire event; delete the dead signed-in invitation proxy |
+| Route/API | Existing Roma command routes and Bob's existing `save-instance` / Copilot transport | Add only the typed Save-control state/click iframe bridge; do not add a route or Save result protocol |
 | Design system | Dieter popup mechanics, buttons, icons, table, tokens, and motion | Reuse mechanics; Roma and Bob retain product meaning and copy |
 | Runtime/deploy | Roma and Bob Cloudflare Pages deployments from `main` | No Prague deployment and no unrelated Worker deployment |
 | Verification | Focused local suites, cloud-dev Roma/Builder surfaces, owner QA | Local checks are not deployed-product proof |
@@ -123,8 +125,10 @@ These exclusions are boundaries, not deferred findings in this PRD.
 ### 5.1 Settled division of labor
 
 - Bob owns exactly one account-bound editor command: Save.
-- Roma owns Publish, Republish, Unpublish, Delete, assets, team, invites, and
+- Roma owns Publish, Republish, Unpublish, Delete, assets, team, and
   account settings commands.
+- Roma owns the Builder page header and its geometry. Bob may supply Save state
+  to one reserved Roma action slot but does not render another header.
 - Dieter owns popup, table, icon, button, and motion mechanics; it does
   not own the meaning of a destructive command.
 - Tokyo and Michael continue to own their stored facts. No downstream validator
@@ -134,23 +138,22 @@ These exclusions are boundaries, not deferred findings in this PRD.
 
 ## 6. Executable product decisions
 
-### E1 — One decision before six consequential Roma commands
+### E1 — One decision before five consequential Roma commands
 
-The six commands are:
+The five commands are:
 
 | Command | Existing owner | Confirmation meaning |
 | --- | --- | --- |
 | Delete saved Widget | `WidgetsDomain` | Deletes saved source and makes any published version unavailable; cannot be undone |
 | Delete asset | `AssetsDomain` | Removes the asset; Widgets using it may stop displaying it; cannot be undone |
 | Unpublish Widget | `WidgetPublicationControls` | Takes the public Widget offline while preserving saved source for later Publish |
-| Remove team member | `TeamMemberDomain` | Removes the member's account access; they may be invited again later |
-| Revoke pending invite | `TeamDomain` | Makes the pending invite unusable; a new invite may be created later |
+| Remove team member | `TeamMemberDomain` | Removes the member's account access |
 | Transfer ownership | `SettingsDomain` | Makes the selected member Owner and the current Owner Admin |
 
 Implementation law:
 
 1. Add one Roma consumer component, `RomaCommandConfirmationDialog`, because the
-   same decision mechanics are required by six current Roma-owned commands.
+   same decision mechanics are required by five current Roma-owned commands.
 2. Build it from the existing Roma/Dieter popup and button pattern; do not create
    another dialog framework or put product copy in Dieter.
 3. Its exact inputs are open state, title, explanatory body, confirm label,
@@ -176,7 +179,6 @@ Required command copy:
 | Delete asset | `Delete this asset?` | `Delete asset` | Name the asset, reference impact, and irreversibility |
 | Unpublish | `Take this widget offline?` | `Unpublish` | Say saved changes remain and it can be published again |
 | Remove member | `Remove this team member?` | `Remove member` | Name the person and loss of access |
-| Revoke invite | `Revoke this invitation?` | `Revoke invite` | Name the invite recipient and that the link stops working |
 | Transfer owner | `Transfer account ownership?` | `Transfer ownership` | Name the recipient and state that the current owner becomes Admin |
 
 The final sentence may be adjusted for grammar around the exact subject name,
@@ -214,16 +216,127 @@ Implementation law:
 6. After 1,000 milliseconds, that green result button disappears if the draft is
    still clean.
 7. If the user makes a newer edit while Save is in flight, the returned result
-   saved only the submitted snapshot. The current draft remains dirty and the
-   control returns directly to `Save`; it must not claim the newer draft is saved.
-8. A failed Save returns to `Save` and retains the existing visible error. It
-   never enters the green `Saved` state.
+   saved only the submitted snapshot. After the result, the control returns to
+   `Save` when the current draft remains dirty; it must not claim that draft is
+   saved.
+8. A failed Save retains the existing visible error and resolves the control
+   from current draft truth: `Save` when dirty, `hidden` when the current draft
+   still matches saved truth. It never enters the green `Saved` state.
 9. A new accepted edit, a new Save, or a new `ck:open-editor` cancels any pending
    disappearance timer and derives the next button state from current draft truth.
 10. First Save adoption of `instanceId` and `baseLocale` remains in place and uses
-   this same button sequence without a second Bob open.
-11. Add no Roma message, Bob protocol event, publication action, or persistence
-    outside the existing Save command.
+    this same button sequence without a second Bob open.
+11. Outside E6's two presentation messages, add no Roma message, Save result
+    protocol, publication action, or persistence outside the existing Save
+    command.
+
+### E6 — One Roma header with a borrowed Bob Save slot
+
+E6 is specified beside E2 because it is the rendering boundary for E2's button
+and both execute as one cohesive slice.
+
+Roma owns the Builder page and therefore owns its one header. Bob owns the
+browser-memory draft and Save. The control is rendered in Roma's header, but its
+visibility and state come only from Bob.
+
+The resulting page is:
+
+```text
+┌──────────────────────────────────────────────────────────────┐
+│ Widget name · publication state   publication actions   Save │  Roma
+├──────────────────────────────────────────────────────────────┤
+│                                                              │
+│                         Bob editor                           │
+│                                                              │
+└──────────────────────────────────────────────────────────────┘
+```
+
+When Bob is clean, the reserved slot renders nothing. When Bob is dirty, saving,
+or showing the one-second result, that slot renders `Save`, the spinner, or green
+`✓ Saved` respectively.
+
+#### Ownership
+
+- Roma owns the header DOM, layout, Widget identity, publication state,
+  publication actions, and the empty/right-side Save slot.
+- Bob owns the draft, dirty truth, submitted/current signatures, Save command,
+  Save phase, and Save error.
+- Dieter owns the Button, spinner, checkmark, green success state, and tokens.
+- Tokyo remains the saved-source authority behind the existing Roma command.
+
+Roma does not receive the draft through the header bridge and cannot construct a
+Save. Bob does not acquire publication or page-header authority.
+
+#### Minimal iframe bridge
+
+Because Bob is an iframe, Roma cannot invoke Bob's in-memory `save()` directly.
+Add exactly two typed presentation messages to the existing Roma/Bob message
+unions:
+
+```ts
+type BobSaveControlStateMessage = {
+  type: 'bob:save-control-state';
+  phase: 'hidden' | 'save' | 'saving' | 'saved';
+};
+
+type HostSaveRequestMessage = {
+  type: 'host:save-request';
+};
+```
+
+The messages are local to the existing Roma/Bob host protocol; do not introduce
+a new shared service, route, package, or generic event bus.
+
+The flow is:
+
+```text
+Bob phase changes
+    → bob:save-control-state
+    → Roma renders the matching header control
+
+User clicks Roma's Save button
+    → host:save-request
+    → Bob invokes its existing save()
+    → existing bob:account-command(save-instance)
+    → existing Roma route/result
+    → Bob resolves exact draft truth and emits the next phase
+```
+
+Implementation law:
+
+1. Bob is the sole producer of `hidden | save | saving | saved`.
+2. Bob emits the current phase after every accepted editor open and every phase
+   transition.
+3. Roma resets the borrowed slot to `hidden` when the iframe reloads, the active
+   target changes, or Bob is not ready; stale Save chrome may not cross sessions.
+4. Roma renders the borrowed control after its existing publication actions at
+   the far right of `page__actions`.
+5. Roma sends `host:save-request` only from the visible `save` phase. Bob checks
+   current dirty/saving truth again and ignores an inapplicable duplicate request.
+6. Bob immediately emits `saving`, runs the existing Save command, and then emits
+   `saved`, `save`, or `hidden` according to E2. Save failures continue to use
+   Bob's existing visible error surface.
+7. The existing `bob:dirty-state-changed` message remains separate and continues
+   to gate Roma publication. Save presentation is not used as publication truth.
+8. Both directions retain the current exact iframe source/origin checks. No
+   wildcard host command is accepted after the host origin is known.
+9. The existing `bob:account-command` and `host:account-command-result` remain the
+   only Save request/result path. Do not add another Save response handshake.
+10. Remove `TopDrawer` from `BuilderApp` and delete its header-only CSS and dead
+    context/action wrappers. Bob's editor content expands into the released
+    vertical space.
+11. Current source still exposes `open-navigation` and `open-tools` inside
+    `TopDrawer` on compact landscape, even though desktop shows only Save. Do not
+    silently delete those reachable actions:
+    - Roma continues to own host navigation; remove Bob's host-navigation action
+      only when the existing Roma shell control covers that compact surface.
+    - move Bob's compact-only ToolDrawer opener into `editor-content` as the same
+      Dieter quaternary icon control; keep it hidden where ToolDrawer is already
+      persistent.
+    - do not recreate a Bob header to hold either control.
+
+This is one visual header with a narrowly hosted Bob action, not a transfer of
+Save authority to Roma.
 
 ### E3 — Widgets starts independent reads together and holds its table shape
 
@@ -305,37 +418,11 @@ Implementation law:
 The exact passive status words are `Working`, `Applied`, `Not applied`, and
 `Stopped`. They describe Bob's known result; they do not reinterpret model text.
 
-### E6 — Invitation acceptance uses its one real login path
-
-Berlin's current authority is explicit: invitation acceptance happens while
-issuing the product session for a login transaction that carries the invitation
-token. Signed-in `POST /invitations/:token/accept` intentionally returns
-`invitation_accept_requires_login_flow`.
-
-Roma nevertheless renders a signed-in `Accept invitation` button that calls a
-Roma proxy for that rejected POST. That button cannot complete its stated action.
-
-Implementation law:
-
-1. Keep Berlin's transactional login-time acceptance unchanged.
-2. Make the invitation page use the existing Google login handoff with
-   `/accept-invite/{token}` as `next`, whether or not Roma currently has a
-   session.
-3. For a currently signed-in visitor, explain that they must continue with the
-   invited Google email and label the action `Continue with Google`.
-4. Delete the signed-in `acceptInvitation` fetch/button state and the now-unused
-   Roma `POST /api/invitations/[token]/accept` proxy route.
-5. On successful login-time acceptance, Berlin already redirects the completed
-   session to `/home`; preserve that result.
-6. Preserve invalid-token, expired-token, email-mismatch, denied-provider, and
-   unavailable-auth visible failure behavior at their existing owners.
-7. Add no second acceptance command, membership repair, alternate account,
-   fallback identity, or compatibility path.
-
 ## 7. Complete finding ledger
 
-This ledger is the crosswalk from all six audit documents to execution. It is
-intentionally wider than the five code changes. Every reported finding is
+This ledger is the crosswalk from all six audit documents and the current product
+owner ruling to execution. It is intentionally wider than the six code changes.
+Every reported finding is
 retained even when the correct decision is to keep, close, exclude, or reject it.
 
 Source codes:
@@ -346,6 +433,7 @@ Source codes:
 - **CX** — Codex independent audit
 - **CU** — Cursor service and route walk
 - **K** — Kimi remediation re-audit
+- **PO** — current human product-owner ruling
 
 ### 7.1 Consequential-command findings
 
@@ -355,9 +443,8 @@ Source codes:
 | D2 | Asset Delete executes on the first click | M, CX, K | Current and reachable in `AssetsDomain`; removes an account asset that Widgets may reference | **Execute E1** |
 | D3 | Unpublish executes on the first click | M, CX, K | Current and reachable in `WidgetPublicationControls`; takes the public Widget offline while preserving source | **Execute E1** |
 | D4 | Team-member removal executes on the first click | M, CX, K | Current and reachable in `TeamMemberDomain`; removes account access | **Execute E1** |
-| D5 | Invite revocation executes on the first click | M, CX, K | Current and reachable in `TeamDomain`; invalidates the pending invitation | **Execute E1** |
-| D6 | Ownership transfer executes on the first click | M, CX, K | Current and reachable in `SettingsDomain`; target becomes Owner and current Owner becomes Admin | **Execute E1** |
-| D7 | Unsaved-navigation confirmation receives more protection than persisted destructive work | M, K | Current product inconsistency, proven by D1–D6 and the existing unsaved-changes popup | **Resolved by E1**, without changing the unsaved guard |
+| D5 | Ownership transfer executes on the first click | M, CX, K | Current and reachable in `SettingsDomain`; target becomes Owner and current Owner becomes Admin | **Execute E1** |
+| D6 | Unsaved-navigation confirmation receives more protection than persisted destructive work | M, K | Current product inconsistency, proven by D1–D5 and the existing unsaved-changes popup | **Resolved by E1**, without changing the unsaved guard |
 
 ### 7.2 Save and editor-state findings
 
@@ -372,6 +459,8 @@ Source codes:
 | S7 | Session loss mid-edit needs recovery machinery | M | Latent/theoretical in this audit; Bob already owns browser-memory draft and `beforeunload` warning | **Not proven**; no autosave or recovery service |
 | S8 | Builder briefly says `No instance selected` during normal open | CL, CX | Earlier-baseline claim; absent on the current implementation and did not reproduce live | **Already corrected** |
 | S9 | Existing Builder controls become usable seconds before preview | CL, K | Observed once by Claude; not reproduced by the later independent current-baseline walk, where control and preview readiness were close | **Conflicting evidence; no execution** until a current reproducible trace exists |
+| S10 | Bob renders a second Builder header whose ordinary desktop purpose is now only Save | PO | Current: Roma already owns identity/publication header while Bob `TopDrawer` consumes a second vertical bar | **Execute E6:** delete Bob's header and host Save in Roma's reserved action slot |
+| S11 | Removing `TopDrawer` could silently remove compact navigation/tools controls | PO, current source | Current but compact-only: CSS hides them on desktop and reveals them below the compact breakpoint | **Execute E6 boundary:** Roma retains navigation ownership; rehome only Bob's compact ToolDrawer opener without recreating a header |
 
 ### 7.3 Roma shell, Widgets, and dialog findings
 
@@ -429,17 +518,16 @@ Source codes:
 | C9 | Stop should roll back already-applied edits | A | Current product law says Stop ends future work; already-applied edits remain and may be undone explicitly | **Keep** |
 | C10 | Grant expiry and provider failures are normalized into visible errors | A | Current off-path visible failure, not a silent substitution or partial success | **Keep current error boundary** |
 
-### 7.7 Account, first-run, delegated, and incomplete-product findings
+### 7.7 Account, first-run, and incomplete-product findings
 
 | ID | Finding | Source | Current evidence and classification | Decision |
 | --- | --- | --- | --- | --- |
 | A1 | Home is empty and has no next action | M, CL, K | Current and visually observed | **Architect-closed:** Home remains intentionally blank |
 | A2 | Billing, broader Usage, and AI are stub destinations | M, CL, K | Current but honest: each surface states what is and is not connected | **Architect-closed/keep** |
 | A3 | Upgrade CTA does not perform billing | M, K | Current intentional scaffold until billing exists | **Architect-closed/keep** |
-| A4 | Roma presents a signed-in invitation-acceptance command even though Berlin accepts only during login | M | Current and reachable: `AcceptInviteDomain` POSTs through Roma, while Berlin deliberately returns `invitation_accept_requires_login_flow` | **Execute E6:** route every invitation through the existing login transaction and delete the dead signed-in proxy |
-| A5 | Public embed renders literal `Not found` | M, K | Current visible failure with no fallback | **Architect-closed/keep** |
-| A6 | Public embed can remain stale for 24 hours after failed purge | M, K | Earlier baseline; corrected by PRD 129 cache law and current cache headers | **Already corrected** |
-| A7 | Partial translated overlay should fall back to another locale | CL, CU | Current serving preserves exact selected-locale/base composition and does not substitute identity | **Keep; no fallback** |
+| A4 | Public embed renders literal `Not found` | M, K | Current visible failure with no fallback | **Architect-closed/keep** |
+| A5 | Public embed can remain stale for 24 hours after failed purge | M, K | Earlier baseline; corrected by PRD 129 cache law and current cache headers | **Already corrected** |
+| A6 | Partial translated overlay should fall back to another locale | CL, CU | Current serving preserves exact selected-locale/base composition and does not substitute identity | **Keep; no fallback** |
 
 ### 7.8 Explicitly excluded findings
 
@@ -458,13 +546,13 @@ automatic execution scope:
 
 - real destructive command completion and failure in shared cloud-dev data;
 - uploads and bulk uploads;
-- Profile, locale, Widget Defaults, team, invitation, and ownership writes;
+- Profile, locale, Widget Defaults, team-member, and ownership writes;
 - Translation Agent generation and partial failure;
 - deliberate service hangs, outages, and multi-tab concurrency;
 - DevStudio and operator-only surfaces; and
 - Product Copilot charging/provider failure beyond the tested successful turn.
 
-Slices 8–10 verify only the behavior actually changed by E1–E5. They do not turn
+Slices 8–10 verify only the behavior actually changed by E1–E6. They do not turn
 these unmarked areas into a second audit program.
 
 ## 8. Execution slices
@@ -477,8 +565,9 @@ half-converted UI state is pushed to `main`.
 1. Confirm the branch/worktree and preserve unrelated edits.
 2. Record current focused test results for Roma and Bob.
 3. Add or extend behavior-level fixtures for click-confirmation semantics, Save
-   button transitions, Widget route concurrency/result priority, panel-label
-   projection, and Copilot visible-message lifecycle.
+   control bridge/button transitions, single-header geometry, Widget route
+   concurrency/result priority, panel-label projection, and Copilot
+   visible-message lifecycle.
 4. Do not make source-text grep the only proof for interactive behavior.
 
 **Exit gate:** the fixtures represent the existing authority boundaries and fail
@@ -497,7 +586,7 @@ only for the intended missing behavior.
 **Exit gate:** the shared consumer has no product-command knowledge and no command
 can run before confirmation.
 
-### Slice 2 — Wire the six Roma commands
+### Slice 2 — Wire the five Roma commands
 
 1. Widgets: route Delete through the confirmation, preserving row/list busy and
    existing cache updates.
@@ -505,33 +594,57 @@ can run before confirmation.
    policy and result handling.
 3. Publication: confirm only Unpublish, leaving Publish/Republish untouched.
 4. Team member: confirm Remove.
-5. Team invite: confirm Revoke.
-6. Settings: confirm ownership transfer and preserve the existing successful
+5. Settings: confirm ownership transfer and preserve the existing successful
    redirect/session behavior.
-7. Test each command's exact subject, body, and confirm label.
-8. Test that Cancel leaves remote and local state unchanged.
-9. Test that post-confirm failures remain visible in the existing owner surface.
+6. Test each command's exact subject, body, and confirm label.
+7. Test that Cancel leaves remote and local state unchanged.
+8. Test that post-confirm failures remain visible in the existing owner surface.
 
-**Exit gate:** all six commands require one decision, execute exactly once after
+**Exit gate:** all five commands require one decision, execute exactly once after
 Confirm, and otherwise retain their old route/result semantics.
 
-### Slice 3 — Bob Save button result sequence
+### Slice 3 — One Roma header and Bob's borrowed Save control
 
-1. Express the one Save control as `save | saving | saved | hidden` local
-   presentation state derived from the existing dirty/save result truth.
-2. Keep `Save` for dirty idle state and the spinner inside the same button while
-   the command runs.
-3. On a successful clean result, turn that button green and render the Dieter
-   checkmark plus `Saved` for 1,000 milliseconds, then hide it.
-4. If newer edits exist when the Save result arrives, return directly to `Save`
-   and do not render the green success state for the current draft.
-5. On failure, return to `Save` and preserve the existing visible error.
-6. Cancel the result timer on a new edit, a new Save, editor open, and unmount.
-7. Cover existing Save, first Save, save failure, edit-during-save,
-   edit-during-saved, timer completion, and subsequent editor open.
+1. Add the generic `data-state="success"` presentation to Dieter Button using
+   existing green/white tokens, document it in `button.spec.json`, and keep it
+   orthogonal to the existing hierarchy `data-type`.
+2. Add the typed `bob:save-control-state` and `host:save-request` messages to the
+   existing Bob/Roma host-message unions. Preserve current iframe source/origin
+   checks in both directions.
+3. Express Bob's one Save control as `hidden | save | saving | saved`, derived
+   from existing draft/signature/command truth, and emit it after editor open and
+   each transition.
+4. Add the reserved Save slot at the far right of Roma Builder
+   `page__actions`, after publication actions. Reset it to hidden on iframe load,
+   target change, or Bob-not-ready state.
+5. Render `Save` for dirty idle state. Its click sends `host:save-request`; Bob
+   rechecks current truth and invokes its existing `save()`.
+6. Render the spinner inside the same Roma button when Bob emits `saving`.
+7. On a successful clean result, render the same button green with the Dieter
+   checkmark plus `Saved` for 1,000 milliseconds, then have Bob emit `hidden`.
+8. If newer edits exist when the Save result arrives, have Bob emit `save`
+   directly; never show green success for the current dirty draft.
+9. On failure, preserve the existing visible Bob error and emit `save` only
+   when the current draft is dirty; emit `hidden` when it matches saved truth.
+10. Cancel the result timer on a new edit, a new Save, editor open, and unmount.
+11. Keep `bob:dirty-state-changed` separate as Roma's publication gate. Do not
+    derive publication truth from Save presentation.
+12. Keep the existing `bob:account-command(save-instance)` and
+    `host:account-command-result` as the only persistence request/result path.
+13. Remove `TopDrawer` from `BuilderApp`, delete its header-only markup/CSS, and
+    let `editor-content` occupy the released vertical space.
+14. Remove Bob's compact host-navigation action only after confirming Roma's own
+    shell/navigation control covers that surface. Move the compact-only
+    ToolDrawer opener into `editor-content` with the same existing Dieter control;
+    keep it hidden where ToolDrawer is persistent.
+15. Cover the Dieter state, message origin/source admission, initial clean/dirty
+    open, duplicate click, existing Save, first Save, failure, edit-during-save,
+    edit-during-saved, timer completion, target change, iframe reload, compact
+    ToolDrawer access, and absence of a second header.
 
-**Exit gate:** one button communicates the exact command lifecycle and disappears
-only after a truthful clean Save result.
+**Exit gate:** Roma renders the only Builder header; Bob still exclusively owns
+Save truth and execution; the one borrowed button communicates the exact command
+lifecycle; and removing `TopDrawer` drops no reachable editor action.
 
 ### Slice 4 — Widgets cold-path correction
 
@@ -578,7 +691,7 @@ wire contract is unchanged.
 
 ### Slice 7 — Documentation reconciliation
 
-1. Update the owning Roma, Bob, Dieter, account, UI-interaction, accessibility,
+1. Update the owning Roma, Bob, account, Dieter component, UI-interaction,
    and Product Copilot manuals only where behavior changed.
 2. Preserve PRD 129 and PRD 131 law.
 3. Update this PRD's status from local implementation through deployed/verified
@@ -602,6 +715,7 @@ pnpm -C roma test:widget-command-gates
 pnpm -C roma test:account-asset-gates
 pnpm -C roma test:ui-copy
 pnpm -C roma test:widget-defaults-typography
+pnpm -C dieter typecheck
 pnpm -C bob typecheck
 pnpm -C bob lint
 pnpm -C bob test:accessibility-copy
@@ -639,20 +753,24 @@ are recorded. A green local build is not reported as deployment proof.
 
 Verify through the owning surfaces:
 
-1. each of the six dialogs opens from its real control, cancels by button and the
+1. each of the five dialogs opens from its real control, cancels by button and the
    standard backdrop behavior, and invokes no command before Confirm;
 2. each Confirm invokes the exact command and preserves visible failure behavior;
-3. Bob Save runs `Save → spinner → green ✓ Saved → disappear`, returns directly
-   to `Save` when newer edits exist, and works after first Save without reopening
-   Bob;
-4. cold Widgets retains the table frame and the route latency reflects concurrent
+3. the Builder renders one Roma header and no Bob header; the borrowed Save
+   control occupies the far-right Roma action slot only when Bob requests it;
+4. Bob Save runs `Save → spinner → green ✓ Saved → disappear`, returns directly
+   to `Save` when newer edits exist, resets across iframe/target changes, and
+   works after first Save without reopening Bob;
+5. compact landscape retains Bob ToolDrawer access without recreating a header,
+   and Roma still owns host navigation;
+6. cold Widgets retains the table frame and the route latency reflects concurrent
    upstream reads;
-5. Widget Defaults visibly distinguishes multiple compiled panels;
-6. a real Product Copilot text-only turn, editing turn, Stop, and controlled
+7. Widget Defaults visibly distinguishes multiple compiled panels;
+8. a real Product Copilot text-only turn, editing turn, Stop, and controlled
    failure show truthful message status; and
-7. narrow-viewport behavior remains usable.
+9. narrow-viewport behavior remains usable.
 
-Use only safe cloud-dev account data. Restore any team, invitation, publication,
+Use only safe cloud-dev account data. Restore any team-member, publication,
 asset, or Widget state intentionally changed for QA. Never automate or mutate a
 real Google identity.
 
@@ -665,8 +783,10 @@ than inferred.
 | Surface | Required positive proof | Required negative/failure proof |
 | --- | --- | --- |
 | Shared confirmation | Confirm calls once after the visible click decision | Open, Cancel, and backdrop call zero times |
-| Six Roma commands | Exact command runs after Confirm | Existing route error remains visible and does not report success |
-| Bob Save | `Save → spinner → green ✓ Saved → disappear`; first Save adopts and follows the same sequence | Failure returns to Save; newer edits never receive a false Saved state; timer is cancelled on edit/open/unmount |
+| Five Roma commands | Exact command runs after Confirm | Existing route error remains visible and does not report success |
+| Roma/Bob header bridge | One Roma header; Bob phase renders the far-right borrowed slot; click invokes Bob's existing Save | Wrong origin/source is ignored; reload/target change hides stale state; no second Save/result route |
+| Bob Save | `Save → spinner → green ✓ Saved → disappear`; first Save adopts and follows the same sequence | Failure preserves the error and derives Save/hidden from current dirty truth; newer edits never receive a false Saved state; timer is cancelled on edit/open/unmount |
+| Bob header removal | Editor content gains the released space; compact ToolDrawer opener remains reachable | No Bob header, dead header CSS, silent loss of tools, or Bob-owned host navigation remains |
 | Widgets route | Both reads start before either completes; exact success response | Instance error wins deterministically; definitions error follows when instances succeed |
 | Widgets loading | Stable table with accessible status | Error and empty states do not masquerade as loading |
 | Widget Defaults | Exact panel labels and control order appear | Empty panels remain absent; no inferred/fallback labels |
@@ -687,8 +807,8 @@ than inferred.
 | --- | --- |
 | V1 Silent substitution | No invented confirmation subject, panel label, Save result, or Copilot result replaces exact truth |
 | V2 Silent healing | No persisted/user state is normalized or repaired while being read |
-| V3 Silent omission | No command, control, panel, event, or failure result is silently dropped |
-| V4 Fail-open control | Missing authorization or command dependencies still fail through their existing owners |
+| V3 Silent omission | No command, control, panel, event, failure result, or reachable compact ToolDrawer action is silently dropped |
+| V4 Fail-open control | Missing authorization or command dependencies still fail through their existing owners; host Save messages retain exact iframe source/origin admission |
 | V5 Corruption-as-absence | No stored-state interpretation changes in this pass |
 | V6 Partial-success masquerade | Save button and Copilot statuses describe only known completed results; confirmations do not claim command success |
 | V7 Masquerade/redress | A failing command is not rerouted through a renamed retry or wrapper |
@@ -698,7 +818,7 @@ than inferred.
 
 This PRD is complete only when all of the following are true:
 
-- E1–E5 are implemented within their named authorities;
+- E1–E6 are implemented within their named authorities;
 - focused and behavior-level tests pass;
 - canonical documentation matches the implementation;
 - the intended complete worktree is committed and pushed under explicit
@@ -708,4 +828,43 @@ This PRD is complete only when all of the following are true:
 - product-data state is reported accurately; and
 - the independent V1–V8 audit passes with no unresolved blocker.
 
-Until then the honest state is: **execution planned, not complete**.
+## 13. Local execution reconciliation
+
+As of 2026-08-19, Slices 0–8 are complete locally:
+
+- Roma composes one shared product-neutral confirmation and uses it for Widget
+  Delete, Asset Delete, Unpublish in both Roma consumers, Remove member, and
+  Transfer ownership. Publish/Republish remain immediate and invitation code or
+  copy did not enter the pass.
+- Roma renders the one Builder header. Bob's former `TopDrawer` and host
+  navigation message are removed; compact Roma navigation stays in Roma and
+  compact ToolDrawer access stays over Bob's editor work area.
+- Bob owns `hidden | save | saving | saved`, exact host admission, the existing
+  Save command, the one-second clean receipt, first-Save in-place adoption, and
+  edit/failure transitions. Dieter supplies the generic success presentation.
+- the Widgets route starts its two independent owner reads together while
+  preserving instance-first error priority; Your widgets retains its semantic
+  Table and five headers with one accessible first-load row.
+- Widget Defaults renders each non-empty projection under the exact trusted
+  compiled panel label assigned as DOM text.
+- Bob's visible Copilot messages show only `Working`, `Applied`, `Not applied`,
+  or `Stopped` from exact request/apply truth; model history and wire contracts
+  are unchanged.
+- the owning canonical manuals are reconciled to that local implementation.
+
+Focused Roma/Bob/Dieter typechecks, Roma/Bob lints, all new behavior fixtures,
+the existing focused regression suites listed in Slice 8, Roma `build:cf`, Bob
+`build:cf`, and `git diff --check` pass. Bob lint still reports the same three
+pre-existing `CopilotPane` exhaustive-dependency warnings and exits `0`.
+
+No commit, push, Pages deployment, remote product-data mutation, or cloud-dev
+owner QA is claimed yet. Those remain Slices 9–10.
+
+The independent complete-diff audit found and closed two reachable Save-phase
+defects: edits during an active Save now keep the `saving` phase until the
+request terminates, and a failed request now exposes `Save` only when the current
+draft remains dirty. The corrected code, behavior tests, canonical docs, and
+production builds were re-audited. V1–V8 pass with no unresolved blocker.
+
+Until Slices 9–10 finish, the honest state is: **implemented, green, and
+independently audited locally; not yet shipped or owner-verified**.

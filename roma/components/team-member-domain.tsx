@@ -7,6 +7,7 @@ import { formatAccountRoleLabel, isAccountRoleValue } from '../lib/format';
 import { resolvePersonLabel } from '../lib/person-profile';
 import { useRomaAccountApi } from './account-api';
 import { DieterDropdownActions } from './dieter-dropdown-actions';
+import { RomaCommandConfirmationDialog } from './roma-command-confirmation-dialog';
 import { useRomaAccountContext } from './roma-account-context';
 
 type TeamMemberProfile = {
@@ -93,6 +94,7 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
   const [mutationError, setMutationError] = useState<string | null>(null);
   const [savingRole, setSavingRole] = useState(false);
   const [removingMember, setRemovingMember] = useState(false);
+  const [removeConfirmationName, setRemoveConfirmationName] = useState<string | null>(null);
   const [roleDraft, setRoleDraft] = useState('viewer');
 
   const accountId = accountContext.accountId;
@@ -257,7 +259,9 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
                 data-size="medium"
                 data-type="tertiary"
                 type="button"
-                onClick={() => void removeMember()}
+                onClick={() => setRemoveConfirmationName(
+                  resolveMemberDisplayName(member.member.profile, member.member.userId),
+                )}
                 disabled={!canManage || member.member.role === 'owner' || removingMember}
               >
                 <span className="diet-button__label">{removingMember ? 'Removing...' : 'Remove member'}</span>
@@ -303,6 +307,19 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
           ) : null}
         </>
       ) : null}
+      <RomaCommandConfirmationDialog
+        open={removeConfirmationName !== null}
+        title="Remove this team member?"
+        body={removeConfirmationName
+          ? `“${removeConfirmationName}” will lose access to this account.`
+          : ''}
+        confirmLabel="Remove member"
+        onCancel={() => setRemoveConfirmationName(null)}
+        onConfirm={() => {
+          setRemoveConfirmationName(null);
+          void removeMember();
+        }}
+      />
     </>
   );
 }

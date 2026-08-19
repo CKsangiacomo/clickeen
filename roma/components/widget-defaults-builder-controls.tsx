@@ -127,7 +127,27 @@ function filterPanelHtml(panel: CompiledPanel, allowedPaths: Set<string>): strin
   return template.innerHTML.trim();
 }
 
-function buildPanelHtml(
+function wrapPanelHtml(panel: CompiledPanel, filteredHtml: string): string {
+  const wrapper = document.createElement('section');
+  wrapper.className = 'tdmenucontent__cluster';
+
+  const header = document.createElement('div');
+  header.className = 'tdmenucontent__cluster-header';
+
+  const label = document.createElement('h3');
+  label.className = 'overline-small tdmenucontent__cluster-label';
+  label.textContent = panel.label;
+  header.appendChild(label);
+
+  const body = document.createElement('div');
+  body.className = 'tdmenucontent__cluster-body';
+  body.innerHTML = filteredHtml;
+
+  wrapper.append(header, body);
+  return wrapper.outerHTML;
+}
+
+export function buildPanelHtml(
   payload: CompiledWidget,
   controls: CompiledControl[],
 ): string {
@@ -135,7 +155,10 @@ function buildPanelHtml(
   const panelIds = new Set(controls.map((control) => control.panelId));
   return payload.panels
     .filter((panel) => panelIds.has(panel.id))
-    .map((panel) => filterPanelHtml(panel, allowedPaths))
+    .map((panel) => {
+      const filteredHtml = filterPanelHtml(panel, allowedPaths);
+      return filteredHtml ? wrapPanelHtml(panel, filteredHtml) : '';
+    })
     .filter(Boolean)
     .join('\n');
 }

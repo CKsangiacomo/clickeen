@@ -2,7 +2,13 @@
 
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { AccountFontLibrary } from '@clickeen/widget-foundation';
-import { createInitialSessionState, type SessionState } from './sessionTypes';
+import {
+  acceptsHostSaveRequest,
+  createInitialSessionState,
+  resolveSaveControlPhase,
+  type BobSaveControlStateMessage,
+  type SessionState,
+} from './sessionTypes';
 import { createAccountAssetsClient, useSessionTransport } from './sessionTransport';
 import { useSessionEditing } from './useSessionEditing';
 import { useSessionBoot } from './useSessionBoot';
@@ -66,13 +72,60 @@ export function WidgetDocumentSessionProvider({ children }: { children: ReactNod
     setCopilot: chrome.setCopilot,
     hostOriginRef: transport.hostOriginRef,
   });
-  const saving = useSessionSaving({
+  const { save } = useSessionSaving({
     stateRef,
     metaRef,
     setState,
     setMeta: chrome.setMeta,
     executeAccountCommand: transport.executeAccountCommand,
   });
+
+  useEffect(() => {
+    if (state.saveControlPhase !== 'saved') return undefined;
+    const timer = window.setTimeout(() => {
+      const current = stateRef.current;
+      const saveControlPhase = resolveSaveControlPhase(current.saveControlPhase, {
+        type: 'receipt-elapsed',
+        isDirty: current.isDirty,
+      });
+      if (saveControlPhase === current.saveControlPhase) return;
+      const nextState = { ...current, saveControlPhase };
+      stateRef.current = nextState;
+      setState(nextState);
+    }, 1_000);
+    return () => window.clearTimeout(timer);
+  }, [state.saveControlPhase]);
+
+  useEffect(() => {
+    const targetOrigin = transport.hostOriginRef.current;
+    if (!targetOrigin) return;
+    const message: BobSaveControlStateMessage = {
+      type: 'bob:save-control-state',
+      phase: state.saveControlPhase,
+    };
+    try {
+      window.parent?.postMessage(message, targetOrigin);
+    } catch {}
+  }, [state.lastUpdate?.ts, state.saveControlPhase, transport.hostOriginRef]);
+
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      const current = stateRef.current;
+      if (!acceptsHostSaveRequest({
+        data: event.data,
+        eventOrigin: event.origin,
+        hostOrigin: transport.hostOriginRef.current,
+        eventSource: event.source,
+        parentWindow: window.parent,
+        phase: current.saveControlPhase,
+        isDirty: current.isDirty,
+        isSaving: current.isSaving,
+      })) return;
+      void save();
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [save, stateRef, transport.hostOriginRef]);
 
   useEffect(() => {
     const origin = transport.hostOriginRef.current || '*';
@@ -128,7 +181,7 @@ export function WidgetDocumentSessionProvider({ children }: { children: ReactNod
       apiFetch: transport.fetchApi,
       requestSystemUpsell: transport.requestSystemUpsell,
       applyOps: editing.applyOps,
-      save: saving.save,
+      save,
       setInstanceLabel: editing.setInstanceLabel,
       loadInstance: boot.loadInstance,
     }),
@@ -137,7 +190,7 @@ export function WidgetDocumentSessionProvider({ children }: { children: ReactNod
       boot.loadInstance,
       editing.applyOps,
       editing.setInstanceLabel,
-      saving.save,
+      save,
       state,
       chrome.meta,
       transport.fetchApi,

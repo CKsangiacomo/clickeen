@@ -83,8 +83,24 @@ a caller field. Save is an explicit action:
 
 - clean state: no save action;
 - dirty state: `Save`;
-- persistence in flight: `Saving...`;
-- confirmed clean state: no save action.
+- persistence in flight: the same Button is disabled and shows its Spinner with
+  `Saving…`;
+- confirmed clean state: the Button becomes system green and shows the Dieter
+  checkmark plus `Saved` for exactly one second, then disappears;
+- failed persistence: Bob's existing error stays visible and the control is
+  `Save` when the current draft remains dirty or absent when it matches saved
+  truth;
+- an accepted edit during Save keeps `Saving…` until the submitted result, then
+  returns to `Save` when the current draft remains dirty, without showing a
+  false `Saved`; and
+- an accepted edit during the one-second receipt cancels that receipt and
+  restores `Save` immediately.
+
+Bob owns those four presentation phases from its exact draft/save truth. Roma
+renders the phase in the far-right slot of its one Builder header and sends one
+exact `host:save-request` only for the visible `Save` phase. Roma does not infer
+dirty state or success. Bob's existing `save-instance` command/result remains
+the only persistence protocol.
 
 Save is source/base persistence only. It does not generate translations,
 regenerate translations, mutate locale overlays, publish, unpublish,
@@ -196,10 +212,17 @@ Translation-sync attention stays in Bob's Translations panel beside Tokyo's
 authoritative summary and Generate action. Roma must not derive or display a
 second translation-sync state.
 
-Copilot currently uses conversational feedback, confirmed apply, and undo for
-single-step chat/edit operations. Do not convert current Copilot into fake
-streamed activity. Future longer or multi-phase Copilot operations may use
-Agent Activity only when the phases are real product work.
+Copilot uses conversational feedback, confirmed apply, and undo for single-step
+chat/edit operations. Each visible assistant message may show passive Bob-owned
+result text: `Working` while its current request/tool application is unresolved,
+`Applied` only after the exact edit batch succeeds, `Not applied` after request,
+stream, or apply failure, and `Stopped` when the user stops unresolved work.
+Text-only terminal success clears `Working` without pretending that an edit was
+applied. These words are transcript presentation only; they do not enter model
+history, the SSE contract, an outcome API, or persistence. Do not convert
+current Copilot into fake streamed activity. Future longer or multi-phase
+Copilot operations may use Agent Activity only when the phases are real product
+work.
 
 ## Bulk Progress
 

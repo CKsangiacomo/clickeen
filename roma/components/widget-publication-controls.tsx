@@ -5,6 +5,7 @@ import { resolveAccountShellErrorCopy } from '../lib/account-shell-copy';
 import { buildWidgetPublicActions } from '../lib/public-widget-actions';
 import { useRomaAccountApi } from './account-api';
 import { useRomaAccountContext } from './roma-account-context';
+import { RomaCommandConfirmationDialog } from './roma-command-confirmation-dialog';
 import {
   buildPublicationCapacityUpsell,
   RomaUpsellDialog,
@@ -40,6 +41,7 @@ function useWidgetPublicationStatus({
   const [pendingStatus, setPendingStatus] = useState<'published' | 'unpublished' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [upsell, setUpsell] = useState<UpsellPresentation | null>(null);
+  const [unpublishConfirmationOpen, setUnpublishConfirmationOpen] = useState(false);
 
   const published = instance.status === 'published';
   const savedChangesNotLive = published
@@ -106,6 +108,15 @@ function useWidgetPublicationStatus({
     }
   };
 
+  const requestStatusChange = (nextStatus: 'published' | 'unpublished') => {
+    if (!canMutate || disabled || pendingStatus) return;
+    if (nextStatus === 'published') {
+      void changeStatus(nextStatus);
+      return;
+    }
+    setUnpublishConfirmationOpen(true);
+  };
+
   return {
     canMutate,
     published,
@@ -116,6 +127,13 @@ function useWidgetPublicationStatus({
     upsell,
     setUpsell,
     changeStatus,
+    requestStatusChange,
+    unpublishConfirmationOpen,
+    cancelUnpublish: () => setUnpublishConfirmationOpen(false),
+    confirmUnpublish: () => {
+      setUnpublishConfirmationOpen(false);
+      void changeStatus('unpublished');
+    },
   };
 }
 
@@ -165,7 +183,7 @@ export function WidgetPublicationState({
           role="switch"
           checked={status.published}
           disabled={!status.canMutate || disabled || Boolean(status.pendingStatus) || status.publishBlocked}
-          onChange={(event) => void status.changeStatus(event.target.checked ? 'published' : 'unpublished')}
+          onChange={(event) => status.requestStatusChange(event.target.checked ? 'published' : 'unpublished')}
         />
         <span className="diet-toggle__switch" aria-hidden="true">
           <span className="diet-toggle__knob" />
@@ -177,6 +195,14 @@ export function WidgetPublicationState({
         reason={status.upsell?.body}
         upgradeAvailable={status.upsell?.upgradeAvailable}
         onClose={() => status.setUpsell(null)}
+      />
+      <RomaCommandConfirmationDialog
+        open={status.unpublishConfirmationOpen}
+        title="Take this widget offline?"
+        body={`“${instance.displayName}” will be taken offline. Its saved source remains, and it can be published again.`}
+        confirmLabel="Unpublish"
+        onCancel={status.cancelUnpublish}
+        onConfirm={status.confirmUnpublish}
       />
     </div>
   );
@@ -239,7 +265,7 @@ export function WidgetPublicationControls({
             role="switch"
             checked={status.published}
             disabled={!status.canMutate || disabled || Boolean(status.pendingStatus) || status.publishBlocked}
-            onChange={(event) => void status.changeStatus(event.target.checked ? 'published' : 'unpublished')}
+            onChange={(event) => status.requestStatusChange(event.target.checked ? 'published' : 'unpublished')}
           />
           <span className="diet-toggle__switch" aria-hidden="true">
             <span className="diet-toggle__knob" />
@@ -300,6 +326,14 @@ export function WidgetPublicationControls({
         instanceName={instance.displayName}
         actions={publicActions}
         onClose={() => setCopyCodeOpen(false)}
+      />
+      <RomaCommandConfirmationDialog
+        open={status.unpublishConfirmationOpen}
+        title="Take this widget offline?"
+        body={`“${instance.displayName}” will be taken offline. Its saved source remains, and it can be published again.`}
+        confirmLabel="Unpublish"
+        onCancel={status.cancelUnpublish}
+        onConfirm={status.confirmUnpublish}
       />
     </div>
   );

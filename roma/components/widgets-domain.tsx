@@ -14,6 +14,7 @@ import { DieterDropdownActions } from './dieter-dropdown-actions';
 import { DieterTextfield } from './dieter-textfield';
 import { prefetchWidgetEditorArtifact } from './widget-editor-artifact';
 import { RomaAccountNoticeModal } from './roma-account-notice-modal';
+import { RomaCommandConfirmationDialog } from './roma-command-confirmation-dialog';
 import { useRomaAccountContext } from './roma-account-context';
 import { RomaDomainErrorBoundary } from './roma-domain-error-boundary';
 import { RomaShell } from './roma-shell';
@@ -107,6 +108,7 @@ export function WidgetsDomain({
   const [renamingInstanceId, setRenamingInstanceId] = useState<string | null>(null);
   const [renameDraft, setRenameDraft] = useState('');
   const [renameError, setRenameError] = useState<string | null>(null);
+  const [deleteConfirmationInstance, setDeleteConfirmationInstance] = useState<WidgetInstance | null>(null);
   const [sort, setSort] = useState<WidgetSort>(DEFAULT_WIDGET_SORT);
   const [openWidgetActions, setOpenWidgetActions] = useState<{
     instanceId: string;
@@ -180,6 +182,8 @@ export function WidgetsDomain({
   );
   const widgetDataError = dataError;
   const canRenderWidgetData = !dataError || catalog.length > 0 || widgetInstances.length > 0;
+  const initialDataLoading = domainLoading && catalog.length === 0 && widgetInstances.length === 0 && !widgetDataError;
+  const showingInitialWidgetsLoading = view === 'your-widgets' && initialDataLoading;
 
   const catalogByWidgetType = useMemo(
     () => new Map(catalog.map((option) => [option.widgetType, option])),
@@ -432,7 +436,7 @@ export function WidgetsDomain({
 
   return (
     <>
-      {widgetDataError || mutationError || renameError || (domainLoading && catalog.length === 0 && widgetInstances.length === 0) ? (
+      {widgetDataError || mutationError || renameError || (view === 'catalog' && initialDataLoading) ? (
         <section className="rd-canvas-module" role={widgetDataError || mutationError || renameError ? 'alert' : 'status'}>
           {widgetDataError ? (
             <div className="roma-inline-stack">
@@ -449,7 +453,7 @@ export function WidgetsDomain({
           ) : null}
           {renameError ? <p className="body-m">{renameError}</p> : null}
 
-          {domainLoading && catalog.length === 0 && widgetInstances.length === 0 && !widgetDataError ? <p className="body-m">Loading widgets...</p> : null}
+          {view === 'catalog' && initialDataLoading ? <p className="body-m">Loading widgets...</p> : null}
         </section>
       ) : null}
 
@@ -479,7 +483,7 @@ export function WidgetsDomain({
               </section>
             ) : null}
 
-            {displayedInstances.length > 0 && canRenderWidgetData ? (
+            {showingInitialWidgetsLoading || (displayedInstances.length > 0 && canRenderWidgetData) ? (
               <div className="diet-table">
                 <table className="diet-table__table">
                 <caption className="sr-only">Your widgets</caption>
@@ -556,7 +560,13 @@ export function WidgetsDomain({
                   </tr>
                 </thead>
                 <tbody>
-                  {displayedInstances.map((instance) => {
+                  {showingInitialWidgetsLoading ? (
+                    <tr>
+                      <td className="body-m" colSpan={5}>
+                        <span role="status">Loading widgets...</span>
+                      </td>
+                    </tr>
+                  ) : displayedInstances.map((instance) => {
                     const instanceName = instance.displayName || DEFAULT_INSTANCE_DISPLAY_NAME;
                     const widgetDisplayName = catalogByWidgetType.get(instance.widgetType)!.displayName;
                     const isSelected = selectedInstanceId === instance.instanceId;
@@ -785,8 +795,8 @@ export function WidgetsDomain({
                 type="button"
                 role="menuitem"
                 onClick={() => {
-                  closeWidgetActions(true);
-                  void handleDeleteInstance(openWidgetActionsInstance);
+                  closeWidgetActions();
+                  setDeleteConfirmationInstance(openWidgetActionsInstance);
                 }}
               >
                 <span className="diet-btn-menuactions__label">Delete</span>
@@ -795,6 +805,20 @@ export function WidgetsDomain({
             document.body,
           )
         : null}
+      <RomaCommandConfirmationDialog
+        open={Boolean(deleteConfirmationInstance)}
+        title="Delete this widget?"
+        body={deleteConfirmationInstance
+          ? `Deleting “${deleteConfirmationInstance.displayName}” removes its saved source and makes any published version unavailable. This cannot be undone.`
+          : ''}
+        confirmLabel="Delete widget"
+        onCancel={() => setDeleteConfirmationInstance(null)}
+        onConfirm={() => {
+          const instance = deleteConfirmationInstance;
+          setDeleteConfirmationInstance(null);
+          if (instance) void handleDeleteInstance(instance);
+        }}
+      />
     </>
   );
 }

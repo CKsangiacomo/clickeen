@@ -10,6 +10,7 @@ import {
   type SessionMeta,
   type SessionState,
   type CopilotRuntimeUi,
+  resolveSaveControlPhase,
   serializeInstanceDataSignature,
 } from './sessionTypes';
 import { bindSessionTypographyControls } from './sessionConfig';
@@ -63,6 +64,11 @@ export function useSessionBoot(args: {
           instanceData,
           savedInstanceDataSignature,
           isDirty: message.instanceId === null,
+          isSaving: false,
+          saveControlPhase: resolveSaveControlPhase(current.saveControlPhase, {
+            type: 'editor-opened',
+            isDirty: message.instanceId === null,
+          }),
           error: null,
           lastUpdate: {
             source: 'load',
@@ -121,12 +127,12 @@ export function useSessionBoot(args: {
         if (event.source !== window.parent) return;
         const requestId = data.requestId;
         const targetOrigin = event.origin && event.origin !== 'null' ? event.origin : '*';
+        if (targetOrigin !== '*') {
+          hostOriginRef.current = targetOrigin;
+        }
 
         void loadInstance(data).then((result) => {
           if (result.ok) {
-            if (targetOrigin !== '*') {
-              hostOriginRef.current = targetOrigin;
-            }
             postToParent(
               {
                 type: 'bob:open-editor-applied',

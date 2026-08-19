@@ -4,7 +4,12 @@ import { evaluateEditLimits, type Policy } from '@clickeen/ck-policy';
 import { useCallback, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
 import type { ApplyWidgetOpsResult, WidgetOp } from '../ops';
 import { applyWidgetOps } from '../ops';
-import { serializeInstanceDataSignature, type SessionMeta, type SessionState } from './sessionTypes';
+import {
+  resolveSaveControlPhase,
+  serializeInstanceDataSignature,
+  type SessionMeta,
+  type SessionState,
+} from './sessionTypes';
 
 export function useSessionEditing(args: {
   stateRef: MutableRefObject<SessionState>;
@@ -73,10 +78,15 @@ export function useSessionEditing(args: {
       }
 
       const latest = stateRef.current;
+      const isDirty = serializeInstanceDataSignature(applied.data) !== latest.savedInstanceDataSignature;
       const nextState: SessionState = {
         ...latest,
         instanceData: applied.data,
-        isDirty: serializeInstanceDataSignature(applied.data) !== latest.savedInstanceDataSignature,
+        isDirty,
+        saveControlPhase: resolveSaveControlPhase(latest.saveControlPhase, {
+          type: 'draft-changed',
+          isDirty,
+        }),
         error: null,
         lastUpdate: {
           source: 'ops',

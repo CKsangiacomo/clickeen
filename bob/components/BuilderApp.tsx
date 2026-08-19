@@ -1,9 +1,9 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { TopDrawer } from './TopDrawer';
 import { ToolDrawer } from './ToolDrawer';
 import { Workspace } from './Workspace';
+import { dieterIconStyle } from './dieterIcon';
 import { WidgetSessionProvider } from '../lib/session/useWidgetSession';
 import { useWidgetSession, useWidgetSessionChrome } from '../lib/session/useWidgetSession';
 import {
@@ -56,7 +56,7 @@ function BuilderShell() {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
       setToolsOpen(false);
-      toolsButtonRef.current?.focus();
+      window.requestAnimationFrame(() => toolsButtonRef.current?.focus());
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
@@ -73,7 +73,7 @@ function BuilderShell() {
 
   const closeTools = useCallback(() => {
     setToolsOpen(false);
-    toolsButtonRef.current?.focus();
+    window.requestAnimationFrame(() => toolsButtonRef.current?.focus());
   }, []);
 
   const requestTranslationsRefresh = () => {
@@ -100,13 +100,26 @@ function BuilderShell() {
   return (
     <>
       <div className="builder-app">
-        <TopDrawer
-          onOpenTools={() => setToolsOpen(true)}
-          toolsOpen={toolsOpen}
-          toolsButtonRef={toolsButtonRef}
-        />
-
         <div className="editor-content">
+          <button
+            ref={toolsButtonRef}
+            className="tooldrawer-open diet-button"
+            data-size="large"
+            data-type="quaternary"
+            type="button"
+            aria-label="Open tools"
+            aria-expanded={toolsOpen}
+            aria-controls="builder-tool-drawer"
+            onClick={() => setToolsOpen(true)}
+          >
+            <span
+              className="diet-icon"
+              data-size="20"
+              data-icon="line.3.horizontal.decrease.circle"
+              style={dieterIconStyle('line.3.horizontal.decrease.circle')}
+              aria-hidden="true"
+            />
+          </button>
           <ToolDrawer
             id="builder-tool-drawer"
             compactOpen={toolsOpen}

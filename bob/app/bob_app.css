@@ -19,10 +19,7 @@ body {
 }
 
 .builder-app {
-  display: flex;
-  flex-direction: column;
   height: 100dvh;
-  gap: var(--space-2);
   padding-block: max(var(--space-2), env(safe-area-inset-top))
     max(var(--space-2), env(safe-area-inset-bottom));
   padding-inline: max(var(--space-2), env(safe-area-inset-left))
@@ -36,7 +33,7 @@ body {
   display: grid;
   grid-template-columns: 340px 1fr;
   gap: var(--space-2);
-  flex: 1;
+  height: 100%;
   min-height: 0;
   overflow: hidden;
 }
@@ -46,8 +43,7 @@ body {
   display: none;
 }
 
-.topdrawer .host-navigation-open,
-.topdrawer .tooldrawer-open,
+.editor-content > .tooldrawer-open,
 .tooldrawer .tooldrawer-close {
   display: none;
 }
@@ -56,49 +52,26 @@ body {
   opacity: 0.6;
 }
 
-/* ToolDrawer structure classes */
-.topdrawer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-2);
-  background: transparent;
-  border: none;
-  gap: var(--space-2);
-}
-
-.topdrawer-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  flex: none;
-}
-
-.topdrawer-leading {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  flex: none;
-}
-
-.topdrawer-context-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  min-width: 0;
-  flex: 1;
-}
-
 @media (max-width: 599px), (max-height: 599px) {
   .editor-content {
     display: block;
   }
 
-  .topdrawer .host-navigation-open,
-  .topdrawer .tooldrawer-open,
+  .editor-content > .tooldrawer-open,
   .tooldrawer .tooldrawer-close {
     display: inline-flex;
     flex: none;
+  }
+
+  .editor-content > .tooldrawer-open {
+    position: absolute;
+    z-index: 3;
+    inset-block-start: var(--space-2);
+    inset-inline-start: var(--space-2);
+  }
+
+  .editor-content > .tooldrawer-open[aria-expanded='true'] {
+    display: none;
   }
 
   .tooldrawer {
@@ -127,9 +100,6 @@ body {
     block-size: 100%;
   }
 
-  .topdrawer-instance-title {
-    min-width: 0;
-  }
 }
 
 @media (max-width: 599px) and (orientation: portrait) and (pointer: coarse) {
@@ -150,35 +120,6 @@ body {
     color: var(--color-text);
     text-align: center;
   }
-}
-
-.topdrawer-context {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-width: 0;
-  flex-wrap: wrap;
-}
-
-.topdrawer-more.diet-popover-host {
-  flex: none;
-  inline-size: auto;
-}
-
-.topdrawer-more > .topdrawer-more__menu.diet-popover {
-  inset-inline-start: auto;
-  inset-block-start: calc(100% + var(--space-1));
-  inset-inline-end: 0;
-  inline-size: 12rem;
-}
-
-.topdrawer-instance-title {
-  min-width: 240px;
-  max-width: 560px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--color-text);
 }
 
 .tooldrawer {

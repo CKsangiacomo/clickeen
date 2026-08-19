@@ -161,3 +161,17 @@
   --button-hover-bg: color-mix(in oklab, var(--color-text), transparent 88%);
   --button-active-bg: color-mix(in oklab, var(--color-text), transparent 75%);
 }
+
+.diet-button[data-state='success'] {
+  --button-bg: var(--color-system-green);
+  --button-color: var(--color-system-white);
+  --button-hover-bg: color-mix(in oklab, var(--color-system-green), var(--state-darken-target) 22%);
+  --button-hover-color: var(--color-system-white);
+  --button-active-bg: color-mix(in oklab, var(--color-system-green), var(--state-darken-target) 40%);
+  --button-active-color: var(--color-system-white);
+}
+
+.diet-button[data-state='success']:disabled,
+.diet-button[data-state='success'][aria-disabled='true'] {
+  opacity: 1;
+}

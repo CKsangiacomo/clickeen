@@ -61,9 +61,6 @@ rendering fidelity, not workspace classification. Bob keeps one editor model:
 
 ```text
 Bob
-├── TopDrawer
-│   ├── host/editor context
-│   └── editor actions
 └── EditorContent
     ├── ToolDrawer
     │   ├── ToolDrawerHeader
@@ -109,12 +106,14 @@ large buttons only. The part's own alignment, type law, and transparent
 canvas treatment stand; on this full-canvas surface the header's width
 geometry follows Bob's canvas below it — full width with the same `space-2`
 inset Bob's own container uses, not the ordinary 80rem centered page
-column, matching the page's zeroed padding and stretched content. The
-Widgets inventory keeps its own row kit. `TopDrawer`
-is Bob-owned editor chrome and contains editing tools, dirty state, and Save
-only; it has no publication state, Publish/Republish/Unpublish command, public
-URL/code action, or release receipt. In Compact mode TopDrawer also exposes the
-control that opens Roma's existing navigation drawer.
+column, matching the page's zeroed padding and stretched content. The Widgets
+inventory keeps its own row kit. Roma's header is the only Builder header and
+owns publication state/actions and compact Roma navigation. Bob has no header
+and receives no publication state, Publish/Republish/Unpublish command, public
+URL/code action, or release receipt. Bob owns Save truth and lends only its
+current Save presentation phase to the far-right Roma header slot. In Compact
+mode Bob's `Open tools` Button sits over `EditorContent` and opens the same
+ToolDrawer without creating another bar, rail, or header.
 
 ## Authoring Flow
 
@@ -255,18 +254,29 @@ Bob also notifies Roma when the browser-memory working copy changes:
 }
 ```
 
-Bob sends its one host intent without owning Roma routes:
+Bob exposes its Save presentation without giving Roma persistence authority:
 
 ```json
 {
-  "type": "bob:host-action",
-  "action": "open-navigation"
+  "type": "bob:save-control-state",
+  "phase": "[hidden|save|saving|saved]"
 }
 ```
 
-Roma validates the Bob origin and frame source. `open-navigation` opens the
-existing Roma navigation drawer. Publication does not cross the Roma-to-Bob
-protocol.
+Roma accepts this message only from the exact Bob origin and current iframe.
+For the visible `save` phase only, clicking the borrowed header control sends:
+
+```json
+{
+  "type": "host:save-request"
+}
+```
+
+Bob accepts that intent only from its exact parent/origin while the current
+draft is dirty, the phase is `save`, and no Save is active, then invokes its
+existing Save command once. Compact Roma navigation is a direct Roma control;
+no Bob host-navigation message remains. Publication does not cross the
+Roma-to-Bob protocol.
 
 Roma replies to account commands with:
 
@@ -380,11 +390,18 @@ duplicate, and delete. Roma does not generate translations, regenerate
 translations, or mutate locale overlays from the `save-instance` command.
 Bob treats the Save response as editable-source persistence truth only.
 
-While that existing Save request is pending, TopDrawer keeps the same primary
-Dieter Button, changes its exact caller-owned label to `Saving…`, sets the
-Button's loading and busy state, disables repeat submission, and composes the
-ordinary Dieter Spinner. The Spinner is presentation only; it does not start,
-retry, complete, persist, or reinterpret the Save command.
+Bob derives one local Save presentation phase from its exact draft signature
+and existing Save result: clean is `hidden`, dirty is `save`, in flight is
+`saving`, and a matching successful result is `saved`. Roma renders that phase
+in the borrowed far-right header slot: Save; disabled Spinner plus `Saving…`;
+then the system-green checkmark plus `Saved` for exactly one second before the
+control disappears. Failure keeps Bob's existing error and derives Save or
+hidden from current dirty truth. An accepted edit during Save keeps Saving
+until the submitted result, then returns to Save when the current draft remains
+dirty; an edit during the receipt cancels the receipt immediately. First Save keeps
+its existing in-place ID/base-locale adoption and does not reopen Bob. The
+Spinner and success presentation do not start, retry, complete, persist, or
+reinterpret the Save command.
 
 When translations need update, that attention belongs to the Translations panel.
 [`interactions.md`](../engineering/UI/interactions.md) owns interaction feedback
@@ -803,6 +820,15 @@ model-visible Product Copilot thread context, draft concurrency, and reversible
 application of Product-Copilot-produced operations. San Francisco does not
 store Product Copilot thread state.
 
+The visible assistant transcript carries presentation-only result status.
+`Working` appears while that message's request or tool application is
+unresolved. A text-only terminal result clears it. `Applied` appears only after
+Bob's exact `applyOps` call succeeds; request/stream/apply failure becomes
+`Not applied`; Stop marks only unresolved work `Stopped` and preserves already
+applied edits and Undo. These words do not enter structured model history,
+`CopilotTurnRequest`, SSE events, Roma, a learning record, or account storage.
+Bob never rewrites or suppresses the streamed assistant text to produce them.
+
 Product Copilot model picker state is display/input state only. Bob renders the
 model options and default model that Roma sends in the Builder-open payload.
 Bob sends a `selectedModel` override only when Roma explicitly set
@@ -911,8 +937,9 @@ Roma owns public-widget action truth for the current account and opened
 instance. Roma's shared publication controls construct the exact public URL and
 complete iframe snippet and present Open public widget plus one Copy code intent
 in the Roma Builder header and Widgets inventory. The Builder-open envelope
-sends no publication facts or actions to Bob, and Bob's TopDrawer remains an
-editing surface. Unpublished instances expose no live actions.
+sends no publication facts or actions to Bob. Roma's Builder header remains the
+only publication surface in the editor. Unpublished instances expose no live
+actions.
 
 `runtime.js` is behavior-only and is never offered as a standalone embed. A
 script-only copy option would omit the materialized HTML and CSS.

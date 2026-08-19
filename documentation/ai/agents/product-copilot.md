@@ -317,6 +317,15 @@ batch. Bob's model history (`bob/lib/copilot/model-history.ts`) is the structure
 turn log sent on each request and is separate from the visible text-only chat
 bubbles.
 
+Bob gives each unresolved visible assistant message the passive status
+`Working`. A text-only successful terminal event removes that status without
+inventing an edit result. Bob changes the exact narration to `Applied` only
+after `session.applyOps` succeeds. A request, stream, or apply failure becomes
+`Not applied`; Stop marks only unresolved work `Stopped` and preserves any
+already-applied edit and Undo. Those four words are Bob presentation state:
+they are not Product Copilot events, model-history fields, outcome messages,
+learning records, or persisted truth, and streamed assistant text remains exact.
+
 Apply is browser-memory only. User save remains a Roma account operation.
 Publish remains Roma-owned. Tokyo persistence is not touched by Product Copilot.
 Bob does not send apply or Undo activity to a separate outcome or learning route.
@@ -336,7 +345,7 @@ Apply and Undo remain local editor operations.
 | Product Copilot Worker | upstream status | San Francisco non-OK response is propagated |
 | Product Copilot Worker | `500 PROVIDER_ERROR` | missing San Francisco config or unexpected failure |
 | Product Copilot stream | `agent_turn_error` event | multiple model tool calls, finish/tool-count inconsistency, missing terminal/continuation boundary, malformed SSE JSON transport, or `model_step_error` |
-| Bob | assistant message, no apply | stale draft signature, failed undo construction, or failed local apply |
+| Bob | `Not applied` plus assistant error, no apply | request/stream failure, stale draft signature, failed undo construction, or failed local apply |
 
 Product Copilot trusts Roma's accepted request and San Francisco's typed event
 payloads. Bob remains the first edit-operation acceptance boundary for the

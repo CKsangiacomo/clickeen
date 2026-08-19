@@ -124,6 +124,12 @@ The governing component product law is:
   label. Button composes the ordinary current-color Spinner before that label
   and derives its size from the Button's existing icon ladder. Spinner never
   starts, retries, completes, or interprets the command.
+- Button may carry the optional presentation state `data-state="success"`.
+  It preserves the required size/type grammar, geometry, direct-child Icon and
+  label composition, and disabled behavior while using the system green/white
+  result treatment. The caller owns the successful result, exact result label,
+  optional Icon, and display lifetime. The Button does not infer, time, retain,
+  or persist success.
 - Choice Tiles is a two- or three-option string chooser with one `sm|md|lg`
   size authority on its root. Small, medium, and large use proportional
   `4rem/4.5rem/5rem` minimum heights, `.5rem/.5rem/.75rem` block padding,
@@ -540,6 +546,13 @@ whether dismissal is allowed. Product owners keep workflow state, copy,
 validation, persistence, and the accepted dismissal behavior. Bulk Edit,
 Object Manager, DevStudio token editing, and Roma blocking dialogs consume
 Popup without adding a second modal framework.
+
+Roma's consequential-command confirmation is one consumer composition of this
+Popup: exact caller title/body/confirm label plus Dieter Cancel and confirm
+Buttons. Dieter supplies only the Popup/Button mechanics. Roma keeps the exact
+selected subject, command, pending/error/result state, and dismissal law;
+opening, Cancel, and backdrop invoke no command, and explicit confirmation
+invokes the already-owned command once.
 
 The shared plan-limit/upsell surface is one Roma-hosted composition of Popup.
 For a Widget-bound denial, its body is the exact localized template supplied by

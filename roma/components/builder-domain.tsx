@@ -5,10 +5,17 @@ import type { AccountAssetHostCommand } from '@clickeen/ck-contracts';
 import type { ProductCopilotTurnEvent } from '@clickeen/ck-contracts/ai';
 import type { AgentRuntimePolicyUi, Policy } from '@clickeen/ck-policy';
 import type { AccountFontLibrary } from '@clickeen/widget-foundation';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { resolveBobBaseUrl } from '../lib/env/bob';
+import {
+  createHostSaveRequestMessage,
+  readBobSaveControlPhase,
+  type BobSaveControlPhase,
+  type BobSaveControlStateMessage,
+} from '../lib/builder-host-protocol';
 import { formatAccountTierLabel } from '../lib/format';
 import { useRomaAccountApi } from './account-api';
 import { getWidgetEditorArtifact } from './widget-editor-artifact';
@@ -107,11 +114,6 @@ type BobSystemUpsellMessage = {
 };
 
 type BobUpsellMessage = BobWidgetUpsellMessage | BobSystemUpsellMessage;
-
-type BobHostActionMessage = {
-  type: 'bob:host-action';
-  action: 'open-navigation';
-};
 
 function resolveBobSystemUpsellBody(reasonKey: string): string {
   switch (reasonKey) {
@@ -555,6 +557,7 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
   const pathname = usePathname();
   const { openNavigation } = useRomaShellActions();
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const navigationButtonRef = useRef<HTMLButtonElement | null>(null);
   const bobReadyRef = useRef(false);
   const openDispatchSeqRef = useRef(0);
   const openingTargetKeyRef = useRef('');
@@ -584,6 +587,7 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
   const [openError, setOpenError] = useState<string | null>(null);
   const [publicationInstance, setPublicationInstance] = useState<WidgetInstance | null>(null);
   const [bobIsDirty, setBobIsDirty] = useState(false);
+  const [bobSaveControlPhase, setBobSaveControlPhase] = useState<BobSaveControlPhase>('hidden');
   const [unsavedDialogOpen, setUnsavedDialogOpen] = useState(false);
   const [upsell, setUpsell] = useState<UpsellPresentation | null>(null);
 
@@ -980,6 +984,7 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
     openingTargetKeyRef.current = targetKey;
 
     const openSeq = ++openDispatchSeqRef.current;
+    setBobSaveControlPhase('hidden');
     setOpenError(null);
 
     try {
@@ -1052,6 +1057,7 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
         }
       }
       setOpenError(message);
+      setBobSaveControlPhase('hidden');
     } finally {
       if (openingTargetKeyRef.current === targetKey) {
         openingTargetKeyRef.current = '';
@@ -1065,6 +1071,7 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
   }, [openActiveInstanceInBob]);
 
   const handleBobIframeLoad = useCallback(() => {
+    setBobSaveControlPhase('hidden');
     bobReadyRef.current = true;
     if (!activeInstanceIdRef.current && !activeWidgetTypeRef.current) return;
     void openActiveInstanceInBobRef.current();
@@ -1085,7 +1092,7 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
       if (event.origin !== bobBaseUrl) return;
       const source = iframeRef.current?.contentWindow;
       if (!source || event.source !== source) return;
-      const data = event.data as BobReadyMessage | BobDirtyStateChangedMessage | BobAccountCommandMessage | BobUpsellMessage | BobHostActionMessage | null;
+      const data = event.data as BobReadyMessage | BobDirtyStateChangedMessage | BobSaveControlStateMessage | BobAccountCommandMessage | BobUpsellMessage | null;
       if (!data || typeof data !== 'object') return;
       if (data.type === 'bob:session-ready') {
         bobReadyRef.current = true;
@@ -1097,6 +1104,17 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
       if (data.type === 'bob:dirty-state-changed') {
         bobIsDirtyRef.current = data.isDirty;
         setBobIsDirty(data.isDirty);
+        return;
+      }
+      const saveControlPhase = readBobSaveControlPhase({
+        data,
+        eventOrigin: event.origin,
+        bobOrigin: bobBaseUrl,
+        eventSource: event.source,
+        iframeWindow: source,
+      });
+      if (saveControlPhase) {
+        setBobSaveControlPhase(saveControlPhase);
         return;
       }
       if (data.type === 'bob:upsell') {
@@ -1113,10 +1131,6 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
               upgradeAvailable: true,
             };
         setUpsell(presentation);
-        return;
-      }
-      if (data.type === 'bob:host-action') {
-        openNavigation(iframeRef.current);
         return;
       }
       if (data.type === 'bob:account-command') {
@@ -1174,7 +1188,7 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
 
     window.addEventListener('message', listener);
     return () => window.removeEventListener('message', listener);
-  }, [accountPolicy, activeInstanceId, activeWidgetType, bobBaseUrl, openNavigation, runBobAccountCommand]);
+  }, [accountPolicy, activeInstanceId, activeWidgetType, bobBaseUrl, runBobAccountCommand]);
 
   useEffect(() => {
     bobReadyRef.current = false;
@@ -1184,17 +1198,13 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
     activeCompiledWidgetRef.current = null;
     bobAppliedInstanceIdRef.current = '';
     bobIsDirtyRef.current = false;
+    setBobSaveControlPhase('hidden');
     setPublicationInstance(null);
     setBobIsDirty(false);
     setOpenError(null);
   }, [bobSrc]);
 
   useEffect(() => {
-    if (!activeInstanceId && !activeWidgetType) {
-      setOpenError(null);
-      return;
-    }
-    if (!bobReadyRef.current) return;
     if (
       activeInstanceId &&
       suppressNextOpenInstanceIdRef.current === activeInstanceId
@@ -1202,8 +1212,21 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
       suppressNextOpenInstanceIdRef.current = '';
       return;
     }
+    setBobSaveControlPhase('hidden');
+    if (!activeInstanceId && !activeWidgetType) {
+      setOpenError(null);
+      return;
+    }
+    if (!bobReadyRef.current) return;
     void openActiveInstanceInBobRef.current();
   }, [activeInstanceId, activeWidgetType]);
+
+  const requestBobSave = useCallback(() => {
+    if (bobSaveControlPhase !== 'save') return;
+    const targetWindow = iframeRef.current?.contentWindow;
+    if (!targetWindow) return;
+    targetWindow.postMessage(createHostSaveRequestMessage(), bobBaseUrl);
+  }, [bobBaseUrl, bobSaveControlPhase]);
 
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -1293,6 +1316,24 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
       ) : null}
       <header className="page__header">
         <div className="roma-page-heading">
+          <button
+            ref={navigationButtonRef}
+            className="roma-nav-trigger diet-button"
+            data-size="medium"
+            data-type="quaternary"
+            type="button"
+            aria-label="Open navigation"
+            aria-controls="roma-primary-navigation"
+            onClick={() => openNavigation(navigationButtonRef.current)}
+          >
+            <Image
+              className="diet-icon"
+              src="/dieter/icons/svg/line.3.horizontal.decrease.circle.svg"
+              alt=""
+              width={20}
+              height={20}
+            />
+          </button>
           <h1 className="heading-2">
             {publicationInstance?.displayName || (activeInstanceId ? 'Loading widget…' : 'Untitled widget')}
           </h1>
@@ -1311,18 +1352,64 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
             </p>
           )}
         </div>
-        {publicationInstance ? (
+        {publicationInstance || bobSaveControlPhase !== 'hidden' ? (
           <div className="page__actions">
-            <WidgetPublicationControls
-              instance={publicationInstance}
-              dirty={bobIsDirty}
-              showToggle={false}
-              controlSize="large"
-              onPendingChange={handlePublicationPendingChange}
-              onInstanceChange={(next) => {
-                setPublicationInstance(next);
-              }}
-            />
+            {publicationInstance ? (
+              <WidgetPublicationControls
+                instance={publicationInstance}
+                dirty={bobIsDirty}
+                showToggle={false}
+                controlSize="large"
+                onPendingChange={handlePublicationPendingChange}
+                onInstanceChange={(next) => {
+                  setPublicationInstance(next);
+                }}
+              />
+            ) : null}
+            {bobSaveControlPhase === 'save' ? (
+              <button
+                className="diet-button"
+                data-size="large"
+                data-type="primary"
+                type="button"
+                onClick={requestBobSave}
+              >
+                <span className="diet-button__label">Save</span>
+              </button>
+            ) : null}
+            {bobSaveControlPhase === 'saving' ? (
+              <button
+                className="diet-button"
+                data-size="large"
+                data-type="primary"
+                data-loading="true"
+                type="button"
+                aria-busy="true"
+                disabled
+              >
+                <span className="diet-spinner" aria-hidden="true" />
+                <span className="diet-button__label">Saving…</span>
+              </button>
+            ) : null}
+            {bobSaveControlPhase === 'saved' ? (
+              <button
+                className="diet-button"
+                data-size="large"
+                data-type="primary"
+                data-state="success"
+                type="button"
+                disabled
+              >
+                <Image
+                  className="diet-icon"
+                  src="/dieter/icons/svg/checkmark.svg"
+                  alt=""
+                  width={20}
+                  height={20}
+                />
+                <span className="diet-button__label">Saved</span>
+              </button>
+            ) : null}
           </div>
         ) : null}
       </header>

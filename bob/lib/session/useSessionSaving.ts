@@ -3,6 +3,7 @@
 import { useCallback, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
 import {
   serializeInstanceDataSignature,
+  resolveSaveControlPhase,
   type SessionMeta,
   type SessionState,
 } from './sessionTypes';
@@ -36,6 +37,9 @@ export function useSessionSaving(args: {
     const savingState: SessionState = {
       ...stateRef.current,
       isSaving: true,
+      saveControlPhase: resolveSaveControlPhase(stateRef.current.saveControlPhase, {
+        type: 'save-started',
+      }),
       error: null,
     };
     stateRef.current = savingState;
@@ -66,6 +70,10 @@ export function useSessionSaving(args: {
           const nextState: SessionState = {
             ...stateRef.current,
             isSaving: false,
+            saveControlPhase: resolveSaveControlPhase(stateRef.current.saveControlPhase, {
+              type: 'save-failed',
+              isDirty: stateRef.current.isDirty,
+            }),
             error: {
               source: 'save',
               message: err.reasonKey,
@@ -80,6 +88,10 @@ export function useSessionSaving(args: {
         const nextState: SessionState = {
           ...stateRef.current,
           isSaving: false,
+          saveControlPhase: resolveSaveControlPhase(stateRef.current.saveControlPhase, {
+            type: 'save-failed',
+            isDirty: stateRef.current.isDirty,
+          }),
           error: {
             source: 'save',
             message: err.reasonKey,
@@ -116,6 +128,10 @@ export function useSessionSaving(args: {
         savedInstanceDataSignature: submittedInstanceDataSignature,
         isDirty: serializeInstanceDataSignature(nextInstanceData) !== submittedInstanceDataSignature,
         isSaving: false,
+        saveControlPhase: resolveSaveControlPhase(current.saveControlPhase, {
+          type: 'save-succeeded',
+          currentDraftMatchesSubmitted: !hasEditsAfterSubmittedSave,
+        }),
         error: null,
       };
       stateRef.current = nextState;
@@ -125,6 +141,10 @@ export function useSessionSaving(args: {
       const nextState: SessionState = {
         ...stateRef.current,
         isSaving: false,
+        saveControlPhase: resolveSaveControlPhase(stateRef.current.saveControlPhase, {
+          type: 'save-failed',
+          isDirty: stateRef.current.isDirty,
+        }),
         error: { source: 'save', message: messageText },
       };
       stateRef.current = nextState;

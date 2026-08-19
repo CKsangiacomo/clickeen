@@ -72,7 +72,12 @@ The active `/builder/:instanceId` and `/builder/new/:widgetType` routes are the
 explicit editor exceptions. Their pages omit the ordinary Roma Page header and
 give the remaining padding-free, unconstrained body to Bob. Roma renders one
 slim header above the iframe for instance identity and Roma-owned publication
-controls. Bob's TopDrawer remains editing-only and supplies tools plus Save.
+controls. That Roma header is the only Builder header. Bob owns Save truth and
+borrows the far-right Roma action slot only while its exact presentation phase
+is `save`, `saving`, or `saved`; Roma renders that phase and sends the one
+host-Save intent but does not infer dirty state or persistence success. Compact
+Roma navigation remains in this header, while Bob's compact ToolDrawer opener
+belongs to the editor work area.
 The `/builder` landing route remains an ordinary Roma page because no editor is
 open there.
 
@@ -108,6 +113,16 @@ the denied operation was never applied and no work is lost. Unsaved
 Builder/defaults confirmation treats Escape as Keep editing and requires
 explicit Discard. Native `beforeunload` remains only at the browser boundary;
 in-app navigation uses the Roma unsaved-changes dialog.
+
+Roma also composes one product-neutral consequential-command confirmation from
+the current Dieter Popup and Buttons. It accepts only open state, exact title,
+body, confirm label, Cancel, and Confirm callbacks. Opening, Cancel, backdrop,
+and repeated events after a decision invoke no product command; one explicit
+Confirm invokes the already-owned command once. The current consumers are
+Widget Delete, Asset Delete, Unpublish in both Roma publication surfaces,
+Remove member, and Transfer ownership. Each consumer retains its existing
+route, authorization, pending state, visible error, and result handling. No
+invitation command or invitation workflow is part of this composition.
 
 Roma owns one shared account upsell Popup and assembles it from truths with
 different owners:
@@ -450,6 +465,10 @@ and Roma's slim Builder header. It derives Publish/Republish/Unpublish and the
 published receipt from exact `updatedAt`, `publishedAt`, and publication status,
 and builds public URL/code actions from the current account and instance
 coordinate. Bob receives none of those facts or actions.
+Publish and Republish remain immediate explicit commands. An Unpublish intent
+opens the shared confirmation in both the inventory and Builder header; the
+dialog names the exact Widget, says it will go offline while saved source
+remains, and sends the existing Unpublish command only after explicit confirm.
 
 Tokyo is the single timestamp writer. Save and Rename each return `updatedAt`
 strictly later than the previous `updatedAt` and any `publishedAt`.
@@ -497,7 +516,10 @@ name, and Published sorts are client-side projections over the authoritative
 account list. Their headers use the shared `small` Dieter sort control. The active
 sort uses `chevron.up.2` or `chevron.down.2` with
 `--color-system-black`; inactive sorts use `chevron.down.dotted.2` with
-`--color-system-gray`.
+`--color-system-gray`. On a cache-cold first load, that same Table and all five
+headers remain mounted; one status row spanning the columns says
+`Loading widgets...`. Roma does not replace the inventory with a loose loading
+paragraph and then shift into a Table.
 
 Rename, Duplicate, and Delete use the same unbound Dieter Menu Actions row.
 Roma owns their exact Chrome wording and command handlers; Menu Actions owns
@@ -545,7 +567,11 @@ role and the instance publish state, while tier upgrade decisions happen only in
 command routes.
 
 Roma loads widget catalog definitions from Tokyo-worker and loads saved instance
-rows through the account instance coordinate/list-facts helpers. Tokyo-worker
+rows through the account instance coordinate/list-facts helpers. After current
+account resolution, those two independent reads start together and are awaited
+once. The instance-facts failure retains deterministic priority when both fail;
+otherwise the definitions failure is returned. Roma adds no cache, timeout,
+probe, retry, fallback, or alternate read to this cold path. Tokyo-worker
 returns stored `displayName` as string or `null`; Roma applies the UI fallback
 label for product rendering.
 
@@ -744,7 +770,11 @@ Explicit allowed Publish is the sole package materialization path.
 Widget Defaults consumes exact deploy-built `CompiledWidget` artifacts. It
 selects the repeated common control surface once from one exact artifact,
 selects each Widget's own Core controls from that Widget's artifact, and
-preserves compiler order. Panel filtering is a UI projection, not validation.
+preserves compiler order. Every non-empty projected panel is introduced by its
+exact compiler-supplied `panel.label`, assigned as DOM text and followed by the
+unchanged selected-control HTML. Empty panels remain absent. Roma does not
+infer a label from an id, keep a second panel-label map, or substitute missing
+copy. Panel filtering is a UI projection, not validation.
 The browser-facing save route is the single document/typography admission
 boundary. After it accepts the draft and authoritative account font library,
 Tokyo stores the exact document and later consumers trust it without a second

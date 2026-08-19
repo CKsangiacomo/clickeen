@@ -35,11 +35,18 @@ export async function GET(request: NextRequest) {
   if (!current.ok) return current.response;
 
   const accountId = current.value.authzPayload.accountPublicId;
-  const widgetInstances = await loadAccountWidgetInstanceFacts({
-    accountId,
-    accountCapsule: current.value.authzToken,
-    requestId: current.value.requestId,
-  });
+  const [widgetInstances, widgetDefinitions] = await Promise.all([
+    loadAccountWidgetInstanceFacts({
+      accountId,
+      accountCapsule: current.value.authzToken,
+      requestId: current.value.requestId,
+    }),
+    listTokyoWidgetDefinitions({
+      accountId,
+      accountCapsule: current.value.authzToken,
+      requestId: current.value.requestId,
+    }),
+  ]);
   if (widgetInstances.ok === false) {
     return withSession(
       request,
@@ -56,11 +63,6 @@ export async function GET(request: NextRequest) {
       current.value.setCookies,
     );
   }
-  const widgetDefinitions = await listTokyoWidgetDefinitions({
-    accountId,
-    accountCapsule: current.value.authzToken,
-    requestId: current.value.requestId,
-  });
   if (widgetDefinitions.ok === false) {
     return withSession(
       request,

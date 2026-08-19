@@ -147,6 +147,11 @@ Button loading composes that ordinary Spinner before a caller-supplied loading
 label. The caller disables the Button and sets `data-loading` plus `aria-busy`
 for the exact lifetime of its command; Button derives Spinner size from its
 existing small/medium/large Icon ladder and does not own the asynchronous work.
+Button also accepts the optional presentation state `data-state="success"`.
+That state keeps the Button's existing size, type, children, and disabled
+semantics while using the system green/white result treatment. The caller owns
+the successful result, its exact label and optional Icon, and the duration for
+which the result is shown; Button does not infer or retain success.
 
 Choice Tiles owns two- and three-option selection structure, interaction,
 selected presentation, and one proportional `sm|md|lg` tile geometry. Its

@@ -23,12 +23,43 @@ export type PreviewSettings = {
   host: 'canvas' | 'column' | 'banner' | 'floating';
 };
 
+export type SaveControlPhase = 'hidden' | 'save' | 'saving' | 'saved';
+
+export type SaveControlTransition =
+  | { type: 'editor-opened'; isDirty: boolean }
+  | { type: 'draft-changed'; isDirty: boolean }
+  | { type: 'save-started' }
+  | { type: 'save-succeeded'; currentDraftMatchesSubmitted: boolean }
+  | { type: 'save-failed'; isDirty: boolean }
+  | { type: 'receipt-elapsed'; isDirty: boolean };
+
+export function resolveSaveControlPhase(
+  current: SaveControlPhase,
+  transition: SaveControlTransition,
+): SaveControlPhase {
+  switch (transition.type) {
+    case 'editor-opened':
+      return transition.isDirty ? 'save' : 'hidden';
+    case 'draft-changed':
+      return current === 'saving' ? 'saving' : transition.isDirty ? 'save' : 'hidden';
+    case 'save-started':
+      return 'saving';
+    case 'save-succeeded':
+      return transition.currentDraftMatchesSubmitted ? 'saved' : 'save';
+    case 'save-failed':
+      return transition.isDirty ? 'save' : 'hidden';
+    case 'receipt-elapsed':
+      return current === 'saved' ? (transition.isDirty ? 'save' : 'hidden') : current;
+  }
+}
+
 export type SessionState = {
   compiled: CompiledWidget | null;
   instanceData: Record<string, unknown>;
   savedInstanceDataSignature: string | null;
   isDirty: boolean;
   isSaving: boolean;
+  saveControlPhase: SaveControlPhase;
   lastUpdate: UpdateMeta | null;
   error: SessionError | null;
 };
@@ -70,10 +101,38 @@ export type BobDirtyStateChangedMessage = {
   isDirty: boolean;
 };
 
-export type BobHostActionMessage = {
-  type: 'bob:host-action';
-  action: 'open-navigation';
+export type BobSaveControlStateMessage = {
+  type: 'bob:save-control-state';
+  phase: SaveControlPhase;
 };
+
+export type HostSaveRequestMessage = {
+  type: 'host:save-request';
+};
+
+export function acceptsHostSaveRequest(args: {
+  data: unknown;
+  eventOrigin: string;
+  hostOrigin: string | null;
+  eventSource: MessageEventSource | null;
+  parentWindow: Window | null;
+  phase: SaveControlPhase;
+  isDirty: boolean;
+  isSaving: boolean;
+}): args is typeof args & { data: HostSaveRequestMessage } {
+  return Boolean(
+    args.hostOrigin &&
+      args.eventOrigin === args.hostOrigin &&
+      args.parentWindow &&
+      args.eventSource === args.parentWindow &&
+      args.data &&
+      typeof args.data === 'object' &&
+      (args.data as { type?: unknown }).type === 'host:save-request' &&
+      args.phase === 'save' &&
+      args.isDirty &&
+      !args.isSaving,
+  );
+}
 
 export type BobWidgetUpsellMessage = {
   type: 'bob:upsell';
@@ -161,6 +220,7 @@ export function createInitialSessionState(): SessionState {
     savedInstanceDataSignature: null,
     isDirty: false,
     isSaving: false,
+    saveControlPhase: 'hidden',
     lastUpdate: null,
     error: null,
   };

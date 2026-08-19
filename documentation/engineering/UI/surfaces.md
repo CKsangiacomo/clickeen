@@ -68,12 +68,12 @@ data, policy, behavior, and composition.
 
 ## Current Direction
 
-Bob is the strongest directional editor reference because it uses a clear
-`TopDrawer` above `EditorContent`, with `ToolDrawer | Workspace` inside that
-content. ToolDrawer owns `ToolDrawerHeader + ToolDrawerContent`; Workspace owns
+Bob is the strongest directional editor reference because its `EditorContent`
+contains `ToolDrawer | Workspace`. ToolDrawer owns
+`ToolDrawerHeader + ToolDrawerContent`; Workspace owns
 `Preview + StatusOverlay + WorkspaceControls`. The active Roma Builder page
-omits the ordinary Page header and gives its complete body to this Bob-owned
-composition. DevStudio and Roma
+owns the one visible Builder header above Bob's iframe. Bob has no second
+header. DevStudio and Roma
 implement the accepted Full/Compact operational shell with one inset navigation
 tree while retaining their own route and domain composition. Bob keeps its
 specialized editor portrait boundary.
@@ -119,8 +119,10 @@ information and may scroll instead of becoming unrelated mobile card feeds.
 
 Bob uses the same nested composition inside `EditorContent`:
 `ToolDrawer | Workspace` when it fits, and the same ToolDrawer as an explicit
-drawer over the full Workspace in compact mode. TopDrawer remains above that
-composition in both modes. This is the same editor, not a mobile variant.
+drawer over the full Workspace in compact mode. Roma's Builder header remains
+the single header in both modes; its compact navigation trigger opens Roma's
+drawer, while Bob's compact ToolDrawer trigger sits over the editor work area.
+This is the same editor, not a mobile variant.
 
 Desktop workspace on tablet remains touch-operable. Compact mode in mobile
 landscape or portrait changes composition, not product authority or available

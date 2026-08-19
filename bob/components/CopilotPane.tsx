@@ -5,7 +5,13 @@ import type {
 } from '@clickeen/ck-contracts/ai';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { WidgetOp } from '../lib/ops';
-import type { CopilotMessage } from '../lib/copilot/types';
+import {
+  appendWorkingCopilotAssistantText,
+  COPILOT_MESSAGE_PRESENTATION_LABELS,
+  resolveWorkingCopilotAssistantMessages,
+  type CopilotMessage,
+  type CopilotMessagePresentationStatus,
+} from '../lib/copilot/types';
 import {
   emptyCopilotModelHistory,
   appendUserMessage,
@@ -48,6 +54,7 @@ type ActiveTurnState = {
   modelStepId: string | null;
   bufferedToolCall: BufferedToolCall | null;
   modelHistory: CopilotModelHistory;
+  unresolvedMessageIds: string[];
   undoOps: WidgetOp[]; // accumulated inverse ops (reverse order at undo time)
   postApplySignature: string | null;
   stepCount: number;
@@ -318,13 +325,55 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
     });
   }, [compiled, session.instanceData]);
 
-  const pushMessage = useCallback((msg: Omit<CopilotMessage, 'id' | 'ts'>) => {
-    if (!threadKey) return;
+  const pushMessage = useCallback((msg: Omit<CopilotMessage, 'id' | 'ts'>): string | null => {
+    if (!threadKey) return null;
+    const messageId = newId();
     copilot.updateCopilotThread(threadKey, (current) => {
       const base = current ?? { sessionId: crypto.randomUUID(), messages: [] };
-      return { ...base, messages: [...base.messages, { ...msg, id: newId(), ts: Date.now() }] };
+      return { ...base, messages: [...base.messages, { ...msg, id: messageId, ts: Date.now() }] };
     });
+    return messageId;
   }, [threadKey, copilot]);
+
+  const resolveTurnVisibleMessages = useCallback((
+    turn: ActiveTurnState,
+    resolution: Exclude<CopilotMessagePresentationStatus, 'working'> | 'complete',
+  ): boolean => {
+    const messageIds = turn.unresolvedMessageIds;
+    turn.unresolvedMessageIds = [];
+    if (!threadKey || messageIds.length === 0) return false;
+
+    copilot.updateCopilotThread(threadKey, (current) => {
+      if (!current) return { sessionId: copilotSessionId, messages: [] };
+      return {
+        ...current,
+        messages: resolveWorkingCopilotAssistantMessages({
+          messages: current.messages,
+          messageIds,
+          resolution,
+        }),
+      };
+    });
+    return true;
+  }, [copilot, copilotSessionId, threadKey]);
+
+  const pushTurnResultMessage = useCallback((args: {
+    turn: ActiveTurnState;
+    presentationStatus: Exclude<CopilotMessagePresentationStatus, 'working'>;
+    text: string;
+  }): void => {
+    const resolvedExistingMessage = resolveTurnVisibleMessages(
+      args.turn,
+      args.presentationStatus,
+    );
+    pushMessage({
+      role: 'assistant',
+      text: args.text,
+      ...(resolvedExistingMessage
+        ? {}
+        : { presentationStatus: args.presentationStatus }),
+    });
+  }, [pushMessage, resolveTurnVisibleMessages]);
 
   // -------------------------------------------------------------------------
   // Tool execution: ONLY after model_step_finished (ground rule #6)
@@ -339,12 +388,24 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
 
     const activeCompiled = compiled;
     if (!activeCompiled) {
-      pushMessage({ role: 'assistant', text: 'Editor context is unavailable. The edit was not applied.' });
+      pushTurnResultMessage({
+        turn,
+        presentationStatus: 'not-applied',
+        text: 'Editor context is unavailable. The edit was not applied.',
+      });
+      setStatus('idle');
+      activeTurnRef.current = null;
+      activeHandleRef.current = null;
       return;
     }
 
     // Verify tool name
     if (toolName !== 'apply_widget_ops') {
+      pushTurnResultMessage({
+        turn,
+        presentationStatus: 'not-applied',
+        text: COPILOT_INVALID_EDIT_MESSAGE,
+      });
       await sendContinuation(turn, toolCallId, modelStepId, {
         ok: false,
         errors: [{ opIndex: 0, message: `Unknown tool: ${toolName}` }],
@@ -355,6 +416,11 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
     // Extract and validate the ops batch
     const ops = (input as { ops?: unknown[] })?.ops;
     if (!Array.isArray(ops) || ops.length === 0) {
+      pushTurnResultMessage({
+        turn,
+        presentationStatus: 'not-applied',
+        text: COPILOT_INVALID_EDIT_MESSAGE,
+      });
       await sendContinuation(turn, toolCallId, modelStepId, {
         ok: false,
         errors: [{ opIndex: 0, message: 'Tool call must include a non-empty ops array.' }],
@@ -370,6 +436,11 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
       ops: ops as WidgetOp[],
     });
     if (!expandedOps) {
+      pushTurnResultMessage({
+        turn,
+        presentationStatus: 'not-applied',
+        text: COPILOT_INVALID_EDIT_MESSAGE,
+      });
       await sendContinuation(turn, toolCallId, modelStepId, {
         ok: false,
         errors: [{ opIndex: 0, message: 'The edit could not be represented in this widget.' }],
@@ -384,6 +455,11 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
       controls: activeCompiled.controls,
     });
     if (!inverseOps) {
+      pushTurnResultMessage({
+        turn,
+        presentationStatus: 'not-applied',
+        text: COPILOT_INVALID_EDIT_MESSAGE,
+      });
       await sendContinuation(turn, toolCallId, modelStepId, {
         ok: false,
         errors: [{ opIndex: 0, message: 'The edit could not be undone safely. Nothing was applied.' }],
@@ -394,6 +470,11 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
     // Apply through the existing Bob engine
     const applied = session.applyOps(expandedOps);
     if (!applied.ok) {
+      pushTurnResultMessage({
+        turn,
+        presentationStatus: 'not-applied',
+        text: COPILOT_INVALID_EDIT_MESSAGE,
+      });
       await sendContinuation(turn, toolCallId, modelStepId, {
         ok: false,
         errors: applied.errors.map((err) => ({
@@ -428,7 +509,14 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
     setActiveUndoToken(undoToken);
 
     const appliedText = summarizeAppliedOps(expandedOps, controlsForAi);
-    pushMessage({ role: 'assistant', text: appliedText, hasUndoAction: true, undoToken });
+    const resolvedExistingMessage = resolveTurnVisibleMessages(turn, 'applied');
+    pushMessage({
+      role: 'assistant',
+      text: appliedText,
+      hasUndoAction: true,
+      undoToken,
+      ...(resolvedExistingMessage ? {} : { presentationStatus: 'applied' }),
+    });
 
     // Send continuation with the successful result
     await sendContinuation(turn, toolCallId, modelStepId, {
@@ -436,7 +524,14 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
       changedPaths: applied.changedPaths,
       postApplySignature: turn.postApplySignature,
     });
-  }, [compiled, session, pushMessage, controlsForAi]);
+  }, [
+    compiled,
+    controlsForAi,
+    pushMessage,
+    pushTurnResultMessage,
+    resolveTurnVisibleMessages,
+    session,
+  ]);
 
   // -------------------------------------------------------------------------
   // Continuation: send the next model turn with the tool result
@@ -451,17 +546,29 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
     if (turn.isStopped) return;
 
     if (tierStepLimit === null) {
-      pushMessage({ role: 'assistant', text: 'Editor policy is unavailable. The turn was not continued.' });
+      pushTurnResultMessage({
+        turn,
+        presentationStatus: 'not-applied',
+        text: 'Editor policy is unavailable. The turn was not continued.',
+      });
+      streamingMessageIdRef.current = null;
       setStatus('idle');
       activeTurnRef.current = null;
+      activeHandleRef.current = null;
       return;
     }
 
     // Tier step limit: refuse the next continuation past the signed limit
     if (turn.stepCount >= tierStepLimit) {
-      pushMessage({ role: 'assistant', text: 'Copilot reached the step limit for this turn without completing. Try a smaller change.' });
+      pushTurnResultMessage({
+        turn,
+        presentationStatus: 'not-applied',
+        text: 'Copilot reached the step limit for this turn without completing. Try a smaller change.',
+      });
+      streamingMessageIdRef.current = null;
       setStatus('idle');
       activeTurnRef.current = null;
+      activeHandleRef.current = null;
       return;
     }
 
@@ -469,9 +576,15 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
     const currentInstanceId = chrome.meta?.instanceId;
     const activeCompiled = compiled;
     if (!activeLocale || !currentInstanceId || !activeCompiled) {
-      pushMessage({ role: 'assistant', text: 'Editor context is unavailable. The turn was not continued.' });
+      pushTurnResultMessage({
+        turn,
+        presentationStatus: 'not-applied',
+        text: 'Editor context is unavailable. The turn was not continued.',
+      });
+      streamingMessageIdRef.current = null;
       setStatus('idle');
       activeTurnRef.current = null;
+      activeHandleRef.current = null;
       return;
     }
 
@@ -506,7 +619,14 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
 
     turn.stepCount++;
     startTurnRequest(turn, body);
-  }, [chrome, compiled, copilotSessionId, controlsForAi, pushMessage, tierStepLimit]);
+  }, [
+    chrome,
+    compiled,
+    copilotSessionId,
+    controlsForAi,
+    pushTurnResultMessage,
+    tierStepLimit,
+  ]);
 
   // -------------------------------------------------------------------------
   // Turn request: start a streaming request and wire the event handler
@@ -515,10 +635,26 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
   const startTurnRequest = useCallback((turn: ActiveTurnState, body: unknown): void => {
     const currentInstanceId = chrome.meta?.instanceId;
     if (!currentInstanceId) {
-      pushMessage({ role: 'assistant', text: 'Editor context is not ready. Try again in a moment.' });
+      pushTurnResultMessage({
+        turn,
+        presentationStatus: 'not-applied',
+        text: 'Editor context is not ready. Try again in a moment.',
+      });
+      streamingMessageIdRef.current = null;
       setStatus('idle');
       activeTurnRef.current = null;
+      activeHandleRef.current = null;
       return;
+    }
+
+    const workingMessageId = pushMessage({
+      role: 'assistant',
+      text: '',
+      presentationStatus: 'working',
+    });
+    if (workingMessageId) {
+      turn.unresolvedMessageIds.push(workingMessageId);
+      streamingMessageIdRef.current = workingMessageId;
     }
 
     const handle = transport.runCopilot({
@@ -536,27 +672,37 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
     };
 
     handle.completed.then(
-      () => {
-        // Request completed — if the turn is still active without a buffered tool,
-        // finalize it (the terminal event already arrived via onCopilotEvent).
-        if (activeTurnRef.current === turn && !turn.bufferedToolCall) {
+      (result) => {
+        const isCurrentRequest = activeHandleRef.current?.requestId === handle.requestId;
+        if (isCurrentRequest) activeHandleRef.current = null;
+        if (!result.ok && isCurrentRequest && activeTurnRef.current === turn && !turn.isStopped) {
+          pushTurnResultMessage({
+            turn,
+            presentationStatus: 'not-applied',
+            text: COPILOT_UNEXPECTED_FAILURE_MESSAGE,
+          });
+          streamingMessageIdRef.current = null;
           setStatus('idle');
           activeTurnRef.current = null;
-          activeHandleRef.current = null;
         }
-        // If there IS a buffered tool call, executeBufferedToolCall is handling it.
       },
       () => {
         // Request failed or timed out
-        if (activeTurnRef.current === turn && !turn.isStopped) {
-          pushMessage({ role: 'assistant', text: COPILOT_UNEXPECTED_FAILURE_MESSAGE });
+        const isCurrentRequest = activeHandleRef.current?.requestId === handle.requestId;
+        if (isCurrentRequest) activeHandleRef.current = null;
+        if (isCurrentRequest && activeTurnRef.current === turn && !turn.isStopped) {
+          pushTurnResultMessage({
+            turn,
+            presentationStatus: 'not-applied',
+            text: COPILOT_UNEXPECTED_FAILURE_MESSAGE,
+          });
+          streamingMessageIdRef.current = null;
           setStatus('idle');
           activeTurnRef.current = null;
-          activeHandleRef.current = null;
         }
       },
     );
-  }, [chrome, pushMessage, transport]);
+  }, [chrome, pushMessage, pushTurnResultMessage, transport]);
 
   // -------------------------------------------------------------------------
   // Event handler: dispatch each ProductCopilotTurnEvent
@@ -571,28 +717,25 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
       case 'text_delta': {
         // Append streaming text to the model history
         turn.modelHistory = appendAssistantText(turn.modelHistory, event.data.text);
-        // Push the streaming text to the UI so the user sees it live
-        if (streamingMessageIdRef.current) {
-          // Update the existing streaming message
-          if (threadKey) {
-            copilot.updateCopilotThread(threadKey, (current) => {
-              if (!current) return { sessionId: copilotSessionId, messages: [] };
-              const messages = current.messages.map((m) =>
-                m.id === streamingMessageIdRef.current ? { ...m, text: m.text + event.data.text } : m,
-              );
-              return { ...current, messages };
-            });
-          }
-        } else {
-          // Create a new streaming assistant message
-          const msgId = newId();
-          streamingMessageIdRef.current = msgId;
-          if (threadKey) {
-            copilot.updateCopilotThread(threadKey, (current) => {
-              const base = current ?? { sessionId: copilotSessionId, messages: [] };
-              return { ...base, messages: [...base.messages, { id: msgId, role: 'assistant', text: event.data.text, ts: Date.now() }] };
-            });
-          }
+        // Stream the exact text while the visible message remains unresolved.
+        const messageId = streamingMessageIdRef.current ?? newId();
+        streamingMessageIdRef.current = messageId;
+        if (!turn.unresolvedMessageIds.includes(messageId)) {
+          turn.unresolvedMessageIds.push(messageId);
+        }
+        if (threadKey) {
+          copilot.updateCopilotThread(threadKey, (current) => {
+            const base = current ?? { sessionId: copilotSessionId, messages: [] };
+            return {
+              ...base,
+              messages: appendWorkingCopilotAssistantText({
+                messages: base.messages,
+                messageId,
+                text: event.data.text,
+                ts: Date.now(),
+              }),
+            };
+          });
         }
         break;
       }
@@ -622,9 +765,15 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
             void executeBufferedToolCall();
           } else {
             // tool-calls finish but no matching buffered call — visible failure
-            pushMessage({ role: 'assistant', text: 'Copilot requested an edit but the request was malformed. Nothing was applied.' });
+            pushTurnResultMessage({
+              turn,
+              presentationStatus: 'not-applied',
+              text: 'Copilot requested an edit but the request was malformed. Nothing was applied.',
+            });
+            streamingMessageIdRef.current = null;
             setStatus('idle');
             activeTurnRef.current = null;
+            activeHandleRef.current = null;
           }
         }
         // 'stop' → the terminal agent_turn_finished event follows
@@ -633,6 +782,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
 
       case 'agent_turn_finished':
         // Turn complete — finalize the streaming message and clean up
+        resolveTurnVisibleMessages(turn, 'complete');
         streamingMessageIdRef.current = null;
         setStatus('idle');
         activeTurnRef.current = null;
@@ -641,7 +791,12 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
 
       case 'agent_turn_error': {
         const message = normalizeAssistantText(event.data.message);
-        pushMessage({ role: 'assistant', text: message || COPILOT_UNEXPECTED_FAILURE_MESSAGE });
+        pushTurnResultMessage({
+          turn,
+          presentationStatus: 'not-applied',
+          text: message || COPILOT_UNEXPECTED_FAILURE_MESSAGE,
+        });
+        streamingMessageIdRef.current = null;
         setStatus('idle');
         activeTurnRef.current = null;
         activeHandleRef.current = null;
@@ -649,13 +804,26 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
       }
 
       case 'agent_turn_stopped':
-        // Server confirmed stop — but Bob already marked it stopped locally
+        // A server-originated stop remains visible if Bob did not already stop locally.
+        pushTurnResultMessage({
+          turn,
+          presentationStatus: 'stopped',
+          text: 'Stopped. Already-applied changes remain and can be undone.',
+        });
+        streamingMessageIdRef.current = null;
         setStatus('idle');
         activeTurnRef.current = null;
         activeHandleRef.current = null;
         break;
     }
-  }, [pushMessage, executeBufferedToolCall, threadKey, copilot, copilotSessionId]);
+  }, [
+    copilot,
+    copilotSessionId,
+    executeBufferedToolCall,
+    pushTurnResultMessage,
+    resolveTurnVisibleMessages,
+    threadKey,
+  ]);
 
   // -------------------------------------------------------------------------
   // Send (initial) and Stop
@@ -746,12 +914,14 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
       modelStepId: null,
       bufferedToolCall: null,
       modelHistory: appendUserMessage(emptyCopilotModelHistory(), prompt),
+      unresolvedMessageIds: [],
       undoOps: [],
       postApplySignature: null,
       stepCount: 1, // the initial request is step 1
       isStopped: false,
     };
     activeTurnRef.current = turn;
+    streamingMessageIdRef.current = null;
 
     setStatus('loading');
     setDraft('');
@@ -810,10 +980,15 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
     // Already-applied edits remain visible (session state unchanged)
     // Undo remains available (undoRef unchanged)
 
+    pushTurnResultMessage({
+      turn,
+      presentationStatus: 'stopped',
+      text: 'Stopped. Already-applied changes remain and can be undone.',
+    });
+    streamingMessageIdRef.current = null;
     setStatus('idle');
     activeTurnRef.current = null;
-    pushMessage({ role: 'assistant', text: 'Stopped. Already-applied changes remain and can be undone.' });
-  }, [pushMessage]);
+  }, [pushTurnResultMessage]);
 
   // -------------------------------------------------------------------------
   // Render
@@ -859,6 +1034,19 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
               >
                 {m.text}
               </div>
+
+              {m.role === 'assistant' && m.presentationStatus ? (
+                <div
+                  className="body-s"
+                  role="status"
+                  style={{
+                    color: 'var(--color-system-gray)',
+                    marginTop: 'var(--space-1)',
+                  }}
+                >
+                  {COPILOT_MESSAGE_PRESENTATION_LABELS[m.presentationStatus]}
+                </div>
+              ) : null}
 
             {m.hasUndoAction && undoAvailable && m.undoToken === activeUndoToken ? (
               <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 'var(--space-1)' }}>

@@ -107,9 +107,11 @@ async function testRomaOwnsBuilderPublicationChrome(): Promise<void> {
   const widgetsSource = await readRoute('components/widgets-domain.tsx');
   const builderRoute = await readRoute('app/(authed)/builder/[instanceId]/page.tsx');
   const builderLandingRoute = await readRoute('app/(authed)/builder/page.tsx');
-  const topDrawer = await readFile(new URL('../../bob/components/TopDrawer.tsx', import.meta.url), 'utf8');
+  const builderApp = await readFile(new URL('../../bob/components/BuilderApp.tsx', import.meta.url), 'utf8');
   const bobBoot = await readFile(new URL('../../bob/lib/session/useSessionBoot.ts', import.meta.url), 'utf8');
   const bobCss = await readFile(new URL('../../bob/app/bob_app.css', import.meta.url), 'utf8');
+  const bobSessionTypes = await readFile(new URL('../../bob/lib/session/sessionTypes.ts', import.meta.url), 'utf8');
+  const builderHostProtocol = await readRoute('lib/builder-host-protocol.ts');
   const copyDialog = await readRoute('components/widget-copy-code-dialog.tsx');
   const clipboard = await readRoute('lib/copy-to-clipboard.ts');
   const publicationControls = await readRoute('components/widget-publication-controls.tsx');
@@ -123,9 +125,19 @@ async function testRomaOwnsBuilderPublicationChrome(): Promise<void> {
 
   assert.match(builderSource, /className="page__header"/);
   assert.match(builderSource, /<WidgetPublicationControls/);
+  assert.match(widgetsSource, /showingInitialWidgetsLoading \|\| \(displayedInstances\.length > 0/);
+  assert.match(widgetsSource, /<td className="body-m" colSpan=\{5\}>[\s\S]*<span role="status">Loading widgets\.\.\.<\/span>/);
   assert.match(builderSource, /activeInstanceId \? 'Loading widget…' : 'Untitled widget'/);
   assert.match(builderSource, /activeInstanceId \? 'Loading publication status…' : 'Save to create this widget'/);
-  assert.match(builderSource, /data\.type === 'bob:host-action'/);
+  assert.match(builderSource, /className="roma-nav-trigger diet-button"/);
+  assert.match(builderSource, /onClick=\{\(\) => openNavigation\(navigationButtonRef\.current\)\}/);
+  assert.match(builderSource, /readBobSaveControlPhase\(\{/);
+  assert.match(builderSource, /bobSaveControlPhase === 'save'/);
+  assert.match(builderSource, /bobSaveControlPhase === 'saving'/);
+  assert.match(builderSource, /bobSaveControlPhase === 'saved'/);
+  assert.match(builderSource, /targetWindow\.postMessage\(createHostSaveRequestMessage\(\), bobBaseUrl\)/);
+  assertBefore(builderSource, /<WidgetPublicationControls/, /bobSaveControlPhase === 'save'/);
+  assert.doesNotMatch(builderSource, /bob:host-action|open-navigation/);
   assert.doesNotMatch(builderSource, /data\.action === 'copy-code'/);
   assert.doesNotMatch(builderSource, /returnTo|returnLabel|data\.action === 'return'/);
   assert.doesNotMatch(builderSource, /<WidgetCopyCodeDialog/);
@@ -134,14 +146,18 @@ async function testRomaOwnsBuilderPublicationChrome(): Promise<void> {
   assert.doesNotMatch(builderSource, />Copy script</);
   assert.doesNotMatch(builderSource, />Open public widget</);
 
-  assert.match(topDrawer, /className="topdrawer"/);
-  assert.doesNotMatch(topDrawer, /Open public widget|>More<|>Copy code<|publishStatus|publishedAt|publicActions/);
-  assert.doesNotMatch(topDrawer, />Copy URL</);
-  assert.doesNotMatch(topDrawer, />Copy embed</);
-  assert.doesNotMatch(topDrawer, />Copy script</);
-  assert.doesNotMatch(topDrawer, /navigator\.clipboard|document\.execCommand/);
-  assert.match(topDrawer, /requestHostAction\('open-navigation'\)/);
-  assert.doesNotMatch(topDrawer, /requestHostAction\('return'\)|returnLabel|topdrawer-return/);
+  assert.match(builderApp, /className="builder-app"/);
+  assert.match(builderApp, /className="editor-content"/);
+  assert.match(builderApp, /className="tooldrawer-open diet-button"/);
+  assert.match(builderApp, /aria-label="Open tools"/);
+  assert.doesNotMatch(builderApp, /TopDrawer|topdrawer|open-navigation/);
+  assert.doesNotMatch(bobCss, /topdrawer/);
+  assert.match(bobCss, /\.editor-content > \.tooldrawer-open/);
+  assert.match(bobSessionTypes, /type: 'bob:save-control-state'/);
+  assert.match(bobSessionTypes, /type: 'host:save-request'/);
+  assert.doesNotMatch(bobSessionTypes, /bob:host-action|open-navigation/);
+  assert.match(builderHostProtocol, /args\.eventOrigin !== args\.bobOrigin/);
+  assert.match(builderHostProtocol, /args\.eventSource !== args\.iframeWindow/);
   assert.doesNotMatch(bobBoot, /publicActions|publishStatus|publishedAt|sourceUpdatedAt/);
   assert.doesNotMatch(bobBoot, /coreui\.errors\.builder\.publicActions\.invalid/);
   assert.doesNotMatch(bobBoot, /returnLabel/);
@@ -228,7 +244,7 @@ async function testWidgetsListComposition(): Promise<void> {
   assert.match(renameRoute, /updatedAt: result\.value\.updatedAt/);
   assert.match(source, /displayName: resolvedDisplayName, updatedAt: payload\.updatedAt/);
   assert.match(publicationControls, /checked=\{status\.published\}/);
-  assert.match(publicationControls, /changeStatus\(event\.target\.checked \? 'published' : 'unpublished'\)/);
+  assert.match(publicationControls, /requestStatusChange\(event\.target\.checked \? 'published' : 'unpublished'\)/);
   assert.match(publicationControls, /className="roma-widget-publish-actions"/);
   assert.match(publicationControls, />Copy code<\/span>/);
   assert.match(publicationControls, /<WidgetCopyCodeDialog/);
@@ -362,6 +378,7 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
 
   for (const relativePath of [
     'components/roma-account-notice-modal.tsx',
+    'components/roma-command-confirmation-dialog.tsx',
     'components/roma-unsaved-changes-dialog.tsx',
     'components/roma-upsell-dialog.tsx',
     'components/assets-domain.tsx',
@@ -387,6 +404,7 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
 
   for (const relativePath of [
     'components/roma-account-notice-modal.tsx',
+    'components/roma-command-confirmation-dialog.tsx',
     'components/roma-unsaved-changes-dialog.tsx',
   ]) {
     const source = await readRoute(relativePath);

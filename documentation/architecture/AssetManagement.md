@@ -246,6 +246,13 @@ Tokyo-worker owns that exact delete result. Roma trusts it and returns it to the
 caller without independently proving the account coordinate, asset reference,
 or success shape again.
 
+Before Roma sends this existing Delete command, it opens the shared
+consequential-command confirmation for the exact selected filename and states
+that referencing Widgets may stop displaying the asset. Opening, Cancel, and
+backdrop make no request; one explicit `Delete asset` confirmation invokes the
+same route once. Pending state, visible failure, Tokyo ownership, and the exact
+result contract remain unchanged.
+
 References from existing widget instances remain saved widget data. A user can
 repair or replace those references by editing the instance in Bob and saving
 through Roma.

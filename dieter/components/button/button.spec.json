@@ -4,6 +4,7 @@
   "attributes": {
     "size": { "enum": ["small", "medium", "large"], "required": true },
     "type": { "enum": ["primary", "secondary", "tertiary", "quaternary"], "required": true },
+    "state": { "enum": ["success"], "optional": true },
     "ariaLabel": { "optional": true },
     "label": { "optional": true },
     "iconStart": { "optional": true },
@@ -94,6 +95,26 @@
         "type": "primary",
         "label": "Saving…",
         "loading": true,
+        "disabled": true
+      }
+    },
+    {
+      "id": "button-success",
+      "sizes": ["small", "medium", "large"],
+      "types": ["primary", "secondary", "tertiary", "quaternary"],
+      "spec": [
+        "diet-button",
+        "data-size='{{size}}'",
+        "data-type='{{type}}'",
+        "data-state='success'",
+        "caller-owned result label"
+      ],
+      "context": {
+        "size": "medium",
+        "type": "primary",
+        "state": "success",
+        "label": "Saved",
+        "iconStart": "checkmark",
         "disabled": true
       }
     }

@@ -1,4 +1,4 @@
-<button class="diet-button" data-size="{{size}}" data-type="{{type}}" type="button"{{#if loading}} data-loading="true" aria-busy="true"{{/if}}{{#if ariaLabel}} aria-label="{{ariaLabel}}"{{/if}}{{#if disabled}} disabled{{/if}}{{#if tabIndex}} tabindex="{{tabIndex}}"{{/if}}{{#if path}} data-path="{{path}}"{{/if}}>
+<button class="diet-button" data-size="{{size}}" data-type="{{type}}"{{#if state}} data-state="{{state}}"{{/if}} type="button"{{#if loading}} data-loading="true" aria-busy="true"{{/if}}{{#if ariaLabel}} aria-label="{{ariaLabel}}"{{/if}}{{#if disabled}} disabled{{/if}}{{#if tabIndex}} tabindex="{{tabIndex}}"{{/if}}{{#if path}} data-path="{{path}}"{{/if}}>
   {{#if loading}}
   <span class="diet-spinner" aria-hidden="true"></span>
   {{/if}}

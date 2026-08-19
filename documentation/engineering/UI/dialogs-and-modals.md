@@ -82,6 +82,7 @@ a dialog seems low-risk.
 | Roma account tier-drop notice | Never | Never | Open settings or persisted Dismiss resolves it |
 | Roma shared plan-limit/upsell Popup | Close | Close | Denied action was not applied; system-owned Upgrade scaffold or dismiss |
 | Roma widget public code | Close | Close | Close; read/copy only, no work is mutated |
+| Roma consequential command confirmation | Never | Cancel | Cancel makes no command; the exact command-labelled confirmation invokes the existing command once |
 | DevStudio token editor | Close if unchanged; dirty opens discard confirmation | Never | Cancel follows the dirty rule; Confirm Commit persists |
 | Roma unsaved Builder/defaults confirmation | Keep editing | Never | Keep editing is safe; Discard is explicit |
 

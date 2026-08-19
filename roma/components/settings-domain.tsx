@@ -7,18 +7,21 @@ import { resolvePersonLabel } from '../lib/person-profile';
 import { useRomaAccountApi } from './account-api';
 import { AccountLocaleSettingsCard } from './account-locale-settings-card';
 import { DieterDropdownActions } from './dieter-dropdown-actions';
+import { RomaCommandConfirmationDialog } from './roma-command-confirmation-dialog';
 import { useRomaAccountContext } from './roma-account-context';
 
+type AccountMember = {
+  userId: string;
+  role: string;
+  profile: {
+    givenName: string | null;
+    familyName: string | null;
+    primaryEmail: string;
+  } | null;
+};
+
 type AccountMembersResponse = {
-  members: Array<{
-    userId: string;
-    role: string;
-    profile: {
-      givenName: string | null;
-      familyName: string | null;
-      primaryEmail: string;
-    } | null;
-  }>;
+  members: AccountMember[];
 };
 
 const SETTINGS_REASON_COPY: Record<string, string> = {
@@ -59,6 +62,7 @@ export function SettingsDomain() {
   const [nextOwnerUserId, setNextOwnerUserId] = useState('');
   const [ownerTransferLoading, setOwnerTransferLoading] = useState(false);
   const [ownerTransferError, setOwnerTransferError] = useState<string | null>(null);
+  const [ownerTransferConfirmationCandidate, setOwnerTransferConfirmationCandidate] = useState<AccountMember | null>(null);
 
   const loadMembers = useCallback(async () => {
     setMembersLoading(true);
@@ -92,15 +96,15 @@ export function SettingsDomain() {
     }
   }, [activeAccount?.role, loadMembers]);
 
-  const transferOwner = useCallback(async () => {
-    if (!activeAccountId || !nextOwnerUserId) return;
+  const transferOwner = useCallback(async (ownerUserId: string) => {
+    if (!activeAccountId) return;
     setOwnerTransferLoading(true);
     setOwnerTransferError(null);
     try {
       const response = await accountApi.fetchRaw(`/api/account/owner-transfer`, {
         method: 'POST',
         headers: accountApi.buildHeaders({ contentType: 'application/json' }),
-        body: JSON.stringify({ nextOwnerUserId }),
+        body: JSON.stringify({ nextOwnerUserId: ownerUserId }),
       });
       const payload = (await response.json().catch(() => null)) as {
         error?: unknown;
@@ -115,11 +119,12 @@ export function SettingsDomain() {
     } finally {
       setOwnerTransferLoading(false);
     }
-  }, [accountApi, activeAccountId, nextOwnerUserId]);
+  }, [accountApi, activeAccountId]);
 
   const canManageAccount = activeAccount.role === 'owner';
   const canEditLocales = activeAccount.role === 'owner' || activeAccount.role === 'admin';
   const ownerCandidates = members?.members.filter((member) => member.userId !== data.user.id && member.role !== 'owner') ?? [];
+  const selectedOwnerCandidate = ownerCandidates.find((member) => member.userId === nextOwnerUserId) ?? null;
 
   return (
     <>
@@ -177,8 +182,8 @@ export function SettingsDomain() {
             data-size="medium"
             data-type="primary"
             type="button"
-            onClick={() => void transferOwner()}
-            disabled={!canManageAccount || ownerTransferLoading || !nextOwnerUserId}
+            onClick={() => setOwnerTransferConfirmationCandidate(selectedOwnerCandidate)}
+            disabled={!canManageAccount || ownerTransferLoading || !selectedOwnerCandidate}
           >
             <span className="diet-button__label">{ownerTransferLoading ? 'Transferring…' : 'Transfer ownership'}</span>
           </button>
@@ -187,6 +192,21 @@ export function SettingsDomain() {
         {ownerCandidates.length === 0 && canManageAccount ? <p className="body-s" role="status">Add another member before transferring ownership.</p> : null}
         {ownerTransferError ? <p className="body-m" role="alert">{ownerTransferError}</p> : null}
       </section>
+
+      <RomaCommandConfirmationDialog
+        open={ownerTransferConfirmationCandidate !== null}
+        title="Transfer account ownership?"
+        body={ownerTransferConfirmationCandidate
+          ? `“${resolvePersonLabel(ownerTransferConfirmationCandidate.profile, ownerTransferConfirmationCandidate.userId)}” will become Owner of this account, and you will become Admin.`
+          : ''}
+        confirmLabel="Transfer ownership"
+        onCancel={() => setOwnerTransferConfirmationCandidate(null)}
+        onConfirm={() => {
+          const candidate = ownerTransferConfirmationCandidate;
+          setOwnerTransferConfirmationCandidate(null);
+          if (candidate) void transferOwner(candidate.userId);
+        }}
+      />
 
     </>
   );

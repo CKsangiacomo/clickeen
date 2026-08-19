@@ -9,6 +9,7 @@ import { DieterDropdownActions } from './dieter-dropdown-actions';
 import { parseApiErrorReason } from './same-origin-json';
 import { useRomaAccountContext } from './roma-account-context';
 import { RomaAccountNoticeModal } from './roma-account-notice-modal';
+import { RomaCommandConfirmationDialog } from './roma-command-confirmation-dialog';
 import { RomaDomainErrorBoundary } from './roma-domain-error-boundary';
 import { RomaShell } from './roma-shell';
 
@@ -234,6 +235,7 @@ export function AssetsDomain({
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [deletingAssetRef, setDeletingAssetRef] = useState<string | null>(null);
+  const [deleteConfirmationAsset, setDeleteConfirmationAsset] = useState<AccountAssetRecord | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [singleUploadError, setSingleUploadError] = useState<string | null>(null);
   const [singleUploadBusy, setSingleUploadBusy] = useState(false);
@@ -313,9 +315,9 @@ export function AssetsDomain({
   const handleDeleteAsset = useCallback(
     (asset: AccountAssetRecord) => {
       if (!accountId) return;
-      void deleteAsset(asset);
+      setDeleteConfirmationAsset(asset);
     },
-    [accountId, deleteAsset],
+    [accountId],
   );
 
   const uploadSingle = useCallback(
@@ -702,6 +704,20 @@ export function AssetsDomain({
           </footer>
         </dialog>
       ) : null}
+      <RomaCommandConfirmationDialog
+        open={Boolean(deleteConfirmationAsset)}
+        title="Delete this asset?"
+        body={deleteConfirmationAsset
+          ? `Deleting “${deleteConfirmationAsset.filename}” removes the asset. Widgets that use it may stop displaying it. This cannot be undone.`
+          : ''}
+        confirmLabel="Delete asset"
+        onCancel={() => setDeleteConfirmationAsset(null)}
+        onConfirm={() => {
+          const asset = deleteConfirmationAsset;
+          setDeleteConfirmationAsset(null);
+          if (asset) void deleteAsset(asset);
+        }}
+      />
     </>
   );
 }

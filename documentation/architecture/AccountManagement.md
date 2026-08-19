@@ -197,6 +197,14 @@ Rules:
 Owner transfer is a current account operation and must operate against
 `users.role`, not membership rows.
 
+Roma requires an explicit click confirmation before Remove member and Transfer
+ownership send their existing commands. The dialog names the exact selected
+person; Remove states that account access will be lost, and Transfer states that
+the recipient becomes Owner while the current Owner becomes Admin. Opening,
+Cancel, and backdrop send no command; one Confirm sends the existing Roma route
+once. This changes no Berlin role, membership, invitation, or ownership
+authority.
+
 ## Login And Connectors
 
 Login is not connector authorization.
