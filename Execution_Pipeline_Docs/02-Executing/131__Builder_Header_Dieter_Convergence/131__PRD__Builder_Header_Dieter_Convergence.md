@@ -29,8 +29,11 @@ timestamp on any screen.
 ## 3. Changes
 
 - `roma/components/builder-domain.tsx`: the `roma-builder-header` div is
-  replaced by `page__header` — `h1.heading-2` instance label, optional
-  loading `p`, publication controls inside `page__actions`.
+  replaced by `page__header` — `h1` instance label in the standard domain
+  register (`heading-6`, matching every settings/domain header in the
+  product), optional loading `p`, publication controls inside
+  `page__actions`. An initial `heading-2` page-title register was shipped
+  briefly and corrected to the domain register after owner review.
 - `roma/app/roma.css`: every `.roma-builder-header` rule is deleted; one
   composition override block (`.roma-builder-page .page__header`) sets band
   alignment/padding/surface beside the page's existing full-bleed overrides;

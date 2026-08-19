@@ -1292,7 +1292,7 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
         </div>
       ) : null}
       <header className="page__header">
-        <h1 className="heading-2">
+        <h1 className="heading-6">
           {publicationInstance?.displayName || (activeInstanceId ? 'Loading widget…' : 'Untitled widget')}
         </h1>
         {!publicationInstance ? (

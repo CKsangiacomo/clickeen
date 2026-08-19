@@ -102,8 +102,9 @@ operation.
 
 When Roma hosts an active Bob session, Roma's `page` contains the full-canvas
 Builder plus a slim Roma-owned header composed from the frozen Dieter
-`page__header` part (`h1` instance label plus `page__actions` publication
-controls; no border, shadow, or local shell restatement). It carries the
+`page__header` part (`h1.heading-6` instance label in the standard domain
+register plus `page__actions` publication controls; no border, shadow, or
+local shell restatement). It carries the
 instance label and the same Roma publication control used by Widgets
 inventory. `TopDrawer`
 is Bob-owned editor chrome and contains editing tools, dirty state, and Save
