@@ -22,13 +22,32 @@ test.describe('Roma Builder authenticated smoke', () => {
 
     const bobIframe = page.locator('iframe[title="Bob Builder"]');
     const bobFrame = page.frameLocator('iframe[title="Bob Builder"]');
-    await expect(bobFrame.locator('.topdrawer')).toBeVisible({ timeout: 20_000 });
+    await expect(bobFrame.locator('.tooldrawer')).toBeVisible({ timeout: 20_000 });
     await expect(bobFrame.getByRole('radio', { name: 'Manual' })).toBeVisible({ timeout: 20_000 });
     await expect(bobFrame.getByText('Content').first()).toBeVisible();
-    await expect(page.locator('header.page__header')).toBeVisible({ timeout: 30_000 });
-    await expect(page.locator('header.page__header h1.heading-2')).toBeVisible();
-    await expect(page.locator('header.page__header .roma-page-heading .diet-badge')).toBeVisible();
-    await expect(page.locator('header.page__header .roma-page-heading .diet-toggle')).toBeVisible();
+    const builderHeader = page.locator('header.page__header[data-width="full"]');
+    await expect(builderHeader).toBeVisible({ timeout: 30_000 });
+    await expect(builderHeader.locator(':scope > .page__heading > h1.heading-2')).toBeVisible();
+    await expect(builderHeader.locator(':scope > .page__heading .diet-badge')).toBeVisible();
+    await expect(builderHeader.locator(':scope > .page__heading .diet-toggle')).toBeVisible();
+    const [builderHeadingBox, builderActionsBox, builderPageBox, builderHeaderBox] = await Promise.all([
+      builderHeader.locator(':scope > .page__heading').boundingBox(),
+      builderHeader.locator(':scope > .page__actions').boundingBox(),
+      page.locator('main.page').boundingBox(),
+      builderHeader.boundingBox(),
+    ]);
+    expect(builderHeadingBox).not.toBeNull();
+    expect(builderActionsBox).not.toBeNull();
+    expect(builderPageBox).not.toBeNull();
+    expect(builderHeaderBox).not.toBeNull();
+    expect(
+      Math.abs(
+        (builderHeadingBox?.y ?? 0) + (builderHeadingBox?.height ?? 0) / 2
+          - ((builderActionsBox?.y ?? 0) + (builderActionsBox?.height ?? 0) / 2),
+      ),
+    ).toBeLessThanOrEqual(1);
+    expect(builderHeaderBox?.x).toBe(builderPageBox?.x);
+    expect(builderHeaderBox?.width).toBe(builderPageBox?.width);
     await expect(bobFrame.locator('section.workspace[data-widget-ready="true"]')).toBeVisible({
       timeout: 30_000,
     });
@@ -74,10 +93,43 @@ test.describe('Roma Builder authenticated smoke', () => {
     await bobFrame.locator('.builder-app').screenshot({ path: testInfo.outputPath('bob-editor.png') });
 
     await page.setViewportSize({ width: 844, height: 390 });
-    await bobFrame.getByRole('button', { name: 'Open Clickeen navigation' }).click();
+    await page.getByRole('button', { name: 'Open navigation' }).click();
     await expect(page.locator('aside.left-nav')).toBeVisible();
     await expect(page.locator('aside.left-nav a.roma-nav__link').first()).toBeFocused();
     await page.keyboard.press('Escape');
     await expect(page.locator('aside.left-nav')).toBeHidden();
+  });
+
+  test('uses the same centered contained header grammar on an ordinary Roma domain', async ({ page }) => {
+    await page.goto('/profile');
+
+    const header = page.locator('header.page__header[data-width="contained"]');
+    const heading = header.locator(':scope > .page__heading');
+    const actions = header.locator(':scope > .page__actions');
+    await expect(header).toBeVisible();
+    await expect(heading.getByRole('heading', { name: 'User Settings' })).toBeVisible();
+    await expect(actions.locator('.diet-button')).toHaveCount(2);
+    expect(await actions.locator('.diet-button').evaluateAll((buttons) => (
+      buttons.map((button) => button.getAttribute('data-size'))
+    ))).toEqual(['large', 'large']);
+
+    const [headingBox, actionsBox, contentBox, headerBox] = await Promise.all([
+      heading.boundingBox(),
+      actions.boundingBox(),
+      page.locator('main.page > .page__content').boundingBox(),
+      header.boundingBox(),
+    ]);
+    expect(headingBox).not.toBeNull();
+    expect(actionsBox).not.toBeNull();
+    expect(contentBox).not.toBeNull();
+    expect(headerBox).not.toBeNull();
+    expect(
+      Math.abs(
+        (headingBox?.y ?? 0) + (headingBox?.height ?? 0) / 2
+          - ((actionsBox?.y ?? 0) + (actionsBox?.height ?? 0) / 2),
+      ),
+    ).toBeLessThanOrEqual(1);
+    expect(headerBox?.x).toBe(contentBox?.x);
+    expect(headerBox?.width).toBe(contentBox?.width);
   });
 });

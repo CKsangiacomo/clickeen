@@ -32,8 +32,11 @@ The Bob UI Native husk and the local widget-authoring workspace are removed.
 ## Runtime Layout
 
 - The actual app uses Dieter's
-  `main-container > left-nav + page` source directly. Route content uses
-  `page__header`, `page__actions`, and `page__content`.
+  `main-container > left-nav + page` source directly. Every route uses the
+  exact `page__header > page__heading + page__actions` grammar with the
+  `contained` width, followed by `page__content`. The existing Compact
+  navigation trigger is the first item in `page__heading`; DevStudio does not
+  create a second Compact header.
 - Narrow landscape and portrait both use the same shared inset navigation
   drawer; DevStudio does not replace the shell with a separate portrait screen.
 - `src/html/` contains static HTML fragments bundled into the static Pages app.

@@ -7,7 +7,21 @@
   "taxonomy": {
     "root": "main-container",
     "directChildren": ["left-nav", "page"],
-    "pageParts": ["page__header", "page__actions", "page__content"]
+    "pageParts": ["page__header", "page__heading", "page__actions", "page__content"],
+    "pageHeaderDirectChildren": ["page__heading", "page__actions"]
+  },
+  "width": {
+    "attribute": "data-width",
+    "values": ["contained", "full"],
+    "contained": {
+      "maxInlineSize": "80rem",
+      "marginInline": "auto"
+    },
+    "full": {
+      "maxInlineSize": "none",
+      "marginInline": "0",
+      "padding": "var(--space-2) var(--layout-page-padding)"
+    }
   },
   "state": {
     "navigationOpen": {

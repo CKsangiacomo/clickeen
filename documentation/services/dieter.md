@@ -73,11 +73,19 @@ Authenticated edits commit back to that same foundation token file through
 DevStudio's validated GitHub write path.
 
 The shared application shell keeps the exact
-`main-container > left-nav + page` taxonomy. In Full mode the navigation is a
+`main-container > left-nav + page` taxonomy. Its Page header has one exact
+`page__header > page__heading + page__actions` grammar. The heading part owns
+the leading layout for caller-supplied navigation, `h1.heading-2`, filter, or
+state content; the actions part owns the trailing layout for caller-supplied
+commands. Dieter centers those parts vertically on the desktop row and stacks
+and leading-aligns them in Compact mode. Callers select only the bounded
+`contained` or `full` width modes: contained uses the centered `80rem` Page
+maximum, while full removes it for a deliberately full-width canvas. Width
+never changes the inner grammar, command, state, or copy. In Full mode the navigation is a
 foreground panel inset by `--space-2` on all sides over the application
 muted backdrop. It is `12rem` wide and uses the shared surface, no border,
 `3xl` radius, and floating shadow. The page header and content share one
-centered `80rem` maximum width. Full Page padding is `--space-4`; header and
+centered `80rem` maximum width in contained mode. Full Page padding is `--space-4`; header and
 content separation use `--space-4`. Compact Page padding is `--space-4`;
 header and content separation use `--space-3`. In Compact mode the same panel
 DOM becomes an inset overlay over a full-width page, retains its separate

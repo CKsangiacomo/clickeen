@@ -52,15 +52,22 @@ and tablets in either orientation, with the same compact navigation/workspace
 on narrow mobile landscape and portrait. Retina/4K density governs sharpness,
 not layout class. Roma directly consumes Dieter's
 `main-container > left-nav + page` source. The shared Page provides
-`page__header`, `page__actions`, and `page__content`; Roma owns the navigation
+`page__header > page__heading + page__actions` and `page__content`; Roma owns the navigation
 tree, page content, domain composition, commands, and drawer state. The same
 navigation DOM owns Full and Compact modes, with Escape/scrim close and focus
 return in Compact mode. At least `600px` of usable width and height is Full; a
 smaller dimension is Compact. Full presents the navigation as an 8px-inset
 foreground panel; Compact presents that same panel as an 8px-inset overlay over
 the full-width page. The shared Full panel is `16rem` wide, borderless, and uses the
-shared surface, `3xl` radius, and Dieter elevation. Page headers and domain
-content align to the same centered `80rem` maximum width. Domain screens are
+shared surface, `3xl` radius, and Dieter elevation. Every Roma domain header
+uses one stateless `RomaPageHeader` composition. Its heading part always
+contains the existing navigation trigger, `h1.heading-2`, and optional
+caller-owned filter or state; its actions part contains only caller-owned
+commands. Ordinary domain headers and content use Dieter's `contained` width
+and align to the same centered `80rem` maximum. Right-side page commands use
+large Dieter Button geometry; navigation and heading-context controls retain
+their medium geometry. The component owns no command, permission, state, copy,
+or route behavior. Domain screens are
 not replaced by mobile variants. Roma uses the Dieter Page rhythm directly.
 Its navigation rows use `--control-size-lg`. Primary modules use `--space-3`
 block padding and `--space-2` internal gaps, while secondary cards use
@@ -68,11 +75,13 @@ block padding and `--space-2` internal gaps, while secondary cards use
 remains roomier. These are direct uses of the
 existing structural spacing scale, not a second density system.
 
-The active `/builder/:instanceId` and `/builder/new/:widgetType` routes are the
-explicit editor exceptions. Their pages omit the ordinary Roma Page header and
-give the remaining padding-free, unconstrained body to Bob. Roma renders one
-slim header above the iframe for instance identity and Roma-owned publication
-controls. That Roma header is the only Builder header. Bob owns Save truth and
+The active `/builder/:instanceId` and `/builder/new/:widgetType` routes give
+the padding-free, unconstrained body below the header to Bob. Their one Roma
+header uses the same `RomaPageHeader` grammar and control roles as ordinary
+domains, selecting only Dieter's `full` width so its outer width follows the
+editor canvas. Its standard Roma/Dieter inline inset remains independent of
+Bob's tighter internal workspace inset. That Roma header is the only Builder
+header. Bob owns Save truth and
 borrows the far-right Roma action slot only while its exact presentation phase
 is `save`, `saving`, or `saved`; Roma renders that phase and sends the one
 host-Save intent but does not infer dirty state or persistence success. Compact

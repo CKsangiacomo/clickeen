@@ -26,6 +26,7 @@ import {
   resolveTargetPlan,
   type UpsellPresentation,
 } from './roma-upsell-dialog';
+import { RomaPageHeader } from './roma-page-header';
 import { useRomaShellActions } from './roma-shell';
 import { WidgetPublicationControls, WidgetPublicationState } from './widget-publication-controls';
 import {
@@ -1314,8 +1315,10 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
           </div>
         </div>
       ) : null}
-      <header className="page__header">
-        <div className="roma-page-heading">
+      <RomaPageHeader
+        width="full"
+        title={publicationInstance?.displayName || (activeInstanceId ? 'Loading widget…' : 'Untitled widget')}
+        navigationTrigger={(
           <button
             ref={navigationButtonRef}
             className="roma-nav-trigger diet-button"
@@ -1334,26 +1337,23 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
               height={20}
             />
           </button>
-          <h1 className="heading-2">
-            {publicationInstance?.displayName || (activeInstanceId ? 'Loading widget…' : 'Untitled widget')}
-          </h1>
-          {publicationInstance ? (
-            <WidgetPublicationState
-              instance={publicationInstance}
-              dirty={bobIsDirty}
-              onPendingChange={handlePublicationPendingChange}
-              onInstanceChange={(next) => {
-                setPublicationInstance(next);
-              }}
-            />
-          ) : (
-            <p className="body-xs">
-              {activeInstanceId ? 'Loading publication status…' : 'Save to create this widget'}
-            </p>
-          )}
-        </div>
-        {publicationInstance || bobSaveControlPhase !== 'hidden' ? (
-          <div className="page__actions">
+        )}
+        headingExtras={publicationInstance ? (
+          <WidgetPublicationState
+            instance={publicationInstance}
+            dirty={bobIsDirty}
+            onPendingChange={handlePublicationPendingChange}
+            onInstanceChange={(next) => {
+              setPublicationInstance(next);
+            }}
+          />
+        ) : (
+          <p className="body-xs">
+            {activeInstanceId ? 'Loading publication status…' : 'Save to create this widget'}
+          </p>
+        )}
+        actions={publicationInstance || bobSaveControlPhase !== 'hidden' ? (
+          <>
             {publicationInstance ? (
               <WidgetPublicationControls
                 instance={publicationInstance}
@@ -1410,9 +1410,9 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
                 <span className="diet-button__label">Saved</span>
               </button>
             ) : null}
-          </div>
-        ) : null}
-      </header>
+          </>
+        ) : undefined}
+      />
       <iframe
         ref={iframeRef}
         src={bobSrc}

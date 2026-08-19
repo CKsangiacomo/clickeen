@@ -15,6 +15,7 @@ import {
 import type { RomaDomainKey } from '../lib/domains';
 import { RomaAccountBoundary } from './roma-account-context';
 import { RomaNav } from './roma-nav';
+import { RomaPageHeader } from './roma-page-header';
 
 type RomaShellProps = {
   activeDomain: RomaDomainKey;
@@ -163,14 +164,13 @@ export function RomaShell({
           />
           {!fullCanvas && !pageHeader ? renderNavigationTrigger(true) : null}
           {!fullCanvas && pageHeader ? (
-            <header className="page__header">
-              <div className="roma-page-heading">
-                {renderNavigationTrigger()}
-                <h1 className="heading-2">{title}</h1>
-                {headerControls}
-              </div>
-              {headerRight ? <div className="page__actions">{headerRight}</div> : null}
-            </header>
+            <RomaPageHeader
+              width="contained"
+              title={title}
+              navigationTrigger={renderNavigationTrigger()}
+              headingExtras={headerControls}
+              actions={headerRight}
+            />
           ) : null}
           <section className="page__content">
             <RomaAccountBoundary>{children}</RomaAccountBoundary>

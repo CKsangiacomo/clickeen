@@ -248,10 +248,6 @@ menuButton.setAttribute('aria-expanded', 'false');
 menuButton.innerHTML =
   '<span class="diet-icon" data-size="16" aria-hidden="true" data-icon="line.3.horizontal.decrease.circle"></span>';
 
-const compactBar = document.createElement('header');
-compactBar.className = 'devstudio-compact-bar';
-compactBar.append(menuButton);
-
 const scrim = document.createElement('button');
 scrim.type = 'button';
 scrim.dataset.navigationScrim = '';
@@ -259,7 +255,7 @@ scrim.tabIndex = -1;
 scrim.setAttribute('aria-label', 'Close navigation');
 
 shell.append(sidebar, main);
-main.append(compactBar, scrim);
+main.append(scrim);
 appRoot.append(shell);
 
 const navHeader = document.createElement('header');
@@ -800,7 +796,7 @@ function renderNotFound(slug: string): DocumentFragment {
   const fragment = document.createDocumentFragment();
   const article = document.createElement('article');
   article.className = 'stack';
-  article.innerHTML = `<h1 class="heading-2">Missing</h1><p class="body-s">Could not load \`${slug}\`.</p>`;
+  article.innerHTML = `<p class="body-s">Could not load \`${slug}\`.</p>`;
   fragment.append(article);
   return fragment;
 }
@@ -835,15 +831,20 @@ function wrapWithPageChrome(fragment: DocumentFragment, title: string): Document
 
   const header = document.createElement('header');
   header.className = 'page__header';
+  header.dataset.width = 'contained';
+
+  const heading = document.createElement('div');
+  heading.className = 'page__heading';
+  heading.append(menuButton);
 
   if (headingElement) {
     headingElement.parentElement?.removeChild(headingElement);
-    header.append(headingElement);
+    heading.append(headingElement);
   } else {
-    const heading = document.createElement('h1');
-    heading.className = 'heading-2';
-    heading.textContent = title;
-    header.append(heading);
+    const fallbackHeading = document.createElement('h1');
+    fallbackHeading.className = 'heading-2';
+    fallbackHeading.textContent = title;
+    heading.append(fallbackHeading);
   }
   const declaredActions = nodes.find(
     (node): node is HTMLElement =>
@@ -858,7 +859,7 @@ function wrapWithPageChrome(fragment: DocumentFragment, title: string): Document
     actions.className = 'page__actions';
     actions.hidden = true;
   }
-  header.append(actions);
+  header.append(heading, actions);
 
   const content = document.createElement('div');
   content.className = 'page__content';
@@ -868,9 +869,9 @@ function wrapWithPageChrome(fragment: DocumentFragment, title: string): Document
       return;
     }
 
-  if (skipNodes.has(node)) {
-    return;
-  }
+    if (skipNodes.has(node)) {
+      return;
+    }
 
     if (node instanceof HTMLStyleElement) {
       content.append(node);
@@ -975,8 +976,10 @@ function renderFromHash() {
 
   const page = showcaseIndex.get(pagePath);
   if (!page) {
+    const wrapped = wrapWithPageChrome(renderNotFound(pagePath), 'Missing');
     destroyDieterComponents(main);
-    main.replaceChildren(compactBar, scrim, renderNotFound(pagePath));
+    main.replaceChildren(scrim, wrapped);
+    hydrateDieterComponents(main);
     return;
   }
 
@@ -988,7 +991,7 @@ function renderFromHash() {
   setActive(page.path);
   document.title = `DevStudio · ${page.title}`;
   destroyDieterComponents(main);
-  main.replaceChildren(compactBar, scrim, wrapped);
+  main.replaceChildren(scrim, wrapped);
   hydrateDieterComponents(main);
   hydrateTypographyPage(main);
   main.querySelectorAll<HTMLElement>('[data-token-edit]').forEach((node) => {
@@ -1014,5 +1017,5 @@ function renderFromHash() {
 }
 
 window.addEventListener('hashchange', renderFromHash);
-hydrateIcons(compactBar);
+hydrateIcons(menuButton);
 renderFromHash();

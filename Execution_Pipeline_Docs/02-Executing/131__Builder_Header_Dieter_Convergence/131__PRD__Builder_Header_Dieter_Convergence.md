@@ -1,6 +1,6 @@
 # PRD 131 — Builder Header Dieter Convergence
 
-Status: **DEPLOYED AND VERIFIED IN CLOUD-DEV — OWNER VISUAL ACCEPTANCE PENDING**
+Status: **LOCAL UNIFIED-HEADER IMPLEMENTATION COMPLETE — CLOUD-DEV DEPLOYMENT AND OWNER VISUAL ACCEPTANCE PENDING**
 
 Owner: Clickeen product owner/architect
 
@@ -151,3 +151,46 @@ var(--space-2) var(--layout-page-padding)`. No header markup, title, publication
 state, toggle, action, borrowed Save slot, Bob canvas, or product behavior
 changes. This supersedes only §8's claim that the header must copy Bob's
 `space-2` inline inset; §8's full-width decision remains in force.
+
+## 10. One Roma Header Grammar (2026-08-19, owner-directed)
+
+Owner visual review established that the remaining defect was systemic rather
+than Builder-specific: Dieter's `page__header` top-aligned a heading line box
+against taller page-action Buttons, while ordinary Roma and Builder authored
+the leading header group separately. The resulting vertical center and DOM
+grammar could drift even when their outer width was correct.
+
+The correction makes Dieter the one structural authority:
+
+```text
+page__header[data-width="contained|full"]
+├── page__heading
+└── page__actions
+```
+
+- Desktop centers the two direct children on one cross-axis. Compact stacks
+  and leading-aligns them.
+- `contained` retains the centered `80rem` ordinary Page maximum. `full`
+  removes that maximum and owns the existing full-canvas header padding.
+- One stateless Roma `RomaPageHeader` always renders both named children and
+  owns `h1.heading-2`. Callers supply only the title, existing navigation
+  trigger, existing filter/state content, existing actions, and the bounded
+  width choice.
+- Every ordinary Roma domain consumes `contained`; saved and New Builder
+  consume `full`. Home remains intentionally headerless, Builder landing
+  remains ordinary, and the Widget-detail route remains a redirect.
+- Roma right-side Page commands use large Dieter Button geometry. The three
+  Assets commands now follow that role; their types, words, order, handlers,
+  loading labels, and disabled conditions are unchanged.
+- Builder publication state/actions and Bob's borrowed Save presentation keep
+  their exact existing owners, order, handlers, messages, and command paths.
+  Bob remains headerless.
+- The local `.roma-page-heading` and Builder `page__header` overrides are
+  deleted. Builder full-canvas content and Bob's independent workspace inset
+  remain.
+
+The affected Dieter, Roma, DevStudio, browser-evidence, governance, current
+manual, and generated reveal files are one implementation set. Local checks,
+commit/push/deploy evidence, live verification, and the independent V1–V8
+result are recorded after the complete integrated pass rather than inferred
+from this plan text.

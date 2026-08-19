@@ -92,18 +92,11 @@ body {
   outline: none;
 }
 
-.devstudio-compact-bar {
+.devstudio-navigation-trigger {
   display: none;
 }
 
 @media (max-width: 599px), (max-height: 599px) {
-  .devstudio-compact-bar {
-    display: flex;
-    align-items: center;
-    min-height: var(--control-size-lg);
-    margin-block-end: var(--space-4);
-  }
-
   .devstudio-navigation-trigger {
     display: inline-flex;
   }

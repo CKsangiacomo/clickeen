@@ -114,6 +114,7 @@ async function testRomaOwnsBuilderPublicationChrome(): Promise<void> {
   const builderHostProtocol = await readRoute('lib/builder-host-protocol.ts');
   const copyDialog = await readRoute('components/widget-copy-code-dialog.tsx');
   const clipboard = await readRoute('lib/copy-to-clipboard.ts');
+  const pageHeader = await readRoute('components/roma-page-header.tsx');
   const publicationControls = await readRoute('components/widget-publication-controls.tsx');
 
   assert.doesNotMatch(builderRoute, /showHeader/);
@@ -123,7 +124,16 @@ async function testRomaOwnsBuilderPublicationChrome(): Promise<void> {
   assert.doesNotMatch(builderLandingRoute, /rd-canvas--builder/);
   assert.match(builderLandingRoute, /RomaShellDefaultActions/);
 
-  assert.match(builderSource, /className="page__header"/);
+  assert.match(builderSource, /<RomaPageHeader\s+width="full"/);
+  assert.doesNotMatch(builderSource, /className="page__header"|roma-page-heading/);
+  assert.match(pageHeader, /width: 'contained' \| 'full'/);
+  assert.match(pageHeader, /title: ReactNode/);
+  assert.match(pageHeader, /navigationTrigger\?: ReactNode/);
+  assert.match(pageHeader, /headingExtras\?: ReactNode/);
+  assert.match(pageHeader, /<header className="page__header" data-width=\{width\}>/);
+  assert.match(pageHeader, /<div className="page__heading">[\s\S]*?\{navigationTrigger\}[\s\S]*?<h1 className="heading-2">\{title\}<\/h1>[\s\S]*?\{headingExtras\}[\s\S]*?<\/div>/);
+  assert.match(pageHeader, /<div className="page__actions">\{actions\}<\/div>/);
+  assert.doesNotMatch(pageHeader, /useState|useEffect|onClick|onChange/);
   assert.match(builderSource, /<WidgetPublicationControls/);
   assert.match(widgetsSource, /showingInitialWidgetsLoading \|\| \(displayedInstances\.length > 0/);
   assert.match(widgetsSource, /<td className="body-m" colSpan=\{5\}>[\s\S]*<span role="status">Loading widgets\.\.\.<\/span>/);
@@ -266,8 +276,17 @@ async function testWidgetsListComposition(): Promise<void> {
 
 async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
   const shell = await readRoute('components/roma-shell.tsx');
+  const pageHeader = await readRoute('components/roma-page-header.tsx');
   const layout = await readRoute('app/layout.tsx');
   const romaCss = await readRoute('app/roma.css');
+  const mainContainerCss = await readFile(
+    new URL('../../dieter/layouts/main-container/main-container.css', import.meta.url),
+    'utf8',
+  );
+  const mainContainerSpec = await readFile(
+    new URL('../../dieter/layouts/main-container/main-container.spec.json', import.meta.url),
+    'utf8',
+  );
   const tableCss = await readFile(new URL('../../dieter/components/table/table.css', import.meta.url), 'utf8');
   const assets = await readRoute('components/assets-domain.tsx');
   const widgets = await readRoute('components/widgets-domain.tsx');
@@ -279,10 +298,17 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
   assert.match(shell, /className="main-container"/);
   assert.match(shell, /className="left-nav"/);
   assert.match(shell, /className=\{`page/);
-  assert.match(shell, /className="page__header"/);
+  assert.match(shell, /<RomaPageHeader\s+width="contained"/);
   assert.match(shell, /headerControls\?: ReactNode/);
-  assert.match(shell, /<h1 className="heading-2">\{title\}<\/h1>\s+\{headerControls\}/);
-  assert.match(shell, /className="page__actions"/);
+  assert.match(shell, /title=\{title\}/);
+  assert.match(shell, /navigationTrigger=\{renderNavigationTrigger\(\)\}/);
+  assert.match(shell, /headingExtras=\{headerControls\}/);
+  assert.match(shell, /actions=\{headerRight\}/);
+  assert.match(pageHeader, /<header className="page__header" data-width=\{width\}>[\s\S]*?<div className="page__heading">[\s\S]*?<h1 className="heading-2">\{title\}<\/h1>[\s\S]*?<\/div>[\s\S]*?<div className="page__actions">\{actions\}<\/div>[\s\S]*?<\/header>/);
+  assert.match(mainContainerSpec, /"pageHeaderDirectChildren": \["page__heading", "page__actions"\]/);
+  assert.match(mainContainerSpec, /"values": \["contained", "full"\]/);
+  assert.match(mainContainerCss, /\.page__header\[data-width='contained'\]/);
+  assert.match(mainContainerCss, /\.page__header\[data-width='full'\]/);
   assert.match(shell, /className="page__content"/);
   assert.match(shell, /matchMedia\('\(min-width: 600px\) and \(min-height: 600px\)'\)/);
   assert.match(shell, /data-navigation-open=\{navigationOpen \? 'true' : undefined\}/);
@@ -294,6 +320,9 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
     /\.roma-layout|\.roma-modal|\.rd-header|\.rd-domain|\.roma-portrait-boundary/,
   );
   assert.doesNotMatch(romaCss, /pointer:\s*coarse|orientation:\s*portrait/);
+  assert.doesNotMatch(romaCss, /\.roma-page-heading|\.roma-builder-page \.page__header/);
+  assert.match(romaCss, /\.main-container > \.page\.roma-builder-page \{\s+padding: 0;/);
+  assert.match(romaCss, /\.roma-builder-page > \.page__content \{[\s\S]*?max-inline-size: none;[\s\S]*?margin: 0;/);
   assert.match(tableCss, /border-radius: var\(--control-radius-lg\);/);
   assert.doesNotMatch(tableCss, /box-shadow:/);
   assert.match(tableCss, /padding: var\(--space-3\) var\(--space-4\);/);
@@ -328,6 +357,8 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
   assert.match(assetsPage, /triggerStyle="button"/);
   assert.match(assetsPage, /headerControls=\{\(\s+<DieterDropdownActions/);
   assert.match(assetsPage, /headerRight=\{headerActions \? \(/);
+  assert.equal((assetsPage.match(/data-size="large"/g) ?? []).length, 3);
+  assert.doesNotMatch(assetsPage, /data-size="medium"/);
   for (const [value, label] of [
     ['all', 'Show all'],
     ['font', 'Fonts'],

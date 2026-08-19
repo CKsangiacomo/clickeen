@@ -35,6 +35,7 @@ main-container
 ├── left-nav
 └── page
     ├── page__header
+    │   ├── page__heading
     │   └── page__actions
     └── page__content
 ```
@@ -50,8 +51,15 @@ foundation-token write path.
 `main-container` and `page` use `--role-surface-muted`; `left-nav` uses
 `--role-surface`. In Full mode `left-nav` is `12rem` wide, inset by
 `--space-2` on all four sides, borderless, and uses `3xl` radius plus the
-floating shadow. The Page header and content share one centered `80rem`
-maximum width. Full Page rhythm uses `--space-4` outer padding with
+floating shadow. `page__header` always contains the same leading
+`page__heading` and trailing `page__actions` parts. The heading part contains
+the navigation trigger, `h1.heading-2`, and any caller-owned filter or state;
+the actions part contains caller-owned page commands. Their desktop center
+line, gaps, and Compact stacking are Dieter layout truth. The header has only
+two bounded width modes: `contained` shares the centered `80rem` maximum with
+ordinary Page content, while `full` removes that maximum for a consumer whose
+canvas below is intentionally full width. The width mode never changes the
+inner grammar or product behavior. Full Page rhythm uses `--space-4` outer padding with
 `--space-4` header and content separation. Compact uses `--space-4` outer
 padding with `--space-3` header and content separation. In Compact mode the
 same panel DOM uses its separate `12rem` maximum-width token, overlays the
@@ -72,8 +80,10 @@ Bob is the strongest directional editor reference because its `EditorContent`
 contains `ToolDrawer | Workspace`. ToolDrawer owns
 `ToolDrawerHeader + ToolDrawerContent`; Workspace owns
 `Preview + StatusOverlay + WorkspaceControls`. The active Roma Builder page
-owns the one visible Builder header above Bob's iframe. Bob has no second
-header. DevStudio and Roma
+owns the one visible Builder header above Bob's iframe. It consumes the same
+grammar as every other Roma page and selects the `full` width mode so its
+outer width follows the editor canvas; ordinary Roma and DevStudio headers
+select `contained`. Bob has no second header. DevStudio and Roma
 implement the accepted Full/Compact operational shell with one inset navigation
 tree while retaining their own route and domain composition. Bob keeps its
 specialized editor portrait boundary.

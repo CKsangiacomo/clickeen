@@ -40,8 +40,12 @@ and safe areas. The Full navigation is an 8px-inset foreground panel; Compact
 uses that same panel as an 8px-inset overlay above the full-width page. Reveal
 and policy pages are not rebuilt as mobile variants. The shared navigation is
 `16rem` wide, uses the shared surface without a border, and has the Dieter
-`3xl` radius and floating shadow. Page headers and route content align to the
-same centered `80rem` maximum width. DevStudio uses the Dieter Page rhythm
+`3xl` radius and floating shadow. DevStudio consumes the exact
+`page__header > page__heading + page__actions` grammar and the `contained`
+header width, so headings and commands share Dieter's centered desktop line,
+Compact stacking, and the same centered `80rem` maximum as route content.
+DevStudio supplies its own title and actions and does not create another
+header structure. DevStudio uses the Dieter Page rhythm
 directly. Its navigation rows use `--control-size-lg`; brand-to-navigation and
 navigation-group separation use `--space-4` and `--space-3`. Source-derived
 previews use one token-owned compact composition: generic preview height uses

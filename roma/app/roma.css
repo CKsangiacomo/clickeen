@@ -102,14 +102,6 @@ a {
   justify-content: flex-start;
 }
 
-.roma-page-heading {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  min-width: 0;
-  flex: 1;
-}
-
 .roma-nav-trigger.diet-button {
   display: none;
 }
@@ -149,12 +141,6 @@ a {
   z-index: 2;
   inset-block-start: var(--space-4);
   inset-inline: var(--space-4);
-}
-
-.roma-builder-page .page__header {
-  max-inline-size: none;
-  margin-inline: 0;
-  padding: var(--space-2) var(--layout-page-padding);
 }
 
 .roma-widget-publication {

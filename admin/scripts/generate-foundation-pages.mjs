@@ -355,6 +355,7 @@ async function generateLayoutsPage() {
           </tr>`;
   }).join('\n');
   const presentation = spec.presentation ?? {};
+  const width = spec.width;
   const html = `${GENERATED_HEADER}
 <div class="dieter-preview layouts-page" data-layout-source="dieter/layouts/main-container">
   <p class="body-s">The three current layout families, their owners, consumers, and exact class taxonomy.</p>
@@ -365,7 +366,7 @@ async function generateLayoutsPage() {
       <table class="diet-table__table">
         <thead><tr><th class="label-s" scope="col">Layout</th><th class="label-s" scope="col">Owner</th><th class="label-s" scope="col">Consumers</th><th class="label-s" scope="col">Source</th></tr></thead>
         <tbody>
-          <tr><th class="body-s" scope="row">Application shell</th><td class="body-s">Dieter</td><td class="body-s">Roma ordinary domains; DevStudio</td><td class="body-s"><code class="body-s">dieter/layouts/main-container/</code></td></tr>
+          <tr><th class="body-s" scope="row">Application shell</th><td class="body-s">Dieter</td><td class="body-s">Roma ordinary and Builder Page headers; DevStudio</td><td class="body-s"><code class="body-s">dieter/layouts/main-container/</code></td></tr>
           <tr><th class="body-s" scope="row">Builder editor</th><td class="body-s">Bob</td><td class="body-s">Bob, hosted by the Roma Builder domain</td><td class="body-s"><code class="body-s">bob/components/BuilderApp.tsx</code> + <code class="body-s">bob/app/bob_app.css</code></td></tr>
           <tr><th class="body-s" scope="row">Public Widget</th><td class="body-s">Widget software</td><td class="body-s">Saved public packages; Bob preview</td><td class="body-s"><code class="body-s">tokyo/product/widgets/*/widget.html</code> + shared Widget runtime</td></tr>
         </tbody>
@@ -380,7 +381,8 @@ async function generateLayoutsPage() {
 ├── .left-nav
 └── .page
     ├── [data-navigation-scrim]  compact only
-    ├── .page__header
+    ├── .page__header[data-width="contained|full"]
+    │   ├── .page__heading
     │   └── .page__actions
     └── .page__content</code></pre>
     <div class="diet-table">
@@ -390,7 +392,11 @@ async function generateLayoutsPage() {
           <tr><th class="body-s" scope="row">Full</th><td class="body-s">Persistent navigation at <code class="body-s">${escapeHtml(presentation.widePanelWidth)}</code>; Page receives remaining space.</td></tr>
           <tr><th class="body-s" scope="row">Compact</th><td class="body-s">The same navigation overlays the Page at <code class="body-s">${escapeHtml(presentation.compactPanelWidth)}</code>; consumer controls <code class="body-s">data-navigation-open</code>.</td></tr>
           <tr><th class="body-s" scope="row">Capability boundary</th><td class="body-s"><code class="body-s">${escapeHtml(presentation.compactQuery)}</code></td></tr>
-          <tr><th class="body-s" scope="row">Page content</th><td class="body-s">Header and content share <code class="body-s">${escapeHtml(presentation.pageContentMaxWidth)}</code> maximum width.</td></tr>
+          <tr><th class="body-s" scope="row">Contained header</th><td class="body-s"><code class="body-s">data-width="contained"</code> uses <code class="body-s">${escapeHtml(width.contained.maxInlineSize)}</code> maximum width and <code class="body-s">margin-inline: ${escapeHtml(width.contained.marginInline)}</code>.</td></tr>
+          <tr><th class="body-s" scope="row">Full header</th><td class="body-s"><code class="body-s">data-width="full"</code> uses <code class="body-s">max-inline-size: ${escapeHtml(width.full.maxInlineSize)}</code>, <code class="body-s">margin-inline: ${escapeHtml(width.full.marginInline)}</code>, and <code class="body-s">padding: ${escapeHtml(width.full.padding)}</code>.</td></tr>
+          <tr><th class="body-s" scope="row">Desktop header alignment</th><td class="body-s"><code class="body-s">.page__heading</code> and <code class="body-s">.page__actions</code> share a centered cross-axis.</td></tr>
+          <tr><th class="body-s" scope="row">Compact header alignment</th><td class="body-s">The header stacks, and both direct children use full width with leading alignment.</td></tr>
+          <tr><th class="body-s" scope="row">Page content</th><td class="body-s">Content remains centered at <code class="body-s">${escapeHtml(presentation.pageContentMaxWidth)}</code> maximum width independently of the header width.</td></tr>
         </tbody>
       </table>
     </div>
@@ -405,10 +411,10 @@ async function generateLayoutsPage() {
 
   <section class="foundation-section" data-layout-map="bob" aria-labelledby="layout-bob">
     <h2 class="heading-4" id="layout-bob">Builder editor — Bob</h2>
-    <p class="body-s">Roma gives its Builder Page body to Bob. Bob owns the editor composition and keeps the same session when its ToolDrawer becomes a Compact overlay.</p>
+    <p class="body-s">Roma gives its Builder Page body to Bob and owns the application header above it. Bob owns the editor composition and keeps the same session when its ToolDrawer becomes a Compact overlay.</p>
     <pre class="body-s"><code class="body-s">.builder-app
-├── .topdrawer
 └── .editor-content
+    ├── .tooldrawer-open          compact only
     ├── .tooldrawer
     │   ├── .tdheader
     │   └── .tdcontent
@@ -417,7 +423,7 @@ async function generateLayoutsPage() {
         ├── .workspace-iframe
         ├── .workspace-status-overlay  conditional
         └── .workspace-overlay</code></pre>
-    <p class="body-s"><strong>Full:</strong> persistent <code class="body-s">.tooldrawer</code> beside <code class="body-s">.workspace</code>. <strong>Compact:</strong> the same ToolDrawer overlays the full Workspace. <code class="body-s">.topdrawer</code> remains Bob editor chrome, not a Roma Page header.</p>
+    <p class="body-s"><strong>Full:</strong> persistent <code class="body-s">.tooldrawer</code> beside <code class="body-s">.workspace</code>. <strong>Compact:</strong> the same ToolDrawer overlays the full Workspace and <code class="body-s">.tooldrawer-open</code> reveals it. Bob has no separate application header.</p>
   </section>
 
   <section class="foundation-section" data-layout-map="widget" aria-labelledby="layout-widget">

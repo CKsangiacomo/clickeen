@@ -98,17 +98,19 @@ and closes without remounting the editor session or replacing any ToolDrawer
 operation.
 
 When Roma hosts an active Bob session, Roma's `page` contains the full-canvas
-Builder plus a slim Roma-owned header composed from the frozen Dieter
-`page__header` part in its standard grammar: `h1.heading-2` instance label,
-the instance's publication state directly after the label (`diet-badge`
-status word plus `diet-toggle` publish switch), and `page__actions` with
-large buttons only. The part's own alignment, type law, and transparent
-canvas treatment stand; on this full-canvas surface the header's width
-geometry follows Bob's canvas below it — full width rather than the ordinary
-80rem centered page column — while its internal horizontal inset remains the
-standard Roma/Dieter `--layout-page-padding`. Bob's own container keeps its
-independent `space-2` workspace inset. The Widgets inventory keeps its own row
-kit. Roma's header is the only Builder header and owns publication
+Builder plus the same stateless Roma header composition used by every domain.
+It consumes Dieter's exact
+`page__header > page__heading + page__actions` grammar: the heading contains
+the `h1.heading-2` instance label and publication state directly after it
+(`diet-badge` status word plus `diet-toggle` publish switch), and the actions
+part contains large command Buttons only. Builder selects the bounded `full`
+width mode rather than the ordinary contained `80rem` page column, so the
+header's outer width follows Bob's canvas below it while its internal
+horizontal inset remains the standard Roma/Dieter
+`--layout-page-padding`. The width choice does not change alignment, action
+order, state, or behavior. Bob's own container keeps its independent `space-2`
+workspace inset. The Widgets inventory keeps its own row kit. Roma's header is
+the only Builder header and owns publication
 state/actions and compact Roma navigation. Bob has no header and receives no
 publication state, Publish/Republish/Unpublish command, public
 URL/code action, or release receipt. Bob owns Save truth and lends only its

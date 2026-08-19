@@ -59,8 +59,13 @@ layering are owned by their own UI docs.
   `main-container` layout. The layout also uses existing source tokens directly
   for its fixed presentation: `--space-2` inset, muted application backdrop,
   shared navigation surface, no border, `--control-radius-3xl`, and
-  floating/elevated shadows. Header and content align to one centered `80rem`
-  maximum width. Full Page rhythm is `--space-4` outer padding with
+  floating/elevated shadows. The application header has one exact
+  `page__header > page__heading + page__actions` grammar. Desktop centers the
+  two parts on one cross-axis; Compact stacks them and leading-aligns both.
+  Callers select only `contained` (the centered `80rem` maximum used by
+  ordinary Page content) or `full` (no maximum for a deliberately full-width
+  canvas such as Roma Builder). Width does not alter the header's inner
+  structure. Full Page rhythm is `--space-4` outer padding with
   `--space-4` header and content separation. Compact uses `--space-4` outer
   padding with `--space-3` header and content separation. These are not
   duplicated as layout aliases.

@@ -165,7 +165,7 @@ export function AssetsPage() {
         <>
           <button
             className="diet-button"
-            data-size="medium"
+            data-size="large"
             data-type="primary"
             type="button"
             onClick={headerActions.uploadAsset}
@@ -175,7 +175,7 @@ export function AssetsPage() {
           </button>
           <button
             className="diet-button"
-            data-size="medium"
+            data-size="large"
             data-type="secondary"
             type="button"
             onClick={headerActions.uploadBulk}
@@ -185,7 +185,7 @@ export function AssetsPage() {
           </button>
           <button
             className="diet-button"
-            data-size="medium"
+            data-size="large"
             data-type="tertiary"
             type="button"
             onClick={headerActions.refresh}

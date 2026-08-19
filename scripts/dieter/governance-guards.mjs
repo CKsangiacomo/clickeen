@@ -17,6 +17,8 @@ const foundationTokenPath = path.join(repoRoot, TOKEN_FILES.foundation.path);
 const typographyJsonPath = path.join(repoRoot, 'admin', 'src', 'data', 'typography.generated.json');
 const tokenRoot = path.join(repoRoot, 'dieter', 'tokens');
 const dieterStylesPath = path.join(repoRoot, 'dieter', 'styles.css');
+const devStudioMainPath = path.join(repoRoot, 'admin', 'src', 'main.ts');
+const devStudioLayoutCssPath = path.join(repoRoot, 'admin', 'src', 'css', 'layout.css');
 
 const MAIN_CONTAINER_EDITABLE_TOKENS = [
   '--layout-left-nav-width',
@@ -176,9 +178,25 @@ function assertLayoutCoverage() {
     spec.taxonomy?.root !== layoutName ||
     JSON.stringify(spec.taxonomy?.directChildren) !== JSON.stringify(['left-nav', 'page']) ||
     JSON.stringify(spec.taxonomy?.pageParts) !==
-      JSON.stringify(['page__header', 'page__actions', 'page__content'])
+      JSON.stringify(['page__header', 'page__heading', 'page__actions', 'page__content']) ||
+    JSON.stringify(spec.taxonomy?.pageHeaderDirectChildren) !==
+      JSON.stringify(['page__heading', 'page__actions'])
   ) {
-    fail('main-container layout spec does not match the frozen Layout/Page taxonomy');
+    fail('main-container layout spec does not match the governed Layout/Page taxonomy');
+  }
+  if (
+    spec.width?.attribute !== 'data-width' ||
+    JSON.stringify(spec.width?.values) !== JSON.stringify(['contained', 'full']) ||
+    JSON.stringify(spec.width?.contained) !==
+      JSON.stringify({ maxInlineSize: '80rem', marginInline: 'auto' }) ||
+    JSON.stringify(spec.width?.full) !==
+      JSON.stringify({
+        maxInlineSize: 'none',
+        marginInline: '0',
+        padding: 'var(--space-2) var(--layout-page-padding)',
+      })
+  ) {
+    fail('main-container layout spec does not match the exact Page header width contract');
   }
   if (JSON.stringify(spec.editableTokens) !== JSON.stringify(MAIN_CONTAINER_EDITABLE_TOKENS)) {
     fail('main-container layout spec does not expose the exact editable Layout token set');
@@ -188,7 +206,8 @@ function assertLayoutCoverage() {
     'class="main-container"',
     '<aside class="left-nav"',
     '<main class="page"',
-    'class="page__header"',
+    'class="page__header" data-width="contained"',
+    'class="page__heading"',
     'class="page__actions"',
     'class="page__content"',
     'data-navigation-scrim',
@@ -196,6 +215,21 @@ function assertLayoutCoverage() {
   requiredMarkup.forEach((marker) => {
     if (!layoutHtml.includes(marker)) {
       fail(`main-container source HTML is missing ${marker}`);
+    }
+  });
+
+  const layoutCss = read(path.join(layoutRoot, `${layoutName}.css`));
+  const requiredCss = [
+    '.page__header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: var(--space-4);\n  box-sizing: border-box;\n  inline-size: 100%;\n  margin-block-end: var(--space-4);\n}',
+    ".page__header[data-width='contained'] {\n  max-inline-size: 80rem;\n  margin-inline: auto;\n}",
+    ".page__header[data-width='full'] {\n  max-inline-size: none;\n  margin-inline: 0;\n  padding: var(--space-2) var(--layout-page-padding);\n}",
+    '.page__heading {',
+    '  .page__header {\n    flex-direction: column;\n    align-items: flex-start;\n    gap: var(--space-3);\n    margin-block-end: var(--space-3);\n  }',
+    '.page__heading,\n  .page__actions {\n    inline-size: 100%;\n    justify-content: flex-start;',
+  ];
+  requiredCss.forEach((marker) => {
+    if (!layoutCss.includes(marker)) {
+      fail(`main-container source CSS is missing exact contract marker ${marker}`);
     }
   });
 
@@ -214,6 +248,52 @@ function assertLayoutCoverage() {
   ].map((match) => match[1]);
   if (JSON.stringify(layoutsPageTokens) !== JSON.stringify(MAIN_CONTAINER_EDITABLE_TOKENS)) {
     fail('Layouts page must expose exactly the four editable Layout source tokens');
+  }
+  const requiredLayoutReveal = [
+    'Roma ordinary and Builder Page headers; DevStudio',
+    '.page__header[data-width="contained|full"]',
+    '.page__heading',
+    'Contained header',
+    'Full header',
+    'Desktop header alignment',
+    'Compact header alignment',
+  ];
+  requiredLayoutReveal.forEach((marker) => {
+    if (!layoutsHtml.includes(marker)) {
+      fail(`Layouts page is missing governed main-container truth ${marker}`);
+    }
+  });
+  if (layoutsHtml.includes('.topdrawer')) {
+    fail('Layouts page still exposes the removed Bob TopDrawer');
+  }
+
+  const devStudioMain = read(devStudioMainPath);
+  const requiredDevStudioConsumerMarkers = [
+    "header.dataset.width = 'contained'",
+    "heading.className = 'page__heading'",
+    'heading.append(menuButton)',
+    'header.append(heading, actions)',
+    "wrapWithPageChrome(renderNotFound(pagePath), 'Missing')",
+    'main.replaceChildren(scrim, wrapped)',
+  ];
+  requiredDevStudioConsumerMarkers.forEach((marker) => {
+    if (!devStudioMain.includes(marker)) {
+      fail(`DevStudio main-container consumer is missing ${marker}`);
+    }
+  });
+  if (devStudioMain.includes('devstudio-compact-bar')) {
+    fail('DevStudio still creates a second Compact header outside page__heading');
+  }
+
+  const devStudioLayoutCss = read(devStudioLayoutCssPath);
+  if (
+    devStudioLayoutCss.includes('.devstudio-compact-bar') ||
+    !devStudioLayoutCss.includes('.devstudio-navigation-trigger {\n  display: none;\n}') ||
+    !devStudioLayoutCss.includes(
+      "@media (max-width: 599px), (max-height: 599px) {\n  .devstudio-navigation-trigger {\n    display: inline-flex;\n  }\n}",
+    )
+  ) {
+    fail('DevStudio Compact navigation trigger does not follow the unified Page header contract');
   }
 
   const broadStyles = read(dieterStylesPath);
