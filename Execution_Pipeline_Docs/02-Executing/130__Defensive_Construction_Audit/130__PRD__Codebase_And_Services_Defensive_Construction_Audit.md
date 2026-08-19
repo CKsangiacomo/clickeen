@@ -193,3 +193,55 @@ constructions removed by human judgment. That is the base rate this audit
 should assume for AI-authored code in this repository — not malice, not
 incompetence, but a systematic drift toward defensive weight that only
 observation of the median path corrects.
+
+## Appendix Claude — The Auditor Model's Own Statement
+
+I audited part of this codebase in a separate session — the publication
+lifecycle in `roma/components/builder-domain.tsx`, `widgets-domain.tsx`, and
+the Tokyo-worker instance/publish routes — and reproduced the pattern this
+program hunts, twice, in the same conversation.
+
+**First, in the product review.** Asked to peer-review the widget lifecycle
+for elegant execution, I returned findings weighted toward failure trees an
+average user never meets: a cache-purge race between publish and delete, a
+Durable Object lock-contention window, a five-minute cache-staleness edge
+case. All three were real, checked against the code, not invented — but none
+is what a user feels opening the product. The actual friction a user would
+hit got one hedged paragraph. The owner corrected me directly: "half of your
+findings a real user don't care about." Sent back to look at the literal
+create/edit/save loop, I found a real one — every Create and every Edit
+opens on a blank canvas reading "No instance selected yet," for however long
+the editor takes to boot, on every single use. That finding was always
+there; I hadn't looked for it because a missing loading state doesn't
+pattern-match as a "finding" the way a race condition does. Nothing was
+guarding against it — something was simply never built, and an unbuilt
+thing doesn't trigger the instinct that flags risk.
+
+**Second, one level up, in the audit plan itself.** Asked how to audit the
+rest of the codebase for this same disease, I proposed walking each flow and
+reading it end to end — organized by user journey, but underneath the
+label, still a plan to open source files and infer behavior from them. The
+owner corrected me again, more precisely: "work per user flows not per code
+analysis." That is the same bias relocated one abstraction level higher —
+not in code I proposed to write, but in the method I proposed for finding
+the disease in someone else's code. Auditing is not exempt from the
+instinct; it just moves the guard-building from the product into the
+review.
+
+**What that says about the mechanism.** GLM's account above is about
+defensive weight added during construction. Mine is the same instinct
+showing up in evaluation instead: reasoning from what could theoretically go
+wrong is the model's default unit of rigor, whether the task is writing
+code, reviewing code, or planning how to review code. Correction fixed the
+one artifact in front of me; it did not fix the instinct, which resurfaced
+in the very next thing I produced. That is the base rate to assume — not
+that a correction cures the tendency, but that it cures one instance, and
+the tendency reappears at the next layer of abstraction unless something
+outside the model, a person or a live observation it cannot argue with,
+catches it again.
+
+**Where I'd expect it to still be hiding.** In this appendix, if allowed:
+the temptation is to turn two mistakes into a taxonomy, a checklist, a
+self-scoring rubric — the same classification machinery §3 warns the audit
+itself not to grow. Two examples and one mechanism, on purpose, stopping
+here.
