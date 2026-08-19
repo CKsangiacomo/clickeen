@@ -3,8 +3,7 @@
  *
  * Tests createAgentEventStream against mocked San Francisco SSE responses.
  * Covers: modelStepId preservation, tool-calls boundary, start-only-on-initial,
- * multiple tool calls rejected, hardened parser (malformed events fail visibly),
- * event-name/payload agreement.
+ * one-tool-call lifecycle, terminal outcome mapping, and cancellation.
  *
  * Run: cd agents/product-copilot && npx tsx tests/run-turn-contract.ts
  */
@@ -169,10 +168,60 @@ async function testMultipleToolCallsRejected() {
     ]);
     const events = await readAgentEvents(createAgentEventStream({ ...ARGS, sanFranciscoResponse: sf }));
 
-    const types = events.map(e => e.type);
-    assert.ok(types.includes('agent_turn_error'), 'must emit agent_turn_error on multiple tool calls');
-    const errorEvent = events.find(e => e.type === 'agent_turn_error');
-    assert.ok(String((errorEvent?.payload.data as Record<string, unknown>)?.message || '').includes('multiple tool calls'), 'error message must mention multiple tool calls');
+    const errorEvent = events.find((event) => event.type === 'agent_turn_error');
+    assert.ok(errorEvent, 'must emit agent_turn_error on multiple tool calls');
+    assert.ok(String((errorEvent.payload.data as Record<string, unknown>)?.message || '').includes('multiple tool calls'));
+  });
+}
+
+async function testFinishReasonToolCountConsistency() {
+  await assertPass('tool-calls finish without exactly one tool call → agent_turn_error', async () => {
+    const sf = sfResponse([
+      sseFrame('model_step_finished', {
+        version: 1, modelStepId: 'step-1', type: 'model_step_finished',
+        data: { finishReason: 'tool-calls', requestedProvider: 'openai', requestedModel: 'gpt-5.2', reportedModel: 'gpt-5.2', promptTokens: 1, completionTokens: 1, latencyMs: 1 },
+      }),
+    ]);
+    const events = await readAgentEvents(createAgentEventStream({ ...ARGS, sanFranciscoResponse: sf }));
+    const error = events.find((event) => event.type === 'agent_turn_error');
+    assert.ok(error);
+    assert.match(String((error.payload.data as Record<string, unknown>)?.message), /toolCallCount=0/);
+  });
+
+  await assertPass('stop finish after a tool call → agent_turn_error', async () => {
+    const sf = sfResponse([
+      sseFrame('tool_call', { version: 1, modelStepId: 'step-1', type: 'tool_call', data: { toolCallId: 'c1', toolName: 'apply_widget_ops', input: {} } }),
+      sseFrame('model_step_finished', {
+        version: 1, modelStepId: 'step-1', type: 'model_step_finished',
+        data: { finishReason: 'stop', requestedProvider: 'openai', requestedModel: 'gpt-5.2', reportedModel: 'gpt-5.2', promptTokens: 1, completionTokens: 1, latencyMs: 1 },
+      }),
+    ]);
+    const events = await readAgentEvents(createAgentEventStream({ ...ARGS, sanFranciscoResponse: sf }));
+    const error = events.find((event) => event.type === 'agent_turn_error');
+    assert.ok(error);
+    assert.match(String((error.payload.data as Record<string, unknown>)?.message), /toolCallCount=1/);
+    assert.ok(!events.some((event) => event.type === 'agent_turn_finished'));
+  });
+}
+
+async function testMissingBoundaryFailsVisibly() {
+  await assertPass('stream EOF without terminal or tool-step boundary → agent_turn_error', async () => {
+    const sf = sfResponse([
+      sseFrame('text_delta', { version: 1, modelStepId: 'step-1', type: 'text_delta', data: { text: 'unfinished' } }),
+    ]);
+    const events = await readAgentEvents(createAgentEventStream({ ...ARGS, sanFranciscoResponse: sf }));
+    const error = events.find((event) => event.type === 'agent_turn_error');
+    assert.ok(error);
+    assert.match(String((error.payload.data as Record<string, unknown>)?.message), /without a terminal event or tool-step boundary/);
+  });
+}
+
+async function testMalformedJsonTransportFailsVisibly() {
+  await assertPass('malformed SSE JSON transport → agent_turn_error', async () => {
+    const sf = sfResponse(['event: text_delta\ndata: {not-json}\n\n']);
+    const events = await readAgentEvents(createAgentEventStream({ ...ARGS, sanFranciscoResponse: sf }));
+    assert.ok(events.some((event) => event.type === 'agent_turn_error'));
+    assert.ok(!events.some((event) => event.type === 'agent_turn_finished'));
   });
 }
 
@@ -209,71 +258,20 @@ async function testContentFilterAsIncomplete() {
   });
 }
 
-async function testMalformedJsonFailsVisibly() {
-  await assertPass('malformed SSE data JSON → agent_turn_error', async () => {
-    const sf = sfResponse([
-      'event: text_delta\ndata: {invalid json}\n\n',
-    ]);
+async function testCancellationStopsTurn() {
+  await assertPass('San Francisco cancellation → agent_turn_stopped', async () => {
+    const abortError = new Error('cancelled');
+    abortError.name = 'AbortError';
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.error(abortError);
+      },
+    });
+    const sf = new Response(body, { headers: { 'content-type': 'text/event-stream' } });
     const events = await readAgentEvents(createAgentEventStream({ ...ARGS, sanFranciscoResponse: sf }));
 
-    const errorEvent = events.find(e => e.type === 'agent_turn_error');
-    assert.ok(errorEvent, 'must emit agent_turn_error for malformed JSON');
-    assert.ok(String((errorEvent?.payload.data as Record<string, unknown>)?.message || '').includes('Malformed'), 'error must mention malformed');
-  });
-}
-
-async function testUnknownEventTypeFailsVisibly() {
-  await assertPass('unknown event type → agent_turn_error', async () => {
-    const sf = sfResponse([
-      sseFrame('bogus_event', { version: 1, modelStepId: 'step-1', type: 'bogus_event', data: {} }),
-    ]);
-    const events = await readAgentEvents(createAgentEventStream({ ...ARGS, sanFranciscoResponse: sf }));
-
-    const errorEvent = events.find(e => e.type === 'agent_turn_error');
-    assert.ok(errorEvent, 'must emit agent_turn_error for unknown event type');
-    assert.ok(String((errorEvent?.payload.data as Record<string, unknown>)?.message || '').includes('Unknown'), 'error must mention unknown');
-  });
-}
-
-async function testNamePayloadMismatchFails() {
-  await assertPass('SSE event name / payload type mismatch → agent_turn_error', async () => {
-    const sf = sfResponse([
-      sseFrame('text_delta', { version: 1, modelStepId: 'step-1', type: 'tool_call', data: { text: 'mismatch' } }),
-    ]);
-    const events = await readAgentEvents(createAgentEventStream({ ...ARGS, sanFranciscoResponse: sf }));
-
-    const errorEvent = events.find(e => e.type === 'agent_turn_error');
-    assert.ok(errorEvent, 'must emit agent_turn_error for name/payload mismatch');
-    assert.ok(String((errorEvent?.payload.data as Record<string, unknown>)?.message || '').includes('does not match'), 'error must mention mismatch');
-  });
-}
-
-async function testMissingModelStepIdFails() {
-  await assertPass('SF event missing modelStepId → agent_turn_error', async () => {
-    const sf = sfResponse([
-      sseFrame('text_delta', { version: 1, type: 'text_delta', data: { text: 'no step id' } }),
-    ]);
-    const events = await readAgentEvents(createAgentEventStream({ ...ARGS, sanFranciscoResponse: sf }));
-
-    const errorEvent = events.find(e => e.type === 'agent_turn_error');
-    assert.ok(errorEvent, 'must emit agent_turn_error for missing modelStepId');
-    assert.ok(String((errorEvent?.payload.data as Record<string, unknown>)?.message || '').includes('modelStepId'), 'error must mention modelStepId');
-  });
-}
-
-async function testToolCountFinishConsistency() {
-  await assertPass('finishReason stop but toolCallCount > 0 → agent_turn_error', async () => {
-    const sf = sfResponse([
-      sseFrame('tool_call', { version: 1, modelStepId: 'step-1', type: 'tool_call', data: { toolCallId: 'c1', toolName: 'apply_widget_ops', input: {} } }),
-      sseFrame('model_step_finished', {
-        version: 1, modelStepId: 'step-1', type: 'model_step_finished',
-        data: { finishReason: 'stop', requestedProvider: 'openai', requestedModel: 'gpt-5.2', reportedModel: 'gpt-5.2', promptTokens: 1, completionTokens: 1, latencyMs: 1 },
-      }),
-    ]);
-    const events = await readAgentEvents(createAgentEventStream({ ...ARGS, sanFranciscoResponse: sf }));
-
-    const errorEvent = events.find(e => e.type === 'agent_turn_error');
-    assert.ok(errorEvent, 'must emit agent_turn_error for inconsistent tool count');
+    assert.ok(events.some((event) => event.type === 'agent_turn_stopped'));
+    assert.ok(!events.some((event) => event.type === 'agent_turn_error'));
   });
 }
 
@@ -288,13 +286,12 @@ async function run(): Promise<void> {
   await testContinuationNoStart();
   await testModelStepIdPreserved();
   await testMultipleToolCallsRejected();
+  await testFinishReasonToolCountConsistency();
+  await testMissingBoundaryFailsVisibly();
+  await testMalformedJsonTransportFailsVisibly();
   await testLengthAsIncomplete();
   await testContentFilterAsIncomplete();
-  await testMalformedJsonFailsVisibly();
-  await testUnknownEventTypeFailsVisibly();
-  await testNamePayloadMismatchFails();
-  await testMissingModelStepIdFails();
-  await testToolCountFinishConsistency();
+  await testCancellationStopsTurn();
   console.log('\n=== All Phase 2 PC Worker gate tests passed ===');
 }
 

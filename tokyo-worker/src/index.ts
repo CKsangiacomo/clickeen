@@ -21,6 +21,7 @@ export default {
         req,
         env,
         cache: ctx.cache,
+        waitUntil: ctx.waitUntil.bind(ctx),
         pathname,
         url,
         respond,

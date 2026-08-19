@@ -24,6 +24,10 @@ export type AccountInstanceConfigDocument = {
   updatedAt: string;
 };
 
+export type AccountInstanceSourceStorageDocument = AccountInstanceConfigDocument & {
+  content: AccountInstanceContentDocument;
+};
+
 export type AccountInstanceSummary = {
   accountId: string;
   instanceId: string;

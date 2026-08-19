@@ -50,6 +50,17 @@ export async function POST(request: NextRequest) {
   });
   if (!gateway.ok) return gateway.response;
 
+  if (gateway.value.authzPayload.accountStatus !== 'active') {
+    return finalizeAccountAssetResponse({
+      request,
+      response: NextResponse.json(
+        { error: { kind: 'DENY', reasonKey: 'coreui.errors.account.disabled' } },
+        { status: 403 },
+      ),
+      setCookies: gateway.value.sessionSetCookies,
+    });
+  }
+
   const filename = request.headers.get('x-filename');
   const contentLengthHeader = request.headers.get('content-length');
   const contentLength = contentLengthHeader ? Number(contentLengthHeader) : null;

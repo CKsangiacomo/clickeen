@@ -1,7 +1,7 @@
 /**
  * PRD 128 Phase 3 gate tests — Roma route validation + grant boundary.
  *
- * Gate 3.1: shared external request parser, without an internal coordinate re-proof
+ * Gate 3.1: shared external request parser plus saved-instance route authorization
  * Gate 3.2: Grant authoritative — caller cannot overwrite
  * Gate 3.3: Reservation only after validation
  *
@@ -9,7 +9,8 @@
  */
 
 import assert from 'node:assert/strict';
-import { readFileSync } from 'fs';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
 function assertPass(label: string, fn: () => void) {
   try {
@@ -21,11 +22,13 @@ function assertPass(label: string, fn: () => void) {
   }
 }
 
-const ROUTE_PATH = '/Users/piero_macpro/code/VS/clickeen/roma/app/api/account/instances/[instanceId]/copilot/route.ts';
-const LIB_PATH = '/Users/piero_macpro/code/VS/clickeen/roma/lib/ai/account-copilot.ts';
+const ROUTE_PATH = fileURLToPath(
+  new URL('../app/api/account/instances/[instanceId]/copilot/route.ts', import.meta.url),
+);
+const LIB_PATH = fileURLToPath(new URL('../lib/ai/account-copilot.ts', import.meta.url));
 
 // ---------------------------------------------------------------------------
-// Gate 3.1: Shared external parser used; trusted Bob context is not re-proved
+// Gate 3.1: External request admission and saved-instance route authorization
 // ---------------------------------------------------------------------------
 
 function testSharedParserInRoute() {
@@ -43,6 +46,14 @@ function testSharedParserInRoute() {
 
   assertPass('route trusts Bob widgetType after external request acceptance', () => {
     assert.ok(!source.includes('widgetType must match'), 'no downstream widgetType cross-check');
+  });
+
+  assertPass('route authorizes exact saved-instance existence without loading source', () => {
+    assert.ok(source.includes('loadAccountWidgetInstanceListFact'), 'saved-instance fact is read');
+    assert.ok(!source.includes('loadTokyoAccountInstanceDocument'), 'saved source is not reloaded');
+    const instanceGateIdx = source.indexOf('loadAccountWidgetInstanceListFact({');
+    const grantIdx = source.indexOf('issueAccountCopilotGrant({');
+    assert.ok(instanceGateIdx > 0 && grantIdx > instanceGateIdx, 'instance gate runs before grant issuance');
   });
 
   assertPass('route does NOT have its own inline kind validation (uses shared parser)', () => {
@@ -112,6 +123,36 @@ function testReservationAfterValidation() {
 }
 
 // ---------------------------------------------------------------------------
+// Gate 3.4: External model choice admitted once; internal policy is trusted
+// ---------------------------------------------------------------------------
+
+function testModelPolicyBoundary() {
+  console.log('\n--- Gate 3.4: Model policy boundary ---');
+  const source = readFileSync(LIB_PATH, 'utf8');
+
+  assertPass('Bob-selected model remains checked at Roma ingress', () => {
+    const routeSource = readFileSync(ROUTE_PATH, 'utf8');
+    assert.ok(
+      routeSource.includes('!isProductCopilotManagedModel(selectedModel)'),
+      'external selected model is admitted against the managed catalog',
+    );
+  });
+
+  assertPass('Roma trusts the resolved git-authored runtime policy', () => {
+    assert.ok(!source.includes('assertProductCopilotGrantPolicyManaged'), 'no downstream policy/catalog cross-check');
+    assert.ok(!source.includes('listProductCopilotManagedModels'), 'no request-time managed-catalog reconstruction');
+    assert.ok(!source.includes('isProductCopilotManagedModel'), 'grant helper trusts the admitted model selection');
+  });
+
+  assertPass('grant trace consumes the exact accepted route coordinate', () => {
+    assert.ok(source.includes('trace: { sessionId: string; instanceId: string }'), 'trace coordinate is required');
+    assert.ok(source.includes('sessionId: args.trace.sessionId'), 'session coordinate is consumed exactly');
+    assert.ok(source.includes('instanceId: args.trace.instanceId'), 'instance coordinate is consumed exactly');
+    assert.ok(!source.includes('traceRaw'), 'no fallback trace reconstruction');
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
@@ -120,6 +161,7 @@ function run(): void {
   testSharedParserInRoute();
   testGrantAuthoritative();
   testReservationAfterValidation();
+  testModelPolicyBoundary();
   console.log('\n=== All Phase 3 gate tests passed ===');
 }
 

@@ -181,17 +181,6 @@ jobs:
           fi
           printf '%s' "$ROMA_AI_GRANT_PUBLIC_KEY_PEM" | pnpm -C tokyo-worker exec wrangler secret put ROMA_AI_GRANT_PUBLIC_KEY_PEM
 
-      - name: Sync tokyo-assets-dev public cache purge token
-        if: steps.changes.outputs.tokyo == 'true'
-        env:
-          CLOUDFLARE_CACHE_PURGE_TOKEN: ${{ secrets.CLOUDFLARE_CACHE_PURGE_TOKEN }}
-        run: |
-          if [ -z "$CLOUDFLARE_CACHE_PURGE_TOKEN" ]; then
-            echo "Missing CLOUDFLARE_CACHE_PURGE_TOKEN GitHub secret for tokyo-assets-dev cache purge." >&2
-            exit 1
-          fi
-          printf '%s' "$CLOUDFLARE_CACHE_PURGE_TOKEN" | pnpm -C tokyo-worker exec wrangler secret put CLOUDFLARE_CACHE_PURGE_TOKEN
-
       - name: Deploy tokyo-assets-dev (tokyo-worker)
         if: steps.changes.outputs.tokyo == 'true'
         run: pnpm -C tokyo-worker run deploy

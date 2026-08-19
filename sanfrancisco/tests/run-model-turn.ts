@@ -1,19 +1,14 @@
 /**
  * PRD 128B — Model-turn focused tests.
  *
- * Tests the pure functions (type guards, message conversion, tool conversion,
- * error mapping) without API calls. Real API integration was proven by Step 0.
+ * Tests message conversion, tool conversion, and error mapping without API
+ * calls. Real API integration was proven by Step 0.
  *
  * Run: pnpm test:model-turn
  */
 
 import assert from 'node:assert/strict';
 import { HttpError } from '../src/http';
-import {
-  isModelTurnRequest,
-  isModelTurnStreamRequest,
-  isModelTurnStructuredRequest,
-} from '../src/ai/model-turn-types';
 import {
   convertMessages,
   convertTools,
@@ -43,128 +38,6 @@ function assertFail(label: string, fn: () => void) {
     if (err instanceof Error && err.message.startsWith('Expected throw')) throw err;
     console.log(`  ✅ ${label} (correctly rejected)`);
   }
-}
-
-// ---------------------------------------------------------------------------
-// Type guard tests
-// ---------------------------------------------------------------------------
-
-function testTypeGuards(): void {
-  console.log('\n--- Type Guards ---');
-
-  const validBase = {
-    version: 1,
-    agentId: 'product.copilot',
-    grant: 'signed-grant-string',
-    messages: [{ role: 'user', content: 'Hello' }],
-  };
-
-  // Valid stream request
-  assertPass('valid stream request', () => {
-    assert.ok(isModelTurnStreamRequest({ ...validBase, mode: 'stream' }));
-  });
-
-  // Valid structured request
-  assertPass('valid structured request', () => {
-    assert.ok(
-      isModelTurnStructuredRequest({
-        ...validBase,
-        mode: 'structured',
-        output: { schema: { type: 'object', properties: {} } },
-      }),
-    );
-  });
-
-  // isModelTurnRequest accepts both
-  assertPass('isModelTurnRequest accepts stream', () => {
-    assert.ok(isModelTurnRequest({ ...validBase, mode: 'stream' }));
-  });
-
-  assertPass('isModelTurnRequest accepts structured', () => {
-    assert.ok(
-      isModelTurnRequest({
-        ...validBase,
-        mode: 'structured',
-        output: { schema: { type: 'object', properties: {} } },
-      }),
-    );
-  });
-
-  // Invalid: wrong version
-  assertPass('reject version !== 1', () => {
-    assert.ok(!isModelTurnRequest({ ...validBase, mode: 'stream', version: 2 }));
-  });
-
-  // Invalid: missing agentId
-  assertPass('reject missing agentId', () => {
-    const { agentId, ...rest } = validBase;
-    assert.ok(!isModelTurnRequest({ ...rest, mode: 'stream' }));
-  });
-
-  // Invalid: missing grant
-  assertPass('reject missing grant', () => {
-    const { grant, ...rest } = validBase;
-    assert.ok(!isModelTurnRequest({ ...rest, mode: 'stream' }));
-  });
-
-  // Invalid: empty messages
-  assertPass('reject empty messages', () => {
-    assert.ok(!isModelTurnRequest({ ...validBase, mode: 'stream', messages: [] }));
-  });
-
-  // Invalid: invalid mode
-  assertPass('reject invalid mode', () => {
-    assert.ok(!isModelTurnRequest({ ...validBase, mode: 'bogus' }));
-  });
-
-  // Invalid: structured without output
-  assertPass('reject structured without output', () => {
-    assert.ok(!isModelTurnStructuredRequest({ ...validBase, mode: 'structured' }));
-  });
-
-  // Valid with system message
-  assertPass('accept system message in messages', () => {
-    assert.ok(
-      isModelTurnRequest({
-        ...validBase,
-        mode: 'stream',
-        messages: [
-          { role: 'system', content: 'You are a widget editor.' },
-          { role: 'user', content: 'Edit the title.' },
-        ],
-      }),
-    );
-  });
-
-  // Valid with tool messages
-  assertPass('accept tool-call and tool-result messages', () => {
-    assert.ok(
-      isModelTurnRequest({
-        ...validBase,
-        mode: 'stream',
-        messages: [
-          { role: 'user', content: 'Set title to Hello' },
-          { role: 'assistant', content: null, toolCallId: 'call_1', toolName: 'apply_widget_ops', input: { ops: [] } },
-          { role: 'tool', toolCallId: 'call_1', toolName: 'apply_widget_ops', result: { ok: true, changedPaths: ['title'] } },
-        ],
-      }),
-    );
-  });
-
-  // Valid with tools
-  assertPass('accept tool definitions', () => {
-    assert.ok(
-      isModelTurnRequest({
-        ...validBase,
-        mode: 'stream',
-        tools: [{
-          name: 'apply_widget_ops',
-          description: 'Apply widget operations',
-          inputSchema: { type: 'object', properties: { ops: { type: 'array' } } },
-        }],
-      }),
-    );
-  });
 }
 
 // ---------------------------------------------------------------------------
@@ -328,7 +201,6 @@ function testMapToErrorData(): void {
 
 async function run(): Promise<void> {
   console.log('=== PRD 128B Model-Turn Tests ===');
-  testTypeGuards();
   testConvertMessages();
   testConvertTools();
   testMapToErrorData();

@@ -1,4 +1,4 @@
-import { asTrimmedString, looksLikeHtmlErrorPage } from '@clickeen/ck-contracts';
+import { looksLikeHtmlErrorPage } from '@clickeen/ck-contracts';
 import type {
   ProductCopilotControl,
   ProductCopilotTurnEvent,
@@ -63,15 +63,6 @@ function titleCase(input: string): string {
     .filter(Boolean)
     .map((w) => w.slice(0, 1).toUpperCase() + w.slice(1))
     .join(' ');
-}
-
-function safeJsonParse(text: string): unknown {
-  if (!text) return null;
-  try {
-    return JSON.parse(text) as unknown;
-  } catch {
-    return null;
-  }
 }
 
 function normalizeAssistantText(text: string): string {
@@ -152,27 +143,24 @@ function newId(): string {
 
 function buildProductCopilotControls(args: {
   controls: CompiledControl[];
-  currentConfig: unknown;
+  currentConfig: Record<string, unknown>;
 }): ProductCopilotControl[] {
-  const currentConfig = args.currentConfig && typeof args.currentConfig === 'object' && !Array.isArray(args.currentConfig)
-    ? (args.currentConfig as Record<string, unknown>)
-    : {};
   return args.controls
-    .filter((control) => !control.showIf || evaluateShowIfExpression(control.showIf, currentConfig))
+    .filter((control) => !control.showIf || evaluateShowIfExpression(control.showIf, args.currentConfig))
     .map((control) => ({
       path: control.path,
       panelId: control.panelId,
       groupId: control.groupId,
       groupLabel: control.groupLabel,
       type: control.type,
-      kind: control.kind ?? '',
+      kind: control.kind!,
       label: control.label,
       options: control.options,
       enumValues: control.enumValues,
       min: control.min,
       max: control.max,
       itemIdPath: control.itemIdPath,
-      currentValue: getAt(currentConfig, control.path),
+      currentValue: getAt(args.currentConfig, control.path),
     }));
 }
 
@@ -244,7 +232,9 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
   const instanceDataRef = useRef(session.instanceData);
 
   // Tier step limit from the existing signed policy (no new store).
-  const tierStepLimit = chrome.policy?.limits?.['maxTurnsPerThread'] as number | undefined ?? 30;
+  const tierStepLimit = chrome.copilot
+    ? chrome.copilot.maxTurnsPerThread
+    : null;
 
   const threadKey = useMemo(() => {
     if (!widgetType) return null;
@@ -309,9 +299,10 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
   }, [threadKey, messages]);
 
   const uiDisabledReason = useMemo(() => {
-    if (!compiled) return 'Load an instance to begin.';
+    if (!compiled || !chrome.policy || !chrome.copilot) return 'Load an instance to begin.';
+    if (!instanceId) return 'Save this widget before using Copilot.';
     return null;
-  }, [compiled]);
+  }, [chrome.copilot, chrome.policy, compiled, instanceId]);
 
   const controlsForAi = useMemo(() => {
     if (!compiled) return [];
@@ -452,6 +443,13 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
     toolResult: unknown,
   ): Promise<void> => {
     if (turn.isStopped) return;
+
+    if (tierStepLimit === null) {
+      pushMessage({ role: 'assistant', text: 'Editor policy is unavailable. The turn was not continued.' });
+      setStatus('idle');
+      activeTurnRef.current = null;
+      return;
+    }
 
     // Tier step limit: refuse the next continuation past the signed limit
     if (turn.stepCount >= tierStepLimit) {

@@ -181,8 +181,8 @@ document completely; this summary does not replace it.
 12. **Publish generates; public runtime serves complete materialized truth.** One saved Widget
     instance is one complete logical state containing its exact shared
     Header/Stage/Pod/capability values and its exact Core values. Bob edits that
-    document in browser memory. Create writes the first editable source and
-    Save updates that source. Only explicit allowed Publish invokes Roma's one
+    document in browser memory. New writes nothing; first Save creates editable
+    source and later Save updates it. Only explicit allowed Publish invokes Roma's one
     generic Widget materializer; that materializer is the sole authority that
     generates the served complete `index.html`, complete `styles.css`, and
     complete `runtime.js`. Tokyo-worker does not generate those files: it
@@ -261,8 +261,8 @@ For Widget work, apply this boundary gate before editing:
    Clickeen authority. Do not add a validator or filter to reconstruct the
    upstream contract.
 6. Published Widgets are static-first: only explicit allowed Publish
-   materializes complete semantic HTML, CSS, and JavaScript. Create writes the
-   first editable source; Save updates that source; neither generates public
+   materializes complete semantic HTML, CSS, and JavaScript. New writes nothing;
+   first Save creates editable source; later Save updates it; neither generates public
    files. Core JavaScript is mandatory and owns genuine Widget behavior; it is
    never the instance renderer,
    materializer, localizer, validator, preview host, or serving engine.

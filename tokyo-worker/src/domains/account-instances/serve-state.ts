@@ -1,6 +1,7 @@
 import type { Env } from '../../types';
 import { putJson } from '../storage';
 import { accountInstanceServeStateKey } from './keys';
+import type { SubmittedInstancePublicPackage } from './package-files';
 import type { InstanceServeState } from './types';
 
 type InstanceCoordinate = {
@@ -12,6 +13,7 @@ type InstanceCoordinate = {
 function serveStatePayload(
   coordinate: InstanceCoordinate,
   status: InstanceServeState,
+  publicPackage: SubmittedInstancePublicPackage | null,
   now = new Date().toISOString(),
 ) {
   return {
@@ -19,14 +21,22 @@ function serveStatePayload(
     instanceId: coordinate.instanceId,
     status,
     ...(status === 'published' ? { publishedAt: now } : {}),
+    ...(status === 'published' ? { publicPackage } : {}),
     updatedAt: now,
   };
 }
 
-export type InstanceServeStateRecord = {
-  status: InstanceServeState;
-  publishedAt: string | null;
-};
+export type InstanceServeStateRecord =
+  | {
+      status: 'unpublished';
+      publishedAt: null;
+      publicPackage: null;
+    }
+  | {
+      status: 'published';
+      publishedAt: string;
+      publicPackage: SubmittedInstancePublicPackage;
+    };
 
 async function readStoredServeStateRecord(
   env: Env,
@@ -37,8 +47,22 @@ async function readStoredServeStateRecord(
   );
   if (!obj) throw new Error('coreui.errors.instance.serveStateMissing');
   try {
-    const record = await obj.json<{ status: InstanceServeState; publishedAt?: string }>();
-    return { status: record.status, publishedAt: record.publishedAt ?? null };
+    const record = await obj.json<{
+      status: InstanceServeState;
+      publishedAt?: string;
+      publicPackage?: SubmittedInstancePublicPackage;
+    }>();
+    if (record.status === 'published') {
+      return {
+        status: 'published',
+        publishedAt: record.publishedAt!,
+        publicPackage: record.publicPackage!,
+      };
+    }
+    if (record.status === 'unpublished') {
+      return { status: 'unpublished', publishedAt: null, publicPackage: null };
+    }
+    throw new Error('serve_state_status_invalid');
   } catch {
     throw new Error('coreui.errors.instance.serveStateInvalid');
   }
@@ -72,7 +96,7 @@ export async function createInstanceServeState(args: {
   await putJson(
     args.env,
     accountInstanceServeStateKey(args.accountId, args.widgetCode, args.instanceId),
-    serveStatePayload(args, 'unpublished', args.now),
+    serveStatePayload(args, 'unpublished', null, args.now),
   );
   return 'unpublished';
 }
@@ -81,13 +105,20 @@ export async function writeInstanceServeState(args: {
   env: Env;
   accountId: string;
   instanceId: string;
-  status: InstanceServeState;
   widgetCode: string;
   now?: string;
-}): Promise<void> {
+} & (
+  | { status: 'published'; publicPackage: SubmittedInstancePublicPackage }
+  | { status: 'unpublished'; publicPackage?: never }
+)): Promise<void> {
   await putJson(
     args.env,
     accountInstanceServeStateKey(args.accountId, args.widgetCode, args.instanceId),
-    serveStatePayload(args, args.status, args.now),
+    serveStatePayload(
+      args,
+      args.status,
+      args.status === 'published' ? args.publicPackage : null,
+      args.now,
+    ),
   );
 }

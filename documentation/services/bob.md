@@ -100,24 +100,23 @@ Coarse-pointer mobile portrait below `600px` shows the explicit
 and closes without remounting the editor session or replacing any ToolDrawer
 operation.
 
-When Roma hosts an active Bob session, Roma's `page` contains only the
-full-canvas Builder body. Roma does not place a Page header, generic action
-band, padding, or module frame around Bob. `TopDrawer` is Bob-owned editor
-chrome, not a Roma Page header. It holds the instance label and publish state,
-Save as the primary editor action, Publish or Republish for a clean saved
-draft, Open public widget when published, and one Copy code host intent under
-More. Publish never chains an implicit Save. Roma owns the Publish command,
-presents the shared public-code Popup, and performs browser copy; Bob neither
-materializes nor reconstructs public values. In Compact mode TopDrawer also
-exposes the control that opens Roma's existing navigation drawer.
+When Roma hosts an active Bob session, Roma's `page` contains the full-canvas
+Builder plus a slim Roma-owned header. That header carries the instance label
+and the same Roma publication control used by Widgets inventory. `TopDrawer`
+is Bob-owned editor chrome and contains editing tools, dirty state, and Save
+only; it has no publication state, Publish/Republish/Unpublish command, public
+URL/code action, or release receipt. In Compact mode TopDrawer also exposes the
+control that opens Roma's existing navigation drawer.
 
 ## Authoring Flow
 
 The active account authoring flow is:
 
-1. Roma resolves the current account and opened `instanceId`.
-2. Roma reads `instance.config.json` and `instance.content.json` and recomposes
-   one complete saved Widget document.
+1. Roma resolves the current account and either an opened `instanceId` or a New
+   `widgetType`.
+2. For a saved target, Roma reads the exact atomic source document.
+   For New, Roma composes defaults into a browser draft without any instance
+   storage operation.
 3. Roma loads the deploy-built Widget editor artifact.
 4. Roma sends Bob a `ck:open-editor` message.
 5. After the browser-origin check, Bob trusts the Roma-produced open envelope
@@ -125,8 +124,9 @@ The active account authoring flow is:
 6. Bob edits that working state in browser memory.
 7. User presses Save.
 8. Bob sends the save intent to Roma.
-9. Roma resolves the editable source split and Tokyo-worker writes the exact
-   saved source. A later explicit allowed Publish owns package materialization.
+9. Roma prepares the editable source payload and Tokyo-worker writes one exact
+   atomic `instance.source.json`. A later explicit allowed Publish owns package
+   materialization.
 
 Between open and save, Bob writes no account persistence.
 
@@ -187,17 +187,12 @@ Roma opens Bob:
   "widgetname": "[widgetType]",
   "baseLocale": "[baseLocale]",
   "compiled": "[compiledWidgetPayload]",
-  "instanceData": "[savedInstanceData]",
+  "instanceData": "[exactDraftData]",
   "fontLibrary": "[accountFontLibrary]",
   "policy": "[policySnapshot]",
   "accountPublicId": "[accountPublicId]",
-  "instanceId": "[instanceId]",
-  "publishStatus": "[published|unpublished]",
+  "instanceId": "[instanceId|null]",
   "label": "[displayName]",
-  "publicActions": {
-    "publicUrl": "[exact published URL]",
-    "iframeSnippet": "[exact iframe snippet]"
-  },
   "copilot": "[copilotRuntimeUi]",
   "translationSetup": "[translationSetup]"
 }
@@ -208,8 +203,10 @@ The compiled editor artifact carries exact deploy-built `widgetSoftware`:
 and script sources. Bob uses that source only for preview. It creates no
 registry, runtime source fetch, route, or account object.
 
-The open contract contains no stored `publicPackage`; public bytes are not
-editable truth and a never-published instance opens normally.
+The open contract contains no publication status, timestamps, public actions,
+or stored `publicPackage`; release truth is Roma-owned and public bytes are not
+editable truth. A New draft opens with `instanceId: null`, and a saved but
+never-published instance also opens normally.
 
 Bob replies with:
 
@@ -233,8 +230,9 @@ or:
 }
 ```
 
-Roma sends explicit deploy-built Widget editor software, explicit saved instance
-data, and the current account font library as one authoritative open envelope.
+Roma sends explicit deploy-built Widget editor software, exact instance data,
+the optional saved instance identity, and the current account font library as
+one authoritative open envelope.
 Bob uses those values directly and never invents fallback font choices. If Roma
 cannot produce the envelope, Roma returns the owning operation failure and does
 not open the session; Bob does not independently guard or reinterpret the
@@ -249,22 +247,18 @@ Bob also notifies Roma when the browser-memory working copy changes:
 }
 ```
 
-Bob sends host intents without owning Roma routes:
+Bob sends its one host intent without owning Roma routes:
 
 ```json
 {
   "type": "bob:host-action",
-  "action": "[open-navigation|copy-code|publish]"
+  "action": "open-navigation"
 }
 ```
 
 Roma validates the Bob origin and frame source. `open-navigation` opens the
-existing Roma navigation drawer. `copy-code` asks Roma to open the shared
-public-code Popup for the exact published values already supplied in the current
-Builder-open envelope. `publish` asks Roma to Publish or Republish the exact
-saved instance; TopDrawer exposes it only when Bob's draft is clean. Roma owns
-capacity, materialization, storage, result handling, and reopening the same
-instance after success.
+existing Roma navigation drawer. Publication does not cross the Roma-to-Bob
+protocol.
 
 Roma replies to account commands with:
 
@@ -279,14 +273,18 @@ Roma replies to account commands with:
 }
 ```
 
-A Publish/Republish host intent whose publication truth committed before
-Tokyo's Worker-owned cache purge failed is reconciled by Roma from the exact
-Tokyo
-`committed: { instanceId, status, changed }` transition. Roma reopens the exact
-instance, so Bob receives the authoritative publication status and public
-actions through the normal `ck:open-editor` envelope. Roma, not Bob or the
-ToolDrawer, shows the durable delivery-refresh banner and owns the existing
-Republish retry.
+Bob sends `save-instance` with its complete draft. When the open envelope has
+no instance identity, Bob includes `widgetType` with `config`; Roma POSTs that
+exact First Save and replies HTTP 201 with the minted ID and exact current
+account `baseLocale` persisted for the source.
+The Builder host adopts the ID in the visible URL without a route remount; Bob
+adopts the ID and `baseLocale` from that same result into its current
+`meta`/`translationSetup` without a second `ck:open-editor` or another message.
+This does not serialize First Save against a simultaneous account-locale PATCH.
+Later Save uses the same command but its body contains `config` only. Roma uses
+the account/instance coordinate and Tokyo's stored list fact for Widget
+identity; Bob does not resend `widgetType`. Publication and cache state never
+enter this command/result protocol.
 
 When Bob's generic edit boundary denies a Widget-bound action, Bob sends only
 the exact denied system capability and Widget-owned message identity from the
@@ -328,23 +326,30 @@ namespace such as `faq.*`. Bob does not split or store that document.
 
 Bob sends the current working config and exact command coordinate back to Roma:
 
-- instance id as command/session metadata
-- Widget type
+- optional instance id as command/session metadata (`null` for New)
+- Widget type only for First Save, while no saved instance identity exists
 - one complete logical instance document containing every shared and Core
   value
 
 Rename and base-locale changes remain separate owned operations.
 
-Bob sends this as a `bob:account-command` with `command: "update-instance"`.
-Roma performs the account Save command. Tokyo-worker stores the saved editable
-source under:
+Bob sends this as a `bob:account-command` with `command: "save-instance"`.
+Without an ID, Roma creates the first saved source and returns HTTP 201 with
+the minted ID and the exact current account `baseLocale` persisted for that
+source. Bob adopts both from the existing Save result into its current
+`meta`/`translationSetup` without another open or message. This keeps Bob
+coherent with that completed Save; it does not serialize First Save against a
+simultaneous account-locale PATCH across authorities. With an ID, Bob sends
+`{ config }` only; Roma obtains Widget identity from Tokyo's saved list fact
+and updates the source without comparing a caller `widgetType`. Tokyo-worker
+stores editable source under:
 
 ```text
 accounts/{accountPublicId}/instances/{instanceId}/
 ```
 
 Roma resolves the complete logical document into exact config/content payloads,
-and Tokyo-worker writes the canonical source documents. A later explicit
+and Tokyo-worker writes one canonical atomic `instance.source.json`. A later explicit
 allowed Publish asks Roma's materializer to generate the served complete
 `index.html`, complete `styles.css`, and mandatory `runtime.js`. Bob never
 generates or persists those files.
@@ -364,7 +369,7 @@ decision and violate closed-system trust.
 
 Save is separate from manual translation generation, publish, unpublish, rename,
 duplicate, and delete. Roma does not generate translations, regenerate
-translations, or mutate locale overlays from the `update-instance` command.
+translations, or mutate locale overlays from the `save-instance` command.
 Bob treats the Save response as editable-source persistence truth only.
 
 While that existing Save request is pending, TopDrawer keeps the same primary
@@ -383,7 +388,7 @@ hidden UI-authored status.
 
 Bob account commands currently include:
 
-- `update-instance`
+- `save-instance`
 - `list-assets`
 - `resolve-assets`
 - `upload-asset`
@@ -400,7 +405,9 @@ substitute an empty config when serialization fails.
 Bob owns the Translations panel display for the open editor session. It does not
 choose generation locales or write translation files.
 
-The panel sends one Generate translations command with the open `instanceId`.
+The panel requires a saved instance identity. On New it shows **Save this
+widget before generating translations.** and sends nothing. After first Save, it
+sends one Generate translations command with the adopted `instanceId`.
 Roma resolves active locales and calls the Translation Agent Worker. While the
 operation is running, Bob disables the button and displays transient Agent
 Activity. Its static title comes from the open widget artifact's exact
@@ -755,7 +762,9 @@ boundary.
 
 ## Builder Copilot
 
-Product Copilot turns route through Roma with a bounded `currentDraftContext`
+Product Copilot requires a saved instance identity. On New its action is
+disabled with **Save this widget before using Copilot.** and sends nothing.
+After first Save, turns route through Roma with a bounded `currentDraftContext`
 capsule. Bob builds that capsule from the open browser-memory draft:
 `instanceId`, widget identity, active locale, draft signature, visible editable
 controls with current values, unavailable capabilities, and bounded
@@ -771,10 +780,10 @@ actual external edit-request acceptance against the exact compiled controls
 and current draft, then applies the accepted batch when its originating draft
 signature is still current.
 
-Current implementation mismatch: Bob still carries a degraded-context path
-that treats Clickeen-produced control metadata as potentially invalid or
-unavailable. That defensive path is not the canonical closed-system contract
-and must not be replicated.
+Bob consumes the exact compiled control metadata. Temporal boot readiness is a
+separate UI state, and a legitimately empty show-if projection advertises no
+`draft_edit` action; neither case repairs or substitutes compiled artifact
+truth.
 
 Bob does not pre-route user language with regex/control matching before the
 agent sees the turn. The Copilot turn streams `ProductCopilotTurnEvent` frames
@@ -890,13 +899,11 @@ https://clk.live/{accountPublicId}/{instanceId}
 ```
 
 Roma owns public-widget action truth for the current account and opened
-instance. It constructs the exact public URL and complete iframe snippet and
-sends either that complete set or `null` in the Builder-open envelope. Bob
-trusts that Roma-owned value and presents Open public widget plus one Copy code
-intent in TopDrawer when the value is present. Roma handles that intent with the
-same public-code Popup used by the Widgets inventory. Bob never reconstructs,
-validates, or copies those values from editor state. Unpublished instances
-expose no live actions.
+instance. Roma's shared publication controls construct the exact public URL and
+complete iframe snippet and present Open public widget plus one Copy code intent
+in the Roma Builder header and Widgets inventory. The Builder-open envelope
+sends no publication facts or actions to Bob, and Bob's TopDrawer remains an
+editing surface. Unpublished instances expose no live actions.
 
 `runtime.js` is behavior-only and is never offered as a standalone embed. A
 script-only copy option would omit the materialized HTML and CSS.

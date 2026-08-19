@@ -11,6 +11,7 @@ export type TokyoRouteArgs = {
   req: Request;
   env: Env;
   cache: CacheContext | undefined;
+  waitUntil: ExecutionContext['waitUntil'];
   pathname: string;
   url: URL;
   respond: (response: Response) => Response;

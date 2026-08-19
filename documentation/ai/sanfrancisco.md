@@ -36,37 +36,20 @@ agent's messages, tools, mode, or product context through a second semantic
 contract. San Francisco does own acceptance of the external provider response
 before returning one typed Clickeen result.
 
-Current implementation mismatch: the model endpoints still parse and reject
-parts of the internal agent-home request as though an untrusted caller supplied
-them. Those duplicate request-shape guards are closed-system debt. Removing them
-does not remove grant/capability/budget enforcement, provider credential checks,
-or provider-output acceptance.
+`POST /model/turn` now follows that boundary directly: it extracts and verifies
+the signed grant, then consumes the registered agent home's typed request
+without a second request-shape proof. Grant/capability/budget enforcement,
+provider credential checks, concurrency and timeout enforcement, and
+provider-output acceptance remain owned here.
 
 ## Endpoints
 
 | Method | Path | Behavior |
 | --- | --- | --- |
 | `GET`/`HEAD` | `/healthz` | Worker health |
-| `POST` | `/model/chat` | One governed non-streaming model call for a registered agent home |
 | `POST` | `/model/turn` | Governed streaming or structured model step for a registered agent home |
 | `POST` | `/execute` | `410`; agent brains execute in their agent homes |
 | `POST` | `/l10n/translate` | Prague system-copy translation tooling only |
-
-### `/model/chat`
-
-Request and response authority: `ModelChatRequest` and `ModelChatResponse` in
-`sanfrancisco/src/types.ts`.
-
-The current request shape contains a signed grant, registered `agentId`, one to
-24 non-empty chat messages, and an optional finite temperature. Each message is
-currently bounded to `80_000` characters. Those shape limits describe the
-shipped parser; they are not permission for San Francisco to revalidate a
-registered agent home's Clickeen-produced semantics. Successful responses
-contain `requestId`, canonical `agentId`, model `content`, and provider `usage`
-(`provider`, `model`, prompt/completion tokens, and latency).
-
-Provider usage is returned to the caller; San Francisco does not persist a
-second interaction or outcome record.
 
 ### `/model/turn`
 
@@ -129,7 +112,7 @@ the complete AI policy. The AI policy includes agent and policy ids, tier,
 enabled state, default and allowed models, picker selection, per-call token and
 timeout budgets, and thread/monthly turn ceilings.
 
-For `/model/chat` and `/model/turn`, the grant agent must match the canonical
+For `/model/turn`, the grant agent must match the canonical
 registered agent; the capability must include `agent:<canonicalAgentId>`;
 selected/default model and provider must be allowed; and the selected provider
 credential must exist.
@@ -139,15 +122,14 @@ credential must exist.
 Routing authority:
 
 - `sanfrancisco/src/ai/modelRouter.ts`
-- `sanfrancisco/src/ai/chat.ts`
-- `sanfrancisco/src/providers/deepseek.ts`
-- `sanfrancisco/src/providers/openai.ts`
+- `sanfrancisco/src/ai/modelAvailability.ts`
+- `sanfrancisco/src/ai/model-turn.ts`
 
 The selected model wins when present; otherwise the signed default is used.
 San Francisco calls that exact allowed provider/model. Missing credentials or a
 provider failure fail explicitly. There is no provider or model fallback.
 
-`/model/chat`, `/model/turn` (structured), and `/l10n/translate` share the
+`/model/turn` (structured) and `/l10n/translate` share the
 per-isolate inflight limit in `sanfrancisco/src/concurrency.ts` (eight
 concurrent executions). `/model/turn` stream mode uses the streaming-aware
 variant that holds the lease until the stream body completes, errors, or is
@@ -186,12 +168,12 @@ Empty item lists are logged as skipped and return an empty result.
 
 ## Failure Semantics
 
-The current duplicate internal request parser can fail with `400`; this is the
-implementation debt named above. Invalid or expired grants fail with `401`; denied
-capabilities, policies, signatures, or routes with `403`; concurrency/timeouts
-with `429`; provider failures with `502`; unhandled configuration/runtime
-errors with `500`; and `/execute` with `410`. A failed selected route is never
-silently retried through another provider or model.
+Invalid or expired grants fail with `401`; denied capabilities, policies,
+signatures, or routes with `403`; concurrency/timeouts with `429`; provider
+failures with `502`; unhandled configuration/runtime errors with `500`; and
+`/execute` with `410`. After grant verification, San Francisco trusts the
+authorized agent home's structured request semantics. A failed selected route
+is never silently retried through another provider or model.
 
 ## Callers
 

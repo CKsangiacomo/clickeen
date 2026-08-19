@@ -9,6 +9,7 @@
     "build:cf": "node ../scripts/build-roma-cf.mjs",
     "start": "next start",
     "lint": "next lint",
+    "test:account-asset-gates": "tsx tests/run-account-asset-gates.ts",
     "test:account-limit-usage": "tsx tests/run-account-limit-usage.ts",
     "test:instance-save-boundary": "tsx tests/run-instance-save-boundary.ts",
     "test:translation-outcomes": "tsx tests/run-translation-outcomes.ts",

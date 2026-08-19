@@ -52,6 +52,7 @@ export type AgentRuntimePolicyUi = {
   defaultModel: AiModelRef;
   selectedModel?: AiModelRef;
   modelOptions: AiModelOption[];
+  maxTurnsPerThread: number;
 };
 
 function assertFiniteNumber(value: unknown, label: string): asserts value is number {
@@ -373,6 +374,7 @@ export function deriveAiRuntimePolicyUi(policy: AgentRuntimePolicy): AgentRuntim
     defaultModel: policy.defaultModel,
     ...(policy.selectedModel ? { selectedModel: policy.selectedModel } : {}),
     modelOptions: deriveAiModelOptionsForUi(policy),
+    maxTurnsPerThread: policy.maxTurnsPerThread,
   };
 }
 

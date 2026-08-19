@@ -1,13 +1,11 @@
 import { resolveWidgetOverlayCode } from '@clickeen/ck-contracts/overlay-codebooks';
 import type { Env } from '../../types';
-import {
-  writeInstancePublicPackage,
-  type SubmittedInstancePublicPackage,
-} from './package-files';
+import type { SubmittedInstancePublicPackage } from './package-files';
 import { accountInstanceCacheTag } from './keys';
-import { deleteAccountInstanceSubtree } from './delete';
+import { deleteAccountInstanceSourceAnchor } from './delete';
 import {
   listAccountInstanceIds,
+  nextAccountInstanceTimestamp,
   readAccountInstanceSourcePointer,
   writeAccountInstanceSource,
 } from './source';
@@ -20,7 +18,6 @@ export class AccountInstanceTransitionError extends Error {
   reasonKey: string;
   paths?: string[];
   capacity?: { current: number; limit: number };
-  committed?: AccountInstancePublicationTransition;
 
   constructor(args: {
     status: number;
@@ -29,7 +26,6 @@ export class AccountInstanceTransitionError extends Error {
     detail?: string;
     issues?: Array<{ path: string }>;
     capacity?: { current: number; limit: number };
-    committed?: AccountInstancePublicationTransition;
   }) {
     super(args.detail ?? args.reasonKey);
     this.name = 'AccountInstanceTransitionError';
@@ -38,15 +34,8 @@ export class AccountInstanceTransitionError extends Error {
     this.reasonKey = args.reasonKey;
     this.paths = args.issues?.map((issue) => issue.path);
     this.capacity = args.capacity;
-    this.committed = args.committed;
   }
 }
-
-export type AccountInstancePublicationTransition = {
-  instanceId: string;
-  status: 'published' | 'unpublished';
-  changed: boolean;
-};
 
 function transitionFailureFromSavedRead(result: { kind: 'NOT_FOUND' | 'VALIDATION'; reasonKey: string }): never {
   if (result.kind === 'NOT_FOUND') {
@@ -64,38 +53,26 @@ function transitionFailureFromSavedRead(result: { kind: 'NOT_FOUND' | 'VALIDATIO
   });
 }
 
-export async function purgeClkLiveEntryCache(args: {
+export function scheduleAccountInstanceCacheEviction(args: {
   cache: CacheContext | undefined;
+  waitUntil: ExecutionContext['waitUntil'];
   accountId: string;
   instanceId: string;
-}): Promise<void> {
-  if (!args.cache) {
-    throw new AccountInstanceTransitionError({
-      status: 503,
-      kind: 'UPSTREAM_UNAVAILABLE',
-      reasonKey: 'tokyo.errors.publicCache.purgeConfigMissing',
-    });
-  }
-  let result: CachePurgeResult;
+}): void {
+  if (!args.cache) return;
   try {
-    result = await args.cache.purge({
-      tags: [accountInstanceCacheTag(args.accountId, args.instanceId)],
-    });
-  } catch (error) {
-    throw new AccountInstanceTransitionError({
-      status: 502,
-      kind: 'UPSTREAM_UNAVAILABLE',
-      reasonKey: 'tokyo.errors.publicCache.purgeFailed',
-      detail: error instanceof Error ? error.message : String(error),
-    });
-  }
-  if (!result.success) {
-    throw new AccountInstanceTransitionError({
-      status: 502,
-      kind: 'UPSTREAM_UNAVAILABLE',
-      reasonKey: 'tokyo.errors.publicCache.purgeFailed',
-      detail: result.errors.map((error) => `${error.code}:${error.message}`).join(';'),
-    });
+    args.waitUntil(
+      args.cache
+        .purge({
+          tags: [accountInstanceCacheTag(args.accountId, args.instanceId)],
+        })
+        .then(
+          () => undefined,
+          () => undefined,
+        ),
+    );
+  } catch {
+    // Cache eviction is a delivery optimization, never product result truth.
   }
 }
 
@@ -165,6 +142,7 @@ export async function saveAccountInstanceSource(args: {
     baseLocale: existing.value.baseLocale,
     existing: {
       createdAt: existing.value.createdAt,
+      updatedAt: existing.value.updatedAt,
       serveState: {
         status: existing.value.publishStatus,
         publishedAt: existing.value.publishedAt,
@@ -178,6 +156,7 @@ export async function publishAccountInstanceTransition(args: {
   env: Env;
   accountId: string;
   instanceId: string;
+  sourceUpdatedAt: string;
   publishedLimit: number;
   publicPackage: SubmittedInstancePublicPackage;
 }): Promise<{ instanceId: string; status: 'published'; changed: boolean }> {
@@ -204,6 +183,13 @@ export async function publishAccountInstanceTransition(args: {
       reasonKey: 'coreui.errors.instance.notFound',
     });
   }
+  if (existing.updatedAt !== args.sourceUpdatedAt) {
+    throw new AccountInstanceTransitionError({
+      status: 409,
+      kind: 'DENY',
+      reasonKey: 'coreui.errors.instance.sourceChanged',
+    });
+  }
 
   const liveStatus = existing.publishStatus;
   const publishedTotal = pointers.filter(
@@ -221,27 +207,25 @@ export async function publishAccountInstanceTransition(args: {
     });
   }
 
-  const packageWrite = await writeInstancePublicPackage({
-    env: args.env,
-    accountId,
-    instanceId,
-    publicPackage: args.publicPackage,
-  });
-  if (!packageWrite.ok) {
+  try {
+    await writeInstanceServeState({
+      env: args.env,
+      accountId,
+      instanceId,
+      widgetCode: existing.widgetCode,
+      status: 'published',
+      publicPackage: args.publicPackage,
+      now: nextAccountInstanceTimestamp(existing.updatedAt, existing.publishedAt),
+    });
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
     throw new AccountInstanceTransitionError({
       status: 502,
       kind: 'UPSTREAM_UNAVAILABLE',
-      reasonKey: packageWrite.reasonKey,
-      detail: packageWrite.detail,
+      reasonKey: detail.startsWith('artifact.') ? detail : 'artifact.package_write_failed',
+      detail,
     });
   }
-  await writeInstanceServeState({
-    env: args.env,
-    accountId,
-    instanceId,
-    widgetCode: existing.widgetCode,
-    status: 'published',
-  });
   return {
     instanceId,
     status: 'published',
@@ -288,7 +272,7 @@ export async function deleteAccountInstanceTransition(args: {
     }
     transitionFailureFromSavedRead(existing);
   }
-  await deleteAccountInstanceSubtree(
+  await deleteAccountInstanceSourceAnchor(
     args.env,
     instanceId,
     accountId,

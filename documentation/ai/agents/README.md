@@ -10,7 +10,7 @@ is not documented here.
 
 | Agent | Agent id | Worker | Wrangler | Inbound caller | Outbound dependencies | Mutation boundary | Verification |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Product Copilot | `product.copilot` | `agents/product-copilot/src/worker.ts` | `agents/product-copilot/wrangler.toml` | Roma account Builder route | San Francisco `/model/turn` | Bob live draft only; save/publish remains Roma | `pnpm --filter @clickeen/product-copilot test:copilot-contract`, `pnpm --filter @clickeen/product-copilot eval:copilot` |
+| Product Copilot | `product.copilot` | `agents/product-copilot/src/worker.ts` | `agents/product-copilot/wrangler.toml` | Roma account Builder route | San Francisco `/model/turn` | Bob live draft only; save/publish remains Roma | `pnpm --filter @clickeen/product-copilot test:turn-contract`, `pnpm --filter @clickeen/product-copilot test:full-loop` |
 | Translation Agent | `widget.instance.translator` | `agents/translation-agent/src/worker.ts` | `agents/translation-agent/wrangler.toml` | Roma translation routes/service binding | San Francisco `/model/turn` structured mode, Tokyo-worker internal product route | account instance locale overlay files in Tokyo/R2 | `pnpm --filter @clickeen/translation-agent eval:translation-agent`, `pnpm e2e:smoke:translation-agent-runtime` |
 
 ## Worker Binding Inventory
@@ -82,8 +82,8 @@ controls and current draft.
 
 ```bash
 pnpm --filter @clickeen/product-copilot typecheck
-pnpm --filter @clickeen/product-copilot test:copilot-contract
-pnpm --filter @clickeen/product-copilot eval:copilot
+pnpm --filter @clickeen/product-copilot test:turn-contract
+pnpm --filter @clickeen/product-copilot test:full-loop
 pnpm e2e:smoke:copilot-runtime
 pnpm --filter @clickeen/translation-agent typecheck
 pnpm --filter @clickeen/translation-agent eval:translation-agent

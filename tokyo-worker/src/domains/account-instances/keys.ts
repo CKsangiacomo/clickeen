@@ -7,12 +7,8 @@ export function accountInstanceRoot(accountId: string, widgetCode: string, insta
   return `${accountInstancesRoot(accountId)}/${instanceId}`;
 }
 
-export function accountInstanceConfigKey(accountId: string, widgetCode: string, instanceId: string): string {
-  return `${accountInstanceRoot(accountId, widgetCode, instanceId)}/instance.config.json`;
-}
-
-export function accountInstanceContentKey(accountId: string, widgetCode: string, instanceId: string): string {
-  return `${accountInstanceRoot(accountId, widgetCode, instanceId)}/instance.content.json`;
+export function accountInstanceSourceKey(accountId: string, widgetCode: string, instanceId: string): string {
+  return `${accountInstanceRoot(accountId, widgetCode, instanceId)}/instance.source.json`;
 }
 
 export function accountInstanceServeStateKey(accountId: string, widgetCode: string, instanceId: string): string {

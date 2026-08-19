@@ -30,7 +30,7 @@ Canonical account-management architecture:
 | Policy resolver | `packages/ck-policy/src/policy.ts` |
 | Policy registry/matrix | `packages/ck-policy/src/registry.ts`, `packages/ck-policy/entitlements.matrix.json` |
 | Widget entitlement binding and contextual copy | `tokyo/product/widgets/{widgetType}/limits.json` and `upsell/{locale}.json` |
-| Current duplicate Tokyo asset entitlement gate (architecture mismatch) | `tokyo-worker/src/domains/assets-handlers.ts` |
+| Tokyo asset ingress and exact storage execution | `tokyo-worker/src/domains/assets-handlers.ts` |
 | Current DB foundation | `supabase/migrations/20260522090000__prd103_db_core_foundation.sql` |
 
 ## Product Law
@@ -219,14 +219,19 @@ Operational examples:
 - Roma trusts a Bob draft already produced through that boundary when Save is
   requested; Save does not repeat the same Widget entitlement decision;
 - Publish enforces `instances.published.max` at command time: Roma performs the
-  fast precheck and Tokyo-worker uses Roma's exact limit inside one
-  account-scoped, lifecycle-fenced Durable Object coordinator for the final
-  first-wins transition;
-- Create and Duplicate have no editable-instance quota; every tier may retain
-  multiple editable instances;
-- asset upload currently checks `uploads.size.max` and `storage.bytes.max` in
-  both Roma and Tokyo-worker; that duplicated internal entitlement enforcement
-  is an architecture gap, not the target trust contract;
+  fast precheck and Tokyo-worker uses Roma's exact limit and source revision
+  inside the account-scoped lifecycle-fenced Durable Object coordinator;
+- that same coordinator serializes every existing-instance Save, Rename,
+  Publish/Republish, Unpublish, and Delete; an overlap returns HTTP 409
+  `coreui.errors.instance.commandInProgress` and mutates nothing;
+- New, first Save, and Duplicate have no editable-instance quota; every tier
+  may retain multiple editable instances;
+- Roma owns asset product policy and supplies exact authorized limits;
+  Tokyo-worker executes those limits against actual received bytes and the
+  current storage operation while owning file-safety ingress;
+- `storage.bytes.max` usage enumerates only direct objects in the account asset
+  authority; unreachable residual bytes below a deleted instance prefix never
+  enter that quota;
 - Copilot grant issuance enforces `copilot.turns.monthly.max` at its owning
   product-policy boundary; no downstream service repeats that decision.
 
@@ -320,10 +325,10 @@ Current entitlement keys:
 | `embed.seoGeo.enabled` | flag | Bob generic **Enable SEO/GEO** edit boundary; Publish materializer consumes the exact saved result | locally implemented for all five current Widgets |
 | `widget.socialShare.enabled` | flag | Bob generic edit boundary for canonical Widget bindings | locally implemented for all five current Widgets |
 | `copilot.turns.monthly.max` | limit | Roma copilot grant issuance | enforced |
-| `storage.bytes.max` | limit | Roma upload route and Tokyo-worker assets | enforced with current duplicate internal check; architecture gap |
+| `storage.bytes.max` | limit | Roma policy decision; Tokyo-worker exact storage execution | enforced |
 | `views.monthly.max` | limit | clk.live public-serving telemetry | gap |
-| `instances.published.max` | limit | Roma publish policy; Tokyo-worker final account transition | locally enforced first-wins for overlapping Publish; Republish consumes no slot |
-| `uploads.size.max` | limit | Roma upload route and Tokyo-worker assets | enforced with current duplicate internal check; architecture gap |
+| `instances.published.max` | limit | Roma publish policy; Tokyo-worker final account transition | locally enforced inside the existing-instance account coordinator; Republish consumes no slot |
+| `uploads.size.max` | limit | Roma policy decision; Tokyo-worker exact received-byte execution | enforced |
 | `items.group.small.max` | limit | Bob generic edit boundary for applicable canonical Widget bindings | locally implemented for Cards, FAQ, and Logo Showcase |
 | `items.group.medium.max` | limit | Bob generic edit boundary for applicable canonical Widget bindings | locally implemented for FAQ and Logo Showcase |
 | `items.group.large.max` | limit | Bob generic edit boundary for applicable canonical Widget bindings | locally implemented for FAQ and Logo Showcase |
@@ -344,22 +349,40 @@ instance; Tier 2 is the first tier that expands public capacity beyond one
 instance.
 
 The Widgets catalog is not tier-filtered. Every tier may use every Widget type,
-create editable instances, Duplicate them, edit them, and Save them. Public
+open New drafts, first-Save them as editable instances, Duplicate saved
+instances, edit them, and later Save them. Public
 capacity is separate: Publish enforces `instances.published.max` at command
 time, with Free able to publish and serve one instance.
 Roma first performs a fast list-facts precheck before materialization. A request
-that passes sends Roma's exact limit and exact materialized package to
-Tokyo-worker. Tokyo routes that final command to the account's one Durable
-Object coordinator, which reads the exact per-instance publication states,
-permits Republish without another slot, and otherwise compares the current published
-count with that passed limit before writing package or published state. The
-first allowed Publish wins. An overlapping contender while that command is
-active gets HTTP 409 `PUBLISH_IN_PROGRESS` and persists nothing; after the winner
-commits, a later attempt gets the existing HTTP 402 `UPGRADE_REQUIRED`
-capacity result. Before R2 work, the coordinator touches its own storage only
-to activate Cloudflare's shutdown/replacement fencing. It stores no durable
-policy, count, or publication data and is not a publication registry: each
-instance's `serve-state.json` remains publication truth.
+that passes sends Roma's exact limit, exact source `updatedAt`, and exact
+materialized package to Tokyo-worker. Tokyo routes it to the account's one
+Durable Object coordinator. Inside that coordinator Tokyo re-reads source;
+changed source returns HTTP 409 `coreui.errors.instance.sourceChanged` before
+publication. Otherwise Tokyo permits Republish without another slot or compares
+the current published count with the passed limit before atomically replacing
+`serve-state.json` with published status and the exact logical package.
+
+The same coordinator serializes every existing-instance Save, Rename,
+Publish/Republish, Unpublish, and Delete. An overlapping command gets HTTP 409
+`coreui.errors.instance.commandInProgress` and persists nothing. After a first
+Publish winner commits, a later over-capacity attempt gets the existing HTTP
+402 `UPGRADE_REQUIRED` result. Before R2 work, the coordinator touches its own
+storage only to activate Cloudflare's shutdown/replacement fencing. It stores
+no durable source, policy, count, package, or publication data and is not a
+registry. Each instance's `instance.source.json` and `serve-state.json` remain
+the sole atomic source and publication/package truths.
+
+Existing-instance Delete commits by deleting the exact
+`instance.source.json` visibility anchor. The successful response exists before
+Tokyo schedules residual prefix cleanup through `waitUntil`. Cleanup absence,
+throw, rejection, partial completion, or pending work cannot alter the product
+result; source-less residual bytes are unreachable and do not count toward
+`storage.bytes.max`.
+
+Tokyo is the single timestamp writer: Save/Rename make `updatedAt` strictly
+later than both prior `updatedAt` and any `publishedAt`; Publish/Republish makes
+`publishedAt` strictly later than both the exact source coordinate it commits
+and prior `publishedAt`. Consumers compare those values without a validator.
 `widgets.instances.max` has been removed rather than renamed or repurposed. The policy authority emits
 one exact decision; downstream services do not re-evaluate that decision.
 
@@ -385,7 +408,7 @@ here unless it maps to exact entitlement keys.
 | Entitlement limit exceeded | explicit product-policy failure |
 | Migrated Widget editing action exceeds a tier capability | no draft mutation, exact `{ capability, messageId, required }` denial, and one Roma-composed upsell Popup |
 | Existing content exceeds a newly lower tier | preserve exact content; do not delete, clamp, or heal it; gate only the next disallowed action at its owning boundary |
-| Publish/Unpublish truth commits but its cache purge fails | explicit HTTP `502`/`503` failure plus the exact `committed` publication transition; Roma reconciles the visible status and uses the existing command for retry |
+| Cache eviction is missing, fails, rejects, reports `success:false`, or remains pending | no product effect; the owning mutation returns its exact storage/lifecycle result and bounded freshness with `must-revalidate` remains the delivery backstop |
 | Required Widget upsell message is absent | producing Widget contract/build failure; no generic runtime replacement |
 | Policy key exists but no runtime consumer | documented as `gap`, not claimed enforced |
 | Owner-produced account/package result handed to another Clickeen service | consumed exactly; no downstream semantic revalidation or filtering |

@@ -53,8 +53,9 @@ Missing Widget upsell copy fails when the git-authored Widget artifact is
 produced. Runtime consumers do not substitute generic copy, recover by choosing
 another message, or reconstruct the Widget's meaning.
 
-The shared lifecycle is static-first: Create writes the first editable source
-and Save updates it. Only explicit allowed Publish asks Roma to materialize
+The shared lifecycle is static-first: New composes a browser-memory draft and
+writes nothing. First Save creates editable source and later Save updates it.
+Only explicit allowed Publish asks Roma to materialize
 complete semantic base HTML, complete CSS, and mandatory JavaScript;
 Tokyo-worker stores and serves those exact artifacts. Save remains Bob's
 editable-source persistence boundary. Bob preview uses deploy-built Widget
@@ -68,7 +69,8 @@ logical state containing shared Header/Stage/Pod/capability values and Core
 values. Bob edits it; Roma's generic Widget materializer is the sole service
 that generates the served complete `index.html`, complete `styles.css`, and
 mandatory `runtime.js` only on explicit allowed Publish;
-Tokyo-worker only physically writes and serves the source/package objects.
+Tokyo-worker only physically writes one atomic source document and one atomic
+serve-state whose published form contains the logical package members.
 Tokyo-worker never compiles or renders Widget software, and
 public delivery never calls Roma to regenerate it.
 

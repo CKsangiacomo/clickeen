@@ -73,7 +73,7 @@ Examples:
 - compiled control and field maps;
 - editable/translatable field contracts;
 - system-entitlement bindings and Widget-owned localized upsell messages;
-- account instance config/content files;
+- atomic account instance source and serve-state artifacts;
 - locale overlay value maps;
 - account asset references;
 - policy matrices and grants;
@@ -133,10 +133,14 @@ Examples:
 
 - Bob owns one browser-memory Widget draft; Roma accepts that complete draft on
   Save instead of reconstructing a Widget schema from ToolDrawer controls.
-- Roma owns current-account Create, Save, and Publish commands. Create writes
-  the first editable source, Save updates editable source, and only Publish
-  invokes materialization. Tokyo-worker stores the submitted source or package
-  instead of interpreting Widget semantics.
+  Bob sends `widgetType` only on First Save. Existing Save carries only the
+  draft config; Roma loads Tokyo's account-scoped saved list fact and trusts
+  its stored `widgetType` instead of comparing a caller identity.
+- Roma owns current-account New-draft composition, Save, and Publish commands.
+  New writes nothing; first Save creates editable source, later Save updates
+  it, and only Publish invokes materialization. Tokyo-worker stores the
+  submitted source as one atomic source record and the logical package inside
+  one atomic published serve-state instead of interpreting Widget semantics.
 - The Widget compiler owns the compiled Widget contract; Bob consumes it
   instead of maintaining a second Widget-specific schema.
 - Roma's Widget-neutral materializer owns generated package bytes; public
@@ -238,8 +242,9 @@ The reusable Widget source is not one customer's saved instance. One saved
 instance is one complete logical document containing the exact values for the
 shared Header, Stage, Pod, Core-size, typography, appearance/chrome
 capabilities and the exact values under that Widget's Core namespace. Bob edits
-that whole document in browser memory. Create writes its first editable source
-and Save updates that source. Only explicit allowed Publish asks Roma's generic
+that whole document in browser memory. New composes it without persistence;
+first Save creates editable source and later Save updates it. Only explicit
+allowed Publish asks Roma's generic
 materializer to combine the exact saved document with the shared and Core
 software. Tokyo-worker stores the result; neither the Widget folder nor Bob owns
 account persistence.
@@ -255,9 +260,10 @@ Widget Core -> shared Clickeen capability
 ```
 
 Widget access and public capacity are separate. Every tier may use every
-Widget, create editable instances, and Save them. The system capability
+Widget, open New drafts, first-Save them as editable instances, and later Save
+them. The system capability
 `instances.published.max` applies only when the user explicitly Publishes; Free
-may publish and serve one instance. A created-instance quota must not be used as
+may publish and serve one instance. A saved-instance quota must not be used as
 a substitute for publication policy.
 
 Never:
@@ -352,7 +358,7 @@ browser-memory draft; it does not load an account instance's stored serving
 files, and public `runtime.js` contains no Bob editor protocol.
 
 Bob compiles widget definitions into editor controls. Roma saves account
-instances. Tokyo-worker stores submitted runtime files. None of those systems
+instances. Tokyo-worker stores submitted source and serve-state artifacts. None of those systems
 invents, guards, validates, filters, repairs, or reinterprets Widget-specific
 semantics outside the Widget contract.
 
@@ -366,7 +372,8 @@ when the user saves through Roma.
 
 Workspace preview is an ephemeral expression of the same draft. The existing
 isolated iframe may remain, but its input is Widget editing software plus draft
-and preview context—not stored `index.html`, `styles.css`, or `runtime.js`.
+and preview context—not stored logical `indexHtml`, `stylesCss`, or `runtimeJs`
+package members.
 Published and never-published instances use the same preview path. A public
 package is neither a prerequisite nor editable truth.
 
@@ -455,11 +462,12 @@ Visitor requests must not:
 - repair missing artifacts;
 - switch to another locale/account/instance.
 
-The stored `index.html` is the complete semantic expression of the published
-base-locale content, not an empty application shell. The stored `styles.css` is
-the complete presentation. The stored `runtime.js` contains the Widget and
-shared visitor behavior; initial content, localization, hosting, and serving do
-not depend on it.
+The logical `indexHtml` member stored in the published serve-state is the
+complete semantic expression of the base-locale content, not an empty
+application shell. Its `stylesCss` member is the complete presentation. Its
+`runtimeJs` member contains the Widget and shared visitor behavior; initial
+content, localization, hosting, and serving do not depend on it. Tokyo-worker
+exposes these at the public `index.html`, `styles.css`, and `runtime.js` paths.
 
 The generation authority is exact:
 
@@ -468,14 +476,17 @@ deploy-built shared Widget software + deploy-built Core software
 + exact saved account-instance state + explicit allowed Publish
 -> Roma invokes @clickeen/ck-runtime-materializer
 -> complete index.html + styles.css + runtime.js
--> Tokyo-worker stores the exact bytes
+-> Tokyo-worker stores one atomic published serve-state.json containing the
+   exact logical package members
 -> Tokyo-worker serves the stored package
 ```
 
 Roma's materializer is the sole service that generates the served package
 contents. Tokyo-worker never authors, compiles, renders, repairs, or regenerates
-Widget code. Materialization happens only on explicit allowed Publish and not
-on Create, Save, Duplicate, or a visitor request. This is the
+Widget code. Those three public paths are logical members of one stored R2
+artifact, not three objects, and publication has no package/status split
+commit. Materialization happens only on explicit allowed Publish and not
+on New, Save, Duplicate, or a visitor request. This is the
 publish-once/serve-many law that keeps the public
 path static, cacheable, and independent of Bob, Roma, source discovery,
 databases, models, and agents.

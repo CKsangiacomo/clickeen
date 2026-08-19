@@ -98,7 +98,7 @@ async function main(): Promise<void> {
   if (!malformedResult.ok) {
     assert.deepEqual(malformedResult.error.paths, ['common:typography.roles.title']);
   }
-  console.log('PASS Widget Defaults typography contracts');
+  console.log('PASS Widget Defaults typography ingress contract');
 }
 
 void main();

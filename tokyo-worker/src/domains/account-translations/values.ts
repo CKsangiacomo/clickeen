@@ -1,7 +1,5 @@
 import type { Env } from '../../types';
 import { readConfigDocumentByLocation } from '../account-instances/source';
-import { purgeClkLiveEntryCache } from '../account-instances/operations';
-import { readInstanceServeState } from '../account-instances/serve-state';
 import type {
   AccountInstanceConfigDocument,
   AccountInstanceSourceReadFailure,
@@ -23,25 +21,6 @@ async function resolveStoredTranslationSource(args: {
     accountId: args.accountId,
     widgetCode: '',
     instanceId: args.instanceId,
-  });
-}
-
-async function purgePublishedLocaleCache(args: {
-  env: Env;
-  cache: CacheContext | undefined;
-  configDoc: AccountInstanceConfigDocument;
-}): Promise<void> {
-  const status = await readInstanceServeState({
-    env: args.env,
-    accountId: args.configDoc.accountId,
-    instanceId: args.configDoc.id,
-    widgetCode: args.configDoc.widgetCode,
-  });
-  if (status !== 'published') return;
-  await purgeClkLiveEntryCache({
-    cache: args.cache,
-    accountId: args.configDoc.accountId,
-    instanceId: args.configDoc.id,
   });
 }
 
@@ -76,7 +55,6 @@ export async function readAccountInstanceTranslatedLocaleValues(args: {
 
 export async function writeAccountInstanceTranslatedLocaleValues(args: {
   env: Env;
-  cache: CacheContext | undefined;
   instanceId: string;
   accountId: string;
   locale: string;
@@ -101,13 +79,11 @@ export async function writeAccountInstanceTranslatedLocaleValues(args: {
       values: args.values,
     },
   });
-  await purgePublishedLocaleCache({ env: args.env, cache: args.cache, configDoc: stored });
   return { locale: args.locale, values: args.values };
 }
 
 export async function deleteAccountInstanceTranslatedLocaleValues(args: {
   env: Env;
-  cache: CacheContext | undefined;
   instanceId: string;
   accountId: string;
   locale: string;
@@ -125,7 +101,6 @@ export async function deleteAccountInstanceTranslatedLocaleValues(args: {
     instanceId: stored.id,
     locale: args.locale,
   });
-  await purgePublishedLocaleCache({ env: args.env, cache: args.cache, configDoc: stored });
   return { locale: args.locale };
 }
 

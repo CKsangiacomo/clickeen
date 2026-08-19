@@ -1,15 +1,13 @@
 /**
  * PRD 128 Phase 1 gate tests — shared contracts.
  *
- * Tests the ProductCopilotTurnEvent type guard and the CopilotTurnRequest
- * parser against their Phase 1 gates.
+ * Tests the CopilotTurnRequest parser at Roma's external browser boundary.
  *
  * Run: cd packages/ck-contracts && npx tsx tests/run-copilot-contracts.ts
  */
 
 import assert from 'node:assert/strict';
 import {
-  isProductCopilotTurnEvent,
   parseCopilotTurnRequest,
   COPILOT_MAX_HISTORY_ENTRIES,
 } from '../src/ai';
@@ -25,141 +23,7 @@ function assertPass(label: string, fn: () => void) {
 }
 
 // ---------------------------------------------------------------------------
-// Phase 1.1 — ProductCopilotTurnEvent type guard
-// ---------------------------------------------------------------------------
-
-function testTypeGuard() {
-  console.log('\n--- Type Guard: all 7 event types pass ---');
-
-  assertPass('agent_turn_started passes', () => {
-    assert.ok(isProductCopilotTurnEvent({
-      version: 1, userTurnId: 'turn-1', type: 'agent_turn_started', data: {},
-    }));
-  });
-
-  assertPass('text_delta with modelStepId passes', () => {
-    assert.ok(isProductCopilotTurnEvent({
-      version: 1, userTurnId: 'turn-1', modelStepId: 'step-1', type: 'text_delta', data: { text: 'hello' },
-    }));
-  });
-
-  assertPass('tool_call with modelStepId passes', () => {
-    assert.ok(isProductCopilotTurnEvent({
-      version: 1, userTurnId: 'turn-1', modelStepId: 'step-1', type: 'tool_call',
-      data: { toolCallId: 'call-1', toolName: 'apply_widget_ops', input: {} },
-    }));
-  });
-
-  assertPass('model_step_finished with modelStepId passes', () => {
-    assert.ok(isProductCopilotTurnEvent({
-      version: 1, userTurnId: 'turn-1', modelStepId: 'step-1', type: 'model_step_finished',
-      data: {
-        finishReason: 'stop', requestedProvider: 'openai', requestedModel: 'gpt-5.2',
-        reportedModel: 'gpt-5.2-2025-12-11', promptTokens: 10, completionTokens: 5, latencyMs: 100,
-      },
-    }));
-  });
-
-  assertPass('agent_turn_finished passes', () => {
-    assert.ok(isProductCopilotTurnEvent({
-      version: 1, userTurnId: 'turn-1', type: 'agent_turn_finished', data: {},
-    }));
-  });
-
-  assertPass('agent_turn_error passes', () => {
-    assert.ok(isProductCopilotTurnEvent({
-      version: 1, userTurnId: 'turn-1', type: 'agent_turn_error',
-      data: { code: 'PROVIDER_ERROR', reasonKey: 'PROVIDER_ERROR', message: 'fail' },
-    }));
-  });
-
-  assertPass('agent_turn_stopped passes', () => {
-    assert.ok(isProductCopilotTurnEvent({
-      version: 1, userTurnId: 'turn-1', type: 'agent_turn_stopped', data: {},
-    }));
-  });
-
-  console.log('\n--- Type Guard: rejection cases ---');
-
-  assertPass('rejects missing modelStepId on text_delta', () => {
-    assert.ok(!isProductCopilotTurnEvent({
-      version: 1, userTurnId: 'turn-1', type: 'text_delta', data: { text: 'hello' },
-    }));
-  });
-
-  assertPass('rejects missing modelStepId on tool_call', () => {
-    assert.ok(!isProductCopilotTurnEvent({
-      version: 1, userTurnId: 'turn-1', type: 'tool_call',
-      data: { toolCallId: 'call-1', toolName: 'apply_widget_ops', input: {} },
-    }));
-  });
-
-  assertPass('rejects missing modelStepId on model_step_finished', () => {
-    assert.ok(!isProductCopilotTurnEvent({
-      version: 1, userTurnId: 'turn-1', type: 'model_step_finished',
-      data: {
-        finishReason: 'stop', requestedProvider: 'openai', requestedModel: 'gpt-5.2',
-        reportedModel: 'gpt-5.2', promptTokens: 10, completionTokens: 5, latencyMs: 100,
-      },
-    }));
-  });
-
-  assertPass('rejects unknown event type', () => {
-    assert.ok(!isProductCopilotTurnEvent({
-      version: 1, userTurnId: 'turn-1', modelStepId: 'step-1', type: 'bogus_event', data: {},
-    }));
-  });
-
-  assertPass('rejects wrong version', () => {
-    assert.ok(!isProductCopilotTurnEvent({
-      version: 2, userTurnId: 'turn-1', modelStepId: 'step-1', type: 'text_delta', data: { text: 'hi' },
-    }));
-  });
-
-  assertPass('rejects missing userTurnId', () => {
-    assert.ok(!isProductCopilotTurnEvent({
-      version: 1, modelStepId: 'step-1', type: 'text_delta', data: { text: 'hi' },
-    }));
-  });
-
-  assertPass('rejects non-object', () => {
-    assert.ok(!isProductCopilotTurnEvent('string'));
-    assert.ok(!isProductCopilotTurnEvent(null));
-    assert.ok(!isProductCopilotTurnEvent(42));
-  });
-
-  assertPass('rejects empty modelStepId string', () => {
-    assert.ok(!isProductCopilotTurnEvent({
-      version: 1, userTurnId: 'turn-1', modelStepId: '', type: 'text_delta', data: { text: 'hi' },
-    }));
-  });
-
-  assertPass('rejects text_delta without text in data', () => {
-    assert.ok(!isProductCopilotTurnEvent({
-      version: 1, userTurnId: 'turn-1', modelStepId: 'step-1', type: 'text_delta', data: {},
-    }));
-  });
-
-  assertPass('rejects tool_call without toolCallId in data', () => {
-    assert.ok(!isProductCopilotTurnEvent({
-      version: 1, userTurnId: 'turn-1', modelStepId: 'step-1', type: 'tool_call',
-      data: { toolName: 'apply_widget_ops', input: {} },
-    }));
-  });
-
-  assertPass('rejects model_step_finished with empty reportedModel', () => {
-    assert.ok(!isProductCopilotTurnEvent({
-      version: 1, userTurnId: 'turn-1', modelStepId: 'step-1', type: 'model_step_finished',
-      data: {
-        finishReason: 'stop', requestedProvider: 'openai', requestedModel: 'gpt-5.2',
-        reportedModel: '', promptTokens: 10, completionTokens: 5, latencyMs: 100,
-      },
-    }));
-  });
-}
-
-// ---------------------------------------------------------------------------
-// Phase 1.2 — CopilotTurnRequest parser
+// Phase 1 — CopilotTurnRequest parser
 // ---------------------------------------------------------------------------
 
 function validInitialRequest() {
@@ -352,7 +216,6 @@ function testParser() {
 
 async function run(): Promise<void> {
   console.log('=== PRD 128 Phase 1 Gate Tests — Shared Contracts ===');
-  testTypeGuard();
   testParser();
   console.log('\n=== All Phase 1 gate tests passed ===');
 }

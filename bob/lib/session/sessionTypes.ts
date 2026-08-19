@@ -1,6 +1,6 @@
 import type { CompiledWidget } from '../types';
 import type { WidgetOpError } from '../ops';
-import type { Policy } from '@clickeen/ck-policy';
+import type { AgentRuntimePolicyUi, Policy } from '@clickeen/ck-policy';
 import type { AccountAssetHostCommand } from '@clickeen/ck-contracts';
 import type { TranslationSetup } from '../translations-preview';
 import type { AccountFontLibrary } from '@clickeen/widget-foundation';
@@ -26,43 +26,24 @@ export type PreviewSettings = {
 export type SessionState = {
   compiled: CompiledWidget | null;
   instanceData: Record<string, unknown>;
-  savedInstanceDataSignature: string;
+  savedInstanceDataSignature: string | null;
   isDirty: boolean;
   isSaving: boolean;
   lastUpdate: UpdateMeta | null;
   error: SessionError | null;
 };
 
-type PublicActions = {
-  publicUrl: string;
-  iframeSnippet: string;
-};
-
 export type SessionMeta = {
   accountPublicId: string;
-  instanceId: string;
+  instanceId: string | null;
   baseLocale: string;
   widgetname: string;
-  publishStatus: 'published' | 'unpublished';
-  publishedAt: string | null;
-  sourceUpdatedAt: string | null;
   label: string;
-  publicActions: PublicActions | null;
   fontLibrary: AccountFontLibrary;
   translationSetup: TranslationSetup;
 } | null;
 
-export type CopilotModelRef = {
-  provider: string;
-  model: string;
-};
-
-export type CopilotRuntimeUi = {
-  allowModelPicker: boolean;
-  defaultModel: CopilotModelRef;
-  selectedModel?: CopilotModelRef;
-  modelOptions: Array<CopilotModelRef & { label: string }>;
-} | null;
+export type CopilotRuntimeUi = AgentRuntimePolicyUi | null;
 
 export type EditorOpenMessage = {
   type: 'ck:open-editor';
@@ -74,12 +55,8 @@ export type EditorOpenMessage = {
   fontLibrary: AccountFontLibrary;
   policy: Policy;
   accountPublicId: string;
-  instanceId: string;
-  publishStatus: 'published' | 'unpublished';
-  publishedAt: string | null;
-  sourceUpdatedAt: string | null;
+  instanceId: string | null;
   label: string;
-  publicActions: PublicActions | null;
   copilot: CopilotRuntimeUi;
   translationSetup: TranslationSetup;
 };
@@ -95,7 +72,7 @@ export type BobDirtyStateChangedMessage = {
 
 export type BobHostActionMessage = {
   type: 'bob:host-action';
-  action: 'open-navigation' | 'copy-code';
+  action: 'open-navigation';
 };
 
 export type BobWidgetUpsellMessage = {
@@ -126,7 +103,7 @@ export type BobOpenEditorFailedMessage = {
 };
 
 export type BobAccountCommand =
-  | 'update-instance'
+  | 'save-instance'
   | AccountAssetHostCommand
   | 'list-translations'
   | 'read-translation'
@@ -181,7 +158,7 @@ export function createInitialSessionState(): SessionState {
   return {
     compiled: null,
     instanceData: {},
-    savedInstanceDataSignature: serializeInstanceDataSignature({}),
+    savedInstanceDataSignature: null,
     isDirty: false,
     isSaving: false,
     lastUpdate: null,

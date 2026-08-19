@@ -2,7 +2,7 @@
 
 STATUS: ALL CURRENT WIDGETS DEPLOYED TO CLOUD-DEV — OWNER QA PENDING
 
-Last updated: 2026-08-17
+Last updated: 2026-08-18
 
 ## Product Contract
 
@@ -80,9 +80,10 @@ session.
 
 ## Saved Source And Overlay
 
-`instance.content.json` owns the current saved translatable field set. Its keys
-are physical concrete paths. Each field also carries its field pattern and
-stable `identityKey`. The overlay uses `identityKey`, not the physical map key:
+The `content` member of atomic `instance.source.json` owns the current saved
+translatable field set. Its keys are concrete paths. Each field also carries
+its field pattern and stable `identityKey`. The overlay uses `identityKey`, not
+the physical map key:
 
 ```text
 scalar:
@@ -162,8 +163,8 @@ identity's current draft path, so reordering follows the item rather than the
 array position. A newly added identity with no value stays explicit
 untranslated source content until Generate Translations; a deleted identity is
 absent from the current draft and therefore absent from preview. Bob does not
-read or rewrite the instance's stored `index.html`, `styles.css`, or
-`runtime.js`, and it writes no storage.
+read or rewrite the instance's stored logical `indexHtml`, `stylesCss`, or
+`runtimeJs` package members, and it writes no storage.
 
 ## Public Serving
 
@@ -183,7 +184,8 @@ an HTML attribute also authors the exact `data-ck-content-attribute` target.
 For a selected non-base locale, Tokyo-worker:
 
 1. resolves the public route and exact published state;
-2. reads the stored base `index.html`;
+2. reads logical `publicPackage.indexHtml` from the atomic published
+   `serve-state.json`;
 3. lists the exact stored overlay coordinates and authors the base locale plus
    those coordinates as the public switcher's options;
 4. reads the exact requested overlay;
@@ -196,10 +198,10 @@ The response references the same stored CSS and JavaScript. No locale-derived
 package is stored. Successful base/locale responses use the existing public
 cache policy and the locale query is part of the request cache coordinate. An
 exact overlay write/delete reaches Tokyo's default Worker entrypoint after the
-mutation and calls
-`ctx.cache.purge({ tags: [accountInstanceCacheTag] })`. Every cacheable response
-for the exact account/instance carries that tag, covering every package path
-and locale/query variant.
+mutation and schedules the exact account-instance tag eviction through
+`waitUntil`. Every cacheable response for the exact account/instance carries
+that tag, covering every package path. Eviction availability and outcome are
+never part of the overlay result.
 
 Public serving does not inject `CK_LOCALE_CONTEXT`, run a client localizer,
 compare package fingerprints, compare overlay values with saved content, call a
@@ -243,13 +245,10 @@ relationship without a second SEO/Discovery renderer.
 - A coordinate for deleted content is inert because no current semantic node
   has that identity.
 - Public reads never write, heal, regenerate, or call an agent.
-- An overlay file write/delete commits before its cache purge. If that purge
-  fails, the current operation returns an explicit failure even though the
-  exact overlay mutation may already be stored; it does not report completed
-  fresh delivery. Unlike the PRD 129 publication transition, the current
-  overlay result does not yet return a typed `committed` overlay outcome. That
-  result/feedback correction belongs to the named PRD 127/128 translation work
-  and is not claimed as PRD 129 closure.
+- An overlay PUT/DELETE returns its exact storage result. After success,
+  Tokyo-worker schedules account-instance tag eviction through `waitUntil`.
+  Cache context and purge outcome are invisible to the operation, Roma, and the
+  user; bounded freshness with `must-revalidate` remains the delivery backstop.
 
 ## Current Repository And Deploy State
 
@@ -266,16 +265,22 @@ relationship without a second SEO/Discovery renderer.
   present on cloud-dev.
 - Remote account product data was not changed by those code deployments.
   Previously stored positional overlays still require the documented explicit
-  Generate Translations or deletion cutover, and previously published packages
-  must be Republished when they predate the stable content slots.
+  Generate Translations or deletion cutover.
+- Atomic source and published serve-state are a newer pre-GA storage cutover.
+  After deployment, all legacy cloud-dev saved instances require an explicit
+  source cutover or recreation; any that should remain public then require
+  explicit Publish/Republish. There is no compatibility reader or
+  migration-on-read, and this documentation reconciliation performed no remote
+  operation.
 - Both prior zone-API invalidation attempts were proved silent no-ops for
   Workers Caching. The original zone `tags` request left warm base and French
   responses at cache `HIT` after Republish returned `200`; the later accepted
   zone `prefixes: [host/account/instance]` request cannot invalidate cache owned
-  by the Worker entrypoint. The current local source uses Tokyo's default
-  entrypoint `ctx.cache.purge({ tags: [accountInstanceCacheTag] })`. Its
-  cloud-dev deployment and successful base-and-locale freshness proof remain
-  pending. Owner QA remains pending.
+  by the Worker entrypoint. The current local source schedules Tokyo's owning
+  default-entrypoint tag eviction through `waitUntil` and makes its outcome
+  product-inert. That source is not yet deployed. Cache HIT/MISS or purge
+  success is intentionally not an acceptance gate; ordinary localization and
+  public-serving owner QA remains pending.
 
 ## Verification
 
@@ -286,7 +291,7 @@ relationship without a second SEO/Discovery renderer.
 | Overlay bytes | exact R2 object after `pnpm cf:preflight` |
 | Translation result | Roma requested/translated/failed sets |
 | Bob preview | exact overlay values over the one current draft |
-| Base package | exact stored `index.html`, `styles.css`, and `runtime.js` |
+| Base package | exact logical `indexHtml`, `stylesCss`, and `runtimeJs` inside the atomic published `serve-state.json` |
 | Static base meaning | response HTML contains saved content before JavaScript |
 | Localized meaning | `?locale=` response HTML contains translated content and exact `<html lang>` before JavaScript |
 | Storage invariant | no locale-derived HTML/CSS/JavaScript objects |

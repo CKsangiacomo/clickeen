@@ -5,6 +5,7 @@ import {
   readAccountInstanceTranslatedLocaleValues,
   writeAccountInstanceTranslatedLocaleValues,
 } from '../domains/account-translations/values';
+import { scheduleAccountInstanceCacheEviction } from '../domains/account-instances/operations';
 import { json } from '../http';
 import {
   authorizeAccountInstanceControlRequest,
@@ -23,7 +24,7 @@ import {
 export async function tryHandleInternalTranslationRoutes(
   args: TokyoRouteArgs,
 ): Promise<Response | null> {
-  const { req, env, cache, pathname, respond } = args;
+  const { req, env, cache, waitUntil, pathname, respond } = args;
 
   const internalTranslationsListMatch = pathname.match(/^\/__internal\/instances\/([^/]+)\/translations$/);
   if (internalTranslationsListMatch) {
@@ -104,8 +105,8 @@ export async function tryHandleInternalTranslationRoutes(
           instanceId,
           locale,
           values: body.values,
-          cache,
         });
+        scheduleAccountInstanceCacheEviction({ cache, waitUntil, accountId, instanceId });
         return respond(json({ ok: true, locale: translation.locale }));
       } catch (error) {
         const detail = error instanceof Error ? error.message : String(error);
@@ -118,7 +119,13 @@ export async function tryHandleInternalTranslationRoutes(
       if (!auth.ok) return respond(auth.response);
 
       try {
-        const translation = await deleteAccountInstanceTranslatedLocaleValues({ env, accountId, instanceId, locale, cache });
+        const translation = await deleteAccountInstanceTranslatedLocaleValues({
+          env,
+          accountId,
+          instanceId,
+          locale,
+        });
+        scheduleAccountInstanceCacheEviction({ cache, waitUntil, accountId, instanceId });
         return respond(json({ ok: true, locale: translation.locale }));
       } catch (error) {
         const detail = error instanceof Error ? error.message : String(error);

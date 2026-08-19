@@ -18,7 +18,7 @@ import {
 
 export type ExecuteAccountCommandArgs = {
   command: BobAccountCommand;
-  instanceId: string;
+  instanceId?: string;
   body?: unknown;
 };
 
@@ -410,8 +410,8 @@ export function useSessionTransport(args: {
     async (commandArgs: ExecuteAccountCommandArgs) => {
       const result = await dispatchHostAccountCommand({
         command: commandArgs.command,
-        instanceId: commandArgs.instanceId,
-        ...(commandArgs.command === 'update-instance' ? { timeoutMs: 120_000 } : {}),
+        ...(commandArgs.instanceId ? { instanceId: commandArgs.instanceId } : {}),
+        ...(commandArgs.command === 'save-instance' ? { timeoutMs: 120_000 } : {}),
         ...(typeof commandArgs.body === 'undefined' ? {} : { body: commandArgs.body }),
       });
       return { ok: result.ok, status: result.status, json: result.payload };

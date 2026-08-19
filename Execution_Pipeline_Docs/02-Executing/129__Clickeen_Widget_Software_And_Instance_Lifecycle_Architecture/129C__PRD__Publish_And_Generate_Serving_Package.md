@@ -1,6 +1,6 @@
 # PRD 129C — Publish And Generate Serving Package
 
-Status: **CLOUD-DEV DEPLOYED — OWNER QA PENDING**
+Status: **LOCAL PUBLICATION/ATOMIC-STORAGE/CACHE CORRECTION IMPLEMENTED — CLOUD-DEV VERIFICATION PENDING**
 
 Parent: `129__PRD__Clickeen_Widget_Software_And_Instance_Lifecycle_Architecture.md`
 
@@ -16,7 +16,7 @@ Date: 2026-08-17
 129C defines one explicit product action:
 
 ```text
-user clicks Publish
+user clicks Publish or Republish on a Roma surface
 -> system decides whether this account may publish the instance
 -> Roma materializes the exact saved instance once
 -> Tokyo-worker stores the generated package and publication truth
@@ -60,8 +60,8 @@ Publish receives:
 - the Widget's internal `discovery.json`; and
 - the exact saved **Enable SEO/GEO** value.
 
-Publish never reads an unsaved Bob draft. If Bob is dirty, the user Saves first
-and then Publishes.
+Publish never reads an unsaved Bob draft. Roma disables Publish/Republish with
+**Save first** while Bob is dirty. Bob emits no publication command.
 
 ## 4. Starting Implementation Mismatches
 
@@ -76,12 +76,13 @@ gaps outside PRD 129.
 
 That is the wrong ownership:
 
-- Create should create editable source;
+- first Save should create editable source;
 - Save should update editable source;
 - Publish should generate and release public files; and
 - Serve should return those stored files.
 
-129C moves materialization to Publish and removes it from Create and Save.
+129C keeps materialization at Publish and out of New, first/later Save, and
+Duplicate.
 
 ## 5. Publication Capacity
 
@@ -110,48 +111,90 @@ which owns the final account-atomic transition.
 
 Tokyo-worker routes the final command to one
 `AccountPublicationCoordinator` Cloudflare Durable Object selected
-deterministically from `accountPublicId`. The coordinator sets a transient
-`active` gate synchronously before its first await. It then reads a reserved
-Durable Object lifecycle-fence key before request parsing or R2 work, but writes
-no coordinator record. Under Cloudflare's shutdown contract, that storage
-access stops an old in-flight execution rather than allowing it to continue
-beside a replacement object after a deploy or runtime restart.
+deterministically from `accountPublicId`. Despite its retained deployed class
+name, it is the account's existing-instance command coordinator: Save, Rename,
+Publish, Republish, Unpublish, and Delete all use its one exclusive `active`
+gate. The first Save of a New draft creates a newly minted identity and is not
+an existing-instance command.
 
-While the gate is active, the coordinator reads the exact current
-`serve-state.json` truth, compares the published count to the Roma-supplied
-limit, and only an allowed winner writes package bytes and published state.
-Each instance's `serve-state.json` remains the sole publication truth; Durable
-Object storage owns no tier, count, publication set, queue, or registry.
+The coordinator sets `active` synchronously before its first await. It then
+reads a reserved Durable Object lifecycle-fence key before request parsing or
+R2 work, but writes no coordinator record. Under Cloudflare's shutdown
+contract, that storage access stops an old in-flight execution rather than
+allowing it to continue beside a replacement object after a deploy or runtime
+restart. Durable Object storage owns no tier, count, publication set, queue,
+registry, or command result.
+
+If any existing-instance command arrives while the gate is active, it receives
+`409 coreui.errors.instance.commandInProgress`. That result is generic across
+Save/Rename/Publish/Unpublish/Delete: the contender performs no mutation and
+the system does not queue, poll, or automatically retry it.
+
+After entering the gate, Publish reads the exact current source and
+publication pointers for the account. Roma sent the exact `sourceUpdatedAt`
+from the saved source it materialized. Tokyo-worker compares that coordinate
+with the current instance `updatedAt`; if an earlier Save or Rename changed it,
+Publish receives `409 coreui.errors.instance.sourceChanged` and commits
+nothing. Only then does Tokyo-worker compare the published count with the
+Roma-supplied limit.
+
+An allowed Publish makes one R2 write: it replaces the instance's
+`serve-state.json` with the published `status`, a new `publishedAt`, and the
+exact logical `publicPackage`:
+
+```text
+publicPackage:
+  indexHtml
+  stylesCss
+  runtimeJs
+```
+
+That one object is the complete publication commit. There are no separate
+`index.html`, `styles.css`, or `runtime.js` package objects and therefore no
+partial three-object package state. Public URLs retain those filenames; Serve
+selects the matching string from this exact logical package.
+
+Tokyo-worker is the single writer of revision coordinates. Save and Rename
+make `updatedAt` strictly later than their prior `updatedAt` and any current
+`publishedAt`; Publish/Republish makes `publishedAt` strictly later than both
+the exact `sourceUpdatedAt` it commits and the prior `publishedAt`. The
+`updatedAt > publishedAt` divergence fact and every refreshed publication
+receipt are therefore deterministic even for commands that begin in the same
+millisecond. No UI validator or timestamp repair path is authorized.
 
 ### 5.2 Republish
 
 Publishing an already-published instance replaces that instance's public
-package. Under the same final transition it is recognized as Republish and
-does not consume another publication slot.
+package by atomically replacing the same `serve-state.json`. Under the same
+coordinator and exact-source comparison it is recognized as Republish and does
+not consume another publication slot.
 
 ### 5.3 Denied Publish
 
 A Publish denied by Roma's local capacity precheck does not invoke the
-materializer. A request that reaches Tokyo but overlaps another live Publish
-receives `409 PUBLISH_IN_PROGRESS` with the system message `Another Publish is
-finishing. Please try again in a moment.` It may already have completed
-transient in-memory Roma materialization, but it persists no package or
-publication state. After the winning Publish commits, a later or retried
-request enters the coordinator, sees the consumed slot, and receives the existing
-`402 UPGRADE_REQUIRED` capacity result.
+materializer. A request that reaches Tokyo while any existing-instance command
+is active receives `409 coreui.errors.instance.commandInProgress` with the
+system copy `Another widget update is finishing. Please try again in a
+moment.` A Publish whose materialized `sourceUpdatedAt` no longer equals the
+current source receives `409 coreui.errors.instance.sourceChanged` with the
+instruction to Publish again. Either request may already have completed
+transient in-memory Roma materialization, but neither writes publication truth.
+After the active command commits, a later first-Publish request enters the
+coordinator, sees any newly consumed slot, and receives the existing
+`402 UPGRADE_REQUIRED` capacity result when appropriate.
 
 Every denied Publish:
 
-- persists no package files;
+- persists no `serve-state.json` publication replacement;
 - does not change saved source;
 - does not change publication truth;
 - does not replace the currently served package; and
-- returns one exact capacity or in-progress result.
+- returns one exact capacity, command-contention, or source-contention result.
 
 The `402 UPGRADE_REQUIRED` result opens the shared Roma-hosted upgrade Popup
-using system-owned plan/CTA truth. The `409 PUBLISH_IN_PROGRESS` result asks the
-user to try again after the other Publish finishes; it is not an upsell and the
-system does not poll, queue, or retry automatically.
+using system-owned plan/CTA truth. `commandInProgress` and `sourceChanged` are
+ordinary visible command results, not upsells; the system does not poll, queue,
+or retry automatically.
 
 Pure publication-capacity copy is system-owned. It does not require a
 Widget-specific upsell message because the denied action is an account Publish
@@ -338,53 +381,63 @@ with the Publish command.
 
 Tokyo-worker:
 
-- writes the exact generated package for the instance;
-- writes the resulting publication truth; and
+- writes the exact generated package and resulting publication truth as one
+  `serve-state.json` artifact; and
 - later serves that stored truth under 129D.
 
 Tokyo-worker does not compile Widget source, rerun the materializer, interpret
-Discovery, filter Roma's output, or regenerate missing package files.
+Discovery, filter Roma's output, or regenerate missing logical package
+members.
 
 The existing account-instance root remains:
 
 ```text
 accounts/{accountPublicId}/instances/{instanceId}/
-  instance.config.json
-  instance.content.json
+  instance.source.json
   serve-state.json
-  index.html
-  styles.css
-  runtime.js
   overlays/
     locales/
       {locale}.json
 ```
 
-Tokyo-worker stores the three exact generated strings and writes published
-serve state. The account publication Durable Object then returns the committed
-transition to Tokyo's default Worker entrypoint. That owning entrypoint calls
-`ctx.cache.purge({ tags: [accountInstanceCacheTag] })` after a successful
-Publish. Every cacheable response for the exact account/instance carries that
-same deterministic tag, so one Worker-owned purge covers base HTML,
-support-file paths, locale queries, and tracking-query variants without
-enumerating URLs. A republish replaces the same three package objects for the
-same instance. No second storage or release workflow exists.
+For a published instance, `serve-state.json` contains `status`, `publishedAt`,
+and the exact `{ indexHtml, stylesCss, runtimeJs }` logical `publicPackage`.
+Tokyo-worker does not write separate package objects. Republish replaces that
+same one artifact, so the prior complete publication remains unchanged if the
+single R2 write fails.
 
-For a first Publish, Tokyo-worker holds the coordinator's transient `active`
-gate only across the exact count/package/serve-state transition and clears it
-after published state commits, before cache purge. A request arriving during
-that transition receives `409`; a request arriving after commit reads the new
-serve state even while purge is finishing. No TTL, lease, reclaim, stale-holder,
-or release-failure path exists.
+The coordinator returns the owning mutation result to Tokyo's default Worker
+entrypoint. Only after a successful Publish, Unpublish, or Delete commit, the
+entrypoint may schedule
+`cache.purge({ tags: [accountInstanceCacheTag] })` through `waitUntil`. Exact
+overlay writes/deletes use the same post-commit scheduler. Every cacheable
+response for the exact account/instance carries that deterministic tag. Save
+and Rename do not schedule public eviction because neither changes public
+truth.
 
-Publish success means Tokyo-worker has stored the complete generated package,
-committed the intended publication truth, and completed its cache purge. If
-package and publication truth commit but the following purge fails, Tokyo
-returns an explicit HTTP `502` purge failure, or HTTP `503` missing-purge-
-configuration failure, together with the exact
-`committed: { instanceId, status, changed }` transition. It does not claim full
-success, hide the committed publication as a failed Publish, or roll the
-publication back.
+Delete's logical commit is specifically the coordinated deletion of the exact
+`instance.source.json` visibility anchor. After that commit, the default
+entrypoint also schedules residual instance-prefix deletion through
+`waitUntil`, removing unreachable `serve-state.json` and overlay objects. The
+Delete response does not await either residual cleanup or cache eviction, and
+no cleanup outcome can reclassify successful source-anchor deletion.
+
+The scheduler never awaits or inspects purge outcome for the product path.
+Missing cache context, synchronous throw, rejection, `success:false`, or an
+indefinitely pending purge cannot change, delay, or reclassify the owning
+mutation's result. No service and no user has a cache failure state, retry,
+banner, rollback, reconciliation, or polling workflow.
+
+For every existing-instance command, Tokyo-worker holds the coordinator's
+transient `active` gate only across that command and clears it after the command
+returns. A request arriving during the command receives generic
+`commandInProgress`; a later request reads the newly committed source or
+publication truth. No TTL, lease, reclaim, stale-holder, cache-result, or
+release-failure path exists.
+
+Publish success means Tokyo-worker committed the complete generated package
+and intended publication truth in the one artifact. Cache eviction remains an
+invisible delivery optimization outside that definition.
 
 ## 13. First Publish, Republish, And Unpublish
 
@@ -396,37 +449,38 @@ instance from unpublished to published.
 ### 13.2 Republish
 
 An allowed republish generates a new package from the latest saved source and
-replaces the currently public package for that same instance.
+replaces the currently public package for that same instance with one atomic
+`serve-state.json` write.
 
 ### 13.3 Unpublish
 
 Unpublish changes publication truth so the package is no longer served. It
-does not delete editable source and does not materialize another package.
+does not delete editable source and does not materialize another package. Its
+one `serve-state.json` replacement records unpublished truth and contains no
+logical `publicPackage`.
 
-For either publication direction, Roma consumes a post-commit purge failure as
-two exact facts: the requested publication state committed, and public delivery
-refresh failed. Builder reopens the exact instance and Widgets updates its row
-and cache from `committed`; Roma then shows a status-specific durable account-
-shell banner. A committed Publish is retried through Republish. A committed
-Unpublish is retried through the Widgets banner's **Retry public delivery**
-action, which invokes the same idempotent Unpublish command with the committed
-status. Bob's ToolDrawer and the upsell
-Popup do not own this result, and no queue, polling loop, rollback, or alternate
-retry route is added.
+Publication UI lives in Roma only. One shared Roma implementation renders on
+the Widgets inventory row and in the slim Roma bar above Bob. The toggle owns
+Publish/Unpublish. A published instance whose exact saved `updatedAt` is later
+than `publishedAt` shows **Republish**. Published receipt and public actions are
+Roma facts. Bob contains no status chip or public action and is never reopened
+after publication.
 
-Publication UI lives only on the widgets inventory page. The row's toggle
-remains the Publish/Unpublish control. Next to it, a published row whose
-saved source is newer than its published package shows one action —
-"Update live widget" — which invokes the same Publish command and route.
-The editor Saves; it hosts no publication controls or notices. Bob's status
-chip displays publication facts ("Published · time · changes not live") and
-demands nothing. After Publish succeeds, Roma reopens the same instance so
-Bob receives the new publication status and public actions.
+That comparison is exact system truth, not a time heuristic: Tokyo makes every
+Save/Rename `updatedAt` strictly later than the prior source and publication
+coordinates, and makes successful Publish/Republish `publishedAt` strictly
+later than both the committed `sourceUpdatedAt` and the prior `publishedAt`.
+
+Dirty Bob state disables Publish/Republish with **Save first**, but Unpublish
+remains enabled. On product success, the shared controller force-reads exact
+Widgets facts so `publishedAt` comes from Tokyo package commit truth rather than
+an invented client time. There is no cache banner, retry, reconciliation,
+rollback, queue, or polling state anywhere in Roma or Bob.
 
 ## 14. Save Remains Unchanged By Publish
 
-Publish reads saved source. It does not rewrite
-`instance.config.json` or `instance.content.json`.
+Publish reads the exact saved `instance.source.json`. It does not rewrite that
+artifact.
 
 Package generation, package storage, and publication state are Publish work.
 Editable source remains the user's saved instance and may be edited again after
@@ -439,13 +493,8 @@ Publish.
 ```text
 published instance identity
 +
-stored publication truth
-+
-stored index.html
-+
-stored styles.css
-+
-stored runtime.js
+stored serve-state.json containing published status, publishedAt, and exact
+logical publicPackage { indexHtml, stylesCss, runtimeJs }
 +
 zero or more exact locale overlays
 ```
@@ -457,10 +506,10 @@ zero or more exact locale overlays
 | Authority | 129C responsibility |
 | --- | --- |
 | Widget software | Core source, declarations, Discovery, and exact saved-state meaning |
-| Bob | Explicit Publish intent only when the draft is saved |
-| Roma | Current-account Publish command, capacity decision, materializer invocation, and shared denial Popup |
+| Bob | Browser-memory editing, dirty signal, and Save only; no publication intent or facts |
+| Roma | Current-account Publish/Republish/Unpublish controls, capacity decision, materializer invocation, publication receipt/public actions, and shared denial Popup |
 | Roma materializer | Sole generation of complete `index.html`, `styles.css`, and `runtime.js` |
-| Tokyo-worker | Exact package and publication storage |
+| Tokyo-worker | Existing-instance command serialization, exact source revision/capacity decision, and one atomic package/publication artifact |
 | Dieter | Shared Popup mechanics |
 
 No shared authority acquires Widget-specific meaning.
@@ -471,7 +520,8 @@ No shared authority acquires Widget-specific meaning.
 - enforce public capacity at Publish;
 - generate mandatory complete HTML/CSS/JavaScript from exact saved source;
 - generate technical Discovery output during Publish;
-- store one base package through Tokyo-worker;
+- store one base package and publication result as one Tokyo-worker
+  `serve-state.json` commit;
 - preserve overlays as separate exact locale truth;
 - leave saved source unchanged; and
 - hand only stored published truth to Serve.
@@ -492,9 +542,11 @@ No shared authority acquires Widget-specific meaning.
 
 The local implementation includes the current Roma Publish route/UI, fast
 capacity precheck, generic materializer inputs, baseline and enabled Discovery
-output, stable content-slot identity, Tokyo's account-atomic final capacity/
-publication transition, exact package replacement, and Publish/republish/
-unpublish results.
+output, stable content-slot identity, Tokyo's per-account serialization of
+existing-instance Save/Rename/Publish/Unpublish/Delete, exact
+`sourceUpdatedAt` comparison, strict revision coordinates, final capacity
+decision, one-artifact package/publication replacement, and exact
+Publish/Republish/Unpublish results.
 
 Stable identity gives repeated translated content exact Save behavior:
 reorder follows identity, a newly added identity remains intentional
@@ -508,16 +560,25 @@ those operations exist.
 
 ## 20. Local Verification Contract
 
-- Create and Save never invoke the materializer;
+- New and Save never invoke the materializer;
 - only explicit allowed Publish invokes the materializer;
 - Free can retain multiple editable instances and one sequential first Publish
   is denied after one instance is already published;
 - a Roma-local capacity denial performs no materialization, while any final
   Tokyo denial persists no package or publication change;
-- overlapping first Publishes serialize at Tokyo: a live contender receives
-  exact `409 PUBLISH_IN_PROGRESS`, and a later request receives exact
-  `402 UPGRADE_REQUIRED` after the winner consumes the last slot;
-- first Publish produces all three mandatory files from exact saved source;
+- existing-instance Save/Rename/Publish/Unpublish/Delete serialize at Tokyo;
+  any live contender receives exact
+  `409 coreui.errors.instance.commandInProgress` and performs no mutation;
+- Publish compares its exact materialized `sourceUpdatedAt` with current source
+  before commit; a mismatch receives exact
+  `409 coreui.errors.instance.sourceChanged`, while a later first Publish
+  receives exact `402 UPGRADE_REQUIRED` when the last slot was consumed;
+- Save/Rename and Publish/Republish write strictly ordered
+  `updatedAt`/`publishedAt` coordinates, so divergence and refreshed
+  publication receipts have no same-millisecond ambiguity;
+- first Publish produces all three mandatory logical public files from exact
+  saved source and commits them with publication truth in one
+  `serve-state.json`;
 - republish uses the latest saved source and does not consume another slot;
 - raw `index.html` contains each Widget's complete meaningful content before
   JavaScript, including complete FAQ questions and answers;
@@ -527,21 +588,26 @@ those operations exist.
   description;
 - Tier 2+ enabled content-derived output uses only exact declared saved
   content and does not replace the baseline;
-- Tokyo-worker stores Roma's generated files without generating Widget code;
-- a post-commit cache-purge failure returns explicit failure plus exact
-  committed publication truth, Roma reconciles its visible state to that truth,
-  and the ordinary status command remains retryable;
-- Publish/Republish, Unpublish, Delete, and exact overlay mutation use the same
-  Worker-owned default-entrypoint
-  `ctx.cache.purge({ tags: [accountInstanceCacheTag] })`, covering package paths
-  and locale/tracking query variants;
+- Tokyo-worker stores Roma's generated strings as the exact logical
+  `publicPackage` without generating Widget code or writing separate package
+  objects;
+- Publish/Republish, Unpublish, Delete, and exact overlay mutation schedule the
+  same Worker-owned account-instance Cache-Tag eviction after their owning
+  mutation, and every missing/false/throw/reject/pending eviction outcome is
+  product-inert;
+- generated public package responses use bounded revalidation rather than a
+  24-hour stale-while-revalidate dependency;
+- Roma inventory and Builder use one publication control/result path, and Bob
+  contains no publication facts or commands;
 - Save source remains unchanged by Publish;
 - repeated localized content follows stable identity across reorder/add/delete,
   and editable attributes use their exact authored target;
 - no Widget-specific shared-service branch or alternate release workflow exists;
   and
-- focused implementation checks and cloud-dev Worker/R2/Pages/reachability
-  deployment proof pass, while owner QA remains pending.
+- focused local implementation checks pass. Prior PRD 129 baseline
+  Worker/R2/Pages/reachability proof exists; the corrected Roma-only
+  publication UI and background-eviction boundary are not deployed, and owner
+  QA remains pending.
 
 ## 21. Required Final V1-V8 Audit
 
@@ -549,10 +615,10 @@ those operations exist.
 | --- | --- | --- |
 | V1 | Pass | Missing package, policy, Discovery, storage, or stable-coordinate truth has no fallback; intentional untranslated source content is exact saved truth. |
 | V2 | Pass | Publish does not repair saved source or generated output. |
-| V3 | Pass | Policy decision, materialization, account-atomic storage/publication, and Serve handoff remain explicit; account suspension lifecycle remains with its named owner. |
-| V4 | Pass | Roma's fast precheck and Tokyo's lifecycle-fenced per-account coordinator prevent over-capacity first-Publish success across ordinary interleaving and Durable Object restart; a contender fails explicitly and persists nothing. |
-| V5 | Pass | Missing or corrupt source/package truth is not treated as an unpublished empty instance. |
-| V6 | Pass | Publish succeeds only as complete package storage, publication truth, and cache purge; a post-commit purge failure exposes both the committed transition and failed delivery refresh instead of masquerading as full success or total Publish failure. |
+| V3 | Pass | Policy decision, materialization, source revision, single-artifact storage/publication, and Serve handoff remain explicit; account suspension lifecycle remains with its named owner. |
+| V4 | Pass | Roma's fast precheck and Tokyo's lifecycle-fenced per-account coordinator serialize existing-instance mutations; `sourceUpdatedAt` and final capacity checks prevent stale or over-capacity Publish across ordinary interleaving and Durable Object restart. |
+| V5 | Pass | Missing or corrupt source/package truth is not treated as an unpublished empty instance; after Delete, a residual serve-state/overlay prefix without its source anchor is unreachable cleanup residue, not an instance. |
+| V6 | Pass | Publish succeeds exactly as one complete package/publication commit; Delete succeeds exactly as source-anchor deletion; contention and stale source fail explicitly without a write, and residual cleanup/cache eviction are structurally unable to masquerade as product success or failure. |
 | V7 | Pass | No Save-time materializer, alternate release workflow, or client initial renderer is authorized. |
 | V8 | Pass | Verification remains offline/operator evidence, not part of Publish or Serve. |
 
@@ -562,30 +628,34 @@ audit is the implementation evidence.
 ## 22. Reconciliation State
 
 ```text
-all-Widget explicit Publish/Republish UI: present in cloud-dev
+shared Roma-only Publish/Republish/Unpublish UI: implemented locally; cloud-dev verification pending
 publication-capacity decision before materialization: present in cloud-dev
 Roma-only complete HTML/CSS/JavaScript generation: present in cloud-dev
 all-Widget baseline Discovery and authored enabled output: present in cloud-dev
-Tokyo exact package/publication write: present in cloud-dev
-Unpublish without source deletion: present in cloud-dev
-atomic account publication-capacity transition: present in cloud-dev
-account coordinator: one lifecycle-fenced Tokyo Durable Object per account; no durable policy/count/publication truth
-live overlap result: 409 PUBLISH_IN_PROGRESS; no package/publication persistence
+Tokyo exact package/publication write: one atomic serve-state.json containing status, publishedAt, and exact logical publicPackage implemented locally; cloud-dev verification pending
+separate index.html/styles.css/runtime.js storage objects: removed locally; public filename URLs remain and read logical package members
+Unpublish without source deletion: present in prior cloud-dev baseline; current one-artifact behavior requires verification
+account coordinator: one lifecycle-fenced Tokyo Durable Object per account serializing existing-instance Save/Rename/Publish/Unpublish/Delete; implemented locally, with no durable policy/count/publication truth
+live command overlap result: 409 coreui.errors.instance.commandInProgress; no mutation or automatic retry
+stale materialized source result: 409 coreui.errors.instance.sourceChanged from exact sourceUpdatedAt comparison; no publication write
+revision coordinates: Save/Rename updatedAt strictly later than prior updatedAt and publishedAt; Publish/Republish publishedAt strictly later than both committed sourceUpdatedAt and prior publishedAt; implemented locally
 later over-capacity result: 402 UPGRADE_REQUIRED
 stable scalar/repeated overlay identity: present in cloud-dev
 authored exact attribute localization target: present in cloud-dev
 pre-GA positional-overlay compatibility path: absent; explicit Generate/delete cutover required for previously stored positional overlays
 account suspension lifecycle runner/full deletion: documented follow-on account work, not a PRD 129 blocker
-account product data: CLICKEEN Widget Defaults explicitly updated through Roma's authenticated defaults route to include the canonical shared `behavior.seoGeo.enabled:false`; QA VUWUJ7OQ0Y source/package restored after the live Save/Republish proof
+account product data: no remote product-data work performed in this pass; previously documented cloud-dev state remains unchanged
+atomic editable source: one instance.source.json containing metadata/config/content is implemented locally; Save/Rename each replace it in one PUT
+first-Save source visibility: initial unpublished serve-state writes first and instance.source.json commits last; only exact source keys enumerate
+instance Delete commit: exact instance.source.json deletion inside the account coordinator is the logical product result; default-entrypoint serve-state/overlay prefix cleanup and cache eviction are scheduled afterward through waitUntil and are product-inert; implemented locally, cloud-dev verification pending
+legacy cloud-dev source topology: every saved instance using instance.config.json plus instance.content.json requires an explicit pre-GA source cutover or recreation decision; no compatibility reader or remote action in this pass
 stored positional-overlay Generate/delete cutover: pending
-republish of affected pre-stable-slot public packages: pending
-Worker-owned account-instance Cache-Tag invalidation proof for base and locale variants: passed live on `dev.clk.live/CLICKEEN/VUWUJ7OQ0Y` (first post-Republish reads were MISS for base, `?locale=fr`, tracking-query, CSS, and runtime)
-prior zone-API tag purge runtime result: proved silent no-op after warm base/locale HIT responses and successful Republish
-prior zone-API prefix purge runtime result: proved silent no-op because zone-level purge cannot invalidate Workers Caching
-current invalidation: default-entrypoint `ctx.cache.purge({ tags: [accountInstanceCacheTag] })` implemented and live-proven on cloud-dev
-post-commit publication/purge result correction: deployed in `36e65d8a`; cloud-dev deploy and reachability proofs passed
-product commit: 36e65d8a
-main push: performed
-deploy: cloud-dev Worker deploy run `32177053173`, Roma verification run `32177053128`, and reachability run `32177415308` passed for commit `36e65d8a`
-live product: cloud-dev active; owner QA pending
+pre-GA atomic-publication cutover: deploy the corrected runtime, explicitly cut over or recreate every legacy saved instance, then explicitly Publish/Republish each instance intended to remain published so its serve-state.json contains the logical publicPackage; no prior-object compatibility fallback exists
+republish of currently published cloud-dev instances: pending; no Republish or other remote cutover work performed in this pass
+cache eviction non-interference: implemented and locally tested for missing, false, synchronous throw, rejection, and pending outcomes
+generated package cache policy: `public, max-age=60, s-maxage=300, must-revalidate`
+product commit: not created for the current correction
+main push: not performed for the current correction
+deploy: not performed for the current correction
+live product: prior PRD 129 publication/storage/cache baseline remains active; current coordinator, strict timestamps, atomic serve-state package, Roma UI, and cache behavior have not been cloud-dev verified; owner QA pending
 ```

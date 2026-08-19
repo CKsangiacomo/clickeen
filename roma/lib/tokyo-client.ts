@@ -20,7 +20,6 @@ export type TokyoCallFailure = {
     current?: number;
     limit?: number;
   };
-  committed?: unknown;
 };
 
 export type TokyoCallResult<T> =
@@ -73,15 +72,11 @@ export async function callTokyo<T>(
   }
   const payload = await response.json();
   if (!response.ok) {
-    const failure = payload as {
-      error: TokyoCallFailure['error'];
-      committed?: unknown;
-    };
+    const failure = payload as { error: TokyoCallFailure['error'] };
     return {
       ok: false,
       status: response.status,
       error: failure.error,
-      ...(failure.committed === undefined ? {} : { committed: failure.committed }),
     };
   }
   return { ok: true, value: args.decode(payload), status: response.status };

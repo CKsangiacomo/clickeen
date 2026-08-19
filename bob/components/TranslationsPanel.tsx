@@ -271,7 +271,9 @@ export function TranslationsPanel({
   const hasActiveLocales = activeLocales.length > 0;
   const hasTranslatableFields = Boolean(session.compiled?.editableFields?.fields?.length);
   const generateButtonMessage =
-    session.isDirty || session.isSaving
+    !instanceId
+      ? 'Save this widget before generating translations.'
+      : session.isDirty || session.isSaving
       ? 'Save changes before generating translations.'
       : hasActiveLocales && !hasTranslatableFields
         ? 'This widget has no translation fields.'

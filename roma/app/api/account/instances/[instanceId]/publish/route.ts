@@ -128,6 +128,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
   const publish = await publishAccountInstanceInTokyo({
     accountId: productAccountId,
     instanceId,
+    sourceUpdatedAt: saved.value.row.updatedAt,
     publishedLimit,
     accountCapsule: current.value.authzToken,
     requestId: current.value.requestId,
@@ -150,30 +151,12 @@ export async function POST(request: NextRequest, context: RouteContext) {
         current.value.setCookies,
       );
     }
-    if (
-      publish.status === 409 &&
-      publish.error.reasonKey === 'coreui.errors.instance.publishInProgress'
-    ) {
-      return withSession(
-        request,
-        NextResponse.json(
-          {
-            ok: false,
-            kind: 'PUBLISH_IN_PROGRESS',
-            error: publish.error,
-          },
-          { status: 409 },
-        ),
-        current.value.setCookies,
-      );
-    }
     return withSession(
       request,
       NextResponse.json(
         {
           ok: false,
           error: publish.error,
-          ...(publish.committed ? { committed: publish.committed } : {}),
         },
         { status: publish.status },
       ),

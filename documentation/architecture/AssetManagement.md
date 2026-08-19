@@ -99,7 +99,10 @@ accounts/{accountPublicId}/assets/{filename}
 ```
 
 The account asset list returns current account facts from Tokyo-worker. Storage
-usage reads the same account asset authority.
+usage reads the same account asset authority and counts only the exact direct
+objects under `accounts/{accountPublicId}/assets/`. Unreachable residual bytes
+under a deleted Widget instance prefix are outside this authority and never
+affect `storage.bytes.max`.
 
 ## Route And Storage Contract
 
@@ -130,6 +133,8 @@ result.
 Accepted files satisfy:
 
 - account route has a valid current account
+- Roma's current account status permits asset upload (`active` in the current
+  product contract)
 - filename is safe for the account asset folder
 - path stays inside `accounts/{accountPublicId}/assets/`
 - extension is non-scriptable, MIME is accepted, and SVG-like uploads pass SVG
@@ -247,6 +252,8 @@ through Roma.
 
 ## Failure Semantics
 
+- A non-active account upload is denied by Roma with `403` before Tokyo-worker
+  receives the file.
 - Missing resolved assets return `422`.
 - If Tokyo-worker cannot complete an exact storage operation, that operation
   fails visibly. Roma does not substitute, filter, repair, or reinterpret the
@@ -255,20 +262,15 @@ through Roma.
   never overwritten as recovery.
 - Asset delete of a missing object returns `404`; Roma must not report success.
 
-## Current Implementation Mismatch
+## Current Implementation Boundary
 
-The current implementation still contains inherited internal distrust that is
-not part of this architecture contract:
-
-- Bob's Builder session adapter revalidates the Roma asset response;
-- Roma revalidates fields in Tokyo-worker's delete-success result;
-- Tokyo-worker repeats an account-status rejection after Roma has already
-  supplied the current-account policy result.
-
-Those checks are implementation debt. They must be removed at their owning
-code surfaces rather than documented as required safety. The external upload
-admission checks above remain required because raw user bytes have not yet
-become Clickeen-owned truth.
+The closed-system handoff is implemented at the account asset path. Roma's
+browser-facing upload route applies the current account-status policy before
+forwarding; Bob and Roma consume the owning operation's exact success result,
+and Tokyo-worker does not repeat that policy. Browser upload admission, service
+authentication, account authorization, file/path/MIME/executable-content
+safety, actual received-byte limits, exact storage-cap execution, and storage
+failure handling remain at their owning boundaries.
 
 ## Verification
 

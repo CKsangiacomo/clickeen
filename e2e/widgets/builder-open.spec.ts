@@ -23,7 +23,8 @@ test.describe('Roma Builder authenticated smoke', () => {
     await expect(bobFrame.locator('.topdrawer')).toBeVisible({ timeout: 20_000 });
     await expect(bobFrame.getByRole('radio', { name: 'Manual' })).toBeVisible({ timeout: 20_000 });
     await expect(bobFrame.getByText('Content').first()).toBeVisible();
-    await expect(bobFrame.locator('.topdrawer-instance-title')).toBeVisible({ timeout: 30_000 });
+    await expect(page.locator('.roma-builder-header')).toBeVisible({ timeout: 30_000 });
+    await expect(page.locator('.roma-builder-header .heading-4')).toBeVisible();
     await expect(bobFrame.locator('section.workspace[data-widget-ready="true"]')).toBeVisible({
       timeout: 30_000,
     });
@@ -53,8 +54,7 @@ test.describe('Roma Builder authenticated smoke', () => {
     expect(bobCanvasBackground).toBe(outerCanvasBackground);
     expect(bobWorkspaceBackground).toBe(outerCanvasBackground);
 
-    await bobFrame.getByRole('button', { name: 'More' }).click();
-    const copyCodeAction = bobFrame.getByRole('menuitem', { name: 'Copy code' });
+    const copyCodeAction = page.locator('.roma-builder-header').getByRole('button', { name: 'Copy code' });
     await expect(copyCodeAction).toBeVisible();
     await copyCodeAction.click();
     const copyCodeDialog = page.getByRole('dialog', { name: 'Copy code' });

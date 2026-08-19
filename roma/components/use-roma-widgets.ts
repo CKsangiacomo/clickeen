@@ -15,21 +15,6 @@ export type WidgetCatalogOption = {
   description: string;
 };
 
-type RawWidgetInstance = {
-  instanceId?: string | null;
-  widgetType?: string | null;
-  displayName?: string | null;
-  status?: string | null;
-  updatedAt?: string | null;
-  publishedAt?: string | null;
-};
-
-type RawWidgetCatalogOption = {
-  widgetType?: string | null;
-  displayName?: string | null;
-  description?: string | null;
-};
-
 export type RomaWidgetsResponse = {
   accountId: string;
   catalog: WidgetCatalogOption[];
@@ -48,90 +33,9 @@ const ROMA_WIDGETS_CACHE_TTL_MS = 5 * 60 * 1000;
 const romaWidgetsCache = new Map<string, RomaWidgetsCacheEntry>();
 const romaWidgetsInflight = new Map<string, Promise<RomaWidgetsResponse>>();
 const romaWidgetsRequestSeq = new Map<string, number>();
-const RETIRED_WIDGETS_PAYLOAD_FIELDS = [
-  'systemWidgets',
-  'canCreate',
-  'disabledReasonKey',
-  'account',
-] as const;
-
-export function normalizeWidgetType(value: string | null | undefined): string | null {
-  const normalized = String(value || '')
-    .trim()
-    .toLowerCase();
-  return normalized || null;
-}
-
-export function normalizeWidgetInstance(raw: RawWidgetInstance): WidgetInstance | null {
-  const instanceId = String(raw.instanceId || '').trim();
-  if (!instanceId) return null;
-
-  const widgetType = normalizeWidgetType(raw.widgetType);
-  if (!widgetType) return null;
-  const displayName = typeof raw.displayName === 'string' ? raw.displayName.trim() : '';
-  if (raw.status !== 'published' && raw.status !== 'unpublished') return null;
-  const status = raw.status;
-  const updatedAt = typeof raw.updatedAt === 'string' ? raw.updatedAt.trim() : '';
-  if (!updatedAt) return null;
-  const publishedAtRaw = typeof raw.publishedAt === 'string' ? raw.publishedAt.trim() : '';
-  const publishedAt = publishedAtRaw || null;
-
-  return {
-    instanceId,
-    widgetType,
-    displayName,
-    status,
-    publishedAt,
-    updatedAt,
-  };
-}
-
-export function normalizeWidgetCatalogOption(raw: RawWidgetCatalogOption): WidgetCatalogOption | null {
-  const widgetType = normalizeWidgetType(raw.widgetType);
-  if (!widgetType) return null;
-  const displayName = typeof raw.displayName === 'string' ? raw.displayName.trim() : '';
-  if (!displayName) return null;
-  const description = String(raw.description || '').trim();
-  return {
-    widgetType,
-    displayName,
-    description,
-  };
-}
-
-export function normalizeRomaWidgetsResponse(raw: unknown): RomaWidgetsResponse | null {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
-  const record = raw as Record<string, unknown>;
-  const accountId = typeof record.accountId === 'string' ? record.accountId.trim() : '';
-  if (!accountId) return null;
-
-  if (
-    RETIRED_WIDGETS_PAYLOAD_FIELDS.some((field) => field in record) ||
-    !Array.isArray(record.instances) ||
-    !Array.isArray(record.catalog)
-  ) {
-    return null;
-  }
-  const instances = record.instances.map((item) => normalizeWidgetInstance((item || {}) as RawWidgetInstance));
-  const catalog = record.catalog.map((item) => normalizeWidgetCatalogOption((item || {}) as RawWidgetCatalogOption));
-  if (
-    instances.some((item): item is null => item === null) ||
-    catalog.some((item): item is null => item === null)
-  ) {
-    return null;
-  }
-
-  return {
-    accountId,
-    catalog: catalog as WidgetCatalogOption[],
-    instances: instances as WidgetInstance[],
-  };
-}
 
 export function readRomaWidgetsCache(accountId: string): RomaWidgetsCacheEntry | null {
-  const normalizedAccountId = String(accountId || '').trim();
-  if (!normalizedAccountId) return null;
-  return romaWidgetsCache.get(normalizedAccountId) ?? null;
+  return romaWidgetsCache.get(accountId) ?? null;
 }
 
 export function isRomaWidgetsCacheFresh(entry: RomaWidgetsCacheEntry | null): boolean {
@@ -157,13 +61,32 @@ export function updateRomaWidgetsCache(
   return writeRomaWidgetsCache(updater(current.data));
 }
 
+export function invalidateRomaWidgetsCache(accountId: string): void {
+  romaWidgetsCache.delete(accountId);
+}
+
+export function upsertRomaWidgetInstanceCache(
+  accountId: string,
+  instance: WidgetInstance,
+): RomaWidgetsCacheEntry | null {
+  return updateRomaWidgetsCache(accountId, (current) => {
+    const existingIndex = current.instances.findIndex(
+      (entry) => entry.instanceId === instance.instanceId,
+    );
+    const instances = existingIndex >= 0
+      ? current.instances.map((entry) =>
+          entry.instanceId === instance.instanceId ? instance : entry)
+      : [instance, ...current.instances];
+    return { ...current, instances };
+  });
+}
+
 export async function loadRomaWidgetsForAccount(args: {
   accountId: string;
   fetchJson: RomaWidgetsFetchJson;
   force?: boolean;
 }): Promise<RomaWidgetsResponse> {
-  const accountId = String(args.accountId || '').trim();
-  if (!accountId) throw new Error('coreui.errors.auth.contextUnavailable');
+  const accountId = args.accountId;
 
   const cached = readRomaWidgetsCache(accountId);
   if (!args.force && cached && isRomaWidgetsCacheFresh(cached)) {
@@ -176,16 +99,12 @@ export async function loadRomaWidgetsForAccount(args: {
 
   const requestSeq = (romaWidgetsRequestSeq.get(inFlightKey) ?? 0) + 1;
   romaWidgetsRequestSeq.set(inFlightKey, requestSeq);
-  const request = args.fetchJson<unknown>('/api/account/widgets', { method: 'GET' }).then((payload) => {
-    const normalized = normalizeRomaWidgetsResponse(payload);
-    if (!normalized || normalized.accountId !== accountId) {
-      throw new Error('coreui.errors.payload.invalid');
-    }
+  const request = args.fetchJson<RomaWidgetsResponse>('/api/account/widgets', { method: 'GET' }).then((payload) => {
     if (romaWidgetsRequestSeq.get(inFlightKey) === requestSeq) {
-      writeRomaWidgetsCache(normalized);
-      return normalized;
+      writeRomaWidgetsCache(payload);
+      return payload;
     }
-    return readRomaWidgetsCache(accountId)?.data ?? normalized;
+    return readRomaWidgetsCache(accountId)?.data ?? payload;
   });
 
   romaWidgetsInflight.set(inFlightKey, request);
@@ -200,7 +119,10 @@ export async function loadRomaWidgetsForAccount(args: {
 
 export function buildBuilderRoute(args: {
   instanceId: string;
-  widgetType?: string | null;
 }): string {
   return `/builder/${encodeURIComponent(args.instanceId)}`;
+}
+
+export function buildNewBuilderRoute(widgetType: string): string {
+  return `/builder/new/${encodeURIComponent(widgetType)}`;
 }

@@ -268,7 +268,7 @@ Translation Agent:
 - rejects missing requested coordinates.
 
 Model execution goes through San Francisco `/model/turn` in structured mode
-(not `/model/chat`) using the same Roma grant. `TRANSLATION_OUTPUT_SCHEMA`
+using the same Roma grant. `TRANSLATION_OUTPUT_SCHEMA`
 defines the structured-output shape sent on each governed model turn.
 
 Structured output guarantees the shape; Translation Agent owns the domain

@@ -1,6 +1,6 @@
 # Overlay Architecture
 
-Last updated: 2026-08-17
+Last updated: 2026-08-18
 
 ## Product Rule
 
@@ -19,12 +19,8 @@ a locale.
 
 ```text
 accounts/{accountPublicId}/instances/{instanceId}/
-  instance.config.json
-  instance.content.json
+  instance.source.json
   serve-state.json
-  index.html
-  styles.css
-  runtime.js
   overlays/
     locales/
       {locale}.json
@@ -44,9 +40,9 @@ There is no instance-level locale artifact subtree.
 
 ## Field Authority
 
-`instance.content.json` owns the current saved text-field set. Its physical map
-keys remain concrete paths. Each field also carries its `fieldPattern` and
-stable `identityKey`.
+The `content` member of atomic `instance.source.json` owns the current saved
+text-field set. Its map keys remain concrete paths. Each field also carries its
+`fieldPattern` and stable `identityKey`.
 
 Overlay `values` use that `identityKey` as the content coordinate:
 
@@ -93,7 +89,7 @@ Tokyo-worker:
    Translation-Agent overlay;
 4. applies each exact value whose stable coordinate is present to the matching
    semantic node body or exact authored `data-ck-content-attribute` target in
-   the stored base `index.html` response;
+   the published serve-state's logical `indexHtml` response;
 5. serves the resulting semantic HTML response through the existing public
    cache policy, with the locale query in the request coordinate.
 
@@ -102,8 +98,8 @@ It does not invent options from a browser global or `<html lang>`; absent
 options fail visibly. Bob preview remains separate and uses its exact delivered
 preview locale policy.
 
-The stored base `index.html` already contains complete semantic base-language
-content. A localized HTML response contains every available selected-locale
+The published serve-state's logical `indexHtml` already contains complete
+semantic base-language content. A localized HTML response contains every available selected-locale
 value before JavaScript. A new stable identity added since the last Generate
 Translations operation remains visibly base-source content and is explicitly
 untranslated; this is not substitution from another overlay or locale. The
@@ -118,11 +114,12 @@ authorizes a second overlay schema/equality validator in the serving path.
 Those error responses are not cached. Because an overlay coordinate changes
 both one localized response and the switcher options in every index response,
 Publish, unpublish, Delete, and an exact overlay write/delete cause Tokyo's
-default Worker entrypoint to purge its own Workers Cache after the owning truth
-mutation. It calls
-`ctx.cache.purge({ tags: [accountInstanceCacheTag] })`; every cacheable response
+default Worker entrypoint to schedule its own Workers Cache eviction after the
+owning truth mutation through `waitUntil`. It uses the exact
+`accountInstanceCacheTag`; every cacheable response
 for the exact account/instance carries that tag, covering every package path
-and locale/tracking query variant.
+and locale/tracking query variant. Eviction outcome is never part of the
+mutation result or product UI.
 
 This stable-coordinate format is a pre-GA cutover for scalar and repeated
 fields. Previously stored positional-key overlays are not compatibility input.
@@ -137,8 +134,8 @@ read fallback, migration-on-Serve, or alternate overlay schema.
 | List/read/write/delete overlay values | Roma account route -> Tokyo-worker translation route |
 | Generate translations | Bob command -> Roma -> Translation Agent -> exact Tokyo overlay writes |
 | Remove an active language | Roma deletes that exact overlay from every account instance |
-| Save instance source | Roma -> Tokyo-worker; updates `instance.config.json` and `instance.content.json` only |
-| Publish/unpublish | Roma owns the account command; allowed Publish materializes the base package, and Tokyo-worker stores package/publication truth |
+| Save instance source | Roma -> Tokyo-worker; atomically replaces `instance.source.json` only |
+| Publish/unpublish | Roma owns the account command; allowed Publish materializes the base package, and Tokyo-worker atomically replaces package/publication truth in `serve-state.json` |
 | Public localized read | Tokyo-worker reads the one base package and exact overlay |
 
 ## Failure Semantics
@@ -148,11 +145,10 @@ read fallback, migration-on-Serve, or alternate overlay schema.
 - Partial translation failure stays partial and names the exact failed locales.
 - Overlay deletion reports every completed and failed instance/locale
   coordinate.
-- An overlay write/delete commits its exact file before the cache purge. A
-  following purge failure is returned as failure even though the overlay may
-  already be stored; the current result has no typed `committed` overlay
-  outcome. Correcting that translation result/feedback contract remains named
-  PRD 127/128 work and is not a PRD 129 closure claim.
+- An overlay write/delete returns the exact storage result. After a successful
+  mutation, Tokyo-worker schedules the same account-instance cache eviction as
+  publication and deletion. Cache availability or outcome cannot change the
+  overlay result and is never exposed to Roma or the user.
 - Missing requested overlay is absence; malformed stored overlay is corruption.
   They are not interchangeable.
 - A missing value for a newly added stable identity is explicit untranslated
@@ -164,8 +160,8 @@ read fallback, migration-on-Serve, or alternate overlay schema.
 
 ## Local Implementation State
 
-Tokyo-worker's local public path now trusts Roma's stored package and the exact
-Translation-Agent overlay. Big Bang, Cards, Countdown, FAQ, and Logo Showcase
+Tokyo-worker's local public path now trusts Roma's atomic published serve-state
+and the exact Translation-Agent overlay. Big Bang, Cards, Countdown, FAQ, and Logo Showcase
 all materialize their authored semantic content slots through the canonical
 Widget contract. Tokyo-worker uses Cloudflare `HTMLRewriter` to replace those
 slots by stable `identityKey` and set
@@ -184,6 +180,13 @@ locale falls back to base.
 
 The all-Widget changes are deployed and verified in cloud-dev; owner QA remains
 pending.
+
+The atomic source and published serve-state storage shapes are a separate
+pre-GA cutover. After their deployment, all legacy cloud-dev saved instances
+require an explicit source cutover or recreation; any that should remain public
+then require explicit Publish/Republish. No compatibility reader or
+migration-on-read exists, and this documentation pass performed no remote
+work.
 
 ## Verification
 

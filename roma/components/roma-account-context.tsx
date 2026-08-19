@@ -20,11 +20,7 @@ const AUTH_REQUIRED_REASON_KEY = 'coreui.errors.auth.required';
 type RomaAccountContextValue = {
   data: RomaMeResponse;
   activeAccount: RomaActiveAccount;
-  accountContext: ResolvedRomaContext & {
-    accountId: string;
-    accountPublicId: string;
-    accountLabel: string;
-  };
+  accountContext: ResolvedRomaContext;
   accountPolicy: RomaAuthzPolicy;
   reload: () => Promise<void>;
 };
@@ -55,23 +51,12 @@ export function RomaAccountProvider({ children }: { children: ReactNode }) {
     if (!me.data) return null;
     const activeAccount = resolveActiveRomaAccount(me.data);
     const accountContext = resolveActiveRomaContext(me.data);
-    const accountId = accountContext.accountId;
-    const accountPublicId = accountContext.accountPublicId;
-    if (!activeAccount || !accountId || !accountPublicId || !accountContext.accountLabel) {
-      return null;
-    }
-    const accountPolicy = resolveAccountPolicyFromRomaAuthz(me.data, accountId);
-    if (!accountPolicy) return null;
 
     return {
       data: me.data,
       activeAccount,
-      accountContext: {
-        accountId,
-        accountPublicId,
-        accountLabel: accountContext.accountLabel,
-      },
-      accountPolicy,
+      accountContext,
+      accountPolicy: resolveAccountPolicyFromRomaAuthz(me.data),
       reload: me.reload,
     };
   }, [me.data, me.reload]);

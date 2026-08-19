@@ -199,7 +199,7 @@ export function ToolDrawer({
   const activePanelNode = !compiled ? (
     <div className="tdmenucontent">
       <div className="heading-3">Content</div>
-      <div className="label-s label-muted">No instance selected yet. Choose one from Widgets to begin editing.</div>
+      <div className="label-s label-muted">Loading widget…</div>
     </div>
   ) : activePanel === 'translations' ? (
     <TranslationsPanel

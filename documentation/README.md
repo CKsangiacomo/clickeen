@@ -182,7 +182,14 @@ or reinterpret it against a second schema. Authentication, authorization, and
 acceptance of raw human, browser, or third-party input remain at the one ingress
 boundary that turns non-Clickeen input into Clickeen truth.
 
-Create writes the first editable instance source and Save updates that source.
+New writes nothing. First Save creates editable instance source and later Save
+updates that source. Roma's First Save HTTP 201 returns both the minted instance
+ID and the exact current account `baseLocale` persisted with that source. Bob
+adopts both from the existing Save result into its current session without a
+reopen or new message. Bob sends `widgetType` only on that First Save. An
+existing Save body contains `config` only; Roma loads the account-scoped saved
+list fact and uses Tokyo's stored `widgetType` to select the compiled artifact,
+without accepting or comparing a caller Widget identity.
 Only explicit allowed Publish asks Roma to materialize complete semantic
 `index.html`, complete `styles.css`, and mandatory `runtime.js`. Save is Bob's
 editable-source persistence boundary; Publish is the separate release boundary.
@@ -204,23 +211,35 @@ live in the reusable Widget source folder and are not saved by Bob. Bob edits
 the complete document in browser memory; Roma's generic materializer is the
 sole authority that generates the contents of the served `index.html`,
 complete `styles.css`, and mandatory `runtime.js`;
-Tokyo-worker physically writes the canonical source documents and exact package
-bytes to the instance folder and serves them. Roma materializes only on
-explicit allowed Publish—not on Create, Save, Duplicate, or a visitor request.
+Tokyo-worker physically writes the canonical atomic source document and one
+atomic `serve-state.json` whose published form contains those exact logical
+package members, then serves them through their public file URLs. Roma
+materializes only on explicit allowed Publish—not on New, Save, Duplicate, or
+a visitor request.
 
 ```text
 Widget and shared software source
 + exact saved account-instance state + explicit allowed Publish
 -> Roma generic materializer
 -> complete index.html + styles.css + runtime.js
--> Tokyo-worker R2 write
+-> Tokyo-worker one atomic published serve-state.json write
 -> Tokyo Edge delivery
 ```
 
 All five current Widgets now use canonical Core HTML/CSS/JavaScript,
 source-based Bob preview, Publish-only materialization, and Edge locale
-expression. Their retired flat sources have no compatibility path. The PRD 129
-implementation is deployed and verified in cloud-dev; owner QA remains pending.
+expression. Their retired flat sources have no compatibility path. The prior
+PRD 129 package/locale baseline is deployed at product commit `e2ac3589`. The
+corrected non-persisting New, first-Save creation, Roma-only publication, and
+background cache-eviction flow is implemented locally but is not committed,
+pushed, deployed, or live-verified; owner QA remains pending.
+
+Atomic `instance.source.json` and published `serve-state.json` are a pre-GA
+storage cutover. After deployment, all legacy cloud-dev saved instances need an
+explicit source cutover or recreation; any that should remain public then need
+explicit Publish/Republish. There is no legacy read fallback or
+migration-on-read. This documentation reconciliation performs no deploy, remote
+product-data mutation, or live verification.
 
 ## Baseline Repository Commands
 
@@ -248,6 +267,29 @@ prague/
 ```
 
 Only `accounts/` is runtime-managed by account/product operations. It stores account-owned instance source, uploads, translated locale values, and generated public artifacts under `accounts/{accountPublicId}/...`. Private storage object names must not become product API vocabulary.
+
+One account instance physically stores:
+
+```text
+accounts/{accountPublicId}/instances/{instanceId}/
+  instance.source.json
+  serve-state.json
+  overlays/locales/{locale}.json
+```
+
+`instance.source.json` atomically contains the complete source metadata,
+config, and content. It is the instance visibility/commit record: First Save
+writes the initial unpublished `serve-state.json` first and writes
+`instance.source.json` last; listings recognize only exact source-record keys.
+Save and Rename each replace that source in one PUT. Existing-instance Delete
+commits by deleting that exact source/visibility record. Only after the Delete
+result exists does Tokyo schedule best-effort residual instance-prefix cleanup
+through `waitUntil`; cleanup cannot change the product result, and any
+unreachable residual bytes are outside the account asset quota. When published,
+`serve-state.json` atomically contains publication status, `publishedAt`, and
+the exact logical `publicPackage` members `indexHtml`, `stylesCss`, and
+`runtimeJs`. Public routes still expose those members as `index.html`,
+`styles.css`, and `runtime.js`; they are not separate R2 objects.
 
 The other roots are git-authored deploy artifacts synced to R2:
 
@@ -310,11 +352,12 @@ Instances are account-owned data, not code. Tokyo/R2 stores them under `accounts
    - The complete logical draft includes both shared instance state
      (`header.*`, `headerCta.*`, `stage.*`, `pod.*`, `coreSize.*`, shared
      appearance/typography/chrome) and the selected Widget's Core namespace.
-     Roma prepares the semantic config/content split on Save. Roma's
+     Roma prepares the semantic config/content payload on Save. Roma's
      materializer is the sole generator of required HTML/CSS/JavaScript on
      explicit allowed Publish.
-   - Tokyo-worker writes the canonical physical source documents from Roma's
-     semantic payloads and stores the exact package bytes Roma submits;
+   - Tokyo-worker writes one atomic `instance.source.json` from Roma's semantic
+     payload and stores the exact package Roma submits inside the instance's
+     one atomic published `serve-state.json`;
      it does not reinterpret Widget semantics or reconstruct a schema from Bob
      controls.
 2. **DevStudio does not host widget authoring**.
@@ -382,7 +425,7 @@ If you change runtime behavior, update docs in the same PR/commit:
 
 - Compiler determinism: repo typecheck/build plus Cloudflare verification, not a localhost Bob HTTP gate
 - Quick grep for removed/renamed surfaces:
-  - `rg -n "/api/ai/widget-copilot|/api/account/instances/.*/copilot|/model/chat|/execute|PRODUCT_COPILOT_BASE_URL|SANFRANCISCO_BASE_URL|ROMA_AI_GRANT_|PRAGUE_L10N_HMAC_SECRET" documentation`
+  - `rg -n "/api/ai/widget-copilot|/api/account/instances/.*/copilot|/model/turn|/execute|PRODUCT_COPILOT_BASE_URL|SANFRANCISCO_BASE_URL|ROMA_AI_GRANT_|PRAGUE_L10N_HMAC_SECRET" documentation`
   - `rg -n "claims/minibob/complete|/api/account/assets|POST /api/instance\\b" documentation --glob '*.md'`
   - `rg -n "/api/bootstrap|/api/account/widgets|/api/session/finish|/api/account/assets" documentation --glob '*.md'`
   - `rg -n "published/widgets|/renders/widgets|accounts/.*/widgets|root (widgets|public|published|l10n)" documentation --glob '*.md'`

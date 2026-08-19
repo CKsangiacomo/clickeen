@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, type RefObject } from 'react';
+import type { RefObject } from 'react';
 import { useWidgetSession, useWidgetSessionChrome } from '../lib/session/useWidgetSession';
 import type { BobHostActionMessage } from '../lib/session/sessionTypes';
 import { dieterIconStyle } from './dieterIcon';
@@ -22,42 +22,9 @@ export function TopDrawer({
   const session = useWidgetSession();
   const chrome = useWidgetSessionChrome();
   const { save, isSaving, isDirty } = session;
-  const [moreOpen, setMoreOpen] = useState(false);
-  const moreRef = useRef<HTMLDivElement>(null);
-  const moreButtonRef = useRef<HTMLButtonElement>(null);
-
   const meta = chrome.meta;
-  const currentInstanceId = meta?.instanceId ?? '';
-  const hasInstance = Boolean(currentInstanceId);
-  const canSave = hasInstance && isDirty;
+  const canSave = Boolean(meta) && isDirty;
   const showSaveAction = canSave || isSaving;
-  const publishedAt = meta?.publishedAt ?? null;
-  const sourceUpdatedAt = meta?.sourceUpdatedAt ?? null;
-  const changesNotLive =
-    publishedAt !== null && sourceUpdatedAt !== null && sourceUpdatedAt > publishedAt;
-  const currentLabel = meta?.label ?? '';
-  const publicActions = meta?.publicActions ?? null;
-
-  useEffect(() => {
-    if (!moreOpen) return undefined;
-    const closeOnPointerDown = (event: PointerEvent) => {
-      if (event.target instanceof Node && !moreRef.current?.contains(event.target)) {
-        setMoreOpen(false);
-      }
-    };
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-      event.preventDefault();
-      setMoreOpen(false);
-      moreButtonRef.current?.focus();
-    };
-    document.addEventListener('pointerdown', closeOnPointerDown);
-    document.addEventListener('keydown', closeOnEscape);
-    return () => {
-      document.removeEventListener('pointerdown', closeOnPointerDown);
-      document.removeEventListener('keydown', closeOnEscape);
-    };
-  }, [moreOpen]);
 
   return (
     <section className="topdrawer">
@@ -98,73 +65,9 @@ export function TopDrawer({
           />
         </button>
       </div>
-      <div className="topdrawer-context-wrap">
-        <div className="topdrawer-context">
-          {hasInstance ? (
-            <span className="topdrawer-instance-title heading-3">{currentLabel}</span>
-          ) : null}
-          {meta?.publishStatus ? (
-            <span className="topdrawer-publish-status body-xs">
-              {meta.publishStatus === 'published'
-                ? publishedAt
-                  ? `Published · ${new Date(publishedAt).toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}${changesNotLive ? ' · changes not live' : ''}`
-                  : 'Published'
-                : 'Unpublished'}
-            </span>
-          ) : null}
-        </div>
-      </div>
+      <div className="topdrawer-context-wrap" />
 
       <div className="topdrawer-actions">
-        {publicActions ? (
-          <>
-            <a
-              className="diet-button"
-              data-size="large"
-              data-type="tertiary"
-              href={publicActions.publicUrl}
-              target="_blank"
-              rel="noreferrer"
-            >
-              <span className="diet-button__label">Open public widget</span>
-            </a>
-            <div
-              className="topdrawer-more diet-popover-host"
-              ref={moreRef}
-              data-state={moreOpen ? 'open' : 'closed'}
-            >
-              <button
-                ref={moreButtonRef}
-                className="diet-button"
-                data-size="large"
-                data-type="tertiary"
-                type="button"
-                aria-haspopup="menu"
-                aria-expanded={moreOpen}
-                onClick={() => setMoreOpen((open) => !open)}
-              >
-                <span className="diet-button__label">More</span>
-              </button>
-              <div className="topdrawer-more__menu diet-popover" role="menu">
-                <button
-                  className="diet-btn-menuactions"
-                  data-size="md"
-                  type="button"
-                  role="menuitem"
-                  onClick={() => {
-                    setMoreOpen(false);
-                    requestHostAction('copy-code');
-                  }}
-                >
-                  <span className="diet-btn-menuactions__label">Copy code</span>
-                </button>
-              </div>
-            </div>
-          </>
-        ) : null}
         {showSaveAction ? (
           <button
             className="diet-button"

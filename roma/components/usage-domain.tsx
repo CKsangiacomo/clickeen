@@ -6,19 +6,20 @@ import { useRomaAccountApi } from './account-api';
 import { useRomaAccountContext } from './roma-account-context';
 
 type UsageStorageResponse = {
-  storageBytesUsed?: number;
+  accountId: string;
+  storageBytesUsed: number;
 };
 
 export function UsageDomain() {
   const { accountContext, activeAccount, data } = useRomaAccountContext();
   const accountApi = useRomaAccountApi();
   const accountId = accountContext.accountId;
-  const entitlements = data.authz?.entitlements ?? null;
+  const entitlements = data.authz.entitlements;
   const [storageBytesUsed, setStorageBytesUsed] = useState<number | null>(null);
   const [storageLoading, setStorageLoading] = useState(true);
   const [storageError, setStorageError] = useState(false);
 
-  const storageLimit = entitlements?.limits?.['storage.bytes.max'] ?? null;
+  const storageLimit = entitlements.limits['storage.bytes.max'] ?? null;
   const storageLimitLabel =
     typeof storageLimit === 'number' && Number.isFinite(storageLimit) && storageLimit > 0 ? formatBytes(storageLimit) : 'Unlimited';
   const storageUsedLabel = storageLoading ? 'Loading...' : storageBytesUsed == null ? 'Unavailable' : formatBytes(storageBytesUsed);
@@ -29,17 +30,11 @@ export function UsageDomain() {
       setStorageLoading(true);
       setStorageError(false);
       try {
-        const response = await accountApi.fetchRaw(`/api/account/usage`, {
+        const payload = await accountApi.fetchJson<UsageStorageResponse>(`/api/account/usage`, {
           method: 'GET',
         });
-        const payload = (await response.json().catch(() => null)) as UsageStorageResponse | { error?: unknown } | null;
-        if (!response.ok) throw new Error(`HTTP_${response.status}`);
-        const next =
-          payload && typeof payload === 'object' && 'storageBytesUsed' in payload && typeof payload.storageBytesUsed === 'number'
-            ? Math.max(0, Math.trunc(payload.storageBytesUsed))
-            : null;
         if (!cancelled) {
-          setStorageBytesUsed(next);
+          setStorageBytesUsed(payload.storageBytesUsed);
           setStorageError(false);
         }
       } catch {

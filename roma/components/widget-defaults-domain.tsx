@@ -1,17 +1,14 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { BOB_WIDGET_PANEL_IDS } from '@clickeen/bob/control-host';
+import type { CompiledControl, CompiledWidget } from '@clickeen/bob/types';
 import {
   isCommonWidgetControlPath,
   type AccountFontLibrary,
 } from '@clickeen/widget-foundation';
 import { useRomaAccountApi } from './account-api';
 import { getWidgetEditorArtifact } from './widget-editor-artifact';
-import {
-  WidgetDefaultsBuilderControls,
-  type BuilderControlPayload,
-} from './widget-defaults-builder-controls';
+import { WidgetDefaultsBuilderControls } from './widget-defaults-builder-controls';
 import { RomaUnsavedChangesDialog } from './roma-unsaved-changes-dialog';
 
 type AccountWidgetDefaultsDocument = {
@@ -33,25 +30,12 @@ type WidgetDefaultsPayload = {
   widgetDefaults: AccountWidgetDefaultsDocument;
 };
 
-type DefaultsControl = {
-  order: number;
-  panelId: string;
-  groupId?: string;
-  groupLabel?: string;
-  type: string;
-  path: string;
-  label?: string;
-  showIf?: string;
-  min?: number;
-  max?: number;
-};
-
 type WidgetDefaultsEntry = {
   widgetType: string;
   label: string;
   core: Record<string, unknown>;
-  controls: DefaultsControl[];
-  payload?: BuilderControlPayload;
+  controls: CompiledControl[];
+  payload: CompiledWidget;
 };
 
 const WIDGET_DEFAULTS_LOAD_ERROR_COPY = 'Widget defaults could not be loaded. Please try again.';
@@ -62,10 +46,6 @@ function stableJson(value: unknown): string {
   return JSON.stringify(value);
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
-
 function cloneDefaults(value: AccountWidgetDefaultsDocument): AccountWidgetDefaultsDocument {
   return JSON.parse(JSON.stringify(value)) as AccountWidgetDefaultsDocument;
 }
@@ -74,63 +54,19 @@ function cloneValue<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
 }
 
-function panelSortValue(panelId: string): number {
-  const index = BOB_WIDGET_PANEL_IDS.findIndex((candidate) => candidate === panelId);
-  return index >= 0 ? index : BOB_WIDGET_PANEL_IDS.length;
-}
-
-function readPathValue(root: Record<string, unknown>, path: string): unknown {
-  const parts = path.split('.').filter(Boolean);
-  let cursor: unknown = root;
-  for (const part of parts) {
-    if (/^\d+$/.test(part)) {
-      if (!Array.isArray(cursor)) return undefined;
-      cursor = cursor[Number(part)];
-      continue;
-    }
-    if (!isRecord(cursor)) return undefined;
-    cursor = cursor[part];
-  }
-  return cursor;
-}
-
-function pathExists(root: Record<string, unknown>, path: string): boolean {
-  return typeof readPathValue(root, path) !== 'undefined';
-}
-
 function setPathValue(
   root: Record<string, unknown>,
   path: string,
   value: unknown,
 ): Record<string, unknown> {
   const next = cloneValue(root);
-  const parts = path.split('.').filter(Boolean);
+  const parts = path.split('.');
   let cursor: unknown = next;
-  for (let index = 0; index < parts.length; index += 1) {
+  for (let index = 0; index < parts.length - 1; index += 1) {
     const part = parts[index]!;
-    const last = index === parts.length - 1;
-    const nextPart = parts[index + 1];
-    if (/^\d+$/.test(part)) {
-      if (!Array.isArray(cursor)) return next;
-      const offset = Number(part);
-      if (last) {
-        cursor[offset] = value;
-        return next;
-      }
-      if (cursor[offset] == null) cursor[offset] = /^\d+$/.test(nextPart ?? '') ? [] : {};
-      cursor = cursor[offset];
-      continue;
-    }
-    if (!isRecord(cursor)) return next;
-    if (last) {
-      cursor[part] = value;
-      return next;
-    }
-    if (!isRecord(cursor[part]) && !Array.isArray(cursor[part])) {
-      cursor[part] = /^\d+$/.test(nextPart ?? '') ? [] : {};
-    }
-    cursor = cursor[part];
+    cursor = (cursor as Record<string, unknown>)[part];
   }
+  (cursor as Record<string, unknown>)[parts.at(-1)!] = value;
   return next;
 }
 
@@ -139,55 +75,6 @@ function removeRecordKey<T>(record: Record<string, T>, key: string): Record<stri
   const next = { ...record };
   delete next[key];
   return next;
-}
-
-function normalizeCompiledControl(raw: unknown, order: number): DefaultsControl | null {
-  if (!isRecord(raw)) return null;
-  const panelId = typeof raw.panelId === 'string' ? raw.panelId : '';
-  const type = typeof raw.type === 'string' ? raw.type : '';
-  const path = typeof raw.path === 'string' ? raw.path : '';
-  if (!panelId || !type || !path) return null;
-  return {
-    order,
-    panelId,
-    type,
-    path,
-    ...(typeof raw.groupId === 'string' && raw.groupId ? { groupId: raw.groupId } : {}),
-    ...(typeof raw.groupLabel === 'string' && raw.groupLabel ? { groupLabel: raw.groupLabel } : {}),
-    ...(typeof raw.label === 'string' && raw.label ? { label: raw.label } : {}),
-    ...(typeof raw.showIf === 'string' && raw.showIf ? { showIf: raw.showIf } : {}),
-    ...(typeof raw.min === 'number' && Number.isFinite(raw.min) ? { min: raw.min } : {}),
-    ...(typeof raw.max === 'number' && Number.isFinite(raw.max) ? { max: raw.max } : {}),
-  };
-}
-
-function compiledControlsFromPayload(payload: unknown): DefaultsControl[] {
-  if (!isRecord(payload) || !Array.isArray(payload.controls)) return [];
-  return payload.controls
-    .map((control, index) => normalizeCompiledControl(control, index))
-    .filter((control): control is DefaultsControl => Boolean(control))
-    .sort(
-      (left, right) =>
-        panelSortValue(left.panelId) - panelSortValue(right.panelId) || left.order - right.order,
-    );
-}
-
-function compiledDisplayNameFromPayload(payload: unknown): string | null {
-  if (!isRecord(payload)) return null;
-  const displayName = typeof payload.displayName === 'string' ? payload.displayName.trim() : '';
-  return displayName || null;
-}
-
-function uniqueControls(controls: DefaultsControl[]): DefaultsControl[] {
-  const seen = new Set<string>();
-  const unique: DefaultsControl[] = [];
-  for (const control of controls) {
-    const key = control.path;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    unique.push(control);
-  }
-  return unique;
 }
 
 function WidgetDefaultsCoreSection(args: {
@@ -216,7 +103,7 @@ function WidgetDefaultsCoreSection(args: {
       <h3 className="heading-5">{entry.label}</h3>
       <WidgetDefaultsBuilderControls
         controls={entry.controls}
-        payloads={entry.payload ? [entry.payload] : []}
+        payload={entry.payload}
         fontLibrary={fontLibrary}
         hostId={`widget-defaults-core-${entry.widgetType}`}
         scopeLabel={`${entry.label} Core`}
@@ -233,11 +120,7 @@ export function WidgetDefaultsDomain() {
   const accountApi = useRomaAccountApi();
   const [baseline, setBaseline] = useState<AccountWidgetDefaultsDocument | null>(null);
   const [draft, setDraft] = useState<AccountWidgetDefaultsDocument | null>(null);
-  const [compiledControls, setCompiledControls] = useState<Record<string, DefaultsControl[]>>({});
-  const [compiledPayloads, setCompiledPayloads] = useState<Record<string, BuilderControlPayload>>(
-    {},
-  );
-  const [compiledWidgetLabels, setCompiledWidgetLabels] = useState<Record<string, string>>({});
+  const [compiledWidgets, setCompiledWidgets] = useState<Record<string, CompiledWidget>>({});
   const [commonControlsReady, setCommonControlsReady] = useState(false);
   const [commonContractError, setCommonContractError] = useState('');
   const [coreControlsReady, setCoreControlsReady] = useState<Record<string, boolean>>({});
@@ -270,12 +153,7 @@ export function WidgetDefaultsDomain() {
     !coreControlsReadyForAll;
   const controlsLoaded =
     widgetTypes.length > 0 &&
-    widgetTypes.every(
-      (widgetType) =>
-        Array.isArray(compiledControls[widgetType]) &&
-        typeof compiledWidgetLabels[widgetType] === 'string' &&
-        compiledWidgetLabels[widgetType].trim(),
-    );
+    widgetTypes.every((widgetType) => Object.prototype.hasOwnProperty.call(compiledWidgets, widgetType));
 
   const loadDefaults = useCallback(async () => {
     setLoading(true);
@@ -307,28 +185,12 @@ export function WidgetDefaultsDomain() {
     Promise.all(
       requestedWidgetTypes.map(async (widgetType) => {
         const payload = await getWidgetEditorArtifact(widgetType);
-        const displayName = compiledDisplayNameFromPayload(payload);
-        if (!displayName)
-          throw new Error(`Compiled widget metadata missing displayName: ${widgetType}`);
-        return [
-          widgetType,
-          displayName,
-          compiledControlsFromPayload(payload),
-          payload as BuilderControlPayload,
-        ] as const;
+        return [widgetType, payload] as const;
       }),
     )
       .then((entries) => {
         if (cancelled) return;
-        setCompiledWidgetLabels(
-          Object.fromEntries(entries.map(([widgetType, displayName]) => [widgetType, displayName])),
-        );
-        setCompiledControls(
-          Object.fromEntries(entries.map(([widgetType, , controls]) => [widgetType, controls])),
-        );
-        setCompiledPayloads(
-          Object.fromEntries(entries.map(([widgetType, , , payload]) => [widgetType, payload])),
-        );
+        setCompiledWidgets(Object.fromEntries(entries));
         setCommonControlsReady(false);
         setCommonContractError('');
         setCoreControlsReady(
@@ -393,35 +255,27 @@ export function WidgetDefaultsDomain() {
   }, []);
 
   const commonControls = useMemo(() => {
-    if (!draft) return [];
-    return uniqueControls(
-      Object.values(compiledControls)
-        .flat()
-        .filter(
-          (control) =>
-            isCommonWidgetControlPath(control.path) && pathExists(draft.common, control.path),
-        ),
-    );
-  }, [compiledControls, draft]);
+    const commonWidgetType = widgetTypes[0];
+    if (!commonWidgetType) return [];
+    const compiled = compiledWidgets[commonWidgetType];
+    if (!compiled) return [];
+    return compiled.controls.filter((control) => isCommonWidgetControlPath(control.path));
+  }, [compiledWidgets, widgetTypes]);
 
   const widgetEntries = useMemo<WidgetDefaultsEntry[]>(() => {
-    if (!draft) return [];
+    if (!draft || !controlsLoaded) return [];
     return widgetTypes.map((widgetType) => {
-      const core = draft.widgets[widgetType]?.core ?? {};
-      const compiledCoreControls = uniqueControls(
-        (compiledControls[widgetType] ?? []).filter(
-          (control) => !isCommonWidgetControlPath(control.path) && pathExists(core, control.path),
-        ),
-      );
+      const core = draft.widgets[widgetType]!.core;
+      const compiled = compiledWidgets[widgetType]!;
       return {
         widgetType,
         core,
-        controls: compiledCoreControls,
-        label: compiledWidgetLabels[widgetType] ?? widgetType,
-        payload: compiledPayloads[widgetType],
+        controls: compiled.controls.filter((control) => !isCommonWidgetControlPath(control.path)),
+        label: compiled.displayName,
+        payload: compiled,
       };
     });
-  }, [compiledControls, compiledPayloads, compiledWidgetLabels, draft, widgetTypes]);
+  }, [compiledWidgets, controlsLoaded, draft, widgetTypes]);
 
   const updateCommonOps = useCallback((ops: Array<{ path: string; value: unknown }>) => {
     setDraft((current) =>
@@ -469,8 +323,7 @@ export function WidgetDefaultsDomain() {
     (widgetType: string, ops: Array<{ path: string; value: unknown }>) => {
       setDraft((current) => {
         if (!current) return current;
-        const existing = current.widgets[widgetType];
-        if (!existing) return current;
+        const existing = current.widgets[widgetType]!;
         return {
           ...current,
           widgets: {
@@ -591,7 +444,7 @@ export function WidgetDefaultsDomain() {
             {coreContractErrorEntries
               .map(
                 ([widgetType, message]) =>
-                  `${compiledWidgetLabels[widgetType] ?? widgetType}: ${message}`,
+                  `${compiledWidgets[widgetType]!.displayName}: ${message}`,
               )
               .join('\n')}
           </pre>
@@ -647,7 +500,7 @@ export function WidgetDefaultsDomain() {
         <div className="widget-defaults-section">
           <WidgetDefaultsBuilderControls
             controls={commonControls}
-            payloads={widgetTypes.map((widgetType) => compiledPayloads[widgetType]).filter(Boolean)}
+            payload={compiledWidgets[widgetTypes[0]!]!}
             fontLibrary={draft.fontLibrary}
             hostId="widget-defaults-common"
             scopeLabel="All widgets"

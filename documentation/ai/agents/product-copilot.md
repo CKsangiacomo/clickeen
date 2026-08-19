@@ -99,11 +99,10 @@ Roma route/operator requirements:
 - Roma fails closed if `USAGE_KV` is unavailable or contains a malformed
   counter.
 
-Current implementation mismatch: the Roma route also reloads the saved Tokyo
-instance and cross-checks route, envelope, context, and Widget-type coordinates
-that Bob already supplied as one accepted Clickeen turn request. Those duplicate
-internal semantic checks are not the canonical closed-system boundary. Roma
-owns browser-request admission and authorization once; Product Copilot then
+The route reads the exact account-scoped saved-instance fact to authorize the
+browser-supplied route before grant issuance. It does not reload saved source or
+cross-check the accepted turn against a second copy of the instance. Roma owns
+browser-request admission and route authorization once; Product Copilot then
 trusts the exact Roma-issued request and grant.
 
 Roma env/bindings involved in the Copilot path:
@@ -188,14 +187,15 @@ SSE framing is transport serialization. Product Copilot decodes it with one
 streaming `TextDecoder` and consumes San Francisco's exact event union; it does
 not semantically revalidate event names, payload types, or `modelStepId` values.
 
-Current implementation mismatch: the Product Copilot SSE parser normalizes
-CRLF and contains malformed-JSON, unknown-event, event-name equality, and
-missing-`modelStepId` guards over San Francisco-produced output. Those are
-duplicate internal transport/schema checks to remove. They are distinct from
-Product Copilot enforcing the governed one-tool-call model-step boundary.
-Product Copilot transports the model's `apply_widget_ops` request; Bob accepts
-or rejects that external edit request against the exact compiled controls and
-current draft.
+The Product Copilot SSE parser performs only transport work: streaming decode,
+CRLF normalization, frame extraction, and JSON decode. Malformed JSON fails
+visibly as a transport failure. It does not compare the SSE event name with the
+payload type or re-prove San Francisco's `modelStepId` and event schema.
+Product Copilot separately enforces the governed one-tool-call model-step
+boundary, including finish/tool-count consistency and a visible failure when a
+stream ends without a terminal or valid continuation boundary. It transports
+the model's `apply_widget_ops` request; Bob accepts or rejects that external edit
+request against the exact compiled controls and current draft.
 
 Provider usage is not invented by Product Copilot. `model_step_finished`
 forwards the San Francisco reported model and token counts verbatim.
@@ -233,10 +233,11 @@ grant. Product Copilot trusts that Roma-produced request; it does not parse the
 same semantic contract again. The deploy-built control capsule is exact system
 truth and is not treated as a possibly malformed optional edit context.
 
-Current implementation mismatch: Product Copilot currently calls the shared
-turn parser again, and the Bob/agent path contains degraded-context behavior for
-missing or invalid compiled controls. Those are duplicate closed-system guards,
-not the target agent contract.
+Product Copilot consumes the shared accepted `CopilotTurnRequest` union directly
+and does not call the browser-ingress parser again. Bob projects visible
+controls from the exact compiled artifact and current draft; when no controls
+are currently visible, `availableActions` truthfully contains no `draft_edit`
+action rather than inventing edit availability.
 
 Current input limits:
 
@@ -330,17 +331,16 @@ Apply and Undo remain local editor operations.
 | Roma route | `503` | usage reservation dependency unavailable |
 | Roma route | `502` | Product Copilot fetch failure or route catch failure |
 | Product Copilot Worker | `410` | deprecated `POST /execute` |
-| Product Copilot Worker | `400 BAD_REQUEST` | invalid worker request or invalid Product Copilot turn request |
+| Product Copilot Worker | `400 BAD_REQUEST` | malformed JSON transport body |
 | Product Copilot Worker | `404 BAD_REQUEST` | unknown worker path |
 | Product Copilot Worker | upstream status | San Francisco non-OK response is propagated |
 | Product Copilot Worker | `500 PROVIDER_ERROR` | missing San Francisco config or unexpected failure |
-| Product Copilot stream | `agent_turn_error` event | multiple model tool calls or `model_step_error`; current code also reports duplicate San Francisco stream-shape guards as transition debt |
+| Product Copilot stream | `agent_turn_error` event | multiple model tool calls, finish/tool-count inconsistency, missing terminal/continuation boundary, malformed SSE JSON transport, or `model_step_error` |
 | Bob | assistant message, no apply | stale draft signature, failed undo construction, or failed local apply |
 
-Current implementation mismatch: Product Copilot still reparses Roma's request
-and San Francisco event stream. The error branches for those imagined malformed
-internal artifacts are transition debt. Bob remains the first edit-operation
-acceptance boundary for the external model's tool request.
+Product Copilot trusts Roma's accepted request and San Francisco's typed event
+payloads. Bob remains the first edit-operation acceptance boundary for the
+external model's tool request.
 
 ## Runtime Config And Deploy
 
@@ -362,8 +362,8 @@ Local checks:
 
 ```bash
 pnpm --filter @clickeen/product-copilot typecheck
-pnpm --filter @clickeen/product-copilot test:copilot-contract
-pnpm --filter @clickeen/product-copilot eval:copilot
+pnpm --filter @clickeen/product-copilot test:turn-contract
+pnpm --filter @clickeen/product-copilot test:full-loop
 pnpm e2e:smoke:copilot-runtime
 ```
 

@@ -14,10 +14,6 @@ import {
   type AiModelRef,
   type CopilotTurnRequest,
 } from '@clickeen/ck-contracts/ai';
-import {
-  isProductCopilotManagedModel,
-  listProductCopilotManagedModels,
-} from '@clickeen/ck-contracts/ai-model-management';
 import { reserveAccountCopilotTurn, type RomaUsageKv } from '../account-limit-usage';
 import { resolveProductCopilotBaseUrl } from '../env/product-copilot';
 import {
@@ -30,53 +26,10 @@ import {
 export const ACCOUNT_WIDGET_COPILOT_AGENT_ID = 'product.copilot';
 export type AccountCopilotRuntimeUi = AgentRuntimePolicyUi;
 
-function modelKey(model: AiModelRef): string {
-  return `${model.provider}:${model.model}`;
-}
-
-function policyModelKeys(ai: AiGrantPolicy): Set<string> {
-  const out = new Set<string>();
-  for (const [provider, policy] of Object.entries(ai.modelsByProvider)) {
-    if (!policy) continue;
-    policy.allowed.forEach((model) => out.add(`${provider}:${model}`));
-  }
-  return out;
-}
-
-function isPaidProductCopilotProfile(profile: AiGrantPolicy['policyProfile']): boolean {
-  return profile !== 'free';
-}
-
-function assertProductCopilotGrantPolicyManaged(ai: AiGrantPolicy): void {
-  const managedModels = listProductCopilotManagedModels();
-  const managed = new Set(managedModels.map(modelKey));
-  if (!managed.has(modelKey(ai.defaultModel))) {
-    throw new Error(`[Roma] Product Copilot default model is not managed: ${modelKey(ai.defaultModel)}`);
-  }
-  if (ai.selectedModel && !managed.has(modelKey(ai.selectedModel))) {
-    throw new Error(`[Roma] Product Copilot selected model is not managed: ${modelKey(ai.selectedModel)}`);
-  }
-  for (const [provider, policy] of Object.entries(ai.modelsByProvider)) {
-    if (!policy) continue;
-    for (const model of policy.allowed) {
-      const key = `${provider}:${model}`;
-      if (!managed.has(key)) {
-        throw new Error(`[Roma] Product Copilot policy model is not managed: ${key}`);
-      }
-    }
-  }
-  if (isPaidProductCopilotProfile(ai.policyProfile)) {
-    const policyModels = policyModelKeys(ai);
-    if (policyModels.size !== managed.size || managedModels.some((model) => !policyModels.has(modelKey(model)))) {
-      throw new Error('[Roma] Paid Product Copilot policy must include every managed Product Copilot model');
-    }
-  }
-}
-
 export async function issueAccountCopilotGrant(args: {
   authz: RomaAccountAuthzCapsulePayload;
   selectedModel?: AiModelRef | null;
-  trace?: { sessionId?: string; instanceId?: string };
+  trace: { sessionId: string; instanceId: string };
   usageKv?: RomaUsageKv | null;
   skipTurnReservation?: boolean;
 }): Promise<
@@ -110,15 +63,11 @@ export async function issueAccountCopilotGrant(args: {
 
   let ai: AiGrantPolicy;
   try {
-    if (args.selectedModel && !isProductCopilotManagedModel(args.selectedModel)) {
-      throw new Error(`[Roma] Selected Product Copilot model is not managed: ${modelKey(args.selectedModel)}`);
-    }
     ai = resolveAiRuntimePolicy({
       entry,
       policyProfile: args.authz.profile,
       selectedModel: args.selectedModel ?? undefined,
     });
-    assertProductCopilotGrantPolicyManaged(ai);
   } catch (error) {
     return {
       ok: false,
@@ -127,14 +76,6 @@ export async function issueAccountCopilotGrant(args: {
       detail: error instanceof Error ? error.message : String(error),
     };
   }
-
-  const traceRaw = args.trace ?? {};
-  const sessionId =
-    typeof traceRaw.sessionId === 'string' && traceRaw.sessionId.trim() ? traceRaw.sessionId.trim() : crypto.randomUUID();
-  const instanceId =
-    typeof traceRaw.instanceId === 'string' && traceRaw.instanceId.trim()
-      ? traceRaw.instanceId.trim()
-      : undefined;
 
   const baseBudgets = resolveAiRuntimeBudget(ai);
   const maxTokens = baseBudgets.maxTokens;
@@ -155,8 +96,8 @@ export async function issueAccountCopilotGrant(args: {
     mode: 'editor',
     ai,
     trace: {
-      sessionId,
-      ...(instanceId ? { instanceId } : {}),
+      sessionId: args.trace.sessionId,
+      instanceId: args.trace.instanceId,
       surfaceId: 'roma.builder',
       envStage: resolveEnvStage(),
     },
@@ -202,7 +143,6 @@ export function resolveAccountCopilotRuntimeUi(args: {
     entry: resolvedAgent.entry,
     policyProfile: args.authz.profile,
   });
-  assertProductCopilotGrantPolicyManaged(policy);
   return deriveAiRuntimePolicyUi(policy);
 }
 

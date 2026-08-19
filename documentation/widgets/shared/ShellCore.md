@@ -82,8 +82,8 @@ that storage scope.
 New instances merge the exact common defaults with the selected widget's Core
 defaults. The source/build authority owns their disjoint contract; Roma
 consumes those exact system artifacts rather than running a second conflict
-validator. The saved instance remains one exact logical state even though Roma
-stores its source physically as config and content files.
+validator. The saved instance remains one exact logical state and Tokyo stores
+its metadata, config, and content together in one atomic source artifact.
 
 ## Instance State And Persistence
 
@@ -94,25 +94,25 @@ logical state with every namespace in the State Ownership table. A change to
 `faq.sections` is therefore a change to the same browser-memory draft and the
 same saved instance coordinate.
 
-Bob receives and edits the complete logical document. Roma resolves its
-physical source representation:
+Bob receives and edits the complete logical document. Roma prepares its exact
+semantic source payloads and Tokyo stores their physical representation:
 
 ```text
-instance.config.json   non-translatable shared and Core state
-instance.content.json  base-locale Header and Core text
+instance.source.json   source metadata + exact config + exact base-locale content
 ```
 
-Create writes the initial editable source and Save updates it. Only explicit
-allowed Publish invokes Roma's one generic Widget materializer with the exact
+New composes a non-persisted draft. First Save creates editable source and
+later Save updates it. Only explicit allowed Publish invokes Roma's one generic Widget materializer with the exact
 saved state. The materializer composes this shared frame and the selected Core
 and is Roma's sole generator of complete `index.html`, complete `styles.css`,
-and mandatory `runtime.js`. Tokyo-worker physically writes the canonical source
-documents or stores the required HTML/CSS/JavaScript, locale overlays, and
-publication state under the single instance folder. It does not generate or
-reinterpret Widget software.
+and mandatory `runtime.js`. Tokyo-worker writes the atomic source document or
+stores the required logical HTML/CSS/JavaScript together with publication state
+inside one atomic `serve-state.json`; locale overlays remain separate exact
+artifacts under the single instance folder. It does not generate or reinterpret
+Widget software.
 
-Changing common account defaults seeds future instances only through the named
-Create operation. Changing shared or Core source affects future
+Changing common account defaults seeds future instances through New-draft
+composition and first Save. Changing shared or Core source affects future
 materializations only. Neither change silently mutates an already-stored
 instance or public package.
 

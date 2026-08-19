@@ -150,8 +150,8 @@ The compiler emits one complete trusted Widget artifact containing exact
 limit-to-message bindings and exact locale templates. Bob uses that artifact
 at its generic browser-memory edit boundary; Roma uses it when composing a
 Widget-bound denial from Bob or from a Widget-editing surface hosted by Roma.
-Ordinary Roma account commands such as Create, Duplicate, Publish, upload, or
-locale changes use system-owned contextual copy because they contain no unique
+Ordinary Roma account commands such as first Save, Duplicate, Publish, upload,
+or locale changes use system-owned contextual copy because they contain no unique
 Widget meaning. Neither consumer revalidates the artifact or substitutes
 generic copy. Missing or unused source identities fail authoring/build before
 deployment; there is no runtime fallback.
@@ -182,11 +182,11 @@ styles.css  -> complete shared and Core presentation
 runtime.js  -> mandatory Widget and shared visitor behavior
 ```
 
-The exact saved state is one logical document even though storage separates
-base customer text from non-translatable configuration:
+The exact saved state is one logical document and one atomic storage artifact:
 
 ```text
-instance.config.json + instance.content.json
+instance.source.json
+-> source metadata + exact config + exact base-locale content
 -> complete logical instance for Bob and Roma materialization
 ```
 
@@ -195,10 +195,11 @@ appearance/typography/chrome, and the Widget namespace such as `faq.*` all
 belong to that instance. They are not persisted in the Widget source folder and
 do not become separate Header/Stage/Pod instances.
 
-Create writes the initial editable source and Save updates it. Neither creates
-public files. Roma invokes the generic materializer only on explicit allowed
-Publish and generates the required HTML/CSS/JavaScript. Tokyo-worker physically
-writes the source or package to
+New composes a browser-memory draft without persistence. First Save creates
+editable source and later Save updates it. Neither creates public files. Roma
+invokes the generic materializer only on explicit allowed Publish and generates
+the required HTML/CSS/JavaScript. Tokyo-worker physically writes atomic source
+or serve-state truth to
 `accounts/{accountPublicId}/instances/{instanceId}/`; it does not compile or
 render them.
 
@@ -208,15 +209,28 @@ applied from the exact trusted overlay into semantic HTML before the response.
 The browser does not create or localize the initial Widget.
 
 Later widget software or shared runtime changes do not mutate already-stored
-account package files. They require a named account command or a future broad
+account package truth. They require a named account command or a future broad
 re-resolution command with exact coordinates. Public serving must not compare
 stored account package bytes to current widget source on visitor requests.
+
+Physical storage is exact: First Save writes an unpublished `serve-state.json`
+first and `instance.source.json` last; only the source key makes the instance
+visible. Save/Rename each replace source once. Publish writes status,
+`publishedAt`, and logical `{ indexHtml, stylesCss, runtimeJs }` together in one
+atomic `serve-state.json`; the three public paths are not separate R2 objects.
+
+This is a pre-GA cutover. After deployment, all legacy cloud-dev saved
+instances require explicit source cutover or recreation; those retained as
+public then require explicit Publish/Republish. There is no compatibility
+reader or migration-on-read, and this documentation pass performed no remote
+operation.
 
 Dieter icon URLs and account asset references remain external delivery
 references owned by their own roots. Dieter CSS and JavaScript do not.
 
 Current local implementation: all five built Widgets use the canonical Core
-topology, compiled-source Bob preview, source-only Create/Save, Publish-only
+topology, compiled-source Bob preview, non-persisting New plus source-only Save,
+Publish-only
 complete materialization, and Edge locale expression. The all-Widget generator
 builds and verifies one artifact pair per Widget with no compatibility source
 kind or Widget-specific materializer path.

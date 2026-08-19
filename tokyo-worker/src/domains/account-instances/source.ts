@@ -1,15 +1,15 @@
 import type { Env } from '../../types';
 import { isCompactInstanceId } from '@clickeen/ck-contracts/overlay-identity';
 import {
-  accountInstanceConfigKey,
-  accountInstanceContentKey,
+  accountInstanceSourceKey,
   accountInstancesRoot,
 } from './keys';
-import { loadJson, loadJsonObject, putJson } from '../storage';
+import { loadJson, putJson } from '../storage';
 import type {
   AccountInstanceConfigDocument,
   AccountInstanceContentDocument,
   AccountInstanceDocument,
+  AccountInstanceSourceStorageDocument,
   InstanceServeState,
   AccountInstanceSourceReadFailure,
   AccountInstanceSourceReadResult,
@@ -18,11 +18,22 @@ import type {
 import {
   createInstanceServeState,
   readInstanceServeStateRecord,
-  type InstanceServeStateRecord,
 } from './serve-state';
+
+type InstanceServeStateSummary = {
+  status: InstanceServeState;
+  publishedAt: string | null;
+};
 
 function nowIso(): string {
   return new Date().toISOString();
+}
+
+export function nextAccountInstanceTimestamp(...priorCoordinates: Array<string | null>): string {
+  const priorTimes = priorCoordinates
+    .filter((coordinate): coordinate is string => coordinate !== null)
+    .map((coordinate) => new Date(coordinate).getTime() + 1);
+  return new Date(Math.max(Date.now(), ...priorTimes)).toISOString();
 }
 
 export class AccountInstanceCoordinateError extends Error {
@@ -36,7 +47,7 @@ export class AccountInstanceCoordinateError extends Error {
 
 function toAccountInstanceSourcePointer(args: {
   configDoc: AccountInstanceConfigDocument;
-  serveState: InstanceServeStateRecord;
+  serveState: InstanceServeStateSummary;
   updatedAt: string;
 }): AccountInstanceSourcePointer {
   const { configDoc } = args;
@@ -60,27 +71,34 @@ export async function readConfigDocumentByLocation(args: {
   widgetCode: string;
   instanceId: string;
 }): Promise<AccountInstanceConfigDocument | null> {
-  return loadJson<AccountInstanceConfigDocument>(
+  const source = await loadJson<AccountInstanceSourceStorageDocument>(
     args.env,
-    accountInstanceConfigKey(args.accountId, args.widgetCode, args.instanceId),
+    accountInstanceSourceKey(args.accountId, args.widgetCode, args.instanceId),
   );
+  if (!source) return null;
+  return {
+    id: source.id,
+    accountId: source.accountId,
+    widgetCode: source.widgetCode,
+    widgetType: source.widgetType,
+    displayName: source.displayName,
+    config: source.config,
+    baseLocale: source.baseLocale,
+    createdAt: source.createdAt,
+    updatedAt: source.updatedAt,
+  };
 }
 
-export async function readContentDocumentByLocation(args: {
+async function readSourceStorageDocument(args: {
   env: Env;
   accountId: string;
   widgetCode: string;
   instanceId: string;
-  configDoc?: AccountInstanceConfigDocument | null;
-}): Promise<AccountInstanceContentDocument | null> {
-  const configDoc = args.configDoc ?? null;
-  const loaded = await loadJsonObject<AccountInstanceContentDocument>(
+}): Promise<AccountInstanceSourceStorageDocument | null> {
+  return loadJson<AccountInstanceSourceStorageDocument>(
     args.env,
-    accountInstanceContentKey(args.accountId, args.widgetCode, args.instanceId),
+    accountInstanceSourceKey(args.accountId, args.widgetCode, args.instanceId),
   );
-  if (loaded) return loaded.value;
-  if (configDoc) throw new Error('coreui.errors.instance.content.missing');
-  return null;
 }
 
 export async function writeAccountInstanceSource(args: {
@@ -95,13 +113,19 @@ export async function writeAccountInstanceSource(args: {
   baseLocale: string;
   existing?: {
     createdAt: string;
-    serveState: InstanceServeStateRecord;
+    updatedAt: string;
+    serveState: InstanceServeStateSummary;
   };
 }): Promise<{ pointer: AccountInstanceSourcePointer }> {
   const { instanceId, accountId, widgetCode, widgetType } = args;
 
-  const now = nowIso();
-  const configDoc: AccountInstanceConfigDocument = {
+  const now = args.existing
+    ? nextAccountInstanceTimestamp(
+        args.existing.updatedAt,
+        args.existing.serveState.publishedAt,
+      )
+    : nowIso();
+  const sourceDoc: AccountInstanceSourceStorageDocument = {
     id: instanceId,
     accountId,
     widgetCode,
@@ -111,13 +135,8 @@ export async function writeAccountInstanceSource(args: {
     baseLocale: args.baseLocale,
     createdAt: args.existing?.createdAt ?? now,
     updatedAt: now,
+    content: args.content,
   };
-  await putJson(
-    args.env,
-    accountInstanceContentKey(accountId, widgetCode, instanceId),
-    args.content,
-  );
-  await putJson(args.env, accountInstanceConfigKey(accountId, widgetCode, instanceId), configDoc);
   if (!args.existing) {
     await createInstanceServeState({
       env: args.env,
@@ -127,9 +146,14 @@ export async function writeAccountInstanceSource(args: {
       now,
     });
   }
+  await putJson(
+    args.env,
+    accountInstanceSourceKey(accountId, widgetCode, instanceId),
+    sourceDoc,
+  );
   return {
     pointer: toAccountInstanceSourcePointer({
-      configDoc,
+      configDoc: sourceDoc,
       serveState: args.existing?.serveState ?? { status: 'unpublished', publishedAt: null },
       updatedAt: now,
     }),
@@ -141,27 +165,27 @@ export async function readAccountInstanceSourcePointer(args: {
   instanceId: string;
   accountId: string;
 }): Promise<{ ok: true; value: AccountInstanceSourcePointer } | AccountInstanceSourceReadFailure> {
-  const configDoc = await readConfigDocumentByLocation({
+  const sourceDoc = await readSourceStorageDocument({
     env: args.env,
     accountId: args.accountId,
     widgetCode: '',
     instanceId: args.instanceId,
   });
-  if (!configDoc) {
+  if (!sourceDoc) {
     return { ok: false, kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' };
   }
   const serveState = await readInstanceServeStateRecord({
     env: args.env,
     accountId: args.accountId,
     instanceId: args.instanceId,
-    widgetCode: configDoc.widgetCode,
+    widgetCode: sourceDoc.widgetCode,
   });
   return {
     ok: true,
     value: toAccountInstanceSourcePointer({
-      configDoc,
+      configDoc: sourceDoc,
       serveState,
-      updatedAt: configDoc.updatedAt,
+      updatedAt: sourceDoc.updatedAt,
     }),
   };
 }
@@ -171,35 +195,35 @@ export async function readAccountInstanceDocument(args: {
   instanceId: string;
   accountId: string;
 }): Promise<{ ok: true; value: AccountInstanceDocument } | AccountInstanceSourceReadFailure> {
-  const configDoc = await readConfigDocumentByLocation({
+  const sourceDoc = await readSourceStorageDocument({
     env: args.env,
     accountId: args.accountId,
     widgetCode: '',
     instanceId: args.instanceId,
   });
-  if (!configDoc) {
+  if (!sourceDoc) {
     return { ok: false, kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' };
   }
   const serveState = await readInstanceServeStateRecord({
     env: args.env,
     accountId: args.accountId,
     instanceId: args.instanceId,
-    widgetCode: configDoc.widgetCode,
+    widgetCode: sourceDoc.widgetCode,
   });
   return {
     ok: true,
     value: {
-      id: configDoc.id,
-      accountId: configDoc.accountId,
-      widgetCode: configDoc.widgetCode,
-      widgetType: configDoc.widgetType,
-      displayName: configDoc.displayName,
-      config: configDoc.config,
-      baseLocale: configDoc.baseLocale,
+      id: sourceDoc.id,
+      accountId: sourceDoc.accountId,
+      widgetCode: sourceDoc.widgetCode,
+      widgetType: sourceDoc.widgetType,
+      displayName: sourceDoc.displayName,
+      config: sourceDoc.config,
+      baseLocale: sourceDoc.baseLocale,
       publishStatus: serveState.status,
       publishedAt: serveState.publishedAt,
-      createdAt: configDoc.createdAt,
-      updatedAt: configDoc.updatedAt,
+      createdAt: sourceDoc.createdAt,
+      updatedAt: sourceDoc.updatedAt,
     },
   };
 }
@@ -211,23 +235,16 @@ export async function readAccountInstanceContentDocument(args: {
 }): Promise<
   { ok: true; value: AccountInstanceContentDocument } | AccountInstanceSourceReadFailure
 > {
-  const configDoc = await readConfigDocumentByLocation({
+  const sourceDoc = await readSourceStorageDocument({
     env: args.env,
     accountId: args.accountId,
     widgetCode: '',
     instanceId: args.instanceId,
   });
-  if (!configDoc) {
+  if (!sourceDoc) {
     return { ok: false, kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' };
   }
-  const contentDoc = await readContentDocumentByLocation({
-    env: args.env,
-    accountId: args.accountId,
-    widgetCode: configDoc.widgetCode,
-    instanceId: args.instanceId,
-    configDoc,
-  });
-  return { ok: true, value: contentDoc! };
+  return { ok: true, value: sourceDoc.content };
 }
 
 export async function listAccountInstanceIds(args: {
@@ -243,11 +260,9 @@ export async function listAccountInstanceIds(args: {
     for (const object of listed.objects) {
       const key = object.key;
       const rest = key.startsWith(prefix) ? key.slice(prefix.length) : '';
-      const slashIndex = rest.indexOf('/');
-      if (slashIndex <= 0) {
-        throw new AccountInstanceCoordinateError(key || prefix);
-      }
-      const instanceId = rest.slice(0, slashIndex);
+      const match = rest.match(/^([^/]+)\/instance\.source\.json$/);
+      if (!match) continue;
+      const instanceId = match[1];
       if (!isCompactInstanceId(instanceId)) {
         throw new AccountInstanceCoordinateError(`${prefix}${instanceId}`);
       }
@@ -264,22 +279,28 @@ export async function renameAccountInstanceDisplay(args: {
   instanceId: string;
   displayName: string;
 }): Promise<{ instanceId: string; displayName: string; updatedAt: string }> {
-  const configDoc = await readConfigDocumentByLocation({
+  const sourceDoc = await readSourceStorageDocument({
     env: args.env,
     accountId: args.accountId,
     widgetCode: '',
     instanceId: args.instanceId,
   });
-  if (!configDoc) throw new Error('coreui.errors.instance.notFound');
-  const updatedAt = nowIso();
+  if (!sourceDoc) throw new Error('coreui.errors.instance.notFound');
+  const serveState = await readInstanceServeStateRecord({
+    env: args.env,
+    accountId: args.accountId,
+    widgetCode: sourceDoc.widgetCode,
+    instanceId: args.instanceId,
+  });
+  const updatedAt = nextAccountInstanceTimestamp(sourceDoc.updatedAt, serveState.publishedAt);
   await putJson(
     args.env,
-    accountInstanceConfigKey(args.accountId, configDoc.widgetCode, args.instanceId),
+    accountInstanceSourceKey(args.accountId, sourceDoc.widgetCode, args.instanceId),
     {
-      ...configDoc,
+      ...sourceDoc,
       displayName: args.displayName,
       updatedAt,
-    } satisfies AccountInstanceConfigDocument,
+    } satisfies AccountInstanceSourceStorageDocument,
   );
   return { instanceId: args.instanceId, displayName: args.displayName, updatedAt };
 }
@@ -289,35 +310,28 @@ export async function readAccountInstanceSource(args: {
   instanceId: string;
   accountId: string;
 }): Promise<AccountInstanceSourceReadResult> {
-  const configDoc = await readConfigDocumentByLocation({
+  const sourceDoc = await readSourceStorageDocument({
     env: args.env,
     accountId: args.accountId,
     widgetCode: '',
     instanceId: args.instanceId,
   });
-  if (!configDoc) {
+  if (!sourceDoc) {
     return { ok: false, kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' };
   }
   const serveState = await readInstanceServeStateRecord({
     env: args.env,
     accountId: args.accountId,
     instanceId: args.instanceId,
-    widgetCode: configDoc.widgetCode,
+    widgetCode: sourceDoc.widgetCode,
   });
   const pointer = toAccountInstanceSourcePointer({
-    configDoc,
+    configDoc: sourceDoc,
     serveState,
-    updatedAt: configDoc.updatedAt,
-  });
-  const content = await readContentDocumentByLocation({
-    env: args.env,
-    accountId: pointer.accountId,
-    widgetCode: pointer.widgetCode,
-    instanceId: pointer.id,
-    configDoc,
+    updatedAt: sourceDoc.updatedAt,
   });
   return {
     ok: true,
-    value: { pointer, config: configDoc.config, content: content! },
+    value: { pointer, config: sourceDoc.config, content: sourceDoc.content },
   };
 }

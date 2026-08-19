@@ -100,6 +100,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     NextResponse.json({
       instanceId,
       displayName,
+      updatedAt: result.value.updatedAt,
     }),
     current.value.setCookies,
   );

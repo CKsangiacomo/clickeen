@@ -1,6 +1,6 @@
-# PRD 129A — Widget Software And Create
+# PRD 129A — Widget Software And Start
 
-Status: **CLOUD-DEV DEPLOYED — OWNER QA PENDING**
+Status: **LOCAL NEW-DRAFT CORRECTION IMPLEMENTED — CLOUD-DEV VERIFICATION PENDING**
 
 Parent: `129__PRD__Clickeen_Widget_Software_And_Instance_Lifecycle_Architecture.md`
 
@@ -16,8 +16,8 @@ Date: 2026-08-17
 2. what every Widget source folder must contain;
 3. how a Widget declares its use of shared Clickeen capabilities;
 4. how New, Duplicate, and Template choose starting truth; and
-5. how every successful Create ends with one new unpublished editable instance
-   opened in Bob.
+5. how New opens an unsaved Bob draft without creating an instance; and
+6. how explicit Duplicate creates one saved unpublished copy and opens it in Bob.
 
 129A does not define editing, Save, Publish, package generation, or public
 serving. Those belong to 129B, 129C, and 129D.
@@ -563,7 +563,7 @@ The shared default instance state contains:
 The shared Settings control is named **Enable SEO/GEO**. This is one generic
 saved coordinate used by applicable Widgets; it is not FAQ Core state.
 
-## 11. Create Modes
+## 11. Start Modes
 
 ### 11.1 New
 
@@ -572,26 +572,25 @@ Input:
 ```text
 Widget type
 +
-Widget default instance state
+Widget default draft state
 +
 account-owned shared Widget Defaults
-+
-new account instance identity
 ```
 
 Output:
 
 ```text
-new unpublished instance.config.json
+one unsaved complete draft in Bob browser memory
 +
-new unpublished instance.content.json
+instanceId: null
 +
-unpublished serve-state.json
-+
-Bob opened on that exact instance
+zero account-instance storage objects
 ```
 
-New does not invoke the materializer and creates no serving package.
+New is a read/composition path at `/builder/new/{widgetType}`. It does not mint
+an identity, add an inventory row, write editable source or serve state, invoke
+the materializer, or create a serving package. Leaving Bob before Save changes
+nothing in account storage. First Save belongs to 129B.
 
 ### 11.2 Duplicate
 
@@ -605,7 +604,8 @@ Duplicate does not invoke the materializer and creates no serving package.
 
 The implemented generic Duplicate:
 
-- copies the exact saved config and base content;
+- copies the exact saved config and base content into one atomic
+  `instance.source.json`;
 - creates a new compact instance identity;
 - uses the destination account's current base locale;
 - resets translated-field status to `ok`;
@@ -613,6 +613,16 @@ The implemented generic Duplicate:
 - copies no locale overlay or public package;
 - starts unpublished with no display name; and
 - opens the duplicate in Bob.
+
+Tokyo-worker writes the duplicate's initial unpublished `serve-state.json`
+first and its `instance.source.json` last. Only the exact source-record key
+makes the new identity visible, so no partial Duplicate appears in inventory.
+
+That source-record visibility rule is also the exact inverse used by later
+instance Delete, although Delete is not a Start action: removing
+`instance.source.json` is the logical deletion commit, and residual serve-state
+or overlay cleanup is scheduled afterward through `waitUntil` without changing
+the command result.
 
 ### 11.3 Template
 
@@ -631,12 +641,12 @@ schema, source shape, storage root, or compatibility path. Account-owned asset,
 locale, and overlay transfer behavior belongs to that explicit cross-account
 copy implementation; it is not guessed by Create, Bob, or Serve.
 
-## 12. Create Policy
+## 12. Start Policy
 
 New, Duplicate, and Template are available across all Widget types on Free.
 
 A downgrade does not remove access to a Widget type, lock existing editable
-instances, or delete their source. Create remains separate from the account's
+instances, or delete their source. New and Duplicate remain separate from the account's
 published-instance capacity.
 
 The former created-instance capability `widgets.instances.max` did not belong
@@ -646,23 +656,30 @@ system policy; no current product action consumes it.
 Public capacity is enforced later by `instances.published.max` when the user
 clicks Publish. Edit-specific limits remain at their governed edit actions.
 
-## 13. Create Handoff To Bob
+## 13. Start Handoff To Bob
 
-Every successful Create mode completes only when Bob has opened the exact new
-instance.
+New completes when Bob has opened the exact unsaved draft. Duplicate completes
+when Bob has opened the exact newly saved copy.
 
 Bob receives:
 
-- the new instance identity as session context;
-- the exact complete editable instance state recomposed from config and
-  content;
+- `instanceId: null` for New, or the new saved identity for Duplicate;
+- the exact complete editable instance state read from the one source record's
+  config and content;
 - the compiled Widget editor contract;
 - the Widget software needed for preview;
 - exact account policy and fonts; and
 - the existing translation, Copilot, and account command setup.
 
-Create completion is not an inventory refresh and does not depend on a saved
-public package.
+New completion performs no inventory refresh because there is no instance.
+Neither mode depends on a saved public package.
+
+When New later reaches first Save under 129B, Roma's existing `201` Save result
+returns the new ID and the exact account `baseLocale` persisted with the new
+source. Bob adopts both into its session metadata and `translationSetup`
+through that existing command result; Roma does not reopen Bob or add another
+message. This result coherence does not serialize first Save with a simultaneous
+account-locale `PATCH`, and does not claim to solve that separate race.
 
 The exact source-only Bob preview mechanism is implemented under 129B. It uses
 the canonical Widget input defined by the two source rules in Section 5.1 and
@@ -713,7 +730,7 @@ runtime recognizes two Widget architectures.
 - add mandatory Core HTML/CSS/JavaScript ownership;
 - add internal Discovery source;
 - add Widget upsell source and limits message binding;
-- make New source-only and remove its created-instance gate;
+- make New browser-memory-only and remove persistence from catalog selection;
 - make Duplicate source-only and open the duplicate in Bob;
 - define the Template catalog as normal listed CLICKEEN-admin saved instances
   and keep cross-account duplication as its follow-on operation;
@@ -733,11 +750,13 @@ runtime recognizes two Widget architectures.
 - migration of remote account instances or Widget Defaults;
 - deployment.
 
-## 18. Deployed Implementation Boundary
+## 18. Implementation Boundary
 
 All five current Widget source compositions, focused and all-Widget generation,
 Discovery, limit/message bindings, the shared SEO/GEO coordinate, upsell copy,
-New, and Duplicate are implemented and deployed to cloud-dev.
+Duplicate and the Widget software are present in cloud-dev. The corrected
+non-persisting New path is implemented locally and still requires cloud-dev
+verification.
 
 Template creation is not an active product surface and the cross-account copy
 was not implemented. Its architecture is settled: the catalog is a list of
@@ -754,9 +773,12 @@ storage root, compatibility path, or fallback was added.
 - no current Widget `widget.css`, `widget.client.js`, or legacy ToolDrawer-label
   path remains;
 - no shared service contains a Widget-specific branch;
-- New writes source only and opens the exact new instance in Bob;
+- New opens Bob with `instanceId: null`, writes no source, and leaving before
+  Save preserves the exact inventory/storage count;
 - Duplicate writes source only and opens the duplicate in Bob;
-- no Create mode writes `index.html`, `styles.css`, or `runtime.js`;
+- neither New nor Duplicate adds a logical `publicPackage` to
+  `serve-state.json` or
+  produces the public `index.html`, `styles.css`, or `runtime.js` responses;
 - the generated Bob editor input contains the approved deploy-built Widget
   software needed for source-only preview and no instance serving package;
 - Free Create is not limited by public capacity;
@@ -769,11 +791,11 @@ storage root, compatibility path, or fallback was added.
 | ID | Required result | Reason |
 | --- | --- | --- |
 | V1 | Pass | Implemented New/Duplicate/Discovery/composition truth is exact; the settled Template catalog uses normal admin saved-instance truth and its unimplemented cross-account copy receives no fallback. |
-| V2 | Pass | Create copies approved starting truth without repair or coercion. |
+| V2 | Pass | New composes approved starting truth without persisting or repairing it; Duplicate copies exact saved truth. |
 | V3 | Pass | Every required Widget source responsibility and Create output has an owner. |
 | V4 | Pass | Removing the wrong Create gate does not remove edit or Publish enforcement. |
-| V5 | Pass | A source-only unpublished instance is explicit valid truth, not corrupt-package recovery. |
-| V6 | Pass | Create completes only after the new source exists and Bob opens the exact new instance. |
+| V5 | Pass | Exact `instance.source.json` distinguishes a valid source-only unpublished instance from an incomplete creation prefix or unreachable post-Delete residual bytes; neither is corrupt-package recovery. |
+| V6 | Pass | New reports only an unsaved draft; first source creation returns its exact new ID and persisted `baseLocale` through the existing Save result for in-place adoption; Duplicate reports its exact saved copy; later Delete reports source-anchor removal without waiting for residual cleanup. |
 | V7 | Pass | No renamed client blob, legacy branch, source-kind discriminator, or alternate Create path is approved. |
 | V8 | Pass | Source checks and verification remain build/operator evidence only. |
 
@@ -785,16 +807,22 @@ audit is the implementation evidence.
 ```text
 all five canonical Widget sources: present in cloud-dev
 focused and all-Widget generated artifacts: present in cloud-dev
-New source-only Create: present in cloud-dev
-Duplicate source-only Create and Bob open: present in cloud-dev
+New non-persisting draft: implemented locally; cloud-dev verification pending
+prior Duplicate user flow and Bob open: present in cloud-dev; atomic source-record storage is part of the unverified local correction
 Template catalog model: normal listed CLICKEEN-admin saved instances
 Template cross-account Duplicate: not implemented
 retired flat Widget source paths: removed from git and cloud-dev R2; exact URLs return 404
-account product data: unchanged
+account product data: no remote product-data work performed in this pass
+atomic editable source: one instance.source.json containing metadata/config/content is implemented locally; first Save and Duplicate commit that source record last after initial unpublished serve-state
+instance visibility: only exact instance.source.json keys enumerate; partial create prefixes are not instances
+first-Save result adoption: existing 201 result returns exact new instanceId and persisted account baseLocale for Bob session metadata plus translationSetup adoption, with no reopen/new message; implemented locally, cloud-dev verification pending; simultaneous first-Save/account-locale PATCH remains a separate unsolved race
+instance Delete commit: exact instance.source.json deletion is the logical result; residual serve-state/overlay prefix cleanup and cache eviction run afterward through waitUntil and cannot alter it; implemented locally, cloud-dev verification pending
+legacy cloud-dev source topology: every saved instance using instance.config.json plus instance.content.json needs an explicit pre-GA source cutover or recreation decision; no compatibility fallback or remote action in this pass
 stored positional-overlay Generate/delete cutover: pending
-republish of affected pre-stable-slot public packages: pending
-product commit: e2ac3589
-main push: performed
-deploy: cloud-dev Worker deploy run `32177053173`, Roma verification run `32177053128`, and reachability run `32177415308` passed for commit `36e65d8a`
-live product: cloud-dev active; owner QA pending
+pre-GA atomic-publication cutover: deploy the corrected runtime, explicitly cut over or recreate every legacy saved instance, then explicitly Publish/Republish each instance intended to remain published so its `serve-state.json` contains the exact logical publicPackage; no compatibility fallback reads the prior separate package objects
+republish of currently published cloud-dev instances: pending; no remote product-data or Republish work performed in this pass
+prior baseline product commit: e2ac3589; current correction remains uncommitted
+main push: not performed for the corrected New path
+deploy: not performed for the corrected New path
+live product: prior source-only-Create baseline remains active; corrected New path and owner QA pending
 ```

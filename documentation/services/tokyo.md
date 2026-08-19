@@ -35,33 +35,36 @@ Only `accounts/` is product-runtime-managed.
 accounts/{accountPublicId}/
   assets/{assetRef}
   instances/{instanceId}/
-    instance.config.json
-    instance.content.json
+    instance.source.json
     overlays/locales/{locale}.json
     serve-state.json
-    index.html
-    styles.css
-    runtime.js
 ```
 
 Rules:
 
 - `accountPublicId` and `instanceId` are stable compact coordinates.
 - Widget codes and display names are metadata, not folders.
-- `instance.config.json` and `instance.content.json` are the physical source
-  split for one complete logical instance. The former carries non-translatable
-  shared Header/Stage/Pod/capability and Core values; the latter carries
-  base-locale customer-visible Header/Core text. Bob and Roma operate on their
-  recomposed complete state.
+- `instance.source.json` atomically contains source metadata, exact config, and
+  exact base-locale content for one complete logical instance. Bob and Roma
+  operate on that complete state.
+- First Save writes the initial unpublished `serve-state.json` first and
+  `instance.source.json` last. Only exact source-record keys make instances
+  visible; Save and Rename each replace source in one PUT.
+- Existing-instance Delete commits by deleting that exact source/visibility
+  key. Only after the Delete response exists does Tokyo schedule residual
+  prefix cleanup through `waitUntil`; absent, failed, partial, or pending
+  cleanup is product-inert, and residual instance bytes do not affect the
+  account asset quota.
 - Overlay JSON is durable translated value truth.
-- `serve-state.json` is publication truth for the public access boundary.
-- Each instance has one base browser artifact whose `index.html` contains
-  complete base-locale semantic content and whose `styles.css` contains complete
-  presentation.
+- A published `serve-state.json` is one atomic publication artifact containing
+  `status`, `publishedAt`, and exact logical `publicPackage` members
+  `indexHtml`, `stylesCss`, and `runtimeJs`.
+- The logical `indexHtml` contains complete base-locale semantic content and
+  `stylesCss` contains complete presentation.
 - Roma's Widget-neutral materializer is the sole generator of complete
   `index.html`, complete `styles.css`, and mandatory `runtime.js` on explicit
   allowed Publish. Tokyo-worker is
-  only their physical R2 writer and public server; it does not compile,
+  only the atomic serve-state's physical R2 writer and public server; it does not compile,
   translate, infer, validate, fingerprint, or repair them.
 - `runtime.js` owns Widget and shared visitor behavior; it does not create the
   first meaningful page, materialize, localize, host, or serve the instance.
@@ -83,7 +86,8 @@ also real security/ingress boundaries. The closed-system trust law begins after
 those boundaries accept the operation; it does not remove them.
 
 Tokyo-worker serves a published instance after the external request resolves to
-that exact published coordinate. Base HTML references:
+that exact published coordinate. The three file paths are logical views of the
+one atomic serve-state, not separate R2 objects. Base HTML references:
 
 ```text
 /{accountPublicId}/{instanceId}/styles.css
@@ -101,9 +105,10 @@ stored. Missing locale truth is `404` and never falls back to base content. An a
 JSON-decode failure remains explicit; Tokyo does not revalidate the stored
 overlay against another Clickeen artifact on every request. Because the option
 set appears in every index response, Publish, unpublish, Delete, and overlay
-mutation cause Tokyo's default Worker entrypoint to purge its own Workers Cache
-after the owning truth mutation through
-`ctx.cache.purge({ tags: [accountInstanceCacheTag] })`. Every cacheable response
+mutation cause Tokyo's default Worker entrypoint to schedule its own Workers
+Cache eviction after the owning truth mutation through bound `ctx.waitUntil`
+and `ctx.cache.purge({ tags: [accountInstanceCacheTag] })`. Eviction is never
+awaited, inspected, or exposed as product state. Every cacheable response
 for the exact account/instance carries that tag, covering every package path
 and locale/query variant.
 
@@ -115,6 +120,12 @@ attribute target; otherwise Tokyo replaces inner content. It does not compare
 a package/source fingerprint, inject browser locale context, or revalidate
 overlay meaning. The deployment and live cloud-dev serving checks pass; owner
 QA remains pending.
+
+The atomic source and published serve-state shapes are a pre-GA cutover. After
+deployment, all legacy cloud-dev saved instances require an explicit source
+cutover or recreation; any that should remain public then require explicit
+Publish/Republish. There is no compatibility reader or migration-on-read. This
+documentation reconciliation performed no remote operation.
 
 ## Static Read Paths
 

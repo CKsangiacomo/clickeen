@@ -1,6 +1,6 @@
 # PRD 130 — Codebase And Services Defensive-Construction Audit
 
-Status: **AUDIT ONLY — FIRST FULL PASS COMPLETE 2026-08-19 (FINDINGS IN §8) — OWNER TRIAGE PENDING; NO PRODUCT CHANGES AUTHORIZED BY THIS DOCUMENT**
+Status: **FIRST FULL AUDIT PASS COMPLETE 2026-08-19 (HISTORICAL FINDINGS IN §8) — OWNER-AUTHORIZED BOUNDED REMEDIATION B1–B5 IMPLEMENTED LOCALLY (§9) — NOT COMMITTED, PUSHED, DEPLOYED, OR LIVE-VERIFIED; REMAINING FINDINGS UNADJUDICATED**
 
 Owner: Clickeen product owner/architect
 
@@ -20,6 +20,11 @@ This audit finds that weight across the entire codebase and services, keeps
 product functionality and the product vision intact, and records deletable
 or demotable defensive construction for owner triage. It changes nothing
 itself.
+
+The audit and matrix below remain the historical evidence captured by that
+read-only pass. The owner later authorized only the bounded B1–B5 remediation
+recorded in §9. That later authorization does not turn the remaining matrix
+rows into approved work.
 
 This is not a 129-scoped review. It covers every surface: bob, roma,
 tokyo-worker, berlin, prague, admin (DevStudio), agents (product-copilot,
@@ -115,9 +120,10 @@ Nothing in the matrix executes by itself.
 
 ## 6. Execution Rules For Any Later Remediation
 
-This document authorizes auditing only. Any remediation requires separate
-owner authorization and proceeds in batches ordered by blast radius,
-smallest first:
+This document originally authorized auditing only. The owner separately
+authorized the bounded B1–B5 implementation reconciled in §9. Any further
+remediation still requires separate owner authorization and proceeds in
+batches ordered by blast radius, smallest first:
 
 1. **Feedback fixes** — in-place progress, lock-narrowing: near-zero risk,
    immediately felt.
@@ -251,8 +257,9 @@ here.
 Pass A: owner-session browser walk on cloud-dev (core journeys). Pass B: five
 independent service auditors (bob, roma, tokyo-worker, berlin+sanfrancisco+
 agents, admin+prague+packages+workflows), all read-only, each against its
-owning documentation. 60 code findings + 5 felt-product findings. Nothing was
-changed.
+owning documentation. 60 code findings + 5 felt-product findings. At this
+audit checkpoint, nothing had been changed; §9 records the later bounded
+implementation without rewriting this historical evidence.
 
 ### 8.0 Priority findings (cross-service, owner triage order suggested)
 
@@ -403,3 +410,56 @@ checks, signed-grant verification, public-path parsing, upload ingress
 validation, missing-locale 404, committed-transition error shapes. No
 model/provider fallback exists anywhere (pattern 6 runtime class: none
 found).
+
+## 9. Owner-Authorized Bounded Remediation Reconciliation (2026-08-19)
+
+After the read-only audit, the owner explicitly authorized five bounded
+closed-system trust-debt slices. This is not a blanket disposition of §8 and
+does not authorize the remaining findings. B1–B5 are implemented only in the
+current shared local working tree.
+
+### 9.1 Implemented Scope
+
+| Slice | Exact local implementation | Preserved boundary |
+| --- | --- | --- |
+| **B1 — Roma owner-result consumption** | `use-roma-me`, `use-roma-widgets`, Usage, and account-storage usage now consume the exact typed bootstrap/authz/account, Widgets, and Tokyo usage results. The downstream normalizers, retired-field rejection, row-by-row reparse, number coercion/clamping, account-coordinate cross-checks, and WidgetsDomain catalog-vs-instance `widgetType` re-proof were removed. | HTTP/session failure, auth expiry/refresh timing, current-account authorization, request sequencing, and explicit UI failure remain. |
+| **B2 — Widget Defaults compiled/persisted truth** | Widget Defaults consumes exact `CompiledWidget`, `CompiledControl`, and `CompiledPanel` artifacts. It chooses common controls once from one compiled artifact and each Widget's Core controls from that Widget's artifact. Ad-hoc compiled-control normalization, deduplication, path-existence filtering, rendered-path re-proof, payload selection fallback, silent path auto-creation/no-op, missing-Widget no-op, and the second persisted-document validation path were removed. | Roma still admits raw browser defaults at the owning record/typography/font boundary; control-host operation failures remain visible. Tokyo stores and returns Roma's accepted document exactly. |
+| **B3 — Account asset status decision** | Roma now applies the active-account upload decision before entitlement work and before calling Tokyo-worker. Tokyo-worker no longer repeats `accountStatus !== active` from the signed Roma capsule. | Service/account authorization, raw filename/path/MIME/SVG/executable safety, received-byte limit, storage-cap execution, and real R2 failures remain at Tokyo's storage ingress. |
+| **B4 — Product Copilot internal trust chain** | Roma remains the one external browser parser and the one selected-managed-model admission boundary. Product Copilot aliases the shared typed request/context/history contract instead of reparsing it; Roma's grant helper trusts the admitted model/policy and requires exact session/instance trace; San Francisco verifies the signed grant and then consumes the typed internal model-turn request without a second semantic request parser. The downstream turn-event type guard, duplicate policy/model proofs, empty/default identity substitutions, and repeated internal stream-shape checks were removed. Bob consumes exact compiled draft/policy facts without invented config, control-kind, action, or turn-limit defaults. | Auth/authz, route-instance binding, selected-model admission, signed-grant verification, provider transport parsing, Product Copilot's one-tool-call rule, finish/tool-count consistency, EOF terminal reconciliation, cancellation, and Bob's edit/apply/undo boundary remain load-bearing. |
+| **B5 — Prague account-instance reference revalidation** | Prague page loading no longer recursively reparses `accountInstanceRef`, maintains a validation cache, or performs a build/dev-time `clk.live` existence probe with strict/non-strict environment branches. | Git-authored page/block metadata, required copy strings, translation operations, and normal public embed/serving failures remain with their owning boundaries; no fallback reference is introduced. |
+
+### 9.2 Focused Local Verification
+
+All commands below passed against the shared local tree:
+
+- Roma: `typecheck`, `test:account-limit-usage`, direct
+  `run-widget-defaults-typography.ts`, `test:account-asset-gates`,
+  `test:copilot-route`, and `test:widget-command-gates`.
+- Tokyo-worker: `test:widget-defaults`.
+- Bob: `typecheck` and `test:copilot-pane-gates`.
+- Product Copilot: `typecheck`, `test:turn-contract`, and `test:full-loop`.
+- `@clickeen/ck-contracts`: `typecheck` and
+  `tests/run-copilot-contracts.ts`.
+- San Francisco: `typecheck` and `test:model-turn`.
+- Prague: `typecheck` completed with zero errors and zero warnings; Astro
+  reported 37 non-failing hints from existing generated/dependency output.
+
+The focused results preserve external ingress, authentication,
+authorization, raw-byte safety, signed grants, transport failure, and
+worker-owned lifecycle checks while deleting only downstream re-proof and
+fallback machinery. No silent substitution, healing, omission, fail-open
+control, corruption-as-absence, partial-success masquerade, redress wrapper,
+or runtime test dependency was introduced in the B1–B5 reconciliation.
+
+### 9.3 Commit, Deploy, Product Data, And Live State
+
+- Code and documentation are modified only in the shared local working tree.
+- No B1–B5 commit or push has been performed.
+- No Worker, Pages, R2 product-root, or other cloud-dev deployment has been
+  performed for this reconciliation.
+- No remote product data was read, migrated, repaired, or mutated.
+- No authenticated cloud-dev journey, owner QA, or live runtime verification
+  has been performed for B1–B5.
+- The §8 findings matrix remains historical evidence. Findings outside the
+  exact B1–B5 scope remain unadjudicated rather than implicitly fixed,
+  rejected, or authorized.

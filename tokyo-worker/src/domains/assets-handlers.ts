@@ -244,9 +244,6 @@ export async function handleUploadAccountAsset(req: Request, env: Env): Promise<
 
   const authorized = await resolveAccountAssetAuthorization({ req, env, accountId, minRole: 'editor' });
   if (!authorized.ok) return authorized.response;
-  if (authorized.accountAuthz && authorized.accountAuthz.accountStatus !== 'active') {
-    return json({ error: { kind: 'DENY', reasonKey: 'coreui.errors.account.disabled' } }, { status: 403 });
-  }
 
   const filenameValidation = validateUploadFilename(req.headers.get('x-filename'));
   if (!filenameValidation.ok) {

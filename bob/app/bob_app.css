@@ -160,10 +160,6 @@ body {
   flex-wrap: wrap;
 }
 
-.topdrawer-publish-status {
-  color: var(--color-text-secondary);
-}
-
 .topdrawer-more.diet-popover-host {
   flex: none;
   inline-size: auto;

@@ -8,9 +8,7 @@ import { createPortal } from 'react-dom';
 import {
   resolveAccountShellErrorCopy,
   resolveAccountShellReason,
-  resolveCommittedPublicationFailureCopy,
 } from '../lib/account-shell-copy';
-import { buildWidgetPublicActions, type WidgetPublicActions } from '../lib/public-widget-actions';
 import { useRomaAccountApi } from './account-api';
 import { DieterDropdownActions } from './dieter-dropdown-actions';
 import { DieterTextfield } from './dieter-textfield';
@@ -19,15 +17,10 @@ import { RomaAccountNoticeModal } from './roma-account-notice-modal';
 import { useRomaAccountContext } from './roma-account-context';
 import { RomaDomainErrorBoundary } from './roma-domain-error-boundary';
 import { RomaShell } from './roma-shell';
-import {
-  buildPublicationCapacityUpsell,
-  RomaUpsellDialog,
-  type PublicationCapacityUpgrade,
-  type UpsellPresentation,
-} from './roma-upsell-dialog';
-import { WidgetCopyCodeDialog } from './widget-copy-code-dialog';
+import { WidgetPublicationControls } from './widget-publication-controls';
 import {
   buildBuilderRoute,
+  buildNewBuilderRoute,
   DEFAULT_INSTANCE_DISPLAY_NAME,
   isRomaWidgetsCacheFresh,
   loadRomaWidgetsForAccount,
@@ -106,11 +99,6 @@ export function WidgetsDomain({
 
   const [activeActionKey, setActiveActionKey] = useState<string | null>(null);
   const [mutationError, setMutationError] = useState<string | null>(null);
-  const [publicationRetry, setPublicationRetry] = useState<{
-    instance: WidgetInstance;
-    status: 'published' | 'unpublished';
-  } | null>(null);
-  const [upsell, setUpsell] = useState<UpsellPresentation | null>(null);
   const [widgetInstances, setWidgetInstances] = useState<WidgetInstance[]>(() => cachedWidgets?.data.instances ?? []);
   const [catalog, setCatalog] = useState<WidgetCatalogOption[]>(() => cachedWidgets?.data.catalog ?? []);
   const [domainLoading, setDomainLoading] = useState(() => !cachedWidgets);
@@ -120,12 +108,6 @@ export function WidgetsDomain({
   const [renameDraft, setRenameDraft] = useState('');
   const [renameError, setRenameError] = useState<string | null>(null);
   const [sort, setSort] = useState<WidgetSort>(DEFAULT_WIDGET_SORT);
-  const [copyCodeContext, setCopyCodeContext] = useState<{
-    accountPublicId: string;
-    instanceId: string;
-    instanceName: string;
-    actions: WidgetPublicActions | null;
-  } | null>(null);
   const [openWidgetActions, setOpenWidgetActions] = useState<{
     instanceId: string;
     position: { top: number; left: number } | null;
@@ -196,15 +178,8 @@ export function WidgetsDomain({
     () => Array.from(new Set(widgetInstances.map((instance) => instance.widgetType))).sort((a, b) => a.localeCompare(b)),
     [widgetInstances],
   );
-  const missingCatalogWidgetTypes = useMemo(() => {
-    const catalogWidgetTypeSet = new Set(catalog.map((option) => option.widgetType));
-    return instanceWidgetTypes.filter((widgetType) => !catalogWidgetTypeSet.has(widgetType));
-  }, [instanceWidgetTypes, catalog]);
-  const widgetDataError = missingCatalogWidgetTypes.length
-    ? 'Some widgets could not load. Please try again.'
-    : dataError;
-  const canRenderWidgetData = missingCatalogWidgetTypes.length === 0
-    && (!dataError || catalog.length > 0 || widgetInstances.length > 0);
+  const widgetDataError = dataError;
+  const canRenderWidgetData = !dataError || catalog.length > 0 || widgetInstances.length > 0;
 
   const catalogByWidgetType = useMemo(
     () => new Map(catalog.map((option) => [option.widgetType, option])),
@@ -332,14 +307,6 @@ export function WidgetsDomain({
   }, [closeWidgetActions, openWidgetActions, openWidgetActionsInstance]);
 
   useEffect(() => {
-    if (!copyCodeContext) return;
-    const instance = widgetInstances.find((candidate) => candidate.instanceId === copyCodeContext.instanceId);
-    if (copyCodeContext.accountPublicId !== productAccountId || instance?.status !== 'published') {
-      setCopyCodeContext(null);
-    }
-  }, [copyCodeContext, productAccountId, widgetInstances]);
-
-  useEffect(() => {
     if (view !== 'your-widgets') return;
     const candidates = instanceWidgetTypes.slice(0, 8);
     candidates.forEach((widgetType) => {
@@ -348,57 +315,13 @@ export function WidgetsDomain({
   }, [instanceWidgetTypes, view]);
 
   const handleCreateInstance = useCallback(
-    async (widgetType: string) => {
+    (widgetType: string) => {
       if (!productAccountId || !canMutateWidgets) return;
-      const actionKey = `create:${widgetType}`;
-      setActiveActionKey(actionKey);
       setMutationError(null);
-      setPublicationRetry(null);
-      try {
-        const response = await accountApi.fetchRaw('/api/account/instances', {
-          method: 'POST',
-          headers: accountApi.buildHeaders({ contentType: 'application/json' }),
-          body: JSON.stringify({ widgetType }),
-        });
-        if (!response.ok) {
-          const payload = await readJsonOrNull(response);
-          throw new Error(resolveAccountShellReason(payload, 'Creating the widget failed. Please try again.'));
-        }
-        const { instanceId: createdInstanceId } = await response.json() as { instanceId: string };
-        void refreshWidgets({ force: true });
-        router.push(buildBuilderRoute({ instanceId: createdInstanceId, widgetType }));
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        setMutationError(resolveAccountShellErrorCopy(message, 'Creating the widget failed. Please try again.'));
-      } finally {
-        setActiveActionKey((current) => (current === actionKey ? null : current));
-      }
+      router.push(buildNewBuilderRoute(widgetType));
     },
-    [accountApi, canMutateWidgets, productAccountId, refreshWidgets, router],
+    [canMutateWidgets, productAccountId, router],
   );
-
-  const openCopyCode = useCallback((instance: WidgetInstance) => {
-    if (instance.status !== 'published') return;
-    const instanceName = instance.displayName || DEFAULT_INSTANCE_DISPLAY_NAME;
-    try {
-      setCopyCodeContext({
-        accountPublicId: productAccountId,
-        instanceId: instance.instanceId,
-        instanceName,
-        actions: buildWidgetPublicActions({
-          accountPublicId: productAccountId,
-          instanceId: instance.instanceId,
-        }),
-      });
-    } catch {
-      setCopyCodeContext({
-        accountPublicId: productAccountId,
-        instanceId: instance.instanceId,
-        instanceName,
-        actions: null,
-      });
-    }
-  }, [productAccountId]);
 
   const handleDuplicateInstance = useCallback(
     async (instance: WidgetInstance) => {
@@ -406,7 +329,6 @@ export function WidgetsDomain({
       const actionKey = `duplicate:${instance.instanceId}`;
       setActiveActionKey(actionKey);
       setMutationError(null);
-      setPublicationRetry(null);
       try {
         const response = await accountApi.fetchRaw(`/api/account/instances/${encodeURIComponent(instance.instanceId)}/duplicate`, {
           method: 'POST',
@@ -434,7 +356,6 @@ export function WidgetsDomain({
       const actionKey = `delete:${instance.instanceId}`;
       setActiveActionKey(actionKey);
       setMutationError(null);
-      setPublicationRetry(null);
       try {
         await accountApi.fetchJson<{ deleted?: boolean }>(`/api/account/instances/${encodeURIComponent(instance.instanceId)}`, {
           method: 'DELETE',
@@ -450,76 +371,9 @@ export function WidgetsDomain({
     [accountApi, canMutateWidgets, productAccountId, refreshWidgets],
   );
 
-  const handleStatusChange = useCallback(
-    async (instance: WidgetInstance, nextStatus: 'published' | 'unpublished') => {
-      if (!productAccountId || !canMutateWidgets) return;
-      const actionKey = `${nextStatus}:${instance.instanceId}`;
-      const isPublicationRetry = publicationRetry?.instance.instanceId === instance.instanceId
-        && publicationRetry.status === nextStatus;
-      setActiveActionKey(actionKey);
-      setMutationError(null);
-      if (!isPublicationRetry) setPublicationRetry(null);
-      setUpsell(null);
-      try {
-        const response = await accountApi.fetchRaw(
-          `/api/account/instances/${encodeURIComponent(instance.instanceId)}/${nextStatus === 'published' ? 'publish' : 'unpublish'}`,
-          {
-            method: 'POST',
-          },
-        );
-        if (response.status === 402) {
-          const denied = await response.json() as { upgrade: PublicationCapacityUpgrade };
-          setUpsell(buildPublicationCapacityUpsell(denied.upgrade, accountPolicy));
-          return;
-        }
-        if (!response.ok) {
-          const failed = await response.json() as {
-            error: { reasonKey: string };
-            committed?: {
-              instanceId: string;
-              status: 'published' | 'unpublished';
-              changed: boolean;
-            };
-          };
-          if (failed.committed) {
-            const committed = failed.committed;
-            setWidgetInstances((current) => current.map((entry) =>
-              entry.instanceId === committed.instanceId
-                ? { ...entry, status: committed.status }
-                : entry));
-            updateRomaWidgetsCache(productAccountId, (current) => ({
-              ...current,
-              instances: current.instances.map((entry) =>
-                entry.instanceId === committed.instanceId
-                  ? { ...entry, status: committed.status }
-                  : entry),
-            }));
-            setMutationError(resolveCommittedPublicationFailureCopy(
-              committed.status,
-              failed.error.reasonKey,
-              'The publication state changed, but public delivery could not be refreshed. Retry the publication action.',
-            ));
-            setPublicationRetry({ instance, status: committed.status });
-            return;
-          }
-          throw new Error(failed.error.reasonKey);
-        }
-        setPublicationRetry(null);
-        await refreshWidgets({ force: true });
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        setMutationError(resolveAccountShellErrorCopy(message, 'Updating widget status failed. Please try again.'));
-      } finally {
-        setActiveActionKey((current) => (current === actionKey ? null : current));
-      }
-    },
-    [accountApi, accountPolicy, canMutateWidgets, productAccountId, publicationRetry, refreshWidgets],
-  );
-
   const startRename = useCallback((instance: WidgetInstance) => {
     if (!canMutateWidgets) return;
     setMutationError(null);
-    setPublicationRetry(null);
     setRenameError(null);
     setRenamingInstanceId(instance.instanceId);
     setRenameDraft(instance.displayName || DEFAULT_INSTANCE_DISPLAY_NAME);
@@ -546,12 +400,12 @@ export function WidgetsDomain({
       const actionKey = `rename:${instance.instanceId}`;
       setActiveActionKey(actionKey);
       setMutationError(null);
-      setPublicationRetry(null);
       setRenameError(null);
       try {
         const payload = await accountApi.fetchJson<{
           instanceId: string;
           displayName: string;
+          updatedAt: string;
         }>(`/api/account/instances/${encodeURIComponent(instance.instanceId)}/rename`, {
           method: 'POST',
           headers: accountApi.buildHeaders({
@@ -560,10 +414,10 @@ export function WidgetsDomain({
           body: JSON.stringify({ displayName: nextDisplayName }),
         });
         const resolvedDisplayName = payload.displayName;
-        setWidgetInstances((prev) => prev.map((entry) => (entry.instanceId === instance.instanceId ? { ...entry, displayName: resolvedDisplayName } : entry)));
+        setWidgetInstances((prev) => prev.map((entry) => (entry.instanceId === instance.instanceId ? { ...entry, displayName: resolvedDisplayName, updatedAt: payload.updatedAt } : entry)));
         updateRomaWidgetsCache(productAccountId, (current) => ({
           ...current,
-          instances: current.instances.map((entry) => (entry.instanceId === instance.instanceId ? { ...entry, displayName: resolvedDisplayName } : entry)),
+          instances: current.instances.map((entry) => (entry.instanceId === instance.instanceId ? { ...entry, displayName: resolvedDisplayName, updatedAt: payload.updatedAt } : entry)),
         }));
         cancelRename();
       } catch (err) {
@@ -591,18 +445,6 @@ export function WidgetsDomain({
           {mutationError ? (
             <div className="roma-inline-stack">
               <p className="body-m">{mutationError}</p>
-              {publicationRetry ? (
-                <button
-                  className="diet-button"
-                  data-size="medium"
-                  data-type="tertiary"
-                  type="button"
-                  onClick={() => void handleStatusChange(publicationRetry.instance, publicationRetry.status)}
-                  disabled={Boolean(activeActionKey)}
-                >
-                  <span className="diet-button__label">Retry public delivery</span>
-                </button>
-              ) : null}
             </div>
           ) : null}
           {renameError ? <p className="body-m">{renameError}</p> : null}
@@ -719,9 +561,9 @@ export function WidgetsDomain({
                     const widgetDisplayName = catalogByWidgetType.get(instance.widgetType)!.displayName;
                     const isSelected = selectedInstanceId === instance.instanceId;
                     const renameActionKey = `rename:${instance.instanceId}`;
+                    const publicationActionKey = `publication:${instance.instanceId}`;
                     const isRenaming = renamingInstanceId === instance.instanceId;
-                    const statusActionKey = `${instance.status === 'published' ? 'unpublished' : 'published'}:${instance.instanceId}`;
-                    const statusUpdating = activeActionKey === statusActionKey;
+                    const rowActionsDisabled = Boolean(activeActionKey) || isRenaming;
                     const actionsOpen = openWidgetActions?.instanceId === instance.instanceId;
                     const secondaryActionStatus = activeActionKey === `duplicate:${instance.instanceId}`
                       ? 'Duplicating…'
@@ -784,53 +626,19 @@ export function WidgetsDomain({
                           )}
                         </th>
                         <td className="body-s">
-                          <div className="roma-widget-publish-actions">
-                            <label className="diet-toggle roma-widget-status-toggle" data-size="sm" aria-busy={statusUpdating || undefined}>
-                              <span className="diet-toggle__label sr-only">
-                                Published: {instanceName}{statusUpdating ? ', updating' : ''}
-                              </span>
-                              <input
-                                className="diet-toggle__input sr-only"
-                                type="checkbox"
-                                role="switch"
-                                checked={instance.status === 'published'}
-                                disabled={!canMutateWidgets || Boolean(activeActionKey)}
-                                onChange={(event) => void handleStatusChange(instance, event.target.checked ? 'published' : 'unpublished')}
-                              />
-                              <span className="diet-toggle__switch" aria-hidden="true">
-                                <span className="diet-toggle__knob" />
-                              </span>
-                            </label>
-                            {instance.status === 'published' &&
-                            instance.publishedAt !== null &&
-                            instance.updatedAt > instance.publishedAt ? (
-                              <button
-                                className="diet-button"
-                                data-size="small"
-                                data-type="primary"
-                                type="button"
-                                disabled={!canMutateWidgets || Boolean(activeActionKey)}
-                                aria-busy={statusUpdating || undefined}
-                                onClick={() => void handleStatusChange(instance, 'published')}
-                              >
-                                {statusUpdating ? (
-                                  <span className="diet-spinner" aria-hidden="true" />
-                                ) : null}
-                                <span className="diet-button__label">Update live widget</span>
-                              </button>
-                            ) : null}
-                            {instance.status === 'published' ? (
-                              <button
-                                className="diet-button"
-                                data-size="small"
-                                data-type="tertiary"
-                                type="button"
-                                onClick={() => openCopyCode(instance)}
-                              >
-                                <span className="diet-button__label">Copy code</span>
-                              </button>
-                            ) : null}
-                          </div>
+                          <WidgetPublicationControls
+                            instance={instance}
+                            disabled={rowActionsDisabled}
+                            onPendingChange={(pending) => {
+                              setActiveActionKey((current) => pending
+                                ? current ?? publicationActionKey
+                                : current === publicationActionKey ? null : current);
+                            }}
+                            onInstanceChange={(next) => {
+                              setWidgetInstances((current) => current.map((entry) =>
+                                entry.instanceId === next.instanceId ? next : entry));
+                            }}
+                          />
                         </td>
                         <td className="body-s">
                           <span className="body-xs roma-widget-instance-id">{instance.instanceId}</span>
@@ -838,17 +646,27 @@ export function WidgetsDomain({
                         <td className="body-s diet-table__cell--action">
                           {canMutateWidgets ? (
                             <div className="roma-cell-actions">
-                              <Link
-                                href={buildBuilderRoute({
-                                  instanceId: instance.instanceId,
-                                  widgetType: instance.widgetType,
-                                })}
-                                className="diet-button"
-                                data-size="medium"
-                                data-type="tertiary"
-                              >
-                                <span className="diet-button__label">Edit</span>
-                              </Link>
+                              {rowActionsDisabled ? (
+                                <span
+                                  className="diet-button"
+                                  data-size="medium"
+                                  data-type="tertiary"
+                                  aria-disabled="true"
+                                >
+                                  <span className="diet-button__label">Edit</span>
+                                </span>
+                              ) : (
+                                <Link
+                                  href={buildBuilderRoute({
+                                    instanceId: instance.instanceId,
+                                  })}
+                                  className="diet-button"
+                                  data-size="medium"
+                                  data-type="tertiary"
+                                >
+                                  <span className="diet-button__label">Edit</span>
+                                </Link>
+                              )}
                               {secondaryActionStatus ? (
                                 <span className="body-xs roma-widget-action-status" role="status">{secondaryActionStatus}</span>
                               ) : null}
@@ -861,7 +679,7 @@ export function WidgetsDomain({
                                 aria-haspopup="menu"
                                 aria-controls="roma-widget-actions-menu"
                                 aria-expanded={actionsOpen}
-                                disabled={Boolean(activeActionKey) || isRenaming}
+                                disabled={rowActionsDisabled}
                                 onClick={(event) => {
                                   if (actionsOpen) {
                                     closeWidgetActions();
@@ -891,7 +709,6 @@ export function WidgetsDomain({
             <section className="rd-canvas-module">
               <div className="roma-grid roma-grid--three">
                 {displayedCatalog.map((option) => {
-                  const createActionKey = `create:${option.widgetType}`;
                   return (
                     <article className="roma-card" key={option.widgetType}>
                       <h2 className="heading-4">{option.displayName}</h2>
@@ -907,7 +724,7 @@ export function WidgetsDomain({
                             disabled={Boolean(activeActionKey)}
                           >
                             <span className="diet-button__label">
-                              {activeActionKey === createActionKey ? 'Creating...' : 'Create instance'}
+                              Create instance
                             </span>
                           </button>
                         </div>
@@ -978,18 +795,6 @@ export function WidgetsDomain({
             document.body,
           )
         : null}
-      <RomaUpsellDialog
-        open={Boolean(upsell)}
-        reason={upsell?.body}
-        upgradeAvailable={upsell?.upgradeAvailable}
-        onClose={() => setUpsell(null)}
-      />
-      <WidgetCopyCodeDialog
-        open={Boolean(copyCodeContext)}
-        instanceName={copyCodeContext?.instanceName ?? ''}
-        actions={copyCodeContext?.actions ?? null}
-        onClose={() => setCopyCodeContext(null)}
-      />
     </>
   );
 }

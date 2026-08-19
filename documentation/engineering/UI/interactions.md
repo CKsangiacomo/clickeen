@@ -70,8 +70,16 @@ Bob editing and preview are browser-memory optimistic: control edits update the
 local Builder session and preview immediately.
 
 Bob save is confirmed persistence: account truth changes only after the
-`update-instance` command succeeds and Bob reconciles the saved signature. Save
-is an explicit action:
+`save-instance` command succeeds and Bob reconciles the saved signature. On
+New, that HTTP 201 result also carries the first saved instance ID and the exact
+current account `baseLocale` persisted for that source. Bob adopts both into
+its current `meta`/`translationSetup` through the same result; there is no
+reopen or new message. This keeps the completed Save coherent but does not
+serialize First Save against a simultaneous account-locale PATCH across
+authorities. Bob includes `widgetType` only on First Save. Existing Save is
+addressed by the saved account/instance coordinate and carries `config` only;
+Roma obtains Widget identity from Tokyo's saved list fact instead of comparing
+a caller field. Save is an explicit action:
 
 - clean state: no save action;
 - dirty state: `Save`;
@@ -112,8 +120,8 @@ action:
 
 - Bob's shared editing boundary consumes Roma's exact policy snapshot before a
   governed manual or Copilot edit changes the browser-memory draft.
-- Roma gates Create, Duplicate, Publish, account locale changes, uploads, and
-  other Roma-native commands when that command is attempted.
+- Roma gates first Save, Duplicate, Publish, account locale changes, uploads,
+  and other Roma-native commands when that command is attempted.
 - A direct Roma Widget-editing host such as Widget Defaults uses the same
   compiled capability binding before mutating its local draft.
 

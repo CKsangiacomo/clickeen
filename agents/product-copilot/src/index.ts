@@ -9,42 +9,20 @@
  * the model or handle streaming I/O.
  */
 
-import type { ProductCopilotControl } from '@clickeen/ck-contracts/ai';
+import type {
+  CopilotDraftContext,
+  CopilotHistoryEntry as ContractCopilotHistoryEntry,
+  CopilotTurnRequest as ContractCopilotTurnRequest,
+  ProductCopilotControl,
+} from '@clickeen/ck-contracts/ai';
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-export type CopilotHistoryEntry = {
-  role: 'user' | 'assistant';
-  text: string;
-  toolCall?: { toolCallId: string; toolName: string; input: unknown };
-  toolResult?: unknown;
-};
-
-export type DraftContext = {
-  widgetType: string;
-  displayName: string;
-  activeLocale: string;
-  draftSignature: string;
-  controls: ProductCopilotControl[];
-  availableActions: string[];
-  unavailableCapabilities: string[];
-  selectedControlPath?: string;
-};
-
-export type CopilotTurnRequest = {
-  version: 1;
-  kind: 'initial' | 'continuation';
-  sessionId: string;
-  userTurnId: string;
-  userMessage?: string;
-  conversationHistory: CopilotHistoryEntry[];
-  currentDraftContext: DraftContext;
-  priorModelStepId?: string;
-  toolCallId?: string;
-  toolResult?: unknown;
-};
+export type CopilotHistoryEntry = ContractCopilotHistoryEntry;
+export type DraftContext = CopilotDraftContext;
+export type CopilotTurnRequest = ContractCopilotTurnRequest;
 
 export class ProductCopilotInputError extends Error {
   readonly issues: Array<{ path: string; message: string }>;
@@ -123,10 +101,6 @@ export const APPLY_WIDGET_OPS_TOOL = {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
 
 function asString(value: unknown): string | null {
   return typeof value === 'string' ? value : null;
@@ -221,59 +195,6 @@ export function buildContextPrompt(
 }
 
 // ---------------------------------------------------------------------------
-// Turn request validation
-// ---------------------------------------------------------------------------
-
-export function validateTurnRequest(value: unknown): CopilotTurnRequest {
-  if (!isRecord(value)) {
-    throw new ProductCopilotInputError([{ path: '', message: 'Request must be an object.' }]);
-  }
-
-  const issues: Array<{ path: string; message: string }> = [];
-
-  if (value.version !== 1) issues.push({ path: 'version', message: 'Must be 1.' });
-  if (value.kind !== 'initial' && value.kind !== 'continuation') {
-    issues.push({ path: 'kind', message: 'Must be "initial" or "continuation".' });
-  }
-
-  const sessionId = asString(value.sessionId);
-  if (!sessionId) issues.push({ path: 'sessionId', message: 'Required.' });
-
-  const userTurnId = asString(value.userTurnId);
-  if (!userTurnId) issues.push({ path: 'userTurnId', message: 'Required.' });
-
-  const kind = value.kind as 'initial' | 'continuation' | undefined;
-
-  if (kind === 'initial') {
-    const userMessage = asString(value.userMessage);
-    if (!userMessage) issues.push({ path: 'userMessage', message: 'Required for initial turn.' });
-  }
-
-  if (kind === 'continuation') {
-    if (!asString(value.toolCallId)) issues.push({ path: 'toolCallId', message: 'Required for continuation.' });
-    if (value.toolResult === undefined) issues.push({ path: 'toolResult', message: 'Required for continuation.' });
-  }
-
-  const history = value.conversationHistory;
-  if (Array.isArray(history)) {
-    if (history.length > MAX_CONVERSATION_HISTORY_MESSAGES) {
-      issues.push({ path: 'conversationHistory', message: `Max ${MAX_CONVERSATION_HISTORY_MESSAGES} entries.` });
-    }
-  } else {
-    issues.push({ path: 'conversationHistory', message: 'Must be an array.' });
-  }
-
-  const draftCtx = value.currentDraftContext;
-  if (!isRecord(draftCtx)) {
-    issues.push({ path: 'currentDraftContext', message: 'Required.' });
-  }
-
-  if (issues.length) throw new ProductCopilotInputError(issues);
-
-  return value as CopilotTurnRequest;
-}
-
-// ---------------------------------------------------------------------------
 // San Francisco /model/turn request builder
 // ---------------------------------------------------------------------------
 
@@ -317,7 +238,7 @@ export function buildSanFranciscoTurnRequest(args: {
   ];
 
   for (const entry of turnRequest.conversationHistory) {
-    if (entry.toolCall) {
+    if ('toolCall' in entry) {
       messages.push({
         role: 'assistant',
         content: null,
@@ -329,11 +250,11 @@ export function buildSanFranciscoTurnRequest(args: {
       messages.push({ role: entry.role, content: entry.text });
     }
 
-    if (entry.toolResult !== undefined) {
+    if ('toolResult' in entry) {
       messages.push({
         role: 'tool',
-        toolCallId: entry.toolCall?.toolCallId ?? '',
-        toolName: entry.toolCall?.toolName ?? 'apply_widget_ops',
+        toolCallId: entry.toolCall.toolCallId,
+        toolName: entry.toolCall.toolName,
         result: entry.toolResult,
       });
     }
@@ -343,14 +264,14 @@ export function buildSanFranciscoTurnRequest(args: {
     messages.push({ role: 'user', content: contextPrompt });
   }
 
-  if (turnRequest.kind === 'continuation' && turnRequest.toolResult !== undefined) {
+  if (turnRequest.kind === 'continuation') {
     // De-duplicate against the conversation history: Bob's success path
     // (CopilotPane.tsx) records the tool call + result in the SAME history
     // entry AND passes the result as the top-level toolResult field. The
     // provider must receive exactly one tool-result message per tool_call_id,
     // so if the history loop already emitted a result for this call, do not
     // emit it again from the top-level field.
-    const topToolCallId = turnRequest.toolCallId ?? '';
+    const topToolCallId = turnRequest.toolCallId;
     const alreadyInHistory = messages.some(
       (m) => m.role === 'tool' && m.toolCallId === topToolCallId,
     );

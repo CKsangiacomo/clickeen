@@ -139,18 +139,19 @@ shared instance state
 
 Bob edits that complete state in browser memory.
 
-The existing physical source split remains:
+The physical source is one atomic artifact:
 
 ```text
-instance.config.json   every saved value except declared base-locale content
-instance.content.json  exact declared base-locale customer-content values
+instance.source.json   source metadata + exact config + exact base-locale content
 ```
 
-They are two files for one logical instance. The same saved value is never
-owned by both files.
+Roma still prepares distinct semantic config and content payloads, but Tokyo
+stores them in this one document. First Save writes the initial unpublished
+serve-state first and this source record last; only the exact source key makes
+the instance visible. Later Save and Rename each replace source in one PUT.
 
-Create writes the first editable source. Save updates that source. Neither
-action creates the public package.
+New writes nothing. First Save creates editable source and later Save updates
+that source. Neither action creates the public package.
 
 ## Structured Contracts
 
@@ -245,16 +246,20 @@ relationship to its matching editable content slot; Widget Core owns how those
 annotations become the Widget's unique search markup. Shared services contain
 no FAQ branch and derive no customer metadata.
 
-## Create, Edit/Save, Publish, Serve
+## New, First/Later Save, Publish, Serve
 
 The four actions remain separate:
 
 ```text
-Create
-  -> write initial editable source and open the new unpublished instance in Bob
+New
+  -> compose an unsaved browser draft; write no account instance
 
-Edit / Save
-  -> edit one browser-memory draft and update editable source
+First Save
+  -> send widgetType + config, create editable source, and adopt its ID
+
+Later Save
+  -> address the saved account instance and send config only
+  -> Roma uses Tokyo's stored list-fact widgetType; no caller-type comparison
 
 Publish
   -> apply publication capacity, then materialize and store browser files
@@ -272,6 +277,11 @@ instance. Catalog listing and that cross-account copy are follow-on product
 implementation; they do not require a template schema, table, storage root, or
 runtime compatibility path.
 
+Existing Save admits only the browser's record `config`. Roma loads the exact
+account-scoped saved list fact and uses Tokyo's stored `widgetType` to select
+the compiled artifact that prepares semantic source. The caller neither
+supplies nor re-proves Widget identity.
+
 ## Publish-Time Package
 
 Only explicit allowed Publish invokes Roma's Widget-neutral materializer:
@@ -287,7 +297,7 @@ Widget and shared software
 -> Tokyo-worker exact storage
 ```
 
-All three package files are mandatory:
+All three logical package members are mandatory:
 
 - `index.html` contains complete meaningful base-locale Header and Core content
   before JavaScript runs;
@@ -309,22 +319,27 @@ does not store another locale package.
 
 ```text
 accounts/{accountPublicId}/instances/{instanceId}/
-  instance.config.json
-  instance.content.json
+  instance.source.json
   serve-state.json
-  index.html
-  styles.css
-  runtime.js
   overlays/
     locales/
       {locale}.json
 ```
 
-The browser package is absent for a never-published instance. Publish stores or
-replaces the exact three package objects and publication truth through the
-existing Tokyo-worker authority and purges the instance's one Cloudflare cache
-tag. There is no release registry, alternate root, fingerprint path, or
-compatibility package.
+The browser package is absent for a never-published instance. Publish atomically
+replaces `serve-state.json` with published `status`, `publishedAt`, and exact
+logical `publicPackage` `{ indexHtml, stylesCss, runtimeJs }`. The public
+`index.html`, `styles.css`, and `runtime.js` paths expose those members; they
+are not separate R2 objects. Tokyo then schedules best-effort background
+eviction of the instance's one Cloudflare cache tag. Eviction is not part of
+the Publish result. There is no release registry, alternate root, fingerprint
+path, package/status split commit, or compatibility package.
+
+This is a pre-GA storage cutover. After deployment, all legacy cloud-dev saved
+instances require an explicit source cutover or recreation; any that should
+remain public then require explicit Publish/Republish. No compatibility reader
+or migration-on-read exists, and this documentation pass performed no remote
+operation.
 
 ## Uniform Shared-Service Law
 
@@ -368,7 +383,7 @@ These are build/operator evidence only.
 - Do not put unique Widget meaning outside Core and structured contracts.
 - Do not make `core.js` a renamed `widget.client.js` initial renderer or shared
   service orchestrator.
-- Do not make Create or Save generate public files.
+- Do not make New or Save generate public files.
 - Do not put tier values, Popup mechanics, or CTA behavior in Widget source.
 - Do not expose `discovery.json` as a user editor.
 - Do not invent Discovery output in Bob or Tokyo-worker.

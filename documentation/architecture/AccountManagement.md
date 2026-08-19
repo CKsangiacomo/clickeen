@@ -19,7 +19,7 @@ For product/system context, see [CONTEXT.md](./CONTEXT.md) and [Overview.md](./O
 | Role authority | `users.role` in the one-account user model. |
 | Tier/product policy | System policy consumed through Roma; never Widget Core or Tokyo-worker. |
 | Editable Widget access | Every tier may use every Widget and retain editable instances. |
-| Public Widget capacity | `instances.published.max` at Roma Publish. Free is one served instance. Roma performs a fast local precheck; Tokyo-worker owns the final account-atomic transition. A live overlapping first Publish receives `409 PUBLISH_IN_PROGRESS`; a later request that finds the slot consumed receives the existing `402 UPGRADE_REQUIRED` result. |
+| Public Widget capacity | `instances.published.max` at Roma Publish. Free is one served instance. Roma performs a fast local precheck; Tokyo-worker owns the final account-atomic transition. Any overlapping existing-instance command receives `409 coreui.errors.instance.commandInProgress`; a later Publish that finds the slot consumed receives the existing `402 UPGRADE_REQUIRED` result. |
 | Widget denial context | Widget-owned complete localized template from `upsell/{locale}.json`. |
 | Upsell surface and CTA | Roma composes one Popup from system plan truth, Widget context, and the system CTA; Dieter owns mechanics only. |
 | Public package generation | Roma's one Widget-neutral materializer generates complete served HTML/CSS/JavaScript only on explicit allowed Publish. |
@@ -288,18 +288,31 @@ the system-owned CTA. Roma-native commands use system-owned context. Roma does
 not place Widget-specific copy in route/UI branches, and it trusts a Bob draft
 already admitted through Bob's exact editing boundary when Save is requested.
 
-For account Widget instances, Create writes the initial editable source and
-Save updates it. Bob returns one complete logical instance document containing its customized shared
-Header/Stage/Pod/capability state and its Widget Core state. Roma resolves the
-`instance.config.json` / `instance.content.json` source split. Only explicit
-allowed Publish invokes the one generic Widget materializer. That
+For account Widget instances, New composes an unsaved browser-memory draft and
+writes nothing. First Save creates editable source; later Save updates it.
+Bob returns one complete logical instance document containing its customized
+shared Header/Stage/Pod/capability state and its Widget Core state. Roma
+prepares the complete source payload that Tokyo stores atomically as
+`instance.source.json`. First Save's HTTP 201 returns the minted instance ID and
+the exact current account `baseLocale` persisted with that source; Bob adopts
+both through the existing result into its current `meta`/`translationSetup`
+without a reopen or new message. This does not serialize First Save against a
+simultaneous account-locale PATCH across authorities. Only explicit allowed
+Publish invokes the one generic Widget materializer. That
 materializer—not Bob and not Tokyo-worker—generates the served complete
 `index.html`, complete `styles.css`, and mandatory `runtime.js`.
 
+First Save carries Bob's exact `{ widgetType, config }` because the saved
+coordinate does not exist yet. Existing Save is addressed by current account
+plus `instanceId` and carries `{ config }` only. Roma admits the record config,
+loads Tokyo's exact account-scoped list fact, and uses the stored `widgetType`
+to select the compiled artifact. Roma does not accept or compare a caller
+Widget type for an existing instance.
+
 For publication capacity, Roma first uses its exact current account policy and
 published-instance facts as a fast precheck before materialization. It passes
-the exact `instances.published.max` value with the generated package to
-Tokyo-worker. Tokyo-worker then owns the final account-atomic first-Publish
+the exact `instances.published.max` value, generated package, and saved
+`sourceUpdatedAt` to Tokyo-worker. Tokyo-worker owns the final account-atomic
 transition through one Tokyo-owned Cloudflare
 `AccountPublicationCoordinator` Durable Object selected deterministically from
 `accountPublicId`.
@@ -310,30 +323,60 @@ R2 work; it writes no coordinator record. That read gives the in-flight command
 Cloudflare's Durable Object shutdown uniqueness behavior, so an old execution
 is stopped rather than allowed to overlap a replacement object after a deploy
 or runtime restart. The returned value is intentionally unused and the key is
-intentionally never written; the storage access itself is the fence. The
-coordinator holds the gate only across the exact
-published-count decision and package/serve-state commit, then clears it before
-cache purge.
+intentionally never written; the storage access itself is the fence.
 
-Publication truth remains each instance's `serve-state.json`; Durable Object
-storage contains no tier, count, publication set, queue, or release registry.
-Republish is allowed without consuming another slot. A contender while the
-gate is active receives `409 PUBLISH_IN_PROGRESS` and persists no package or
-publication state. A later request after the winner committed reads the new
-published count and receives the existing `402 UPGRADE_REQUIRED` capacity
-result when full. There is no polling loop, automatic retry, second publication
-truth, or per-view capacity check.
+The same coordinator serializes every existing-instance Save, Rename,
+Publish/Republish, Unpublish, and Delete across the account. First Save and
+Duplicate create new coordinates and remain outside this existing-instance
+critical section. It holds the gate across the exact owning command, then
+clears it before any background cache eviction is scheduled. An overlapping
+command receives HTTP 409 `coreui.errors.instance.commandInProgress` and
+persists nothing.
 
-The coordinator ends before cache purge and returns committed truth to Tokyo's
-default Worker entrypoint. That entrypoint owns the cached public responses and
-calls `ctx.cache.purge({ tags: [accountInstanceCacheTag] })`. If the
-package/publication transition commits and that following purge fails, Tokyo
-returns the explicit `502` purge failure, or `503` missing Worker-cache-context
-failure, together with the exact
-`committed: { instanceId, status, changed }` transition. Roma reconciles its
-Builder or Widgets surface to that authoritative publication truth and shows a
-status-specific delivery-refresh banner. The existing Republish or Unpublish
-command is the retry; no rollback, queue, or alternate lifecycle is created.
+Publish re-reads source inside the coordinator and compares it with Roma's
+exact `sourceUpdatedAt`; a mismatch returns HTTP 409
+`coreui.errors.instance.sourceChanged` before package/publication mutation.
+Republish consumes no additional slot. A later Publish after a winner committed
+reads the new published count and receives the existing `402 UPGRADE_REQUIRED`
+capacity result when full. There is no polling loop, automatic retry, second
+publication truth, or per-view capacity check.
+
+Tokyo is the single timestamp writer. Every existing Save/Rename writes
+`updatedAt` strictly later than both the previous `updatedAt` and any
+`publishedAt`; every successful Publish/Republish writes `publishedAt` strictly
+later than both the exact `sourceUpdatedAt` it commits and the prior
+`publishedAt`. Downstream publication controls compare these authoritative
+coordinates without a validator or same-millisecond workaround.
+
+Source and publication each have one atomic R2 record. First Save writes an
+unpublished `serve-state.json` first and `instance.source.json` last; only the
+exact source record makes the new instance visible. Save/Rename each replace
+source in one PUT. A published `serve-state.json` contains `status`,
+`publishedAt`, and the exact logical `publicPackage`
+`{ indexHtml, stylesCss, runtimeJs }`. The public file paths expose those
+members; there are no separate package objects and no package/status split
+commit. Durable Object storage contains no tier, count, source, package,
+publication set, queue, or release registry.
+
+Existing-instance Delete commits by deleting the exact
+`instance.source.json` visibility anchor. If that delete fails, the command
+fails and the instance remains visible. Once the successful command response
+exists, Tokyo schedules residual instance-prefix cleanup through `waitUntil`.
+Cleanup absence, throw, rejection, partial completion, or pending work cannot
+alter the Delete result. Residual bytes remain unreachable and are excluded
+from the account asset quota, whose usage authority is the account asset
+folder.
+
+The coordinator ends before background cleanup or cache eviction and returns
+the exact command truth to Tokyo's default Worker entrypoint. That entrypoint
+owns cached public responses and schedules
+`ctx.cache.purge({ tags: [accountInstanceCacheTag] })` through its bound
+`waitUntil`. Eviction is best-effort infrastructure maintenance: it is never
+awaited or inspected, and missing cache context, synchronous failure,
+rejection, `success:false`, or a pending purge cannot affect the product
+response. Roma and the user never receive or retry cache state. Generated
+package responses use bounded freshness with `must-revalidate`; there is no
+rollback, queue, alternate lifecycle, or cache-derived publication truth.
 
 ### Bob
 
@@ -379,16 +422,16 @@ the exact submitted package; it does not re-prove account policy, decide billing
 or account identity, reinterpret Widget semantics, or own translation
 generation.
 
-Tokyo-worker physically writes the canonical source documents from Roma's exact
-semantic config/content payloads and stores Roma's exact package bytes under the
-account instance folder. It never generates, compiles, renders, or modifies the
-Widget package.
+Tokyo-worker physically writes Roma's exact semantic source payload as one
+atomic `instance.source.json` and stores Roma's exact logical package inside the
+atomic published `serve-state.json`. It never generates, compiles, renders, or
+modifies the Widget package.
 
 ### Public Serving
 
 Public serving resolves the untrusted public route coordinate, reads the exact
-Tokyo-owned serve state and generated package, and returns only a published
-instance. The stored base `index.html` already contains complete semantic base
+Tokyo-owned atomic serve state, selects its logical package member, and returns
+only a published instance. The stored logical `indexHtml` already contains complete semantic base
 content. For an explicit non-base locale, Tokyo-worker reads the exact trusted
 overlay and applies it to the semantic HTML response before returning it;
 client JavaScript is not required to discover the localized content.
@@ -399,8 +442,8 @@ DB state or call an agent or model on a visitor request.
 
 ### Local Public Runtime
 
-The local public-serving path reads exact publication truth and exact stored
-package bytes. It authors switcher options from the exact base locale and
+The local public-serving path reads exact atomic publication/package truth. It
+authors switcher options from the exact base locale and
 stored overlay coordinates. For a selected non-base locale it applies every
 present trusted stable-identity value to the materialized
 `data-ck-content-path` body or exact `data-ck-content-attribute` target through
@@ -415,6 +458,13 @@ The all-Widget changes are deployed and verified in cloud-dev; owner QA remains
 pending. Authenticated translation list/read/write operations also trust the
 exact stored overlay coordinates and values; they do not project or compare
 them against saved source.
+
+Atomic source and published serve-state are a newer pre-GA storage cutover.
+After deployment, all legacy cloud-dev saved instances require an explicit
+source cutover or recreation; any that should remain public then require
+explicit Publish/Republish. There is no compatibility reader or
+migration-on-read, and this documentation reconciliation performed no remote
+operation.
 
 ## Verification
 

@@ -26,6 +26,7 @@ async function testPublishGateBeforeTransition(): Promise<void> {
   const tokyoClientSource = await readRoute('lib/tokyo-client.ts');
   const builderSource = await readRoute('components/builder-domain.tsx');
   const widgetsSource = await readRoute('components/widgets-domain.tsx');
+  const publicationControls = await readRoute('components/widget-publication-controls.tsx');
   const tokyoOperations = await readFile(
     new URL('../../tokyo-worker/src/domains/account-instances/operations.ts', import.meta.url),
     'utf8',
@@ -54,33 +55,45 @@ async function testPublishGateBeforeTransition(): Promise<void> {
   assert.doesNotMatch(source, /listAccountInstancesInTokyo/);
   assert.doesNotMatch(source, /\/instances\/facts/);
   assert.match(source, /publishedLimit,/);
-  assert.match(source, /kind: 'PUBLISH_IN_PROGRESS'/);
+  assert.match(source, /sourceUpdatedAt: saved\.value\.row\.updatedAt/);
   assertBefore(source, gateBranch, 'materializeAccountInstancePublicPackage({');
   assertBefore(source, gateBranch, 'publishAccountInstanceInTokyo({');
-  assertBefore(tokyoOperations, 'listAccountInstanceIds({', 'writeInstancePublicPackage({');
+  assertBefore(tokyoOperations, 'listAccountInstanceIds({', 'await writeInstanceServeState({');
+  assert.doesNotMatch(tokyoOperations, /writeInstancePublicPackage/);
   assert.match(tokyoOperations, /publishedTotal >= args\.publishedLimit/);
+  assert.match(tokyoOperations, /existing\.updatedAt !== args\.sourceUpdatedAt/);
   assert.match(tokyoCoordinator, /private active = false/);
-  assert.match(tokyoCoordinator, /reasonKey: 'coreui\.errors\.instance\.publishInProgress'/);
+  assert.match(tokyoCoordinator, /reasonKey: 'coreui\.errors\.instance\.commandInProgress'/);
+  assert.match(tokyoCoordinator, /coordinateAccountInstanceSave/);
+  assert.match(tokyoCoordinator, /coordinateAccountInstanceRename/);
+  assert.match(tokyoCoordinator, /coordinateAccountInstanceUnpublish/);
+  assert.match(tokyoCoordinator, /coordinateAccountInstanceDelete/);
   assert.doesNotMatch(tokyoCoordinator, /purgeClkLiveEntryCache/);
   assertBefore(
     tokyoRoute,
     'coordinateAccountInstancePublish({',
-    'await purgeClkLiveEntryCache({ cache, accountId, instanceId });',
+    'scheduleAccountInstanceCacheEviction({ cache, waitUntil, accountId, instanceId });',
   );
-  assert.match(tokyoRoute, /error\.committed = transition/);
-  assert.match(tokyoClientSource, /committed\?: unknown/);
-  assert.match(directSource, /committed\?: AccountInstanceStatusTransition/);
-  assert.match(source, /publish\.committed \? \{ committed: publish\.committed \} : \{\}/);
-  assert.match(unpublishRoute, /unpublish\.committed \? \{ committed: unpublish\.committed \} : \{\}/);
-  assert.match(builderSource, /resolveCommittedPublicationFailureCopy/);
-  assertBefore(builderSource, 'await openActiveInstanceInBobRef.current();', 'setPublicationError(message);');
-  assert.match(widgetsSource, /entry\.instanceId === committed\.instanceId/);
-  assert.match(widgetsSource, /status: committed\.status/);
-  assert.match(widgetsSource, /setMutationError\(resolveCommittedPublicationFailureCopy/);
-  assert.match(widgetsSource, /setPublicationRetry\(\{ instance, status: committed\.status \}\)/);
-  assert.match(widgetsSource, />Retry public delivery<\/span>/);
-  assert.match(widgetsSource, /handleStatusChange\(publicationRetry\.instance, publicationRetry\.status\)/);
-  assert.match(widgetsSource, /if \(!isPublicationRetry\) setPublicationRetry\(null\)/);
+  assert.doesNotMatch(tokyoRoute, /await scheduleAccountInstanceCacheEviction|committed/);
+  assert.doesNotMatch(tokyoClientSource, /committed/);
+  assert.doesNotMatch(directSource, /committed/);
+  assert.doesNotMatch(source, /committed/);
+  assert.doesNotMatch(unpublishRoute, /committed/);
+  assert.doesNotMatch(builderSource, /resolveCommittedPublicationFailureCopy|publishActiveInstance|publicationError/);
+  assert.doesNotMatch(widgetsSource, /publicationRetry|Retry public delivery/);
+  assert.doesNotMatch(publicationControls, /cache|purge|committed/);
+  assert.match(publicationControls, /upsertRomaWidgetInstanceCache\(accountContext\.accountPublicId, transitionedInstance\)/);
+  assert.match(publicationControls, /invalidateRomaWidgetsCache\(accountContext\.accountPublicId\)/);
+  assertBefore(
+    publicationControls,
+    'upsertRomaWidgetInstanceCache(accountContext.accountPublicId, transitionedInstance);',
+    'loadRomaWidgetsForAccount({',
+  );
+  assertBefore(
+    publicationControls,
+    'loadRomaWidgetsForAccount({',
+    'invalidateRomaWidgetsCache(accountContext.accountPublicId);',
+  );
 }
 
 async function testDeleteDoesNotDependOnRetiredPages(): Promise<void> {
@@ -89,8 +102,9 @@ async function testDeleteDoesNotDependOnRetiredPages(): Promise<void> {
   assert.doesNotMatch(source, /account-page|PageSources|pageIdsPlacingInstance|placedOnPage|pageIds/);
 }
 
-async function testBuilderUsesBobTopDrawerAsItsOnlyEditorChrome(): Promise<void> {
+async function testRomaOwnsBuilderPublicationChrome(): Promise<void> {
   const builderSource = await readRoute('components/builder-domain.tsx');
+  const widgetsSource = await readRoute('components/widgets-domain.tsx');
   const builderRoute = await readRoute('app/(authed)/builder/[instanceId]/page.tsx');
   const builderLandingRoute = await readRoute('app/(authed)/builder/page.tsx');
   const topDrawer = await readFile(new URL('../../bob/components/TopDrawer.tsx', import.meta.url), 'utf8');
@@ -98,6 +112,7 @@ async function testBuilderUsesBobTopDrawerAsItsOnlyEditorChrome(): Promise<void>
   const bobCss = await readFile(new URL('../../bob/app/bob_app.css', import.meta.url), 'utf8');
   const copyDialog = await readRoute('components/widget-copy-code-dialog.tsx');
   const clipboard = await readRoute('lib/copy-to-clipboard.ts');
+  const publicationControls = await readRoute('components/widget-publication-controls.tsx');
 
   assert.doesNotMatch(builderRoute, /showHeader/);
   assert.match(builderRoute, /fullCanvas/);
@@ -106,31 +121,28 @@ async function testBuilderUsesBobTopDrawerAsItsOnlyEditorChrome(): Promise<void>
   assert.doesNotMatch(builderLandingRoute, /rd-canvas--builder/);
   assert.match(builderLandingRoute, /RomaShellDefaultActions/);
 
-  assert.match(builderSource, /buildWidgetPublicActions\(\{/);
-  assert.match(builderSource, /publicActions: nextPublicActions/);
+  assert.match(builderSource, /className="roma-builder-header"/);
+  assert.match(builderSource, /<WidgetPublicationControls/);
+  assert.match(builderSource, /activeInstanceId \? 'Loading widget…' : 'Untitled widget'/);
+  assert.match(builderSource, /activeInstanceId \? 'Loading publication status…' : 'Save to create this widget'/);
   assert.match(builderSource, /data\.type === 'bob:host-action'/);
-  assert.match(builderSource, /data\.action === 'copy-code'/);
+  assert.doesNotMatch(builderSource, /data\.action === 'copy-code'/);
   assert.doesNotMatch(builderSource, /returnTo|returnLabel|data\.action === 'return'/);
-  assert.match(builderSource, /<WidgetCopyCodeDialog/);
+  assert.doesNotMatch(builderSource, /<WidgetCopyCodeDialog/);
   assert.doesNotMatch(builderSource, />Copy URL</);
   assert.doesNotMatch(builderSource, />Copy embed</);
   assert.doesNotMatch(builderSource, />Copy script</);
   assert.doesNotMatch(builderSource, />Open public widget</);
 
   assert.match(topDrawer, /className="topdrawer"/);
-  assert.match(topDrawer, />Open public widget</);
-  assert.match(topDrawer, />More</);
-  assert.match(topDrawer, />Copy code</);
-  assert.match(topDrawer, /requestHostAction\('copy-code'\)/);
+  assert.doesNotMatch(topDrawer, /Open public widget|>More<|>Copy code<|publishStatus|publishedAt|publicActions/);
   assert.doesNotMatch(topDrawer, />Copy URL</);
   assert.doesNotMatch(topDrawer, />Copy embed</);
   assert.doesNotMatch(topDrawer, />Copy script</);
   assert.doesNotMatch(topDrawer, /navigator\.clipboard|document\.execCommand/);
-  assert.match(topDrawer, /className="topdrawer-more diet-popover-host"/);
   assert.match(topDrawer, /requestHostAction\('open-navigation'\)/);
   assert.doesNotMatch(topDrawer, /requestHostAction\('return'\)|returnLabel|topdrawer-return/);
-  assert.match(bobBoot, /const publicActions = message\.publicActions/);
-  assert.match(bobBoot, /publishStatus: message\.publishStatus/);
+  assert.doesNotMatch(bobBoot, /publicActions|publishStatus|publishedAt|sourceUpdatedAt/);
   assert.doesNotMatch(bobBoot, /coreui\.errors\.builder\.publicActions\.invalid/);
   assert.doesNotMatch(bobBoot, /returnLabel/);
   assert.doesNotMatch(bobCss, /topdrawer-action-status/);
@@ -138,6 +150,22 @@ async function testBuilderUsesBobTopDrawerAsItsOnlyEditorChrome(): Promise<void>
   assert.doesNotMatch(copyDialog, /data-size="large"/);
   assert.match(copyDialog, /request !== copyRequestRef\.current/);
   assert.match(clipboard, /finally \{\s+element\?\.remove\(\);/);
+  assert.match(publicationControls, />Open public widget</);
+  assert.match(publicationControls, />Copy code</);
+  assert.match(publicationControls, />Republish</);
+  assert.match(publicationControls, /nextStatus === 'published' && dirty/);
+  assert.match(publicationControls, /publishBlocked = dirty && !published/);
+  assert.match(publicationControls, /checked=\{published\}/);
+  assert.match(publicationControls, /onPendingChange\?\.\(true\)/);
+  assert.match(publicationControls, /onPendingChange\?\.\(false\)/);
+  assert.match(widgetsSource, /const publicationActionKey = `publication:\$\{instance\.instanceId\}`/);
+  assert.match(widgetsSource, /disabled=\{rowActionsDisabled\}/);
+  assert.match(widgetsSource, /current === publicationActionKey \? null : current/);
+  assert.match(widgetsSource, /aria-disabled="true"/);
+  assert.match(builderSource, /publicationIdlePromiseRef/);
+  assert.match(builderSource, /args\.command === 'save-instance' && publicationPendingRef\.current/);
+  assert.match(builderSource, /await publicationIdlePromiseRef\.current/);
+  assert.match(builderSource, /onPendingChange=\{handlePublicationPendingChange\}/);
 }
 
 function testRomaOwnsExactPublicWidgetActions(): void {
@@ -157,6 +185,8 @@ async function testWidgetsListComposition(): Promise<void> {
   const nav = await readRoute('components/roma-nav.tsx');
   const domains = await readRoute('lib/domains.ts');
   const romaCss = await readRoute('app/roma.css');
+  const publicationControls = await readRoute('components/widget-publication-controls.tsx');
+  const renameRoute = await readRoute('app/api/account/instances/[instanceId]/rename/route.ts');
 
   assert.match(route, /<WidgetsPage view="your-widgets" \/>/);
   assert.match(catalogRoute, /<WidgetsPage view="catalog" \/>/);
@@ -194,12 +224,14 @@ async function testWidgetsListComposition(): Promise<void> {
   assert.match(source, /displayedInstances\.map\(\(instance\)/);
   assert.match(source, /displayedCatalog\.map\(\(option\)/);
   assert.match(source, /handleCreateInstance\(option\.widgetType\)/);
-  assert.match(source, /checked=\{instance\.status === 'published'\}/);
-  assert.match(source, /handleStatusChange\(instance, event\.target\.checked \? 'published' : 'unpublished'\)/);
-  assert.match(source, /className="roma-widget-publish-actions"/);
-  assert.match(source, /instance\.status === 'published' \? \(/);
-  assert.match(source, />Copy code<\/span>/);
-  assert.match(source, /<WidgetCopyCodeDialog/);
+  assert.match(source, /<WidgetPublicationControls/);
+  assert.match(renameRoute, /updatedAt: result\.value\.updatedAt/);
+  assert.match(source, /displayName: resolvedDisplayName, updatedAt: payload\.updatedAt/);
+  assert.match(publicationControls, /checked=\{published\}/);
+  assert.match(publicationControls, /changeStatus\(event\.target\.checked \? 'published' : 'unpublished'\)/);
+  assert.match(publicationControls, /className="roma-widget-publish-actions"/);
+  assert.match(publicationControls, />Copy code<\/span>/);
+  assert.match(publicationControls, /<WidgetCopyCodeDialog/);
   assert.match(source, /<span className="body-xs roma-widget-instance-id">\{instance\.instanceId\}<\/span>/);
   assert.match(romaCss, /\.roma-widget-publish-actions \{[\s\S]*justify-content: flex-start;/);
   assert.match(source, /className="diet-popover roma-widget-actions-popover"/);
@@ -367,8 +399,8 @@ async function run(): Promise<void> {
   console.log('PASS Publish prechecks before materialization and Tokyo atomically backs the transition');
   await testDeleteDoesNotDependOnRetiredPages();
   console.log('PASS instance deletion has no retired Pages dependency');
-  await testBuilderUsesBobTopDrawerAsItsOnlyEditorChrome();
-  console.log('PASS active Builder owns full-canvas chrome and preserves initial-only preview readiness');
+  await testRomaOwnsBuilderPublicationChrome();
+  console.log('PASS Roma owns Builder publication chrome while Bob remains Save-only');
   testRomaOwnsExactPublicWidgetActions();
   console.log('PASS Roma owns exact public widget actions for Widgets and Builder');
   await testWidgetsListComposition();

@@ -2,35 +2,33 @@
 
 import type { CompiledWidget } from '@clickeen/bob/types';
 import type { AccountAssetHostCommand } from '@clickeen/ck-contracts';
-import { isProductCopilotTurnEvent, type ProductCopilotTurnEvent } from '@clickeen/ck-contracts/ai';
-import type { Policy } from '@clickeen/ck-policy';
+import type { ProductCopilotTurnEvent } from '@clickeen/ck-contracts/ai';
+import type { AgentRuntimePolicyUi, Policy } from '@clickeen/ck-policy';
 import type { AccountFontLibrary } from '@clickeen/widget-foundation';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  resolveAccountShellErrorCopy,
-  resolveCommittedPublicationFailureCopy,
-} from '../lib/account-shell-copy';
 import { resolveBobBaseUrl } from '../lib/env/bob';
 import { formatAccountTierLabel } from '../lib/format';
-import { buildWidgetPublicActions, type WidgetPublicActions } from '../lib/public-widget-actions';
 import { useRomaAccountApi } from './account-api';
 import { getWidgetEditorArtifact } from './widget-editor-artifact';
 import { useRomaAccountContext } from './roma-account-context';
 import { RomaUnsavedChangesDialog } from './roma-unsaved-changes-dialog';
 import {
-  buildPublicationCapacityUpsell,
   RomaUpsellDialog,
   resolveTargetPlan,
-  type PublicationCapacityUpgrade,
   type UpsellPresentation,
 } from './roma-upsell-dialog';
 import { useRomaShellActions } from './roma-shell';
-import { WidgetCopyCodeDialog } from './widget-copy-code-dialog';
+import { WidgetPublicationControls } from './widget-publication-controls';
+import {
+  upsertRomaWidgetInstanceCache,
+  type WidgetInstance,
+} from './use-roma-widgets';
 
 type BuilderDomainProps = {
   initialInstanceId?: string;
+  initialWidgetType?: string;
 };
 
 const OPEN_EDITOR_TIMEOUT_MS = 7000;
@@ -58,7 +56,7 @@ type BobOpenEditorFailedMessage = {
 };
 
 type BobAccountCommand =
-  | 'update-instance'
+  | 'save-instance'
   | AccountAssetHostCommand
   | 'list-translations'
   | 'read-translation'
@@ -66,9 +64,9 @@ type BobAccountCommand =
   | 'run-copilot'
   | 'cancel-copilot';
 
-type BobInstanceAccountCommand = Exclude<
+type BobSavedInstanceAccountCommand = Exclude<
   BobAccountCommand,
-  AccountAssetHostCommand | 'cancel-copilot'
+  AccountAssetHostCommand | 'cancel-copilot' | 'save-instance'
 >;
 
 type BobAccountCommandMessageBase = {
@@ -80,8 +78,12 @@ type BobAccountCommandMessageBase = {
 
 type BobAccountCommandMessage =
   | (BobAccountCommandMessageBase & {
-      command: BobInstanceAccountCommand;
+      command: BobSavedInstanceAccountCommand;
       instanceId: string;
+    })
+  | (BobAccountCommandMessageBase & {
+      command: 'save-instance';
+      instanceId?: string;
     })
   | (BobAccountCommandMessageBase & {
       command: AccountAssetHostCommand;
@@ -108,7 +110,7 @@ type BobUpsellMessage = BobWidgetUpsellMessage | BobSystemUpsellMessage;
 
 type BobHostActionMessage = {
   type: 'bob:host-action';
-  action: 'open-navigation' | 'copy-code';
+  action: 'open-navigation';
 };
 
 function resolveBobSystemUpsellBody(reasonKey: string): string {
@@ -177,19 +179,15 @@ type BobOpenEditorMessage = {
   type: 'ck:open-editor';
   requestId: string;
   accountPublicId: string;
-  instanceId: string;
+  instanceId: string | null;
   baseLocale: string;
   label: string;
   widgetname: string;
   compiled: CompiledWidget;
   instanceData: Record<string, unknown>;
   fontLibrary: AccountFontLibrary;
-  publishStatus: 'published' | 'unpublished';
-  publishedAt: string | null;
-  sourceUpdatedAt: string | null;
-  publicActions: WidgetPublicActions | null;
   policy: unknown;
-  copilot: unknown;
+  copilot: AgentRuntimePolicyUi | null;
   translationSetup: {
     baseLocale: string;
     planTranslationsMax: number | null;
@@ -199,27 +197,29 @@ type BobOpenEditorMessage = {
 
 type BobOpenEditorPayload = Omit<BobOpenEditorMessage, 'requestId'>;
 
-type BuilderOpenResponse = {
-  instanceId: string;
+type BuilderOpenResponseBase = {
   displayName: string;
   widgetType: string;
   baseLocale: string;
   config: Record<string, unknown>;
   fontLibrary: AccountFontLibrary;
-  publishStatus: 'published' | 'unpublished';
-  publishedAt: string | null;
-  sourceUpdatedAt: string | null;
-  copilot: unknown;
+  copilot: AgentRuntimePolicyUi | null;
 };
 
-type PublicationFailureResponse = {
-  error: { reasonKey: string };
-  committed?: {
-    instanceId: string;
-    status: 'published' | 'unpublished';
-    changed: boolean;
-  };
-};
+type BuilderOpenResponse = BuilderOpenResponseBase & (
+  | {
+      instanceId: string;
+      publishStatus: 'published' | 'unpublished';
+      publishedAt: string | null;
+      sourceUpdatedAt: string;
+    }
+  | {
+      instanceId: null;
+      publishStatus: null;
+      publishedAt: null;
+      sourceUpdatedAt: null;
+    }
+);
 
 const BUILDER_REASON_COPY: Record<string, string> = {
   'coreui.errors.auth.required': 'You need to sign in again to open Builder.',
@@ -259,19 +259,28 @@ function buildRomaBuilderRoute(args: { instanceId: string }): string {
   return `/builder/${encodeURIComponent(args.instanceId)}`;
 }
 
+function buildRomaNewBuilderRoute(args: { widgetType: string }): string {
+  return `/builder/new/${encodeURIComponent(args.widgetType)}`;
+}
+
 function resolveBobAccountCommandRequest(args: {
   command: BobAccountCommand;
   instanceId?: string;
   body?: unknown;
 }): { method: 'GET' | 'PUT' | 'POST' | 'DELETE'; path: string } | null {
-  const instanceId = args.instanceId as string;
+  const instanceId = args.instanceId ?? '';
 
   switch (args.command) {
-    case 'update-instance':
-      return {
-        method: 'PUT',
-        path: `/api/account/instances/${encodeURIComponent(instanceId)}`,
-      };
+    case 'save-instance':
+      return instanceId
+        ? {
+            method: 'PUT',
+            path: `/api/account/instances/${encodeURIComponent(instanceId)}`,
+          }
+        : {
+            method: 'POST',
+            path: '/api/account/instances',
+          };
     case 'list-assets':
       return {
         method: 'GET',
@@ -403,12 +412,12 @@ type CopilotStreamOutcome =
 
 /**
  * PRD 128D Phase 4/5 — Reads the Product Copilot SSE stream relayed by Roma
- * and forwards each validated ProductCopilotTurnEvent to Bob as a
+ * and forwards each ProductCopilotTurnEvent to Bob as a
  * host:copilot-event. Unlike readJsonOrStreamedCommandResult, this does NOT
  * look for a terminal `result` frame: the stream is a turn event log whose
  * terminal marker is agent_turn_finished / agent_turn_error / agent_turn_stopped.
  *
- * Rejection is terminal and visible: on a malformed frame Roma emits a final
+ * Transport rejection is terminal and visible: on malformed JSON Roma emits a final
  * synthetic agent_turn_error (so Bob's UI shows the failure) and returns a
  * non-ok outcome that the caller translates into host:account-command-result.
  */
@@ -457,13 +466,8 @@ async function readCopilotStreamedEvents(args: {
 
   const consumeFrame = (raw: string): CopilotStreamOutcome | null => {
     const lines = raw.split('\n');
-    let eventName = 'message';
     const dataLines: string[] = [];
     for (const line of lines) {
-      if (line.startsWith('event:')) {
-        eventName = line.slice('event:'.length).trim();
-        continue;
-      }
       if (line.startsWith('data:')) {
         // Per SSE spec, a single leading space after the colon is stripped.
         dataLines.push(line.slice('data:'.length).replace(/^ /, ''));
@@ -471,17 +475,11 @@ async function readCopilotStreamedEvents(args: {
     }
     if (!dataLines.length) return null; // keepalive / comment frame
 
-    let parsed: unknown;
+    let parsed: ProductCopilotTurnEvent;
     try {
-      parsed = JSON.parse(dataLines.join('\n'));
+      parsed = JSON.parse(dataLines.join('\n')) as ProductCopilotTurnEvent;
     } catch {
       return reject('Malformed JSON in copilot event frame.');
-    }
-    if (!isProductCopilotTurnEvent(parsed)) {
-      return reject('Invalid copilot turn event payload.');
-    }
-    if (eventName !== parsed.type) {
-      return reject(`Copilot event name mismatch (${eventName} vs ${parsed.type}).`);
     }
     lastUserTurnId = parsed.userTurnId;
     postEvent(parsed);
@@ -540,7 +538,17 @@ function decodeBuilderPathInstanceId(pathname: string): string {
   }
 }
 
-export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
+function decodeBuilderPathWidgetType(pathname: string): string {
+  const match = /^\/builder\/new\/([^/?#]+)$/.exec(pathname);
+  if (!match) return '';
+  try {
+    return decodeURIComponent(match[1]);
+  } catch {
+    return match[1];
+  }
+}
+
+export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }: BuilderDomainProps) {
   const { activeAccount, accountPolicy } = useRomaAccountContext();
   const accountApi = useRomaAccountApi();
   const router = useRouter();
@@ -549,10 +557,17 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const bobReadyRef = useRef(false);
   const openDispatchSeqRef = useRef(0);
+  const openingTargetKeyRef = useRef('');
+  const openedTargetKeyRef = useRef('');
   const bobAppliedInstanceIdRef = useRef('');
   const bobIsDirtyRef = useRef(false);
+  const publicationPendingRef = useRef(false);
+  const publicationIdlePromiseRef = useRef<Promise<void>>(Promise.resolve());
+  const resolvePublicationIdleRef = useRef<(() => void) | null>(null);
   const activeCompiledWidgetRef = useRef<CompiledWidget | null>(null);
   const activeInstanceIdRef = useRef('');
+  const activeWidgetTypeRef = useRef('');
+  const suppressNextOpenInstanceIdRef = useRef('');
   const pendingDiscardActionRef = useRef<(() => void) | null>(null);
   const allowNavigationRef = useRef(false);
   const allowPopStateRef = useRef(false);
@@ -562,19 +577,32 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
     if (fromPath) return fromPath;
     return String(initialInstanceId || '').trim();
   });
+  const [activeWidgetType, setActiveWidgetType] = useState(() => {
+    if (initialInstanceId) return '';
+    return decodeBuilderPathWidgetType(pathname) || String(initialWidgetType || '').trim();
+  });
   const [openError, setOpenError] = useState<string | null>(null);
-  const [publicActionContext, setPublicActionContext] = useState<{
-    instanceName: string;
-    actions: WidgetPublicActions;
-  } | null>(null);
-  const [copyCodeOpen, setCopyCodeOpen] = useState(false);
+  const [publicationInstance, setPublicationInstance] = useState<WidgetInstance | null>(null);
+  const [bobIsDirty, setBobIsDirty] = useState(false);
   const [unsavedDialogOpen, setUnsavedDialogOpen] = useState(false);
   const [upsell, setUpsell] = useState<UpsellPresentation | null>(null);
-  const [publicationError, setPublicationError] = useState<string | null>(null);
 
   const bobBaseUrl = useMemo(() => resolveBobBaseUrl(), []);
   const currentUrl = pathname;
-  const pathInstanceId = useMemo(() => decodeBuilderPathInstanceId(pathname), [pathname]);
+
+  const handlePublicationPendingChange = useCallback((pending: boolean) => {
+    if (pending === publicationPendingRef.current) return;
+    publicationPendingRef.current = pending;
+    if (pending) {
+      publicationIdlePromiseRef.current = new Promise<void>((resolve) => {
+        resolvePublicationIdleRef.current = resolve;
+      });
+      return;
+    }
+    resolvePublicationIdleRef.current?.();
+    resolvePublicationIdleRef.current = null;
+    publicationIdlePromiseRef.current = Promise.resolve();
+  }, []);
 
   const keepEditing = useCallback(() => {
     pendingDiscardActionRef.current = null;
@@ -601,29 +629,14 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
     activeInstanceIdRef.current = activeInstanceId;
   }, [activeInstanceId]);
 
+  useEffect(() => {
+    activeWidgetTypeRef.current = activeWidgetType;
+  }, [activeWidgetType]);
+
   // Active account authoring truth: Roma hosts one current-account Builder session and opens Bob with one explicit payload.
   const bobSrc = useMemo(() => {
     return new URL('/bob', `${bobBaseUrl}/`).toString();
   }, [bobBaseUrl]);
-
-  useEffect(() => {
-    if (!activeInstanceId) return;
-    const nextRoute = buildRomaBuilderRoute({
-      instanceId: activeInstanceId,
-    });
-    if (nextRoute === currentUrl) return;
-    router.replace(nextRoute, { scroll: false });
-  }, [activeInstanceId, currentUrl, router]);
-
-  useEffect(() => {
-    const resolved = pathInstanceId || String(initialInstanceId || '').trim();
-    if (!resolved) {
-      if (activeInstanceId) setActiveInstanceId('');
-      return;
-    }
-    if (resolved === activeInstanceId) return;
-    setActiveInstanceId(resolved);
-  }, [activeInstanceId, initialInstanceId, pathInstanceId]);
 
   const runBobAccountCommand = useCallback(
     async (args: { source: Window; requestId: string; command: BobAccountCommand; instanceId?: string; headers?: Record<string, string>; body?: unknown }) => {
@@ -645,7 +658,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         args.source.postMessage(message, bobBaseUrl);
       };
       const commandUsesActiveInstance = !isAccountAssetCommand(args.command);
-      const requestedInstanceId = args.instanceId as string;
+      const requestedInstanceId = args.instanceId ?? '';
       const scopedInstanceId = commandUsesActiveInstance
         ? (bobAppliedInstanceIdRef.current || activeInstanceId)
         : requestedInstanceId;
@@ -657,6 +670,20 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
           ok: false,
           status: 409,
           message: 'coreui.errors.builder.instanceScopeMismatch',
+        });
+        return;
+      }
+      if (
+        commandUsesActiveInstance &&
+        args.command !== 'save-instance' &&
+        !scopedInstanceId
+      ) {
+        reply({
+          requestId: args.requestId,
+          command: args.command,
+          ok: false,
+          status: 409,
+          message: 'coreui.errors.builder.saveFirst',
         });
         return;
       }
@@ -677,6 +704,10 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
           message: 'coreui.errors.builder.command.invalid',
         });
         return;
+      }
+
+      if (args.command === 'save-instance' && publicationPendingRef.current) {
+        await publicationIdlePromiseRef.current;
       }
 
       if (args.command === 'run-copilot') {
@@ -788,16 +819,65 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
           onActivity: sendActivity,
         });
         const { status, payload } = commandResult;
+        const succeeded = status >= 200 && status < 300;
+        let resolvedReplyInstanceId = scopedInstanceId;
+
+        if (succeeded && args.command === 'save-instance') {
+          if (!scopedInstanceId) {
+            const created = payload as {
+              instanceId: string;
+              widgetType: string;
+              displayName: string | null;
+              status: 'unpublished';
+              publishedAt: null;
+              updatedAt: string;
+              baseLocale: string;
+            };
+            resolvedReplyInstanceId = created.instanceId;
+            const nextInstance: WidgetInstance = {
+              instanceId: created.instanceId,
+              widgetType: created.widgetType,
+              displayName: created.displayName || 'Untitled widget',
+              status: created.status,
+              publishedAt: created.publishedAt,
+              updatedAt: created.updatedAt,
+            };
+            bobAppliedInstanceIdRef.current = created.instanceId;
+            activeInstanceIdRef.current = created.instanceId;
+            activeWidgetTypeRef.current = '';
+            suppressNextOpenInstanceIdRef.current = created.instanceId;
+            openedTargetKeyRef.current = `saved:${created.instanceId}`;
+            setActiveInstanceId(created.instanceId);
+            setActiveWidgetType('');
+            setPublicationInstance(nextInstance);
+            upsertRomaWidgetInstanceCache(activeAccount.accountPublicId, nextInstance);
+            window.history.replaceState(
+              window.history.state,
+              '',
+              buildRomaBuilderRoute({ instanceId: created.instanceId }),
+            );
+          } else {
+            const savedAt = (payload as { updatedAt?: unknown } | null)?.updatedAt;
+            if (typeof savedAt === 'string') {
+              setPublicationInstance((current) => {
+                if (!current || current.instanceId !== scopedInstanceId) return current;
+                const next = { ...current, updatedAt: savedAt };
+                upsertRomaWidgetInstanceCache(activeAccount.accountPublicId, next);
+                return next;
+              });
+            }
+          }
+        }
 
         reply({
           requestId: args.requestId,
           command: args.command,
-          ...(scopedInstanceId ? { instanceId: scopedInstanceId } : {}),
-          ok: status >= 200 && status < 300,
+          ...(resolvedReplyInstanceId ? { instanceId: resolvedReplyInstanceId } : {}),
+          ok: succeeded,
           status,
           payload,
           message:
-            (status >= 200 && status < 300) || !payload || typeof payload !== 'object'
+            succeeded || !payload || typeof payload !== 'object'
               ? undefined
               : typeof (
                     payload as {
@@ -821,7 +901,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         });
       }
     },
-    [accountApi, activeInstanceId, bobBaseUrl],
+    [accountApi, activeAccount.accountPublicId, activeInstanceId, bobBaseUrl],
   );
 
   const postOpenEditorAndWait = useCallback(
@@ -888,18 +968,25 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
     [bobBaseUrl],
   );
 
-  const openActiveInstanceInBob = useCallback(async () => {
+  const openActiveInstanceInBob = useCallback(async (force = false) => {
     const targetWindow = iframeRef.current?.contentWindow;
-    if (!targetWindow || !activeInstanceId) return;
+    if (!targetWindow || (!activeInstanceId && !activeWidgetType)) return;
+    const targetKey = activeInstanceId
+      ? `saved:${activeInstanceId}`
+      : `new:${activeWidgetType}`;
+    if (!force && (openingTargetKeyRef.current === targetKey || openedTargetKeyRef.current === targetKey)) {
+      return;
+    }
+    openingTargetKeyRef.current = targetKey;
 
     const openSeq = ++openDispatchSeqRef.current;
     setOpenError(null);
-    setPublicationError(null);
-    setCopyCodeOpen(false);
-    setPublicActionContext(null);
 
     try {
-      const builderOpen = await accountApi.fetchJson<BuilderOpenResponse>(`/api/builder/${encodeURIComponent(activeInstanceId)}/open`);
+      const openPath = activeInstanceId
+        ? `/api/builder/${encodeURIComponent(activeInstanceId)}/open`
+        : `/api/builder/new/${encodeURIComponent(activeWidgetType)}/open`;
+      const builderOpen = await accountApi.fetchJson<BuilderOpenResponse>(openPath);
       const widgetType = builderOpen.widgetType;
       const compiled = await getWidgetEditorArtifact(widgetType);
 
@@ -914,12 +1001,6 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         activeAccount,
         accountPolicy,
       });
-      const nextPublicActions = builderOpen.publishStatus === 'published'
-        ? buildWidgetPublicActions({
-            accountPublicId: activeAccount.accountPublicId,
-            instanceId: resolvedInstanceId,
-          })
-        : null;
       const message: BobOpenEditorPayload = {
         type: 'ck:open-editor',
         accountPublicId: activeAccount.accountPublicId,
@@ -930,10 +1011,6 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         compiled,
         instanceData: config,
         fontLibrary: builderOpen.fontLibrary,
-        publishStatus: builderOpen.publishStatus,
-        publishedAt: builderOpen.publishedAt,
-        sourceUpdatedAt: builderOpen.sourceUpdatedAt,
-        publicActions: nextPublicActions,
         policy: accountPolicy,
         copilot: builderOpen.copilot,
         translationSetup,
@@ -945,9 +1022,23 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
       });
       if (openSeq !== openDispatchSeqRef.current) return;
       activeCompiledWidgetRef.current = compiled;
-      bobAppliedInstanceIdRef.current = resolvedInstanceId;
-      bobIsDirtyRef.current = false;
-      setPublicActionContext(nextPublicActions ? { instanceName: label, actions: nextPublicActions } : null);
+      bobAppliedInstanceIdRef.current = resolvedInstanceId ?? '';
+      const newDraftIsDirty = resolvedInstanceId === null;
+      bobIsDirtyRef.current = newDraftIsDirty;
+      setBobIsDirty(newDraftIsDirty);
+      setPublicationInstance(
+        resolvedInstanceId && builderOpen.publishStatus
+          ? {
+              instanceId: resolvedInstanceId,
+              widgetType,
+              displayName: label,
+              status: builderOpen.publishStatus,
+              publishedAt: builderOpen.publishedAt,
+              updatedAt: builderOpen.sourceUpdatedAt,
+            }
+          : null,
+      );
+      openedTargetKeyRef.current = targetKey;
       setOpenError(null);
     } catch (error) {
       if (openSeq !== openDispatchSeqRef.current) return;
@@ -961,57 +1052,21 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         }
       }
       setOpenError(message);
+    } finally {
+      if (openingTargetKeyRef.current === targetKey) {
+        openingTargetKeyRef.current = '';
+      }
     }
-  }, [accountApi, accountPolicy, activeAccount, activeInstanceId, currentUrl, postOpenEditorAndWait, router]);
+  }, [accountApi, accountPolicy, activeAccount, activeInstanceId, activeWidgetType, currentUrl, postOpenEditorAndWait, router]);
 
   const openActiveInstanceInBobRef = useRef(openActiveInstanceInBob);
   useEffect(() => {
     openActiveInstanceInBobRef.current = openActiveInstanceInBob;
   }, [openActiveInstanceInBob]);
 
-  const publishActiveInstance = useCallback(async () => {
-    const instanceId = bobAppliedInstanceIdRef.current;
-    setPublicationError(null);
-    setUpsell(null);
-    try {
-      const response = await accountApi.fetchRaw(
-        `/api/account/instances/${encodeURIComponent(instanceId)}/publish`,
-        { method: 'POST' },
-      );
-      if (response.status === 402) {
-        const denied = await response.json() as { upgrade: PublicationCapacityUpgrade };
-        setUpsell(buildPublicationCapacityUpsell(denied.upgrade, accountPolicy));
-        return;
-      }
-      if (!response.ok) {
-        const failed = await response.json() as PublicationFailureResponse;
-        if (failed.committed) {
-          const message = resolveCommittedPublicationFailureCopy(
-            failed.committed.status,
-            failed.error.reasonKey,
-            'The publication state changed, but public delivery could not be refreshed. Retry the publication action.',
-          );
-          await openActiveInstanceInBobRef.current();
-          setPublicationError(message);
-          return;
-        }
-        setPublicationError(
-          resolveAccountShellErrorCopy(
-            failed.error.reasonKey,
-            'Publishing this widget failed. Please try again.',
-          ),
-        );
-        return;
-      }
-      await openActiveInstanceInBobRef.current();
-    } catch {
-      setPublicationError('Publishing this widget failed. Please try again.');
-    }
-  }, [accountApi, accountPolicy]);
-
   const handleBobIframeLoad = useCallback(() => {
     bobReadyRef.current = true;
-    if (!activeInstanceIdRef.current) return;
+    if (!activeInstanceIdRef.current && !activeWidgetTypeRef.current) return;
     void openActiveInstanceInBobRef.current();
   }, []);
 
@@ -1034,13 +1089,14 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
       if (!data || typeof data !== 'object') return;
       if (data.type === 'bob:session-ready') {
         bobReadyRef.current = true;
-        if (activeInstanceId) {
+        if (activeInstanceId || activeWidgetType) {
           void openActiveInstanceInBobRef.current();
         }
         return;
       }
       if (data.type === 'bob:dirty-state-changed') {
         bobIsDirtyRef.current = data.isDirty;
+        setBobIsDirty(data.isDirty);
         return;
       }
       if (data.type === 'bob:upsell') {
@@ -1060,12 +1116,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         return;
       }
       if (data.type === 'bob:host-action') {
-        if (data.action === 'open-navigation') {
-          openNavigation(iframeRef.current);
-        } else if (data.action === 'copy-code') {
-          if (publicActionContext) setCopyCodeOpen(true);
-          else setOpenError('coreui.errors.builder.publicActions.invalid');
-        }
+        openNavigation(iframeRef.current);
         return;
       }
       if (data.type === 'bob:account-command') {
@@ -1123,28 +1174,36 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
 
     window.addEventListener('message', listener);
     return () => window.removeEventListener('message', listener);
-  }, [accountPolicy, activeInstanceId, bobBaseUrl, openNavigation, publicActionContext, publishActiveInstance, runBobAccountCommand]);
+  }, [accountPolicy, activeInstanceId, activeWidgetType, bobBaseUrl, openNavigation, runBobAccountCommand]);
 
   useEffect(() => {
     bobReadyRef.current = false;
     openDispatchSeqRef.current += 1;
+    openingTargetKeyRef.current = '';
+    openedTargetKeyRef.current = '';
     activeCompiledWidgetRef.current = null;
     bobAppliedInstanceIdRef.current = '';
     bobIsDirtyRef.current = false;
-    setCopyCodeOpen(false);
-    setPublicActionContext(null);
+    setPublicationInstance(null);
+    setBobIsDirty(false);
     setOpenError(null);
-    setPublicationError(null);
   }, [bobSrc]);
 
   useEffect(() => {
-    if (!activeInstanceId) {
+    if (!activeInstanceId && !activeWidgetType) {
       setOpenError(null);
       return;
     }
     if (!bobReadyRef.current) return;
+    if (
+      activeInstanceId &&
+      suppressNextOpenInstanceIdRef.current === activeInstanceId
+    ) {
+      suppressNextOpenInstanceIdRef.current = '';
+      return;
+    }
     void openActiveInstanceInBobRef.current();
-  }, [activeInstanceId]);
+  }, [activeInstanceId, activeWidgetType]);
 
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -1178,7 +1237,11 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         return;
       }
       const holdInstanceId = bobAppliedInstanceIdRef.current || activeInstanceIdRef.current;
-      const holdRoute = holdInstanceId ? buildRomaBuilderRoute({ instanceId: holdInstanceId }) : '/builder';
+      const holdRoute = holdInstanceId
+        ? buildRomaBuilderRoute({ instanceId: holdInstanceId })
+        : activeWidgetTypeRef.current
+          ? buildRomaNewBuilderRoute({ widgetType: activeWidgetTypeRef.current })
+          : '/builder';
       window.history.pushState(null, '', holdRoute);
       if (holdInstanceId) {
         setActiveInstanceId(holdInstanceId);
@@ -1202,7 +1265,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
 
   const builderOpenErrorCopy = resolveBuilderErrorCopy(openError || '', 'Builder could not open this widget. Please try again.');
 
-  if (!activeInstanceId) {
+  if (!activeInstanceId && !activeWidgetType) {
     return (
       <div className="rd-canvas-module">
         <p className="body-m">No instance selected for Builder.</p>
@@ -1222,40 +1285,41 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         <div className="rd-canvas-module roma-builder-error">
           <p className="body-m">{builderOpenErrorCopy}</p>
           <div className="rd-canvas-module__actions">
-            <button className="diet-button" data-size="medium" data-type="primary" type="button" onClick={() => void openActiveInstanceInBob()}>
+            <button className="diet-button" data-size="medium" data-type="primary" type="button" onClick={() => void openActiveInstanceInBob(true)}>
               <span className="diet-button__label">Retry</span>
             </button>
           </div>
         </div>
       ) : null}
-      {publicationError ? (
-        <div className="rd-canvas-module roma-builder-error" role="alert">
-          <p className="body-m">{publicationError}</p>
-          <div className="rd-canvas-module__actions">
-            <button
-              className="diet-button"
-              data-size="medium"
-              data-type="secondary"
-              type="button"
-              onClick={() => setPublicationError(null)}
-            >
-              <span className="diet-button__label">Dismiss</span>
-            </button>
-          </div>
+      <div className="roma-builder-header">
+        <div className="roma-builder-header__identity">
+          <span className="heading-4">
+            {publicationInstance?.displayName || (activeInstanceId ? 'Loading widget…' : 'Untitled widget')}
+          </span>
+          {!publicationInstance ? (
+            <span className="body-xs">
+              {activeInstanceId ? 'Loading publication status…' : 'Save to create this widget'}
+            </span>
+          ) : null}
         </div>
-      ) : null}
+        {publicationInstance ? (
+          <WidgetPublicationControls
+            instance={publicationInstance}
+            dirty={bobIsDirty}
+            showReceipt
+            onPendingChange={handlePublicationPendingChange}
+            onInstanceChange={(next) => {
+              setPublicationInstance(next);
+            }}
+          />
+        ) : null}
+      </div>
       <iframe
         ref={iframeRef}
         src={bobSrc}
         className="roma-builder__iframe"
         title="Bob Builder"
         onLoad={handleBobIframeLoad}
-      />
-      <WidgetCopyCodeDialog
-        open={copyCodeOpen}
-        instanceName={publicActionContext?.instanceName ?? ''}
-        actions={publicActionContext?.actions ?? null}
-        onClose={() => setCopyCodeOpen(false)}
       />
       <RomaUnsavedChangesDialog
         open={unsavedDialogOpen}

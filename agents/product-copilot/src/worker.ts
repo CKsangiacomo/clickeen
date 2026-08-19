@@ -6,20 +6,39 @@
  * and wraps the model-step SSE stream with Product Copilot agent-level events.
  */
 
-import { CK_REQUEST_ID_HEADER, asTrimmedString, isRecord, normalizeRequestId } from '@clickeen/ck-contracts';
+import { CK_REQUEST_ID_HEADER, isRecord, normalizeRequestId } from '@clickeen/ck-contracts';
 import {
-  ProductCopilotInputError,
   buildSanFranciscoTurnRequest,
-  validateTurnRequest,
   type CopilotTurnRequest,
 } from './index';
-
-const PRODUCT_COPILOT_AGENT_ID = 'product.copilot';
 
 type Env = {
   ENVIRONMENT?: string;
   SANFRANCISCO_AI_ENGINE?: Fetcher;
 };
+
+type RomaCopilotTurnRequest = CopilotTurnRequest & { grant: string };
+
+type SanFranciscoModelStepEvent =
+  | { version: 1; modelStepId: string; type: 'text_delta'; data: { text: string } }
+  | {
+      version: 1;
+      modelStepId: string;
+      type: 'tool_call';
+      data: { toolCallId: string; toolName: string; input: unknown };
+    }
+  | {
+      version: 1;
+      modelStepId: string;
+      type: 'model_step_finished';
+      data: Record<string, unknown> & { finishReason: string };
+    }
+  | {
+      version: 1;
+      modelStepId: string;
+      type: 'model_step_error';
+      data: Record<string, unknown>;
+    };
 
 // ---------------------------------------------------------------------------
 // HTTP helpers
@@ -109,13 +128,9 @@ export function createAgentEventStream(args: {
 
       let buffer = '';
       let terminalEmitted = false;
-      // PRD 128C §7: tool-calls finish is a VALID step boundary awaiting Bob —
-      // not a terminal, not an error. The stream closes cleanly and Bob
-      // executes the tool and sends a continuation.
+      // A tool-calls finish is the one valid non-terminal boundary: Bob will
+      // execute the single tool call and send the continuation request.
       let stepEndedAwaitingContinuation = false;
-      // PRD 128C: at most one tool call per model step. A second is a
-      // visible failure — Bob must never apply the first while the step
-      // could still produce another.
       let toolCallCount = 0;
 
       const emitAgentError = (message: string) => {
@@ -143,83 +158,37 @@ export function createAgentEventStream(args: {
             const rawEvent = buffer.slice(0, eventEnd);
             buffer = buffer.slice(eventEnd + 2);
 
-            // Parse the SSE event.
-            let eventType: string | null = null;
-            let eventData: Record<string, unknown> | null = null;
+            const dataLines = rawEvent
+              .split('\n')
+              .filter((line) => line.startsWith('data:'))
+              .map((line) => line.slice('data:'.length).replace(/^ /, ''));
+            if (!dataLines.length) continue;
 
-            for (const line of rawEvent.split('\n')) {
-              if (line.startsWith('event: ')) {
-                eventType = line.slice(7).trim();
-              } else if (line.startsWith('data: ')) {
-                // PRD 128C: malformed JSON fails visibly — never silently dropped.
-                try {
-                  eventData = JSON.parse(line.slice(6));
-                } catch {
-                  emitAgentError(`Malformed SSE data line: ${line.substring(0, 100)}`);
-                  return;
-                }
-              }
-            }
+            const sfEvent = JSON.parse(dataLines.join('\n')) as SanFranciscoModelStepEvent;
 
-            if (!eventType || !eventData) {
-              // PRD 128C: unknown or incomplete events fail visibly.
-              emitAgentError(`Incomplete SSE event (type=${eventType ?? 'missing'}).`);
-              return;
-            }
-
-            const sfType = eventType;
-            const sfData = eventData;
-            const sfModelStepId = typeof sfData.modelStepId === 'string' ? sfData.modelStepId : undefined;
-
-            // PRD 128C: SSE event name must agree with payload.type.
-            if (typeof sfData.type === 'string' && sfData.type !== sfType) {
-              emitAgentError(`SSE event name (${sfType}) does not match payload type (${sfData.type}).`);
-              return;
-            }
-
-            if (sfType === 'text_delta') {
-              // PRD 128D: modelStepId is required on text_delta.
-              if (!sfModelStepId) {
-                emitAgentError('San Francisco text_delta missing modelStepId.');
-                return;
-              }
+            if (sfEvent.type === 'text_delta') {
               controller.enqueue(encoder.encode(sseEvent('text_delta', {
-                version: 1, userTurnId: args.userTurnId, modelStepId: sfModelStepId, type: 'text_delta',
-                data: sfData.data ?? {},
+                version: 1, userTurnId: args.userTurnId, modelStepId: sfEvent.modelStepId, type: 'text_delta',
+                data: sfEvent.data,
               })));
-            } else if (sfType === 'tool_call') {
-              // PRD 128D: modelStepId is required on tool_call.
-              if (!sfModelStepId) {
-                emitAgentError('San Francisco tool_call missing modelStepId.');
-                return;
-              }
+            } else if (sfEvent.type === 'tool_call') {
               toolCallCount++;
               if (toolCallCount > 1) {
-                // PRD 128C: multiple tool calls in one step are a visible failure.
-                // Bob sees the first tool_call followed by agent_turn_error
-                // and knows not to execute.
                 emitAgentError('Model emitted multiple tool calls in a single step.');
                 return;
               }
               controller.enqueue(encoder.encode(sseEvent('tool_call', {
-                version: 1, userTurnId: args.userTurnId, modelStepId: sfModelStepId, type: 'tool_call',
-                data: sfData.data ?? {},
+                version: 1, userTurnId: args.userTurnId, modelStepId: sfEvent.modelStepId, type: 'tool_call',
+                data: sfEvent.data,
               })));
-            } else if (sfType === 'model_step_finished') {
-              const finishData = (sfData.data ?? {}) as Record<string, unknown>;
-              // PRD 128D: modelStepId is required on model_step_finished.
-              if (!sfModelStepId) {
-                emitAgentError('San Francisco model_step_finished missing modelStepId.');
-                return;
-              }
+            } else if (sfEvent.type === 'model_step_finished') {
+              const finishData = sfEvent.data;
               // Forward the model-step finish with modelStepId preserved.
               controller.enqueue(encoder.encode(sseEvent('model_step_finished', {
-                version: 1, userTurnId: args.userTurnId, modelStepId: sfModelStepId, type: 'model_step_finished',
+                version: 1, userTurnId: args.userTurnId, modelStepId: sfEvent.modelStepId, type: 'model_step_finished',
                 data: finishData,
               })));
 
-              // Tool-call count consistency: tool-calls finish requires exactly
-              // one tool call; stop requires zero.
               const finishReason = finishData.finishReason;
               if (finishReason === 'tool-calls' && toolCallCount !== 1) {
                 emitAgentError(`Finish reason "tool-calls" but toolCallCount=${toolCallCount}.`);
@@ -268,25 +237,16 @@ export function createAgentEventStream(args: {
                 })));
               }
 
-              // Reset tool call count for the next model step (in case SF
-              // sends multiple steps in one stream — normally one per request).
-              toolCallCount = 0;
-            } else if (sfType === 'model_step_error') {
-              const errorData = (sfData.data ?? {}) as Record<string, unknown>;
+            } else if (sfEvent.type === 'model_step_error') {
               terminalEmitted = true;
               controller.enqueue(encoder.encode(sseEvent('agent_turn_error', {
                 version: 1, userTurnId: args.userTurnId, type: 'agent_turn_error',
-                data: errorData,
+                data: sfEvent.data,
               })));
-            } else {
-              // PRD 128C: unknown event names fail visibly.
-              emitAgentError(`Unknown San Francisco event type: ${sfType}.`);
-              return;
             }
           }
         }
 
-        // If stream ended without a terminal or a valid step boundary, fail visibly.
         if (!terminalEmitted && !stepEndedAwaitingContinuation) {
           emitAgentError('Model stream ended without a terminal event or tool-step boundary.');
         }
@@ -319,24 +279,7 @@ export function createAgentEventStream(args: {
 // ---------------------------------------------------------------------------
 
 async function handleTurn(request: Request, env: Env): Promise<Response> {
-  const body = await readJson(request);
-
-  let turnRequest: CopilotTurnRequest;
-  try {
-    turnRequest = validateTurnRequest(body);
-  } catch (err) {
-    if (err instanceof ProductCopilotInputError) {
-      throw new HttpError(400, {
-        error: {
-          code: 'BAD_REQUEST',
-          reasonKey: 'coreui.errors.copilot.invalidRequest',
-          message: 'Invalid Product Copilot turn request',
-          issues: err.issues,
-        },
-      });
-    }
-    throw err;
-  }
+  const turnRequest = await readJson(request) as RomaCopilotTurnRequest;
 
   if (!env.SANFRANCISCO_AI_ENGINE) {
     throw new HttpError(500, {
@@ -350,18 +293,10 @@ async function handleTurn(request: Request, env: Env): Promise<Response> {
 
   // Build the San Francisco /model/turn request
   const sfRequest = buildSanFranciscoTurnRequest({
-    grant: '', // Grant is forwarded by Roma through the request body; the Worker
-               // receives it from Roma's call. For now, the Worker passes the
-               // grant from the original request if present in the body.
+    grant: turnRequest.grant,
     turnRequest,
     temperature: 0.2,
   });
-
-  // The grant comes from the incoming request, carried by Roma
-  const grant = (body as Record<string, unknown>).grant;
-  if (typeof grant === 'string') {
-    (sfRequest as Record<string, unknown>).grant = grant;
-  }
 
   const requestId = normalizeRequestId(request.headers.get(CK_REQUEST_ID_HEADER)) ?? crypto.randomUUID();
 

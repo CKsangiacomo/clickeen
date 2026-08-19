@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isRecord } from '@clickeen/ck-contracts';
 import {
   deleteAccountInstanceFromTokyo,
+  loadAccountWidgetInstanceListFact,
   saveAccountInstanceInTokyo,
 } from '@roma/lib/account-instance-direct';
 import { readWidgetMaterializerArtifact } from '@roma/generated/widget-materializer-artifacts';
@@ -52,10 +54,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       current.value.setCookies,
     );
   }
-  const bodyResult = await readJsonPayloadOrValidation<{
-    widgetType: string;
-    config: Record<string, unknown>;
-  }>(request);
+  const bodyResult = await readJsonPayloadOrValidation<unknown>(request);
   if (!bodyResult.ok) {
     return withSession(
       request,
@@ -63,7 +62,28 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       current.value.setCookies,
     );
   }
-  const { widgetType, config } = bodyResult.payload;
+  if (!isRecord(bodyResult.payload) || !isRecord(bodyResult.payload.config)) {
+    return withSession(
+      request,
+      NextResponse.json(
+        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' } },
+        { status: 422 },
+      ),
+      current.value.setCookies,
+    );
+  }
+  const config = bodyResult.payload.config;
+
+  const savedInstance = await loadAccountWidgetInstanceListFact({
+    accountId,
+    instanceId,
+    accountCapsule: current.value.authzToken,
+    requestId: current.value.requestId,
+  });
+  if (!savedInstance.ok) {
+    return routeFailureResponse(request, savedInstance, current.value.setCookies);
+  }
+  const widgetType = savedInstance.value.widgetType;
 
   const compiled = readWidgetMaterializerArtifact(widgetType);
   if (!compiled) {

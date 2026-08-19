@@ -6,6 +6,7 @@
   "scripts": {
     "deploy": "wrangler deploy --routes \"\"",
     "test:auth-config": "tsx tests/run-auth-config.ts",
+    "test:cache-eviction": "tsx tests/run-cache-eviction.ts",
     "test:content-slots": "tsx tests/run-content-slot-overlays.ts",
     "test:publication-capacity": "tsx tests/run-publication-capacity.ts",
     "test:widget-defaults": "tsx tests/run-account-widget-defaults.ts",

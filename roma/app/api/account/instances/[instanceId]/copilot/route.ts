@@ -1,17 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { asTrimmedString, isRecord } from '@clickeen/ck-contracts';
 import { parseCopilotTurnRequest } from '@clickeen/ck-contracts/ai';
 import {
   issueAccountCopilotGrant,
   streamCopilotTurn,
 } from '@roma/lib/ai/account-copilot';
-import { loadTokyoAccountInstanceDocument } from '@roma/lib/account-instance-direct';
+import { loadAccountWidgetInstanceListFact } from '@roma/lib/account-instance-direct';
 import { requireInstanceIdParam } from '@roma/lib/route-helpers';
 import { resolveCurrentAccountRouteContext, withSession } from '../../../_lib/current-account-route';
-import {
-  type AiModelRef,
-  type AiProvider,
-} from '@clickeen/ck-contracts/ai';
+import { type AiModelRef } from '@clickeen/ck-contracts/ai';
 import { isProductCopilotManagedModel } from '@clickeen/ck-contracts/ai-model-management';
 
 export const runtime = 'edge';
@@ -22,21 +18,13 @@ type SelectedModelParseResult =
   | { ok: true; value: AiModelRef | null }
   | { ok: false; message: string };
 
-function parseSelectedModel(value: unknown): SelectedModelParseResult {
+function admitSelectedModel(value: { provider: string; model: string } | undefined): SelectedModelParseResult {
   if (value == null) return { ok: true, value: null };
-  if (!isRecord(value)) {
-    return { ok: false, message: 'selectedModel must be an object with provider and model' };
+  const selectedModel = value as AiModelRef;
+  if (!isProductCopilotManagedModel(selectedModel)) {
+    return { ok: false, message: `selectedModel is not managed for Product Copilot: ${value.provider}:${value.model}` };
   }
-  const provider = asTrimmedString(value.provider);
-  const model = asTrimmedString(value.model);
-  if (!provider || !model) {
-    return { ok: false, message: 'selectedModel.provider and selectedModel.model are required' };
-  }
-  const selected = { provider: provider as AiProvider, model };
-  if (!isProductCopilotManagedModel(selected)) {
-    return { ok: false, message: `selectedModel is not managed for Product Copilot: ${provider}:${model}` };
-  }
-  return { ok: true, value: selected };
+  return { ok: true, value: selectedModel };
 }
 
 export async function POST(request: NextRequest, context: RouteContext) {
@@ -79,7 +67,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const turnRequest = parsed.request;
 
     // Validate selected model against the managed set
-    const selectedModelResult = parseSelectedModel(turnRequest.selectedModel);
+    const selectedModelResult = admitSelectedModel(turnRequest.selectedModel);
     if (!selectedModelResult.ok) {
       return withSession(
         request,
@@ -98,17 +86,16 @@ export async function POST(request: NextRequest, context: RouteContext) {
     }
     const selectedModel = selectedModelResult.value;
 
-    // Verify the instance exists and is accessible
-    const currentInstance = await loadTokyoAccountInstanceDocument({
+    const savedInstance = await loadAccountWidgetInstanceListFact({
       accountId: current.value.authzPayload.accountPublicId,
       instanceId,
       accountCapsule: current.value.authzToken,
       requestId: current.value.requestId,
     });
-    if (!currentInstance.ok) {
+    if (!savedInstance.ok) {
       return withSession(
         request,
-        NextResponse.json({ error: currentInstance.error }, { status: currentInstance.status }),
+        NextResponse.json({ error: savedInstance.error }, { status: savedInstance.status }),
         current.value.setCookies,
       );
     }

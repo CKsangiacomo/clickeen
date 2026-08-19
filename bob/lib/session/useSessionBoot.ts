@@ -39,11 +39,12 @@ export function useSessionBoot(args: {
 
         const baseLocale = message.baseLocale;
         const nextLabel = message.label;
-        const publicActions = message.publicActions;
         const fontLibrary = message.fontLibrary;
         const compiled = bindSessionTypographyControls(message.compiled, fontLibrary);
         const instanceData = message.instanceData;
-        const savedInstanceDataSignature = serializeInstanceDataSignature(instanceData);
+        const savedInstanceDataSignature = message.instanceId === null
+          ? null
+          : serializeInstanceDataSignature(instanceData);
         const nextPolicy = message.policy;
         const nextCopilot = message.copilot;
 
@@ -52,11 +53,7 @@ export function useSessionBoot(args: {
           instanceId: message.instanceId,
           baseLocale,
           widgetname: compiled.widgetname,
-          publishStatus: message.publishStatus,
-          publishedAt: message.publishedAt,
-          sourceUpdatedAt: message.sourceUpdatedAt,
           label: nextLabel,
-          publicActions,
           fontLibrary,
           translationSetup: message.translationSetup,
         };
@@ -65,7 +62,7 @@ export function useSessionBoot(args: {
           compiled,
           instanceData,
           savedInstanceDataSignature,
-          isDirty: false,
+          isDirty: message.instanceId === null,
           error: null,
           lastUpdate: {
             source: 'load',
@@ -83,7 +80,7 @@ export function useSessionBoot(args: {
         setState(nextState);
         return {
           ok: true,
-          instanceId: message.instanceId,
+          ...(message.instanceId ? { instanceId: message.instanceId } : {}),
           widgetname: compiled.widgetname,
         };
       } catch (err) {

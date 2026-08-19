@@ -178,17 +178,19 @@ an accordion toggle.
 
 ## Lifecycle
 
-- New and Duplicate write unpublished editable source only and open the new
-  instance in Bob.
+- New composes a non-persisted draft and opens it in Bob. First Save writes its
+  unpublished editable source. Duplicate immediately writes and opens a saved
+  unpublished copy.
 - Bob previews compiled FAQ software plus one browser-memory draft.
-- Save updates `instance.config.json` and `instance.content.json` only.
+- Save atomically replaces `instance.source.json` only.
 - A clean explicit Publish/Republish invokes Roma's generic materializer.
 - Roma alone generates complete `index.html`, complete `styles.css`, and
   mandatory visitor-behavior `runtime.js`.
-- Tokyo-worker stores the exact bytes and publication truth.
-- Base serving returns stored files. Selected-locale serving applies the exact
-  overlay to semantic content slots through Cloudflare `HTMLRewriter` before
-  JavaScript.
+- Tokyo-worker stores the exact logical package and publication truth together
+  in atomic `serve-state.json`.
+- Base serving exposes its logical files. Selected-locale serving applies the
+  exact overlay to semantic content slots through Cloudflare `HTMLRewriter`
+  before JavaScript.
 
 ## Verification
 
@@ -208,7 +210,7 @@ exercise remain pending.
 - Do not restore `widget.client.js` or turn `core.js` into the same pipeline.
 - Do not put FAQ paths or meaning in Bob, Roma, Tokyo-worker, Dieter, or shared
   Widget code.
-- Do not make Create or Save generate public files.
+- Do not make New or Save generate public files.
 - Do not make Bob preview read a stored package.
 - Do not move tier/Popup behavior into Core or public runtime.
 - Do not localize initial public content in JavaScript.

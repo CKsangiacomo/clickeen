@@ -2,10 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createCompactInstanceId } from '@clickeen/ck-contracts/overlay-identity';
 import {
   createAccountInstanceInTokyo,
-  listTokyoWidgetDefinitions,
 } from '@roma/lib/account-instance-direct';
 import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
-import { loadAccountWidgetDefaultsInTokyo } from '@roma/lib/account-widget-defaults-direct';
+import { readWidgetMaterializerArtifact } from '@roma/generated/widget-materializer-artifacts';
 import { prepareAccountInstanceSourceArtifacts } from '@roma/lib/account-instance-source-artifacts';
 import { readJsonPayloadOrValidation } from '@roma/lib/route-helpers';
 import { resolveCurrentAccountRouteContext, withSession } from '../_lib/current-account-route';
@@ -21,40 +20,6 @@ function normalizeDisplayName(value: unknown): string | null | undefined {
   return trimmed.length <= 120 ? trimmed : undefined;
 }
 
-function cloneValue<T>(value: T): T {
-  return structuredClone(value);
-}
-
-function mergeDefaultsInto(
-  target: Record<string, unknown>,
-  source: Record<string, unknown>,
-): void {
-  for (const [key, value] of Object.entries(source)) {
-    const existing = target[key];
-    if (
-      existing &&
-      typeof existing === 'object' &&
-      !Array.isArray(existing) &&
-      value &&
-      typeof value === 'object' &&
-      !Array.isArray(value)
-    ) {
-      mergeDefaultsInto(existing as Record<string, unknown>, value as Record<string, unknown>);
-      continue;
-    }
-    target[key] = cloneValue(value);
-  }
-}
-
-function composeInstanceConfigFromAccountDefaults(args: {
-  common: Record<string, unknown>;
-  core: Record<string, unknown>;
-}): Record<string, unknown> {
-  const config = cloneValue(args.common);
-  mergeDefaultsInto(config, args.core);
-  return config;
-}
-
 export async function POST(request: NextRequest) {
   const current = await resolveCurrentAccountRouteContext({ request, minRole: 'editor' });
   if (!current.ok) return current.response;
@@ -62,6 +27,7 @@ export async function POST(request: NextRequest) {
   const bodyResult = await readJsonPayloadOrValidation<{
     widgetType?: unknown;
     displayName?: unknown;
+    config?: Record<string, unknown>;
   } | null>(request);
   if (!bodyResult.ok) {
     return withSession(
@@ -75,7 +41,8 @@ export async function POST(request: NextRequest) {
   const widgetType = typeof body?.widgetType === 'string' ? body.widgetType.trim() : '';
   const hasDisplayName = Boolean(body && Object.prototype.hasOwnProperty.call(body, 'displayName'));
   const displayName = hasDisplayName ? normalizeDisplayName(body?.displayName) : undefined;
-  if (!widgetType || (hasDisplayName && displayName === undefined)) {
+  const config = body?.config;
+  if (!widgetType || !config || typeof config !== 'object' || Array.isArray(config) || (hasDisplayName && displayName === undefined)) {
     return withSession(
       request,
       NextResponse.json(
@@ -86,21 +53,7 @@ export async function POST(request: NextRequest) {
     );
   }
   const accountId = current.value.authzPayload.accountPublicId;
-  const widgetDefinitions = await listTokyoWidgetDefinitions({
-    accountId,
-    accountCapsule: current.value.authzToken,
-    requestId: current.value.requestId,
-  });
-  if (!widgetDefinitions.ok) {
-    return withSession(
-      request,
-      NextResponse.json({ error: widgetDefinitions.error }, { status: widgetDefinitions.status }),
-      current.value.setCookies,
-    );
-  }
-  const widgetDefinition = widgetDefinitions.value.widgetDefinitions.find(
-    (entry) => entry.widgetType === widgetType,
-  );
+  const widgetDefinition = readWidgetMaterializerArtifact(widgetType);
   if (!widgetDefinition) {
     return withSession(
       request,
@@ -111,26 +64,6 @@ export async function POST(request: NextRequest) {
       current.value.setCookies,
     );
   }
-  const accountWidgetDefaults = await loadAccountWidgetDefaultsInTokyo({
-    accountId,
-    accountCapsule: current.value.authzToken,
-    requestId: current.value.requestId,
-  });
-  if (!accountWidgetDefaults.ok) {
-    return withSession(
-      request,
-      NextResponse.json(
-        { error: accountWidgetDefaults.error },
-        { status: accountWidgetDefaults.status },
-      ),
-      current.value.setCookies,
-    );
-  }
-  const widgetDefaults = accountWidgetDefaults.value.widgetDefaults.widgets[widgetType]!;
-  const config = composeInstanceConfigFromAccountDefaults({
-    common: accountWidgetDefaults.value.widgetDefaults.common,
-    core: widgetDefaults.core,
-  });
   const accountLocales = await loadCurrentAccountLocalesState({
     accessToken: current.value.accessToken,
     accountId: current.value.authzPayload.accountId,
@@ -181,6 +114,9 @@ export async function POST(request: NextRequest) {
         widgetType: created.value.row.widgetType,
         displayName: created.value.row.displayName,
         status: created.value.row.publishStatus,
+        publishedAt: created.value.row.publishedAt,
+        updatedAt: created.value.row.updatedAt,
+        baseLocale,
       },
       { status: 201 },
     ),

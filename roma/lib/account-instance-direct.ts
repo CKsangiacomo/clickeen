@@ -21,7 +21,6 @@ type RouteFailure = {
   ok: false;
   status: number;
   error: DirectRouteError;
-  committed?: unknown;
 };
 
 export type AccountInstanceStatusTransition = {
@@ -30,15 +29,13 @@ export type AccountInstanceStatusTransition = {
   changed: boolean;
 };
 
-type AccountInstanceStatusTransitionFailure = Omit<RouteFailure, 'committed'> & {
-  committed?: AccountInstanceStatusTransition;
-};
+type AccountInstanceStatusTransitionFailure = RouteFailure;
 
 export type AccountInstanceCoreRow = {
   instanceId: string;
   displayName: string | null;
-  updatedAt?: string | null;
-  publishedAt?: string | null;
+  updatedAt: string;
+  publishedAt: string | null;
   widgetId?: string;
   accountId: string;
   widgetType: string;
@@ -211,7 +208,7 @@ export async function saveAccountInstanceInTokyo(args: {
   content: AccountInstanceContentDocument;
   internalServiceName?: string | null;
   requestId?: string | null;
-}): Promise<{ ok: true; updatedAt: string | null } | RouteFailure> {
+}): Promise<{ ok: true; updatedAt: string } | RouteFailure> {
   const result = await callTokyo(tokyoCallContext(args), {
     path: `/__internal/instances/${encodeURIComponent(args.instanceId)}`,
     method: 'PUT',
@@ -221,12 +218,12 @@ export async function saveAccountInstanceInTokyo(args: {
         content: args.content,
       },
     },
-    decode: (payload) => payload as { ok: true; updatedAt?: string },
+    decode: (payload) => payload as { ok: true; updatedAt: string },
     errorDetail: 'tokyo_instance_save_http_error',
     errorKey: 'coreui.errors.db.writeFailed',
   });
   if (!result.ok) return result;
-  return { ok: true, updatedAt: result.value.updatedAt ?? null };
+  return { ok: true, updatedAt: result.value.updatedAt };
 }
 
 async function postInstanceStatusTransition(args: {
@@ -259,9 +256,6 @@ async function postInstanceStatusTransition(args: {
       ok: false,
       status: result.status,
       error: result.error,
-      ...(result.committed === undefined
-        ? {}
-        : { committed: result.committed as AccountInstanceStatusTransition }),
     };
   }
   return { ok: true, value: result.value };
@@ -270,6 +264,7 @@ async function postInstanceStatusTransition(args: {
 export async function publishAccountInstanceInTokyo(args: {
   accountId: string;
   instanceId: string;
+  sourceUpdatedAt: string;
   publishedLimit: number;
   accountCapsule?: string | null;
   internalServiceName?: string | null;
@@ -283,6 +278,7 @@ export async function publishAccountInstanceInTokyo(args: {
     ...args,
     action: 'publish',
     body: {
+      sourceUpdatedAt: args.sourceUpdatedAt,
       publishedLimit: args.publishedLimit,
       publicPackage: args.publicPackage,
     },
@@ -389,7 +385,7 @@ export async function listAccountWidgetInstanceIds(args: {
   };
 }
 
-async function loadAccountWidgetInstanceListFact(args: {
+export async function loadAccountWidgetInstanceListFact(args: {
   accountId: string;
   instanceId: string;
   accountCapsule?: string | null;
@@ -484,7 +480,7 @@ export async function renameAccountInstanceInTokyo(args: {
   accountCapsule?: string | null;
   internalServiceName?: string | null;
   requestId?: string | null;
-}): Promise<{ ok: true; value: { instanceId: string; displayName: string } } | RouteFailure> {
+}): Promise<{ ok: true; value: { instanceId: string; displayName: string; updatedAt: string } } | RouteFailure> {
   const result = await callTokyo(tokyoCallContext(args), {
     path: `/__internal/instances/${encodeURIComponent(args.instanceId)}/rename`,
     method: 'POST',
@@ -492,7 +488,7 @@ export async function renameAccountInstanceInTokyo(args: {
       displayName: args.displayName,
     },
     decode: (payload) =>
-      payload as { ok: true; instanceId: string; displayName: string },
+      payload as { ok: true; instanceId: string; displayName: string; updatedAt: string },
     errorDetail: 'tokyo_instance_rename_http_error',
     errorKey: 'coreui.errors.db.writeFailed',
   });
@@ -502,6 +498,7 @@ export async function renameAccountInstanceInTokyo(args: {
     value: {
       instanceId: result.value.instanceId,
       displayName: result.value.displayName,
+      updatedAt: result.value.updatedAt,
     },
   };
 }

@@ -184,9 +184,11 @@ Tokyo/R2 owns account runtime files:
 - `accounts/{accountPublicId}/assets/**`;
 - `accounts/{accountPublicId}/instances/**`;
 - `accounts/{accountPublicId}/instances/{instanceId}/overlays/locales/**`;
-- `accounts/{accountPublicId}/instances/{instanceId}/index.html`;
-- `accounts/{accountPublicId}/instances/{instanceId}/styles.css`;
-- `accounts/{accountPublicId}/instances/{instanceId}/runtime.js`.
+- `accounts/{accountPublicId}/instances/{instanceId}/instance.source.json` as
+  the atomic metadata/config/content source record; and
+- `accounts/{accountPublicId}/instances/{instanceId}/serve-state.json` as the
+  atomic publication artifact whose published form contains logical
+  `indexHtml`, `stylesCss`, and `runtimeJs` members.
 
 Do not move runtime file ownership into Supabase.
 

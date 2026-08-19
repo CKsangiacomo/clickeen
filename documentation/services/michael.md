@@ -27,7 +27,7 @@ in Michael only after a reviewed migration introduces them.
 
 Michael does not own:
 
-- widget instance source documents;
+- the atomic widget instance source artifact;
 - account assets;
 - translated locale overlay files;
 - generated public widget packages;

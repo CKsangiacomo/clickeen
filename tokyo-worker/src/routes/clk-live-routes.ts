@@ -1,7 +1,7 @@
 import { isCompactAccountPublicId, isCompactInstanceId } from '@clickeen/ck-contracts/overlay-identity';
 import { normalizeLocale } from '../asset-utils';
-import { readAccountInstanceSourcePointer } from '../domains/account-instances/source';
 import { accountInstanceCacheTag } from '../domains/account-instances/keys';
+import { publicPackageFileBody } from '../domains/account-instances/package-files';
 import {
   isPublicPackageFile,
   PUBLIC_INDEX_FILE,
@@ -9,6 +9,8 @@ import {
   PUBLIC_STYLES_FILE,
   type PublicPackageFile,
 } from '../domains/account-instances/package-file-names';
+import { readInstanceServeStateRecord } from '../domains/account-instances/serve-state';
+import { readConfigDocumentByLocation } from '../domains/account-instances/source';
 import {
   listLocaleOverlayCoordinates,
   readLocaleOverlay,
@@ -72,20 +74,16 @@ function parseClkLivePath(pathname: string): {
   return { kind: 'instance', accountId, instanceId, file };
 }
 
-function instanceObjectKey(accountId: string, instanceId: string, file: string): string {
-  return `accounts/${accountId}/instances/${instanceId}/${file}`;
-}
-
 function cacheControlForGeneratedFile(file: string): string {
   if (file === PUBLIC_INDEX_FILE || file === PUBLIC_STYLES_FILE || file === PUBLIC_RUNTIME_FILE) {
-    return 'public, max-age=60, s-maxage=300, stale-while-revalidate=86400';
+    return 'public, max-age=60, s-maxage=300, must-revalidate';
   }
   return 'public, max-age=31536000, immutable';
 }
 
-function responseForObject(
+function responseForPackageFile(
   file: PublicPackageFile,
-  obj: { body: ReadableStream | null },
+  body: string,
   headOnly: boolean,
   accountId: string,
   instanceId: string,
@@ -105,7 +103,7 @@ function responseForObject(
   headers.set('cache-tag', accountInstanceCacheTag(accountId, instanceId));
   headers.set('access-control-allow-origin', '*');
   headers.set('x-content-type-options', 'nosniff');
-  return new Response(headOnly ? null : obj.body, { status: 200, headers });
+  return new Response(headOnly ? null : body, { status: 200, headers });
 }
 
 function responseForIndex(args: {
@@ -180,39 +178,44 @@ export async function tryHandleClkLiveStaticRoutes(
   if (!parsed) return null;
   if (req.method !== 'GET' && req.method !== 'HEAD') return respondMethodNotAllowed(respond);
 
-  const pointer = await readAccountInstanceSourcePointer({
+  const config = await readConfigDocumentByLocation({
+    env,
+    accountId: parsed.accountId,
+    widgetCode: '',
+    instanceId: parsed.instanceId,
+  });
+  if (!config) return respond(notFound());
+  const publication = await readInstanceServeStateRecord({
     env,
     accountId: parsed.accountId,
     instanceId: parsed.instanceId,
+    widgetCode: config.widgetCode,
   });
-  if (!pointer.ok || pointer.value.publishStatus !== 'published') return respond(notFound());
-
-  const key = instanceObjectKey(parsed.accountId, parsed.instanceId, parsed.file);
-  const obj = await env.TOKYO_R2.get(key);
-  if (!obj) return respond(notFound());
+  if (publication.status !== 'published') return respond(notFound());
+  const body = publicPackageFileBody(publication.publicPackage, parsed.file);
 
   if (parsed.file === PUBLIC_INDEX_FILE) {
     const localeParams = url.searchParams.getAll('locale');
     if (localeParams.length > 1) return respond(localeNotAvailable());
     const rawLocale = localeParams[0];
-    const locale = typeof rawLocale === 'string' ? normalizeLocale(rawLocale) : pointer.value.baseLocale;
+    const locale = typeof rawLocale === 'string' ? normalizeLocale(rawLocale) : config.baseLocale;
     if (!locale || (typeof rawLocale === 'string' && locale !== rawLocale)) return respond(localeNotAvailable());
-    const baseResponse = responseForObject(
+    const baseResponse = responseForPackageFile(
       parsed.file,
-      obj,
+      body,
       req.method === 'HEAD',
       parsed.accountId,
       parsed.instanceId,
     );
-    if (locale === pointer.value.baseLocale) {
+    if (locale === config.baseLocale) {
       if (req.method === 'HEAD') return respond(baseResponse);
       const overlayLocales = await listLocaleOverlayCoordinates({
         env,
         accountId: parsed.accountId,
-        widgetCode: pointer.value.widgetCode,
+        widgetCode: config.widgetCode,
         instanceId: parsed.instanceId,
       });
-      const languages = [pointer.value.baseLocale, ...overlayLocales];
+      const languages = [config.baseLocale, ...overlayLocales];
       return respond(responseForIndex({ response: baseResponse, locale, languages }));
     }
     let overlay: Awaited<ReturnType<typeof readLocaleOverlay>>;
@@ -220,7 +223,7 @@ export async function tryHandleClkLiveStaticRoutes(
       overlay = await readLocaleOverlay({
         env,
         accountId: parsed.accountId,
-        widgetCode: pointer.value.widgetCode,
+        widgetCode: config.widgetCode,
         instanceId: parsed.instanceId,
         locale,
       });
@@ -232,10 +235,10 @@ export async function tryHandleClkLiveStaticRoutes(
     const overlayLocales = await listLocaleOverlayCoordinates({
       env,
       accountId: parsed.accountId,
-      widgetCode: pointer.value.widgetCode,
+      widgetCode: config.widgetCode,
       instanceId: parsed.instanceId,
     });
-    const languages = [pointer.value.baseLocale, ...overlayLocales];
+    const languages = [config.baseLocale, ...overlayLocales];
     return respond(responseForIndex({
       response: baseResponse,
       locale,
@@ -244,9 +247,9 @@ export async function tryHandleClkLiveStaticRoutes(
     }));
   }
   return respond(
-    responseForObject(
+    responseForPackageFile(
       parsed.file,
-      obj,
+      body,
       req.method === 'HEAD',
       parsed.accountId,
       parsed.instanceId,

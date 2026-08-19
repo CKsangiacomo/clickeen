@@ -10,7 +10,8 @@
  */
 
 import assert from 'node:assert/strict';
-import { readFileSync } from 'fs';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
 function assertPass(label: string, fn: () => void) {
   try {
@@ -22,7 +23,10 @@ function assertPass(label: string, fn: () => void) {
   }
 }
 
-const SOURCE = readFileSync('/Users/piero_macpro/code/VS/clickeen/bob/components/CopilotPane.tsx', 'utf8');
+const SOURCE = readFileSync(
+  fileURLToPath(new URL('../components/CopilotPane.tsx', import.meta.url)),
+  'utf8',
+);
 
 // ---------------------------------------------------------------------------
 // 1. Tool executes ONLY after model_step_finished
@@ -171,9 +175,17 @@ function testTierStepLimit() {
 
   assertPass('tierStepLimit read from signed policy', () => {
     assert.ok(
-      SOURCE.includes("chrome.policy?.limits?.['maxTurnsPerThread']"),
-      'reads from signed policy limits',
+      SOURCE.includes('chrome.copilot.maxTurnsPerThread'),
+      'reads the step limit from the routed signed runtime policy',
     );
+  });
+
+  assertPass('missing signed policy is visible and never becomes an invented limit', () => {
+    const policyBlock = SOURCE.match(/const tierStepLimit[\s\S]{0,180}/)?.[0] ?? '';
+    assert.ok(policyBlock.includes(': null'), 'missing policy remains unavailable');
+    assert.ok(!policyBlock.includes('?? 30'), 'does not invent a default limit');
+    const continuationBlock = SOURCE.match(/const sendContinuation[\s\S]{0,900}/)?.[0] ?? '';
+    assert.ok(continuationBlock.includes('tierStepLimit === null'), 'continuation fails visibly without policy');
   });
 
   assertPass('continuation refused when stepCount >= tierStepLimit', () => {
@@ -232,7 +244,58 @@ function testSaveBoundary() {
 }
 
 // ---------------------------------------------------------------------------
-// 9. Cancellation race-safety
+// 9. Exact draft projection, show-if, and Save-first readiness
+// ---------------------------------------------------------------------------
+
+function testDraftProjectionAndReadiness() {
+  console.log('\n--- Exact draft projection and readiness ---');
+
+  assertPass('controls consume Bob exact draft and preserve compiled kinds', () => {
+    const controlsBlock = SOURCE.match(/function buildProductCopilotControls[\s\S]{0,1200}/)?.[0] ?? '';
+    assert.ok(controlsBlock.includes('evaluateShowIfExpression(control.showIf, args.currentConfig)'), 'show-if uses exact draft');
+    assert.ok(controlsBlock.includes('kind: control.kind!'), 'compiled kind is consumed exactly');
+    assert.ok(!controlsBlock.includes("kind: control.kind ?? ''"), 'no empty-kind substitution');
+    assert.ok(SOURCE.includes('currentConfig: session.instanceData'), 'session draft is projected directly');
+  });
+
+  assertPass('zero currently visible controls truthfully advertises no draft edit action', () => {
+    const availability = "availableActions: controlsForAi.length > 0 ? ['draft_edit'] : []";
+    assert.equal(SOURCE.split(availability).length - 1, 2, 'initial and continuation contexts use the same projection');
+  });
+
+  assertPass('Copilot waits for compiled, policy, and saved-instance coordinates', () => {
+    const readinessBlock = SOURCE.match(/const uiDisabledReason[\s\S]{0,400}/)?.[0] ?? '';
+    assert.ok(readinessBlock.includes('!compiled || !chrome.policy || !chrome.copilot'), 'temporal boot authorities gate use');
+    assert.ok(readinessBlock.includes('!instanceId'), 'new unsaved widget is gated');
+    assert.ok(readinessBlock.includes('Save this widget before using Copilot.'), 'Save-first boundary is visible');
+  });
+}
+
+// ---------------------------------------------------------------------------
+// 10. External model edit admission
+// ---------------------------------------------------------------------------
+
+function testExternalEditAdmission() {
+  console.log('\n--- External model edit admission ---');
+
+  assertPass('only apply_widget_ops enters Bob edit execution', () => {
+    const executeBlock = SOURCE.match(/const executeBufferedToolCall[\s\S]{0,5200}/)?.[0] ?? '';
+    assert.ok(executeBlock.includes("toolName !== 'apply_widget_ops'"), 'tool name is admitted explicitly');
+    assert.ok(executeBlock.includes('!Array.isArray(ops) || ops.length === 0'), 'empty or non-array ops are refused');
+  });
+
+  assertPass('external ops pass through typography, undo, and Bob apply boundary', () => {
+    const executeBlock = SOURCE.match(/const executeBufferedToolCall[\s\S]{0,5200}/)?.[0] ?? '';
+    const expandIndex = executeBlock.indexOf('expandTypographyFamilyOps');
+    const undoIndex = executeBlock.indexOf('buildCopilotUndoOps');
+    const applyIndex = executeBlock.indexOf('session.applyOps');
+    assert.ok(expandIndex >= 0 && undoIndex > expandIndex && applyIndex > undoIndex, 'ops follow the owned admission sequence');
+    assert.ok(executeBlock.includes('if (!applied.ok)'), 'rejected ops are returned without partial application');
+  });
+}
+
+// ---------------------------------------------------------------------------
+// 11. Cancellation race-safety
 // ---------------------------------------------------------------------------
 
 function testCancellationRaceSafety() {
@@ -250,7 +313,7 @@ function testCancellationRaceSafety() {
 }
 
 // ---------------------------------------------------------------------------
-// 10. Streaming text display
+// 12. Streaming text display
 // ---------------------------------------------------------------------------
 
 function testStreamingText() {
@@ -299,6 +362,8 @@ function run(): void {
   testTierStepLimit();
   testTypographyExpansion();
   testSaveBoundary();
+  testDraftProjectionAndReadiness();
+  testExternalEditAdmission();
   testCancellationRaceSafety();
   testStreamingText();
   console.log('\n=== All Bob CopilotPane gate tests passed ===');

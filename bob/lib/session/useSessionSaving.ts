@@ -23,13 +23,6 @@ export function useSessionSaving(args: {
     const meta = metaRef.current;
     const instanceId = meta?.instanceId ?? '';
     const widgetType = meta?.widgetname ?? '';
-    if (!instanceId) {
-      setState((prev) => ({
-        ...prev,
-        error: { source: 'save', message: 'Missing instance context for save.' },
-      }));
-      return;
-    }
     if (!widgetType) {
       setState((prev) => ({
         ...prev,
@@ -52,12 +45,12 @@ export function useSessionSaving(args: {
       const config = snapshot.instanceData;
       const submittedInstanceDataSignature = serializeInstanceDataSignature(config);
       const saveBody: Record<string, unknown> = {
-        widgetType,
         config,
+        ...(!instanceId ? { widgetType } : {}),
       };
       const { ok, json } = await executeAccountCommand({
-        command: 'update-instance',
-        instanceId,
+        command: 'save-instance',
+        ...(instanceId ? { instanceId } : {}),
         body: saveBody,
       });
       if (!ok) {
@@ -98,12 +91,20 @@ export function useSessionSaving(args: {
         return;
       }
 
-      const savedAt = (json as { updatedAt?: unknown } | undefined)?.updatedAt;
-      if (typeof savedAt === 'string' && savedAt) {
-        setMeta((prev) => (prev ? { ...prev, sourceUpdatedAt: savedAt } : prev));
-        metaRef.current = metaRef.current
-          ? { ...metaRef.current, sourceUpdatedAt: savedAt }
-          : metaRef.current;
+      if (!instanceId) {
+        const created = json as { instanceId: string; baseLocale: string };
+        const currentMeta = metaRef.current!;
+        const nextMeta = {
+          ...currentMeta,
+          instanceId: created.instanceId,
+          baseLocale: created.baseLocale,
+          translationSetup: {
+            ...currentMeta.translationSetup,
+            baseLocale: created.baseLocale,
+          },
+        };
+        metaRef.current = nextMeta;
+        setMeta(nextMeta);
       }
       const current = stateRef.current;
       const currentInstanceDataSignature = serializeInstanceDataSignature(current.instanceData);
@@ -133,6 +134,7 @@ export function useSessionSaving(args: {
     executeAccountCommand,
     metaRef,
     setState,
+    setMeta,
     stateRef,
   ]);
 

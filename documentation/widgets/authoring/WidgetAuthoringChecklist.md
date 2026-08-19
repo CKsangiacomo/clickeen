@@ -130,18 +130,22 @@ that owner and is never substituted.
 For the exact saved instance, verify:
 
 1. Bob edits one complete logical shared-plus-Core state; Roma prepares its
-   semantic config/content payloads, Tokyo writes the canonical
-   `instance.config.json` and `instance.content.json`, and Builder reopen
+   semantic config/content payloads, Tokyo writes one atomic
+   `instance.source.json`, and Builder reopen
    recomposes every exact value.
-2. Create writes initial editable source and Save updates editable source.
-   Only explicit allowed Publish invokes Roma's materializer; Tokyo performs
-   only physical source/package writes.
+2. New composes a non-persisted browser draft. First Save creates editable
+   source and later Save updates it. Only explicit allowed Publish invokes
+   Roma's materializer; Tokyo performs only physical source/package writes.
 3. Bob opens and previews a never-published instance from deploy-built Widget
    software plus the one current draft. Builder open and Workspace perform no
    stored instance-package read, and public `runtime.js` contains no Bob editor
    protocol.
-4. The instance folder contains the exact source, `serve-state.json`, public
-   package, and overlay topology with no alternate package/root.
+4. The instance folder contains exact `instance.source.json`,
+   `serve-state.json`, and overlay topology with no alternate package/root.
+   First Save writes unpublished serve-state first and source last; only the
+   exact source key makes the instance visible. Published serve-state
+   atomically contains status, `publishedAt`, and all three logical package
+   members; the public file paths are not separate R2 objects.
 5. `index.html` contains complete semantic base-locale Header and Core content.
 6. Questions, answers, headings, links, names, and accessibility relationships
    are visible in raw HTML before JavaScript.

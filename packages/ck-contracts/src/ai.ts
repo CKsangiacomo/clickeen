@@ -234,75 +234,6 @@ export type ProductCopilotTurnEvent =
     }
   | { version: 1; userTurnId: string; type: 'agent_turn_stopped'; data: Record<string, never> };
 
-const COPILOT_TURN_EVENT_TYPES = new Set([
-  'agent_turn_started',
-  'text_delta',
-  'tool_call',
-  'model_step_finished',
-  'agent_turn_finished',
-  'agent_turn_error',
-  'agent_turn_stopped',
-] as const);
-
-const COPILOT_TURN_EVENT_TYPES_REQUIRING_MODEL_STEP_ID = new Set([
-  'text_delta',
-  'tool_call',
-  'model_step_finished',
-]);
-
-function isCopilotTurnEventData(value: unknown, type: string): boolean {
-  if (typeof value !== 'object' || value === null || Array.isArray(value)) return false;
-  const data = value as Record<string, unknown>;
-  switch (type) {
-    case 'agent_turn_started':
-    case 'agent_turn_finished':
-    case 'agent_turn_stopped':
-      return true;
-    case 'text_delta':
-      return typeof data.text === 'string';
-    case 'tool_call':
-      return (
-        typeof data.toolCallId === 'string' && data.toolCallId.length > 0 &&
-        typeof data.toolName === 'string' && data.toolName.length > 0 &&
-        'input' in data
-      );
-    case 'model_step_finished':
-      return (
-        typeof data.finishReason === 'string' &&
-        typeof data.requestedProvider === 'string' &&
-        typeof data.requestedModel === 'string' &&
-        typeof data.reportedModel === 'string' && data.reportedModel.length > 0 &&
-        typeof data.promptTokens === 'number' && Number.isInteger(data.promptTokens) && data.promptTokens >= 0 &&
-        typeof data.completionTokens === 'number' && Number.isInteger(data.completionTokens) && data.completionTokens >= 0 &&
-        typeof data.latencyMs === 'number' && Number.isInteger(data.latencyMs) && data.latencyMs >= 0
-      );
-    case 'agent_turn_error':
-      return (
-        typeof data.code === 'string' &&
-        typeof data.reasonKey === 'string' &&
-        typeof data.message === 'string'
-      );
-    default:
-      return false;
-  }
-}
-
-export function isProductCopilotTurnEvent(value: unknown): value is ProductCopilotTurnEvent {
-  if (typeof value !== 'object' || value === null || Array.isArray(value)) return false;
-  const record = value as Record<string, unknown>;
-  if (record.version !== 1) return false;
-  if (typeof record.userTurnId !== 'string' || record.userTurnId.length === 0) return false;
-  const type = record.type;
-  if (typeof type !== 'string' || !COPILOT_TURN_EVENT_TYPES.has(type as never)) return false;
-  if (
-    COPILOT_TURN_EVENT_TYPES_REQUIRING_MODEL_STEP_ID.has(type as never) &&
-    (typeof record.modelStepId !== 'string' || record.modelStepId.length === 0)
-  ) {
-    return false;
-  }
-  return isCopilotTurnEventData(record.data, type);
-}
-
 // ---------------------------------------------------------------------------
 // PRD 128D — Copilot turn request contract (shared parser)
 // ---------------------------------------------------------------------------
@@ -492,10 +423,8 @@ function parseSelectedModel(
 }
 
 /**
- * Shared parser for the Copilot turn request union.
- * Used by BOTH Roma (route validation before grant issuance) and the
- * Product Copilot Worker (request validation before model execution).
- * One parser — no drifting validators.
+ * External browser-ingress parser for the Copilot turn request union.
+ * Roma uses it before grant issuance and forwards the accepted typed request.
  */
 export function parseCopilotTurnRequest(
   value: unknown,

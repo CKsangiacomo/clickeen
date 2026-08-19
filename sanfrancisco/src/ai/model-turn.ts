@@ -12,7 +12,7 @@ import { streamText, generateObject, jsonSchema, type LanguageModel } from 'ai';
 
 import { resolveAiAgent, resolveAiModelCapability } from '@clickeen/ck-contracts/ai';
 import { assertCap, resolveGrantBudgets, verifyGrant } from '../grants';
-import { HttpError, json, noStore, readJson, type SanFranciscoRequestContext } from '../http';
+import { HttpError, asString, isRecord, json, noStore, readJson, type SanFranciscoRequestContext } from '../http';
 import { resolveModelSelection, type ModelSelection } from './modelRouter';
 import { withInflightLimit } from '../concurrency';
 import { withStreamInflightLimit } from '../concurrency';
@@ -28,7 +28,6 @@ import type {
   ModelTurnMessage,
   ModelTurnToolDefinition,
 } from './model-turn-types';
-import { isModelTurnRequest } from './model-turn-types';
 
 // ---------------------------------------------------------------------------
 // Provider factory
@@ -504,20 +503,16 @@ export async function handleModelTurn(
   requestContext: SanFranciscoRequestContext,
 ): Promise<Response> {
   const body = await readJson(request);
-  if (!isModelTurnRequest(body)) {
-    throw new HttpError(400, {
-      code: 'BAD_REQUEST',
-      message: 'Invalid model-turn request',
-      issues: [{ path: '', message: 'Expected { version: 1, agentId, grant, messages, mode }' }],
-    });
+  const grantToken = isRecord(body) ? asString(body.grant) : null;
+  if (!grantToken) {
+    throw new HttpError(401, { code: 'GRANT_INVALID', message: 'Missing model-turn grant' });
   }
 
-  const modelTurnRequest = body as ModelTurnRequest;
-
   const grant: AIGrant = await verifyGrant(
-    modelTurnRequest.grant,
+    grantToken,
     env.ROMA_AI_GRANT_PUBLIC_KEY_PEM,
   );
+  const modelTurnRequest = body as ModelTurnRequest;
 
   const resolvedAgent = resolveAiAgent(modelTurnRequest.agentId);
   if (!resolvedAgent) {

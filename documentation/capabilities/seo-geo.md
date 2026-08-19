@@ -140,8 +140,9 @@ existing public cache policy; the locale query is part of the request cache
 coordinate. Every index response also contains exact Edge-authored switcher
 options for the base locale and stored overlay coordinates. Publish,
 unpublish, Delete, and overlay changes cause Tokyo's default Worker entrypoint
-to purge its own Workers Cache after the owning truth mutation through
-`ctx.cache.purge({ tags: [accountInstanceCacheTag] })`. Every cacheable response
+to schedule its own Workers Cache eviction after the owning truth mutation
+through `waitUntil` and the exact account-instance tag. Eviction is outside the
+product response and UI. Every cacheable response
 for the exact account/instance carries that tag, covering every package path
 and locale/query variant.
 

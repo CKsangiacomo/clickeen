@@ -1,13 +1,16 @@
 import { normalizeStorageId } from '../asset-utils';
 import {
-  AccountInstanceTransitionError,
   createAccountInstanceFromSubmittedSource,
-  deleteAccountInstanceTransition,
-  purgeClkLiveEntryCache,
-  saveAccountInstanceSource,
-  unpublishAccountInstanceTransition,
+  scheduleAccountInstanceCacheEviction,
 } from '../domains/account-instances/operations';
-import { coordinateAccountInstancePublish } from '../domains/account-instances/publication-coordinator';
+import {
+  coordinateAccountInstanceDelete,
+  coordinateAccountInstancePublish,
+  coordinateAccountInstanceRename,
+  coordinateAccountInstanceSave,
+  coordinateAccountInstanceUnpublish,
+} from '../domains/account-instances/publication-coordinator';
+import { scheduleAccountInstanceResidualCleanup } from '../domains/account-instances/delete';
 import type { SubmittedInstancePublicPackage } from '../domains/account-instances/package-files';
 import type { AccountInstanceContentDocument } from '../domains/account-instances/types';
 import {
@@ -15,7 +18,6 @@ import {
   listAccountInstanceIds,
   readAccountInstanceSource,
   readAccountInstanceSourcePointer,
-  renameAccountInstanceDisplay,
 } from '../domains/account-instances/source';
 import { json } from '../http';
 import {
@@ -35,7 +37,7 @@ import {
 export async function tryHandleInternalInstanceRoutes(
   args: TokyoRouteArgs,
 ): Promise<Response | null> {
-  const { req, env, cache, pathname, respond } = args;
+  const { req, env, cache, waitUntil, pathname, respond } = args;
 
   const internalAccountInstancesListMatch = pathname.match(
     /^\/__internal\/accounts\/([^/]+)\/instances$/,
@@ -188,6 +190,7 @@ export async function tryHandleInternalInstanceRoutes(
             widgetType: created.pointer.widgetType,
             displayName: created.pointer.displayName,
             publishStatus: created.pointer.publishStatus,
+            publishedAt: created.pointer.publishedAt,
             updatedAt: created.pointer.updatedAt,
             source: {
               config: created.config,
@@ -218,29 +221,12 @@ export async function tryHandleInternalInstanceRoutes(
     if (!auth.ok) return respond(auth.response);
 
     const body = (await req.json()) as { displayName: string };
-    try {
-      const renamed = await renameAccountInstanceDisplay({
-        env,
-        accountId,
-        instanceId,
-        displayName: body.displayName,
-      });
-      return respond(json({ ok: true, ...renamed }));
-    } catch (error) {
-      const detail = error instanceof Error ? error.message : String(error);
-      return respond(
-        json(
-          {
-            error: {
-              kind: detail === 'coreui.errors.instance.notFound' ? 'NOT_FOUND' : 'VALIDATION',
-              reasonKey: detail,
-              detail,
-            },
-          },
-          { status: detail === 'coreui.errors.instance.notFound' ? 404 : 422 },
-        ),
-      );
-    }
+    return respond(await coordinateAccountInstanceRename({
+      env,
+      accountId,
+      instanceId,
+      displayName: body.displayName,
+    }));
   }
 
   const internalInstancePublishMatch = pathname.match(
@@ -264,7 +250,6 @@ export async function tryHandleInternalInstanceRoutes(
     if (!auth.ok) return respond(auth.response);
 
     try {
-      let transition;
       if (action === 'publish') {
         const body = (await readInternalProductJsonBody({
           req,
@@ -273,6 +258,7 @@ export async function tryHandleInternalInstanceRoutes(
           accountId,
           instanceId,
         })) as {
+          sourceUpdatedAt: string;
           publishedLimit: number;
           publicPackage: SubmittedInstancePublicPackage;
         };
@@ -280,33 +266,19 @@ export async function tryHandleInternalInstanceRoutes(
           env,
           accountId,
           instanceId,
+          sourceUpdatedAt: body.sourceUpdatedAt,
           publishedLimit: body.publishedLimit,
           publicPackage: body.publicPackage,
         });
         if (!coordinated.ok) return respond(coordinated);
-        const coordinatedPayload = (await coordinated.json()) as {
-          ok: true;
-          instanceId: string;
-          status: 'published';
-          changed: boolean;
-        };
-        transition = {
-          instanceId: coordinatedPayload.instanceId,
-          status: coordinatedPayload.status,
-          changed: coordinatedPayload.changed,
-        };
+        scheduleAccountInstanceCacheEviction({ cache, waitUntil, accountId, instanceId });
+        return respond(coordinated);
       } else {
-        transition = await unpublishAccountInstanceTransition({ env, accountId, instanceId });
+        const coordinated = await coordinateAccountInstanceUnpublish({ env, accountId, instanceId });
+        if (!coordinated.ok) return respond(coordinated);
+        scheduleAccountInstanceCacheEviction({ cache, waitUntil, accountId, instanceId });
+        return respond(coordinated);
       }
-      try {
-        await purgeClkLiveEntryCache({ cache, accountId, instanceId });
-      } catch (error) {
-        if (error instanceof AccountInstanceTransitionError) {
-          error.committed = transition;
-        }
-        return respond(transitionErrorResponse(error));
-      }
-      return respond(json({ ok: true, ...transition }));
     } catch (error) {
       return respond(transitionErrorResponse(error));
     }
@@ -372,39 +344,23 @@ export async function tryHandleInternalInstanceRoutes(
           content: AccountInstanceContentDocument;
         };
       };
-      try {
-        const result = await saveAccountInstanceSource({
-          env,
-          accountId,
-          instanceId,
-          config: body.source.config,
-          content: body.source.content,
-        });
-        return respond(
-          json({
-            ok: true,
-            instanceId,
-            widgetType: result.pointer.widgetType,
-            displayName: result.pointer.displayName,
-            publishStatus: result.pointer.publishStatus,
-            updatedAt: result.pointer.updatedAt,
-          }),
-        );
-      } catch (error) {
-        return respond(transitionErrorResponse(error));
-      }
+      return respond(await coordinateAccountInstanceSave({
+        env,
+        accountId,
+        instanceId,
+        config: body.source.config,
+        content: body.source.content,
+      }));
     }
 
     if (req.method === 'DELETE') {
       const auth = await authorizeRomaEditorTransition({ req, env, accountId });
       if (!auth.ok) return respond(auth.response);
-      try {
-        const deleted = await deleteAccountInstanceTransition({ env, instanceId, accountId });
-        await purgeClkLiveEntryCache({ cache, accountId, instanceId });
-        return respond(json({ ok: true, existed: deleted.existed }));
-      } catch (error) {
-        return respond(transitionErrorResponse(error));
-      }
+      const coordinated = await coordinateAccountInstanceDelete({ env, instanceId, accountId });
+      if (!coordinated.ok) return respond(coordinated);
+      scheduleAccountInstanceResidualCleanup({ env, waitUntil, accountId, instanceId });
+      scheduleAccountInstanceCacheEviction({ cache, waitUntil, accountId, instanceId });
+      return respond(coordinated);
     }
 
     return respondMethodNotAllowed(respond);

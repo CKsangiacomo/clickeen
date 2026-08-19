@@ -17,30 +17,12 @@ import {
   type AccountAssetsClient,
   type ShowIfEntry,
 } from '@clickeen/bob/control-host';
+import type { CompiledControl, CompiledPanel, CompiledWidget } from '@clickeen/bob/types';
 import type { AccountFontLibrary } from '@clickeen/widget-foundation';
 
-type BuilderControlPanel = {
-  id?: string;
-  html: string;
-};
-
-export type BuilderControlPayload = {
-  widgetname?: string;
-  displayName?: string;
-  panels?: BuilderControlPanel[];
-};
-
-export type BuilderDefaultsControl = {
-  path: string;
-  panelId: string;
-  type: string;
-  min?: number;
-  max?: number;
-};
-
 type BuilderDefaultsControlsProps = {
-  controls: BuilderDefaultsControl[];
-  payloads: BuilderControlPayload[];
+  controls: CompiledControl[];
+  payload: CompiledWidget;
   values: Record<string, unknown>;
   fontLibrary: AccountFontLibrary;
   hostId: string;
@@ -86,7 +68,7 @@ function isFiniteNumber(value: unknown): value is number {
 
 export function readValuefieldInput(
   value: number,
-  control: Pick<BuilderDefaultsControl, 'min' | 'max'>,
+  control: Pick<CompiledControl, 'min' | 'max'>,
 ): number | null {
   if (
     !Number.isFinite(value) ||
@@ -116,7 +98,7 @@ function fragmentHasAllowedPath(root: ParentNode, allowedPaths: Set<string>): bo
   });
 }
 
-function filterPanelHtml(panel: BuilderControlPanel, allowedPaths: Set<string>): string {
+function filterPanelHtml(panel: CompiledPanel, allowedPaths: Set<string>): string {
   const template = document.createElement('template');
   template.innerHTML = panel.html;
 
@@ -145,32 +127,17 @@ function filterPanelHtml(panel: BuilderControlPanel, allowedPaths: Set<string>):
   return template.innerHTML.trim();
 }
 
-function collectRenderedPaths(html: string): Set<string> {
-  const template = document.createElement('template');
-  template.innerHTML = html;
-  return new Set(
-    Array.from(template.content.querySelectorAll<HTMLElement>('[data-bob-path]'))
-      .map((field) => controlPath(field))
-      .filter((path): path is string => Boolean(path)),
-  );
-}
-
 function buildPanelHtml(
-  payload: BuilderControlPayload,
-  controls: BuilderDefaultsControl[],
-): { html: string; missingPaths: string[] } {
+  payload: CompiledWidget,
+  controls: CompiledControl[],
+): string {
   const allowedPaths = new Set(controls.map((control) => control.path));
   const panelIds = new Set(controls.map((control) => control.panelId));
-  const html = (payload.panels ?? [])
-    .filter((panel) => panel.id && panelIds.has(panel.id))
+  return payload.panels
+    .filter((panel) => panelIds.has(panel.id))
     .map((panel) => filterPanelHtml(panel, allowedPaths))
     .filter(Boolean)
     .join('\n');
-  const renderedPaths = collectRenderedPaths(html);
-  const missingPaths = controls
-    .map((control) => control.path)
-    .filter((path) => !renderedPaths.has(path));
-  return { html, missingPaths };
 }
 
 function syncFieldValue(field: HTMLElement, values: Record<string, unknown>) {
@@ -276,7 +243,7 @@ export function WidgetDefaultsBuilderControls({
   onContractError,
   onOps,
   onReadyChange,
-  payloads,
+  payload,
   scopeLabel,
   values,
 }: BuilderDefaultsControlsProps) {
@@ -286,28 +253,16 @@ export function WidgetDefaultsBuilderControls({
   const [contractError, setContractError] = useState('');
   valuesRef.current = values;
 
-  const payload = payloads.find((entry) => Array.isArray(entry.panels) && entry.panels.length > 0);
-  const panelBuild = useMemo(() => {
-    if (!payload || typeof document === 'undefined') return { html: '', missingPaths: [] };
+  const panelHtml = useMemo(() => {
+    if (typeof document === 'undefined') return '';
     return buildPanelHtml(payload, controls);
   }, [controls, payload]);
-  const panelHtml = panelBuild.html;
 
   useEffect(() => {
-    if (payload && panelHtml && panelBuild.missingPaths.length === 0) return;
+    if (panelHtml) return;
     onReadyChange(false);
-    if (!payload) {
-      onContractError('Compiled Builder controls are unavailable.');
-      return;
-    }
-    if (!panelHtml) {
-      onContractError(`No ${scopeLabel} controls are available.`);
-      return;
-    }
-    onContractError(
-      `Compiled Builder controls are missing ${scopeLabel} paths: ${panelBuild.missingPaths.join(', ')}`,
-    );
-  }, [onContractError, onReadyChange, panelBuild.missingPaths, panelHtml, payload, scopeLabel]);
+    onContractError(`No ${scopeLabel} controls are available.`);
+  }, [onContractError, onReadyChange, panelHtml, scopeLabel]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -318,14 +273,6 @@ export function WidgetDefaultsBuilderControls({
     onReadyChange(false);
     container.hidden = true;
     container.dataset.ready = 'false';
-
-    if (panelBuild.missingPaths.length > 0) {
-      const message = `Compiled Builder controls are missing ${scopeLabel} paths: ${panelBuild.missingPaths.join(', ')}`;
-      setContractError(message);
-      onContractError(message);
-      container.innerHTML = '';
-      return;
-    }
 
     container.innerHTML = panelHtml;
     namespaceControlHostClusterIds(container, hostId);
@@ -437,11 +384,9 @@ export function WidgetDefaultsBuilderControls({
     onOps,
     onReadyChange,
     controls,
-    panelBuild.missingPaths,
     panelHtml,
     fontLibrary,
     hostId,
-    scopeLabel,
   ]);
 
   useEffect(() => {
@@ -450,23 +395,8 @@ export function WidgetDefaultsBuilderControls({
     syncControlValues(container, values, showIfEntriesRef.current);
   }, [values]);
 
-  if (!payload) {
-    return (
-      <p className="body-s widget-defaults-error">Compiled Builder controls are unavailable.</p>
-    );
-  }
-
   if (!panelHtml) {
     return <p className="body-s widget-defaults-error">No {scopeLabel} controls are available.</p>;
-  }
-
-  if (panelBuild.missingPaths.length > 0) {
-    return (
-      <p className="body-s widget-defaults-error">
-        Compiled Builder controls are missing {scopeLabel} paths:{' '}
-        {panelBuild.missingPaths.join(', ')}
-      </p>
-    );
   }
 
   if (contractError) {

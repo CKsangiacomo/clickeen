@@ -161,17 +161,13 @@ Rules:
 | `PUBLIC_TOKYO_URL` | Required by Prague base layout for Dieter token CSS and product static resources. |
 | `PUBLIC_ROMA_URL` | Create route redirect into Roma. |
 | `PUBLIC_CLK_LIVE_URL` | Optional base URL for exact public Widget embeds. Defaults to `https://clk.live` where code allows. |
-| `PRAGUE_VALIDATE_ACCOUNT_INSTANCE` | Current legacy availability probe during Prague page loading; architecture debt, not a target runtime contract. |
-| `PRAGUE_VALIDATE_ACCOUNT_INSTANCE_STRICT` | Current legacy fatal mode for that probe; architecture debt, not a target runtime contract. |
 
 Do not document secret values. Prague does not need account-write secrets.
 
-Current implementation mismatch: Prague currently probes a Tokyo-owned public
-account-instance artifact during page loading and can make that probe fatal
-through these variables. In the closed system Prague consumes the exact public
-embed coordinate and trusts Tokyo's published result; normal page work must
-not depend on a second availability-validation ritual. Preserve the variables
-only while the current code still ships them, and do not extend this path.
+Prague consumes the exact authored public embed coordinate without an
+availability preflight. Tokyo naturally serves the published result or `404`.
+Normal page loading has no validation flags, probe cache, or public-instance
+fetch dependency.
 
 ## Operator Commands
 

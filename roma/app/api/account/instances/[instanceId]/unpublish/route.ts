@@ -34,7 +34,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
         {
           ok: false,
           error: unpublish.error,
-          ...(unpublish.committed ? { committed: unpublish.committed } : {}),
         },
         { status: unpublish.status },
       ),

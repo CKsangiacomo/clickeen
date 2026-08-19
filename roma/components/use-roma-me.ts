@@ -1,25 +1,25 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { isCompactAccountPublicId, isRecord, type AccountLocalePolicy } from '@clickeen/ck-contracts';
-import { assertPolicyEntitlementsSnapshot } from '@clickeen/ck-policy';
+import type { AccountLocalePolicy } from '@clickeen/ck-contracts';
+import type { MemberRole, PolicyProfile } from '@clickeen/ck-policy';
 
 export type RomaLifecycleNotice = {
-  tierChangedAt?: string | null;
-  tierChangedFrom?: string | null;
-  tierChangedTo?: string | null;
-  tierDropDismissedAt?: string | null;
-  tierDropEmailSentAt?: string | null;
+  tierChangedAt: string | null;
+  tierChangedFrom: PolicyProfile | null;
+  tierChangedTo: PolicyProfile | null;
+  tierDropDismissedAt: string | null;
+  tierDropEmailSentAt: string | null;
 } | null;
 
 export type RomaAccountSummary = {
   accountId: string;
   accountPublicId: string;
-  role: string;
-  tier: string;
+  role: MemberRole;
+  tier: PolicyProfile;
   websiteUrl: string | null;
   membershipVersion: string | null;
-  lifecycleNotice?: RomaLifecycleNotice;
+  lifecycleNotice: RomaLifecycleNotice;
 };
 
 export type RomaActiveAccount = RomaAccountSummary & {
@@ -34,7 +34,7 @@ export type RomaMeResponse = {
     email: string | null;
     role: string | null;
   };
-  profile?: {
+  profile: {
     userId: string;
     primaryEmail: string;
     givenName: string | null;
@@ -43,226 +43,54 @@ export type RomaMeResponse = {
     usePrimaryLanguageForUi: boolean;
     country: string | null;
     timezone: string | null;
-  } | null;
-  activeAccount?: RomaActiveAccount | null;
-  authz?: {
-    accountId?: string | null;
-    accountPublicId?: string | null;
-    role?: string | null;
-    profile?: string | null;
-    authzVersion?: string | null;
-    issuedAt?: string | null;
-    expiresAt?: string | null;
-    entitlements?: {
-      flags?: Record<string, boolean>;
-      limits?: Record<string, number | null>;
-    } | null;
-  } | null;
+  };
+  activeAccount: RomaActiveAccount;
+  authz: {
+    accountId: string;
+    accountPublicId: string;
+    role: MemberRole;
+    profile: PolicyProfile;
+    authzVersion: string;
+    issuedAt: string;
+    expiresAt: string;
+    entitlements: {
+      flags: Record<string, boolean>;
+      limits: Record<string, number | null>;
+    };
+  };
 };
 
 export type ResolvedRomaContext = {
-  accountId: string | null;
-  accountPublicId: string | null;
-  accountLabel: string | null;
+  accountId: string;
+  accountPublicId: string;
+  accountLabel: string;
 };
 
 export type RomaAuthzPolicy = {
-    profile: 'free' | 'tier1' | 'tier2' | 'tier3' | 'tier4';
-  role: 'viewer' | 'editor' | 'admin' | 'owner';
+  profile: PolicyProfile;
+  role: MemberRole;
   flags: Record<string, boolean>;
   limits: Record<string, number | null>;
 };
 
-function normalizeAccountCoordinate(value: unknown): string | null {
-  return isCompactAccountPublicId(value) ? value : null;
-}
-
-function normalizeAccountId(value: unknown): string | null {
-  return normalizeAccountCoordinate(value);
-}
-
-function normalizeAccountPublicId(value: unknown): string | null {
-  return normalizeAccountCoordinate(value);
-}
-
-function normalizeOptionalString(value: unknown): string | null {
-  return typeof value === 'string' && value.trim() ? value.trim() : null;
-}
-
-function normalizeRole(value: unknown): RomaAuthzPolicy['role'] | null {
-  switch (value) {
-    case 'viewer':
-    case 'editor':
-    case 'admin':
-    case 'owner':
-      return value;
-    default:
-      return null;
-  }
-}
-
-function normalizeProfile(value: unknown): RomaAuthzPolicy['profile'] | null {
-  switch (value) {
-    case 'free':
-    case 'tier1':
-    case 'tier2':
-    case 'tier3':
-    case 'tier4':
-      return value;
-    default:
-      return null;
-  }
-}
-
-function normalizeLifecycleNotice(value: unknown): RomaLifecycleNotice {
-  if (value == null) return null;
-  if (!isRecord(value)) return null;
+export function resolveAccountPolicyFromRomaAuthz(data: RomaMeResponse): RomaAuthzPolicy {
   return {
-    tierChangedAt: normalizeOptionalString(value.tierChangedAt),
-    tierChangedFrom: normalizeOptionalString(value.tierChangedFrom),
-    tierChangedTo: normalizeOptionalString(value.tierChangedTo),
-    tierDropDismissedAt: normalizeOptionalString(value.tierDropDismissedAt),
-    tierDropEmailSentAt: normalizeOptionalString(value.tierDropEmailSentAt),
+    profile: data.authz.profile,
+    role: data.authz.role,
+    flags: data.authz.entitlements.flags,
+    limits: data.authz.entitlements.limits,
   };
 }
 
-export function resolveAccountPolicyFromRomaAuthz(data: RomaMeResponse | null, accountId: string): RomaAuthzPolicy | null {
-  const normalizedAccountId = normalizeAccountId(accountId);
-  const authz = data?.authz;
-  if (!normalizedAccountId || !authz) return null;
+export function resolveActiveRomaAccount(data: RomaMeResponse): RomaActiveAccount {
+  return data.activeAccount;
+}
 
-  const authzAccountId = normalizeAccountId(authz.accountId);
-  if (!authzAccountId || authzAccountId !== normalizedAccountId) return null;
-
-  const role = normalizeRole(authz.role);
-  const profile = normalizeProfile(authz.profile);
-  if (!role || !profile) return null;
-  let entitlements;
-  try {
-    if (!Object.prototype.hasOwnProperty.call(authz, 'entitlements')) return null;
-    entitlements = assertPolicyEntitlementsSnapshot(authz.entitlements);
-  } catch {
-    return null;
-  }
-  if (!entitlements) return null;
-
+export function resolveActiveRomaContext(data: RomaMeResponse): ResolvedRomaContext {
   return {
-        profile,
-    role,
-    flags: { ...(entitlements.flags ?? {}) },
-    limits: { ...(entitlements.limits ?? {}) },
-  };
-}
-
-function assertRomaMeActiveAccountPayload(data: RomaMeResponse | null): void {
-  const activeAccount = data?.activeAccount;
-  if (!activeAccount || !isRecord(activeAccount)) {
-    throw new Error('coreui.errors.auth.contextUnavailable');
-  }
-
-  const accountId = normalizeAccountId(activeAccount.accountId);
-  const accountPublicId = normalizeAccountPublicId(activeAccount.accountPublicId);
-  const role = normalizeRole(activeAccount.role);
-  const profile = normalizeProfile(activeAccount.tier);
-  const status = normalizeOptionalString(activeAccount.status);
-  if (!accountId || !accountPublicId || !role || !profile || !status) {
-    throw new Error('coreui.errors.auth.contextUnavailable');
-  }
-}
-
-function assertRomaMeAuthzPayload(data: RomaMeResponse | null): void {
-  const authz = data?.authz;
-  if (!authz) {
-    throw new Error('coreui.errors.auth.contextUnavailable');
-  }
-
-  const accountId = normalizeAccountId(authz.accountId);
-  const accountPublicId = normalizeAccountPublicId(authz.accountPublicId);
-  const role = normalizeRole(authz.role);
-  const profile = normalizeProfile(authz.profile);
-  const authzVersion = typeof authz.authzVersion === 'string' ? authz.authzVersion.trim() : '';
-  const issuedAt = typeof authz.issuedAt === 'string' ? authz.issuedAt.trim() : '';
-  const expiresAt = typeof authz.expiresAt === 'string' ? authz.expiresAt.trim() : '';
-
-  if (
-    !accountId ||
-    !accountPublicId ||
-    accountId !== accountPublicId ||
-    !role ||
-    !profile ||
-    !authzVersion ||
-    !issuedAt ||
-    !expiresAt
-  ) {
-    throw new Error('coreui.errors.auth.contextUnavailable');
-  }
-  const issuedAtMs = Date.parse(issuedAt);
-  const expiresAtMs = Date.parse(expiresAt);
-  if (!Number.isFinite(issuedAtMs) || !Number.isFinite(expiresAtMs)) {
-    throw new Error('coreui.errors.auth.contextUnavailable');
-  }
-  if (
-    issuedAtMs > Date.now() + ROMA_ME_AUTHZ_EXPIRY_SKEW_MS ||
-    issuedAtMs >= expiresAtMs ||
-    expiresAtMs <= Date.now() + ROMA_ME_AUTHZ_EXPIRY_SKEW_MS
-  ) {
-    throw new Error('coreui.errors.auth.contextUnavailable');
-  }
-  if (!Object.prototype.hasOwnProperty.call(authz, 'entitlements')) {
-    throw new Error('coreui.errors.auth.contextUnavailable');
-  }
-  if (!assertPolicyEntitlementsSnapshot(authz.entitlements)) {
-    throw new Error('coreui.errors.auth.contextUnavailable');
-  }
-
-  assertRomaMeActiveAccountPayload(data);
-  const activeAccountId = normalizeAccountId(data?.activeAccount?.accountId);
-  const activeAccountPublicId = normalizeAccountPublicId(data?.activeAccount?.accountPublicId);
-  const activeAccountRole = normalizeRole(data?.activeAccount?.role);
-  const activeAccountProfile = normalizeProfile(data?.activeAccount?.tier);
-  if (
-    !activeAccountId ||
-    activeAccountId !== accountId ||
-    !activeAccountPublicId ||
-    activeAccountPublicId !== accountPublicId ||
-    activeAccountRole !== role ||
-    activeAccountProfile !== profile
-  ) {
-    throw new Error('coreui.errors.auth.contextUnavailable');
-  }
-}
-
-export function resolveActiveRomaAccount(data: RomaMeResponse | null): RomaActiveAccount | null {
-  const activeAccount = data?.activeAccount;
-  if (!activeAccount) return null;
-  const accountId = normalizeAccountId(activeAccount.accountId);
-  const accountPublicId = normalizeAccountPublicId(activeAccount.accountPublicId);
-  const role = normalizeOptionalString(activeAccount.role);
-  const tier = normalizeOptionalString(activeAccount.tier);
-  const status = normalizeOptionalString(activeAccount.status);
-  if (!accountId || !accountPublicId || !role || !tier || !status) {
-    return null;
-  }
-  return {
-    accountId,
-    accountPublicId,
-    role,
-    tier,
-    websiteUrl: normalizeOptionalString(activeAccount.websiteUrl),
-    membershipVersion: normalizeOptionalString(activeAccount.membershipVersion),
-    lifecycleNotice: normalizeLifecycleNotice(activeAccount.lifecycleNotice),
-    status,
-    activeLocales: activeAccount.activeLocales as string[],
-    localePolicy: activeAccount.localePolicy as AccountLocalePolicy,
-  };
-}
-
-export function resolveActiveRomaContext(data: RomaMeResponse | null): ResolvedRomaContext {
-  const activeAccount = resolveActiveRomaAccount(data);
-  return {
-    accountId: activeAccount?.accountId ?? null,
-    accountPublicId: activeAccount?.accountPublicId ?? null,
-    accountLabel: activeAccount?.accountPublicId ?? null,
+    accountId: data.activeAccount.accountId,
+    accountPublicId: data.activeAccount.accountPublicId,
+    accountLabel: data.activeAccount.accountPublicId,
   };
 }
 
@@ -310,7 +138,7 @@ function isRomaMeStore(value: unknown): value is RomaMeStore {
 }
 
 function resolveRomaMeSafeUntilMs(data: RomaMeResponse | null): number {
-  const expiresAt = typeof data?.authz?.expiresAt === 'string' ? data.authz.expiresAt.trim() : '';
+  const expiresAt = data?.authz.expiresAt ?? '';
   const expiresAtMs = Date.parse(expiresAt);
   if (!Number.isFinite(expiresAtMs)) return 0;
   return expiresAtMs - ROMA_ME_AUTHZ_EXPIRY_SKEW_MS;
@@ -325,7 +153,7 @@ function isRomaMeAuthzStillValid(data: RomaMeResponse | null): boolean {
 }
 
 function resolveRomaMeRefreshDelayMs(data: RomaMeResponse | null): number | null {
-  const expiresAt = typeof data?.authz?.expiresAt === 'string' ? data.authz.expiresAt.trim() : '';
+  const expiresAt = data?.authz.expiresAt ?? '';
   const expiresAtMs = Date.parse(expiresAt);
   if (!Number.isFinite(expiresAtMs)) return null;
   const refreshAtMs = expiresAtMs - ROMA_ME_PROACTIVE_REFRESH_LEAD_MS;
@@ -389,13 +217,6 @@ async function fetchRomaMeState(): Promise<UseRomaMeState> {
   try {
     const response = await fetch('/api/bootstrap', { cache: 'no-store' });
     const payload = (await response.json().catch(() => null)) as RomaMeResponse | { error?: unknown } | null;
-    const authErrorReason = (payload as any)?.error?.reasonKey || (payload as any)?.error;
-    if (response.ok && authErrorReason) {
-      throw new RomaMeLoadError(
-        typeof authErrorReason === 'string' ? authErrorReason : 'coreui.errors.auth.required',
-        false,
-      );
-    }
     if (!response.ok) {
       const reason = (payload as any)?.error?.reasonKey || (payload as any)?.error || `HTTP_${response.status}`;
       const normalizedReason = typeof reason === 'string' ? reason : 'coreui.errors.auth.required';
@@ -406,7 +227,6 @@ async function fetchRomaMeState(): Promise<UseRomaMeState> {
           normalizedReason !== 'coreui.errors.auth.forbidden',
       );
     }
-    assertRomaMeAuthzPayload(payload as RomaMeResponse | null);
 
     return {
       loading: false,

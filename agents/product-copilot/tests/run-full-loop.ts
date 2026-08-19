@@ -50,6 +50,7 @@ function assertPass(label: string, fn: () => void) {
 
 function makeDraftContext(overrides: Partial<DraftContext> = {}): DraftContext {
   return {
+    instanceId: 'instance-1',
     widgetType: 'bigbang',
     displayName: 'Big Bang',
     activeLocale: 'en',
@@ -161,6 +162,7 @@ function testToolCallContinuationTurn(): void {
       userTurnId: 'turn-1',
       priorModelStepId: 'step-1',
       toolCallId: 'call-1',
+      toolName: 'apply_widget_ops',
       toolResult: { ok: true, changedPaths: ['title'] },
       conversationHistory: [
         { role: 'user', text: 'Set the title to Hello' },
@@ -210,6 +212,7 @@ function testContinuationCoordinates(): void {
       userTurnId: 'turn-1',
       priorModelStepId: 'step-1',
       toolCallId: 'call-1',
+      toolName: 'apply_widget_ops',
       toolResult: { ok: true, changedPaths: ['title'] },
       conversationHistory: [
         { role: 'user', text: 'Make the title uppercase' },
@@ -268,6 +271,7 @@ function testNoDuplicationWhenHistoryCarriesResult(): void {
       userTurnId: 'turn-1',
       priorModelStepId: 'step-1',
       toolCallId: 'call-1',
+      toolName: 'apply_widget_ops',
       toolResult: sharedResult,
       conversationHistory: [
         { role: 'user', text: 'edit the title' },

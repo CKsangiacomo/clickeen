@@ -1,6 +1,6 @@
 # Babel Protocol
 
-Last updated: 2026-08-17
+Last updated: 2026-08-18
 
 Babel is the exact saved-text translation protocol for account instances. It
 turns one current saved source field set into one exact overlay value map per
@@ -9,8 +9,8 @@ requested non-base locale.
 ## Source Text Contract
 
 Tokyo-worker resolves the saved instance and returns concrete text fields from
-`instance.content.json`. Each field carries its physical concrete path,
-`fieldPattern`, stable `identityKey`, and current base text. Roma sends the
+the `content` member of atomic `instance.source.json`. Each field carries its
+concrete path, `fieldPattern`, stable `identityKey`, and current base text. Roma sends the
 stable `identityKey` in the existing Babel item `path` field; that transport
 name carries an opaque content coordinate, not a positional array path. This
 saved field set is the only source scope a translation job may translate.
@@ -97,6 +97,13 @@ format. Previously stored positional overlays are not read through a
 compatibility path. After deployment, they require explicit Generate
 Translations or explicit deletion. Serve never migrates or falls back to the
 old format.
+
+Atomic `instance.source.json` is a separate pre-GA storage cutover. After its
+deployment, all legacy cloud-dev saved instances require an explicit source
+cutover or recreation before this protocol can read them; any retained public
+instance then requires explicit Publish/Republish. There is no legacy source
+reader or migration-on-read, and this documentation pass performed no remote
+operation.
 
 ## Verification
 

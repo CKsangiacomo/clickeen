@@ -18,8 +18,8 @@ Each spec documents:
 
 The canonical Widget architecture is a per-Widget `widget.html`, structured
 contracts, and mandatory `core/core.html`, `core/core.css`, and `core/core.js`,
-using shared Stage, Pod, Header, and other generic Clickeen services. Create and
-Save persist editable source. Only explicit allowed Publish asks Roma to
+using shared Stage, Pod, Header, and other generic Clickeen services. New writes
+nothing; first Save creates editable source and later Save updates it. Only explicit allowed Publish asks Roma to
 materialize complete HTML, CSS, and JavaScript. Core JavaScript owns Widget
 behavior and is never the initial-content renderer, materializer, localizer,
 preview host, validator, or serving engine.

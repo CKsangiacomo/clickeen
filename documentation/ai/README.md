@@ -72,7 +72,7 @@ An unregistered agent id is not a current Clickeen AI runtime.
 | Runtime policy derivation and budget helpers | `packages/ck-policy/src/ai-runtime.ts` |
 | San Francisco endpoint request/response types | `sanfrancisco/src/types.ts` |
 | San Francisco grant verification | `sanfrancisco/src/grants.ts` |
-| San Francisco model routing | `sanfrancisco/src/ai/modelRouter.ts`, `sanfrancisco/src/ai/chat.ts` |
+| San Francisco model routing | `sanfrancisco/src/ai/modelRouter.ts`, `sanfrancisco/src/ai/model-turn.ts` |
 | Product Copilot runtime and evals | `agents/product-copilot/` |
 | Translation Agent runtime and evals | `agents/translation-agent/` |
 | Worker deploy | `.github/workflows/cloud-dev-workers.yml` |
@@ -108,8 +108,8 @@ inventory in the same change that changes a binding or secret requirement.
 ```bash
 pnpm --filter @clickeen/sanfrancisco typecheck
 pnpm --filter @clickeen/product-copilot typecheck
-pnpm --filter @clickeen/product-copilot test:copilot-contract
-pnpm --filter @clickeen/product-copilot eval:copilot
+pnpm --filter @clickeen/product-copilot test:turn-contract
+pnpm --filter @clickeen/product-copilot test:full-loop
 pnpm --filter @clickeen/translation-agent typecheck
 pnpm --filter @clickeen/translation-agent eval:translation-agent
 pnpm e2e:smoke:copilot-runtime

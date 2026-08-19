@@ -5,10 +5,7 @@ import {
   isAccountRoleValue,
 } from '../lib/format';
 import { resolveAccountLocalesSuccessCopy } from '../components/account-locale-settings-card';
-import {
-  resolveAccountShellErrorCopy,
-  resolveCommittedPublicationFailureCopy,
-} from '../lib/account-shell-copy';
+import { resolveAccountShellErrorCopy } from '../lib/account-shell-copy';
 
 const tierLabels = [
   ['free', 'Free'],
@@ -55,29 +52,11 @@ assert.equal(
   'Widget delivery is unavailable right now. Please try again.',
 );
 assert.equal(
-  resolveAccountShellErrorCopy('tokyo.errors.publicCache.purgeConfigMissing', 'fallback'),
-  'Public delivery cache is not configured. Please try again after it is configured.',
+  resolveAccountShellErrorCopy('coreui.errors.instance.commandInProgress', 'fallback'),
+  'Another widget update is finishing. Please try again in a moment.',
 );
 assert.equal(
-  resolveAccountShellErrorCopy('tokyo.errors.publicCache.purgeFailed', 'fallback'),
-  'Public delivery could not be refreshed. Please try again.',
+  resolveAccountShellErrorCopy('coreui.errors.instance.sourceChanged', 'fallback'),
+  'Saved changes changed while this widget was being prepared. Publish again.',
 );
-assert.equal(
-  resolveAccountShellErrorCopy('coreui.errors.instance.publishInProgress', 'fallback'),
-  'Another Publish is finishing. Please try again in a moment.',
-);
-assert.equal(
-  resolveCommittedPublicationFailureCopy('published', 'tokyo.errors.publicCache.purgeFailed', 'fallback'),
-  'Published, but public delivery could not be refreshed. Republish to retry.',
-);
-assert.equal(
-  resolveCommittedPublicationFailureCopy('unpublished', 'tokyo.errors.publicCache.purgeFailed', 'fallback'),
-  'Unpublished, but public delivery could not be refreshed. Retry public delivery.',
-);
-assert.equal(
-  resolveCommittedPublicationFailureCopy('published', 'tokyo.errors.publicCache.purgeConfigMissing', 'fallback'),
-  'Published, but public delivery cache is not configured. Republish after it is configured.',
-);
-assert.equal(resolveCommittedPublicationFailureCopy('published', 'unknown', 'fallback'), 'fallback');
-
 console.log('PASS account plan, role, locale cleanup, and Publish contention display labels');

@@ -235,19 +235,18 @@ service:
 | `/api/account/usage`                         | Tokyo-worker storage facts plus account policy context        |
 | `/api/account/widget-defaults`               | Roma defaults document backed by Tokyo-worker                 |
 | `/api/builder/:instanceId/open`              | Roma Builder-open envelope backed by Tokyo-worker             |
+| `/api/builder/new/:widgetType/open`          | Roma non-persisting New-draft composition                     |
 | `/widget-editors/:widgetname.json`           | Deploy-built static Bob editor artifact                       |
 | `/api/account/instances/:instanceId/copilot` | Product Copilot `/turn` through Roma grants (SSE relay)       |
 
 Roma attaches the account authz capsule and account public id to private
 Tokyo-worker calls.
 
-Current implementation mismatch: Roma's browser consumers still defensively
-normalize Clickeen-produced bootstrap and Widget-list results and cross-check
-their account coordinates. The account storage-usage client also coerces and
-revalidates Tokyo-worker's successful `storageBytesUsed` result. Those paths are
-legacy closed-system debt. Authentication and authorization at the route
-boundary remain; downstream semantic revalidation of the owner result must be
-removed rather than standardized.
+Local implementation consumes Berlin's exact bootstrap/account/authz result,
+Roma's exact Widget-list result, and Tokyo-worker's exact integer
+`storageBytesUsed` result. HTTP/session handling, auth expiry, route
+authentication, and authorization remain at their owning boundaries; browser
+consumers do not normalize or cross-check those Clickeen-produced semantics.
 
 Current account-governance routes include:
 
@@ -259,30 +258,45 @@ Current account-governance routes include:
 
 ## Builder Orchestration
 
-Builder opens one saved widget instance:
+Builder opens either a saved instance or a New draft:
 
-1. Resolve the current Roma account and `instanceId`.
-2. Load `instance.config.json`, `instance.content.json`, and the account font
-   library through
-   `GET /api/builder/:instanceId/open`.
-3. Recompose the two physical source files by their exact content coordinates
-   into one complete logical `instanceData` document containing every shared
-   Header/Stage/Pod/capability and Core value.
-4. Load the deploy-built Widget editor artifact.
-5. Wait for Bob `bob:session-ready`.
-6. Send `ck:open-editor` with the deploy-built editor artifact containing the
-   editing declarations and Widget software,
-   complete `instanceData`, account font library, policy, account public id,
-   instance id, label, publish state, and exact public-action values or `null`.
-7. Receive `bob:open-editor-applied` or `bob:open-editor-failed`.
+1. Resolve the current Roma account and the discriminated target:
+   `instanceId` for saved, `widgetType` for New.
+2. Saved uses `GET /api/builder/:instanceId/open` to load and recompose the
+   exact source plus account font library. New uses
+   `GET /api/builder/new/:widgetType/open` to compose exact account defaults in
+   memory and performs no instance/source/package/serve-state write.
+3. Load the deploy-built Widget editor artifact.
+4. Wait for Bob `bob:session-ready`.
+5. Send one `ck:open-editor` with the deploy-built editing declarations and
+   Widget software, complete `instanceData`, account font library, policy,
+   account public id, optional instance id, and label. Publication status,
+   timestamps, receipt, URL, and actions remain in Roma and do not enter Bob.
+6. Receive `bob:open-editor-applied` or `bob:open-editor-failed`.
 
 `NEXT_PUBLIC_BOB_URL` is required and must be an `http` or `https` origin with
 no path, query, or hash. Missing or malformed Bob origin config fails Builder
 instead of falling back to another origin.
 
-Bob edits in browser memory. Save sends the current Widget document back to
-Roma. Roma performs the current-account Save command and Tokyo-worker writes
-the saved source under:
+Bob edits in browser memory. `save-instance` sends the current Widget document
+back to Roma as `config`; Bob adds `widgetType` only while there is no saved
+instance ID. On that First Save, Roma POSTs the exact `{ widgetType, config }`,
+mints the ID, writes the first editable source through Tokyo-worker, upserts its
+Widgets cache, replaces `/builder/new/:widgetType` with
+`/builder/:instanceId` through the History API, and replies HTTP 201 with the ID
+and the exact current account `baseLocale` persisted with that source. Bob
+adopts both through the existing Save result into its current
+`meta`/`translationSetup`, without a second open handshake, message, or iframe
+remount. This keeps Bob aligned with the locale used for that Save; it does not
+serialize First Save against a simultaneous account-locale PATCH across
+authorities.
+
+With an ID, Roma PUT receives `{ config }` only. Its browser ingress requires
+the payload and `config` to be records, then loads the exact account-scoped
+saved list fact from Tokyo-worker and uses that stored `widgetType` to select
+the compiled Widget artifact. It does not read, compare, or revalidate a caller
+`widgetType`. Roma then prepares the semantic source and patches the returned
+`updatedAt`. Tokyo-worker writes saved source under:
 
 ```text
 accounts/{accountPublicId}/instances/{instanceId}/
@@ -290,9 +304,9 @@ accounts/{accountPublicId}/instances/{instanceId}/
 
 The current Widget document is one complete logical instance: its shared
 Header/Stage/Pod/Core-size/appearance/typography/chrome values and its Widget
-Core values travel together. Roma resolves that document into
-`instance.config.json` plus `instance.content.json`; those files are a physical
-localization/source split, not separate instances or competing schemas.
+Core values travel together. Roma prepares exact config and content payloads;
+Tokyo stores them together with source metadata as one atomic
+`instance.source.json`.
 
 The Builder-open envelope includes Roma's exact current-account policy snapshot
 and the trusted compiled Widget limit/message association. Bob's shared edit
@@ -333,10 +347,10 @@ styles.css  complete shared and Core presentation
 runtime.js  mandatory Widget and shared visitor behavior
 ```
 
-This materializer is the sole generator of the files that will be served. Roma
-invokes it only on explicit allowed Publish. Tokyo-worker receives the resulting
-strings and performs the physical R2 writes; it never creates, compiles,
-renders, or alters Widget HTML/CSS/JavaScript.
+This materializer is the sole generator of the logical files that will be served.
+Roma invokes it only on explicit allowed Publish. Tokyo-worker receives the resulting
+strings and stores them together in one atomic published `serve-state.json`; it
+never creates, compiles, renders, or alters Widget HTML/CSS/JavaScript.
 
 Initial public content and presentation exist before `runtime.js` runs. The
 materializer may
@@ -346,8 +360,9 @@ the Publish operation; the saved source remains unchanged. Publish uses the
 exact base locale already stored on that editable instance. Duplicate creates
 the destination instance with the destination account's current base locale;
 it does not copy locale authority from the source instance. Tokyo-worker trusts and stores the submitted
-files; it does not render, compile, validate, infer, fingerprint, or repair
-Widget package bytes. Create writes editable source; Save updates editable
+logical members; it does not render, compile, validate, infer, fingerprint, or repair
+Widget package bytes. New composes an unsaved browser draft and writes
+nothing; first Save creates editable source; later Save updates editable
 source; Duplicate creates new unpublished editable source. None generates a
 public package.
 
@@ -383,7 +398,7 @@ Roma does not re-evaluate Widget-bound tier limits during Save. Bob's shared
 editing boundary already used Roma's exact policy snapshot before accepting
 each governed manual or Copilot edit, so the complete draft is trusted
 Clickeen truth. Save stores that exact accepted draft through Tokyo-worker.
-Account commands that originate in Roma—such as Create, Duplicate,
+Account commands that originate in Roma—such as first Save, Duplicate,
 Publish, locale changes, or uploads—remain Roma-owned policy boundaries and are
 gated once when their own user intent occurs.
 
@@ -424,34 +439,26 @@ through Tokyo-worker. If deletion fails after the settings write, Roma returns
 the saved settings with `localeCleanup.ok: false` and the exact failed
 coordinate. The account setting remains the user decision and account truth.
 
-Roma owns public widget action truth for the current account and opened
-instance. It builds the public URL and complete iframe snippet from the current
-account public id, the exact instance id, the configured public-serving
-origin, and the publish status returned by the Builder-open envelope.
-It sends that exact complete set to Bob, where TopDrawer presents Publish or
-Republish for a clean saved draft, Open public widget when published, and one
-Copy code intent under More. Roma answers that intent with the
-same Dieter Popup used by the Widgets inventory; the Popup presents the exact
-URL and complete iframe value and owns browser copy. Bob does not reconstruct
-or copy those values. Unpublished instances receive `publicActions: null` and
-expose no live public action. Bob's `bob:host-action` message carries
-`open-navigation`, `copy-code`, or `publish` intent; Roma retains navigation,
-Publish, public-action, and unsaved-work authority. Publish never silently
-Saves a dirty draft. After successful Publish or Republish, Roma reopens the
-same instance so Bob receives exact current publication status and actions.
-If publication truth commits but the following Worker-owned cache purge fails,
-the same Roma route preserves the HTTP `502` purge failure, or HTTP `503`
-missing Worker-cache-context failure, and returns `ok: false` together with
-Tokyo's exact
-`committed: { instanceId, status, changed }` transition. Builder reopens the
-exact instance so Bob receives the authoritative publication status and public
-actions, then Roma shows a durable account-shell banner with the exact
-delivery-refresh result and the existing command to retry. The message is not
-placed in the ToolDrawer or an upsell Popup, and it does not say the committed
-Publish or Unpublish failed.
-This committed-result reconciliation is implemented in the current local
-source; cloud-dev deployment and runtime proof remain pending in this
-reconciliation.
+Roma owns public widget action truth for the current account and opened saved
+instance. One shared publication control is rendered in Widgets inventory rows
+and Roma's slim Builder header. It derives Publish/Republish/Unpublish and the
+published receipt from exact `updatedAt`, `publishedAt`, and publication status,
+and builds public URL/code actions from the current account and instance
+coordinate. Bob receives none of those facts or actions.
+
+Tokyo is the single timestamp writer. Save and Rename each return `updatedAt`
+strictly later than the previous `updatedAt` and any `publishedAt`.
+Publish/Republish returns `publishedAt` strictly later than both the exact
+source revision it commits and the prior `publishedAt`. Roma compares those
+authoritative coordinates directly; it adds no validator
+or same-millisecond workaround.
+
+Publish never silently Saves a dirty draft. Roma mirrors Bob's dirty boolean
+only to disable Publish/Republish with **Save first**; Unpublish remains
+available because it does not consume the draft. A successful publication
+command updates Roma's publication facts without reopening Bob. Cache eviction
+is not a Roma result or UI concern: Tokyo schedules it after the owning
+mutation, and no Roma route, banner, retry state, or user copy observes it.
 The copied public URL is slashless:
 
 ```text
@@ -492,25 +499,24 @@ Roma owns their exact Chrome wording and command handlers; Menu Actions owns
 only the shared row presentation and does not interpret or persist the command.
 
 **Widget catalog** renders the canonical widget definitions as Dieter-styled
-cards. A catalog card creates an instance of that widget type; it does not
-represent, count, or group saved account instances. Roma renders only catalog
+cards. A catalog card opens a new unsaved draft of that widget type; it creates
+no instance, identity, source, package, serve state, overlay, or inventory row.
+Leaving before first Save leaves nothing behind. It does not represent, count,
+or group saved account instances. Roma renders only catalog
 metadata supplied by the owning definition and does not invent descriptions,
 categories, badges, or preview media.
 
 Changing routes does not change the account command or storage authority.
-Publication remains a controlled command: the toggle changes only after the
-existing Roma command succeeds and the authoritative instance list refreshes.
-For the exact post-commit purge-failure result, the command itself is not a full
-success but the returned `committed` transition is authoritative publication
-truth. Roma updates the affected row and its Widgets cache from that transition
-and shows the same status-specific account-shell banner: Republish retries a
-committed Publish, and the Widgets banner's **Retry public delivery** action
-retries a committed Unpublish through the same idempotent Unpublish route.
+Publication remains a controlled command: the shared Roma control changes only
+after the existing command succeeds and the exact instance facts refresh.
+Roma immediately patches/upserts its module-scoped Widgets cache after Save so
+the durable inventory reflects first creation and later divergence without a
+five-minute stale window. Cache eviction is outside this product state.
 
 It owns:
 
 - list
-- create
+- new-draft composition and first-Save creation
 - duplicate
 - rename
 - publish
@@ -524,9 +530,9 @@ instances:
 catalog[] + instances[]
 ```
 
-The Widgets list payload does not carry Create, Duplicate, or Publish
+The Widgets list payload does not carry New, Duplicate, or Publish
 availability booleans. Tier limits do not hide catalog items and do not disable
-monetization controls in the list. Create, Duplicate, and Publish remain
+monetization controls in the list. New, Duplicate, and Publish remain
 clickable user-intent actions.
 Role and instance-state rendering stay separate from tier monetization: Roma
 client code derives read-only versus mutable controls from the current account
@@ -538,22 +544,41 @@ rows through the account instance coordinate/list-facts helpers. Tokyo-worker
 returns stored `displayName` as string or `null`; Roma applies the UI fallback
 label for product rendering.
 
-Local implementation: Create and Duplicate do not enforce
-`widgets.instances.max` and write unpublished editable source only. Duplicate
-opens the new duplicate in Bob. Publish enforces
+Local implementation: New and Duplicate do not enforce
+`widgets.instances.max`. New writes nothing; Duplicate writes an immediate
+unpublished editable copy and opens it in Bob. First Save of a New draft mints
+the instance and writes its exact source. Publish enforces
 `instances.published.max` at command time. Roma first uses its computed
 list-facts rows as a fast precheck before invoking the materializer. It then
 passes its exact `instances.published.max` value with the exact generated
-package to Tokyo-worker for the final account-scoped transition. Tokyo applies
-that passed decision against current publication truth through the account's
-one Durable Object coordinator; it does not resolve tier policy again.
+package and exact saved `sourceUpdatedAt` to Tokyo-worker for the final
+account-scoped transition. Tokyo applies that passed decision against current
+source/publication truth through the account's one Durable Object coordinator;
+it does not resolve tier policy again.
 An ordinary over-capacity Publish returns HTTP 402 `UPGRADE_REQUIRED` before
 materialization. In the rare overlap after the precheck, a contender can spend
 transient materializer work, but Tokyo returns HTTP 409
-`PUBLISH_IN_PROGRESS` before storing that contender package or changing its
-publication state. After the winner commits, a later attempt receives the same
-HTTP 402 capacity result. Republish consumes no additional slot. Create and
+`coreui.errors.instance.commandInProgress` before storing that contender package
+or changing publication state. If source changed after Roma materialized it,
+Tokyo returns HTTP 409 `coreui.errors.instance.sourceChanged` before the atomic
+publication write. After a winner commits, a later attempt receives the same
+HTTP 402 capacity result. Republish consumes no additional slot. New and
 Duplicate remain available, and there is no queue or automatic retry.
+
+That account coordinator serializes every existing-instance Save, Rename,
+Publish/Republish, Unpublish, and Delete. First Save and Duplicate create new
+coordinates and do not use this existing-instance critical section. An overlap
+returns the generic command-in-progress result and mutates nothing. The Durable
+Object stores no source, package, policy, count, or publication truth.
+
+For existing-instance Delete, Tokyo's exact product commit is deletion of
+`instance.source.json`, the inventory/open/public-serving visibility anchor.
+Roma trusts that command response and has no cleanup state. Only after the
+response exists does Tokyo schedule residual instance-prefix cleanup through
+`waitUntil`; absence, throw, rejection, partial completion, or pending cleanup
+cannot change the response. Any remaining bytes are unreachable and outside
+the account asset quota.
+
 Roma consumes the git-authored policy matrix as system truth. It does not add a
 runtime malformed-policy validator or silently reinterpret a limit as unlimited
 usage. Authoring/build verification belongs to the authority that produces the
@@ -565,11 +590,27 @@ Widget coordinate, so the system owns their contextual body as well as current
 plan, target plan, and CTA behavior. Roma does not pretend that Widget-owned
 copy exists where the denied action has no Widget-specific meaning.
 
-Create and Duplicate mint the new instance id, store
-the initial editable source, and create no browser package. Publish and
+First Save and Duplicate mint a new instance id, store
+editable source, and create no browser package. New mints and stores nothing.
+Publish and
 unpublish are separate account product actions; only allowed Publish invokes
 materialization before Roma sends the exact product transition and package to
 Tokyo-worker.
+
+Tokyo's physical commit shape is atomic on both sides: First Save writes an
+unpublished `serve-state.json` first and `instance.source.json` last; later
+Save/Rename each replace the source object once. Delete commits by removing the
+exact source object; residual prefix cleanup is deferred and product-inert.
+Publish replaces one
+`serve-state.json` containing `status`, `publishedAt`, and exact logical
+`publicPackage` `{ indexHtml, stylesCss, runtimeJs }`. The public file paths
+remain logical views of those members, not separate R2 objects.
+
+These storage shapes are a pre-GA cutover. After deployment, all legacy
+cloud-dev saved instances require an explicit source cutover or recreation;
+any that should remain public then require explicit Publish/Republish. No
+compatibility reader or migration-on-read exists, and this documentation pass
+performed no remote operation.
 
 ## Assets Domain
 
@@ -601,6 +642,12 @@ Roma current account
   -> Tokyo-worker
   -> accounts/{accountPublicId}/assets/{filename}
 ```
+
+The browser-facing upload route requires an `editor` or higher in an `active`
+current account before it forwards accepted upload metadata and bytes. This is
+Roma product policy. Tokyo-worker verifies service/account authorization and
+owns raw upload and storage safety, but does not repeat the account-status
+decision.
 
 Admin assets use the same path under:
 
@@ -676,8 +723,10 @@ both common and Widget Core defaults.
 Each accepted family transition updates all three values in one draft-state
 update. GET returns Tokyo's exact current document without comparing Widget
 state to ToolDrawer controls. The account-backed controls expose only available
-choices and produce the exact draft that Roma sends to Tokyo without a second
-typography validation pass.
+choices. Because the PUT body is browser input, Roma admits its font library
+and common/Core typography selections once at `/api/account/widget-defaults`
+before they become stored Clickeen truth. Tokyo and later consumers do not
+repeat that validation.
 
 Every initial account font library includes the seven global Clickeen special
 fonts as `source: "tokyo"` records. Account-uploaded fonts remain separate
@@ -685,14 +734,19 @@ fonts as `source: "tokyo"` records. Account-uploaded fonts remain separate
 Roma trusts the authoritative system font library; it does not re-count or
 revalidate the seven product records at Widget Defaults Save.
 
-Account instance Create, Save, and Duplicate write editable source only.
+New writes nothing; first/later Save and Duplicate write editable source only.
 Explicit allowed Publish is the sole package materialization path.
 
-Current implementation mismatch outside this lifecycle: Widget Defaults
-still contains document-shape, product-font-catalog, and relational typography
-validators over Clickeen-produced drafts and libraries. Those duplicate
-internal guards are not part of Publish materialization and the ToolDrawer
-projection must not become a persistence schema under another name.
+Widget Defaults consumes exact deploy-built `CompiledWidget` artifacts. It
+selects the repeated common control surface once from one exact artifact,
+selects each Widget's own Core controls from that Widget's artifact, and
+preserves compiler order. Panel filtering is a UI projection, not validation.
+The browser-facing save route is the single document/typography admission
+boundary. After it accepts the draft and authoritative account font library,
+Tokyo stores the exact document and later consumers trust it without a second
+validator. Raw user/Dieter event admission, capability gating, show-if
+presentation, hydrator lifecycle, authentication, authorization, and Tokyo
+storage failures remain at their owning boundaries.
 
 Account deletion is disabled in the current runtime. Roma does not offer the
 delete-account settings action and `DELETE /api/account` returns an explicit
@@ -708,11 +762,12 @@ while a `continuation` carries `priorModelStepId`, `toolCallId`, `toolName`,
 and `toolResult`. Both kinds carry `sessionId`, `userTurnId`, optional
 `selectedModel`, bounded `conversationHistory`, and a `currentDraftContext`
 capsule with widget identity, locale, draft signature, editable controls/current
-values, available draft actions, and unavailable capabilities. Roma resolves
-account and widget identity from the saved instance context, mints the account
-grant, and pipes the Product Copilot event stream through. Bob keeps apply and
-Undo in browser memory; Roma does not forward those editor actions to a
-separate outcome or learning route.
+values, available draft actions, and unavailable capabilities. Roma authorizes
+the route by reading the exact account-scoped saved-instance fact, without
+loading its source or comparing that source with Bob's draft. It then mints the
+account grant and pipes the Product Copilot event stream through. Bob keeps
+apply and Undo in browser memory; Roma does not forward those editor actions to
+a separate outcome or learning route.
 
 Roma is the sole AI grant signing authority. It holds
 `ROMA_AI_GRANT_PRIVATE_KEY_PEM`; San Francisco, Translation Agent, and
@@ -733,19 +788,20 @@ time. Paid Product Copilot grant policy includes the managed paid model set;
 free policy may remain narrower. The picker owns no model truth, and Roma does
 not silently substitute another provider or model.
 
-Roma authenticates the current account, authorizes the instance route, and
-accepts the externally reachable `CopilotTurnRequest` through the shared
-`parseCopilotTurnRequest` transport parser in `@clickeen/ck-contracts/ai` before
-usage reservation or grant issuance. It then trusts Bob's exact
-`currentDraftContext`, the saved Tokyo instance, and the Product Copilot event
-stream as Clickeen-produced truth. Usage is reserved only on the initial turn;
-continuations pass `skipTurnReservation`.
+Roma authenticates the current account, authorizes the route through the exact
+account-scoped saved-instance fact, and accepts the externally reachable
+`CopilotTurnRequest` through the shared `parseCopilotTurnRequest` transport
+parser in `@clickeen/ck-contracts/ai` before usage reservation or grant
+issuance. It then trusts Bob's exact `currentDraftContext` and the Product
+Copilot event stream as Clickeen-produced truth. It does not reload Tokyo
+source or cross-check source semantics during the turn. Usage is reserved only
+on the initial turn; continuations pass `skipTurnReservation`.
 
-Current implementation mismatch: Product Copilot and Bob still carry degraded
-paths for allegedly invalid Clickeen-produced edit-control metadata. Those
-semantic internal guards are not part of the canonical trust contract.
-Acceptance of the external HTTP request, Bob's edit-operation decision, and
-signed grant authority remain.
+Product Copilot consumes Roma's accepted typed turn directly, and Bob projects
+the exact compiled edit-control metadata plus current draft values without a
+degraded substitute. Acceptance of the external HTTP request, Bob's
+edit-operation decision for the model-produced tool request, and signed grant
+authority remain.
 
 Roma does not infer Copilot failure meaning from HTTP status alone. San
 Francisco/Product Copilot must return explicit reason keys for invalid Product

@@ -1,6 +1,6 @@
 # PRD 129B — Edit And Save Editable Instance
 
-Status: **CLOUD-DEV DEPLOYED — OWNER QA PENDING**
+Status: **LOCAL FIRST-SAVE CORRECTION IMPLEMENTED — CLOUD-DEV VERIFICATION PENDING**
 
 Parent: `129__PRD__Clickeen_Widget_Software_And_Instance_Lifecycle_Architecture.md`
 
@@ -15,7 +15,7 @@ Date: 2026-08-17
 129B defines one product action:
 
 ```text
-open an editable instance in Bob
+open an unsaved New draft or saved editable instance in Bob
 -> edit one browser-memory draft
 -> preview that draft
 -> Save the editable source through Roma
@@ -31,16 +31,16 @@ serve `index.html`, `styles.css`, or `runtime.js`.
 
 Bob opens with:
 
-- the exact instance identity as session context;
-- the exact complete editable state recomposed from
-  `instance.config.json` and `instance.content.json`;
+- `instanceId: null` and an exact account/Widget-default draft for New, or the
+  exact saved instance identity and source for an existing instance;
 - the compiled Widget editor contract;
 - the Widget software needed to preview the draft;
 - exact account policy and account fonts; and
 - the existing Product Copilot, translation, and account-command setup.
 
-The opened instance may be New, Duplicate, Template-created, or previously
-saved. All use the same Bob editing session.
+New and saved instances use the same Bob editing session. Product Copilot and
+Translations require saved instance identity and therefore show **Save first**
+for New; account Assets remain available because they are account-scoped.
 
 Bob open does not require a published package. A never-published instance is a
 normal editable instance.
@@ -72,8 +72,8 @@ The draft contains:
 - every exact Widget Core value; and
 - every exact base-locale customer-content value.
 
-The instance identity remains Bob session context. It is not inserted into the
-Widget's editable state.
+The instance identity remains optional Bob session context. New has no identity
+until first Save; identity is never inserted into editable state.
 
 Manual editing, undo, redo, Product Copilot changes, preview, and Save all act
 on this same draft. There is no second Widget draft, second source shape, or public
@@ -289,17 +289,68 @@ The user may Save repeatedly while editing.
 
 Save sends Roma:
 
-- the exact instance identity as session context; and
-- the exact complete browser-memory draft.
+- the exact complete browser-memory `config` draft;
+- `widgetType` only for first Save, when no stored instance fact exists; and
+- the existing instance identity as route/session context when one exists,
+  with no `widgetType` in that Save body.
 
-Roma prepares the existing source split:
+At the existing-instance route boundary, Roma externally admits a record body
+with record `config`. It loads the exact account-scoped saved-instance list fact
+from Tokyo and consumes that stored fact's `widgetType` to select the existing
+compiled artifact before preparing the source operation. The caller supplies no
+second Widget-type assertion, so no caller `widgetType` comparison or
+revalidation occurs. Tokyo's stored ownership fact is the direct
+artifact-selection input.
+
+Roma prepares one exact editable-source record:
 
 ```text
-instance.config.json
-instance.content.json
+instance.source.json
 ```
 
-Tokyo-worker stores the complete source operation for the existing instance.
+That one record contains the instance metadata, config, and base-locale content.
+There is no physical config/content split.
+
+Without an ID, Roma mints one and Tokyo-worker creates the complete source
+operation using the exact current account `baseLocale` Roma read for that Save.
+Roma's existing `201` Save result returns both the new ID and that exact
+persisted `baseLocale`. Roma adopts the ID, updates its exact inventory fact,
+and replaces `/builder/new/{widgetType}` with `/builder/{instanceId}` in place.
+Bob consumes the same existing account-command result and adopts the new ID and
+`baseLocale` into its session metadata, including
+`translationSetup.baseLocale`. Bob is not reopened and no new message is
+introduced. Tokyo-worker writes the initial unpublished `serve-state.json`
+first and commits `instance.source.json` last. Only that exact source-record
+key makes an instance visible, so a failed first Save cannot expose a
+half-created inventory row. With an ID, Tokyo-worker replaces the existing
+`instance.source.json` in one PUT.
+
+This closes the ordinary response/session coherence gap only. It does not
+serialize first Save with an account-locale `PATCH` that begins concurrently.
+The simultaneous first-Save/base-locale-PATCH race remains separate work and
+is not claimed solved by returning and adopting the persisted locale.
+
+The first Save is the create operation for a newly minted identity. Every later
+Save is an existing-instance command and runs through the same per-account
+`AccountPublicationCoordinator` as Rename, Publish, Unpublish, and Delete. That
+coordinator serializes the mutations rather than asking the commands to infer
+one another's state. If another existing-instance command is active, Save
+receives `409 coreui.errors.instance.commandInProgress`; it performs no write
+and is not queued or retried automatically.
+
+The same exact source key is the later Delete anchor, although Delete remains a
+Roma command rather than a Bob action. Inside the coordinator, removing
+`instance.source.json` is the logical Delete commit. The default Tokyo
+entrypoint schedules residual `serve-state.json`/overlay-prefix cleanup and
+cache eviction afterward through `waitUntil`; neither cleanup outcome can
+change or delay the command result.
+
+Tokyo-worker is the single writer of instance revision coordinates. A
+successful existing-instance Save makes `updatedAt` strictly later than both
+the prior `updatedAt` and any current `publishedAt`. Rename follows the same
+rule. This makes the Roma publication comparison exact even when commands
+begin in the same millisecond; no browser-side validator or timestamp repair
+is required.
 
 Save success means the submitted logical editable instance is the saved
 source. Bob marks that exact submitted draft as saved. If the user made newer
@@ -309,7 +360,8 @@ Save does not:
 
 - invoke the materializer;
 - generate or write `index.html`, `styles.css`, or `runtime.js`;
-- change `serve-state.json`;
+- change `serve-state.json` after the first Save has created its initial
+  unpublished truth;
 - apply publication capacity;
 - publish or unpublish;
 - change the current public package;
@@ -359,9 +411,18 @@ This is normal after the user edits and Saves a published instance.
 Visitors continue receiving the last published package. Nothing public changes
 until the user explicitly publishes again under 129C.
 
+Roma's durable divergence fact is the direct comparison
+`updatedAt > publishedAt`. Save and Rename always move `updatedAt` strictly
+past the prior publication coordinate, and a successful Publish/Republish moves
+`publishedAt` strictly past both the exact saved `sourceUpdatedAt` it committed
+and the prior `publishedAt`. The Republish state and refreshed publication
+receipt therefore come from Tokyo's two single-writer facts, not from client
+timing or a second validation pass.
+
 ## 11. Publish Handoff
 
-Publish is a separate user intent sent through Roma.
+Publish is a separate Roma-owned user command. Bob sends no Publish intent and
+receives no publication state.
 
 129B hands 129C:
 
@@ -373,8 +434,9 @@ exact current saved source
 explicit Publish intent
 ```
 
-Publish does not silently Save the draft. If Bob contains unsaved changes, the
-user Saves first and then Publishes.
+Publish does not silently Save the draft. Roma already mirrors Bob's dirty
+boolean for navigation protection and uses it to disable Publish/Republish with
+**Save first**; Unpublish remains available.
 
 129B does not decide publication capacity, invoke the materializer, store the
 package, or change public truth.
@@ -384,10 +446,10 @@ package, or change public truth.
 | Authority | 129B responsibility |
 | --- | --- |
 | Widget software | Editing declarations, Core preview meaning, limit bindings, Discovery declaration, and Widget upsell copy |
-| Bob | One browser-memory draft, editing, undo/redo, preview, edit-limit decision use, and Save/Publish intents |
+| Bob | One browser-memory draft, editing, undo/redo, preview, edit-limit decision use, and Save only |
 | Product Copilot | Governed model turn and one `apply_widget_ops` tool-call transport |
-| Roma | Current-account Save command and one composed upgrade Popup |
-| Tokyo-worker | Physical storage of the saved source operation |
+| Roma | New-draft composition; first-Save `widgetType` plus config admission; existing-Save config admission and Tokyo-owned stored-`widgetType` artifact selection; result/ID adoption routing; and one composed upgrade Popup |
+| Tokyo-worker | Physical storage of the saved source operation, strict instance revision coordinates, and serialization of later Save with every other existing-instance mutation |
 | Dieter | Shared controls and Popup mechanics |
 
 No shared authority gains Widget-specific meaning.
@@ -406,7 +468,13 @@ No shared authority gains Widget-specific meaning.
 - apply shared Widget edit limits before a denied draft mutation;
 - compose one Roma-hosted upgrade Popup;
 - add the shared **Enable SEO/GEO** edit behavior;
-- make Save write editable source only;
+- make first Save create exact editable source and adopt its returned ID plus
+  persisted `baseLocale` into Bob session metadata and `translationSetup`
+  without reopening Bob or adding a message, and make later Save update source
+  only;
+- send `widgetType` only on first Save; make an existing Save config-only and
+  select its compiled artifact from Tokyo's exact account-scoped stored
+  `widgetType` without a caller comparison;
 - use stable saved content identity for overlay-backed preview; and
 - keep the current published package unchanged after Save.
 
@@ -442,7 +510,7 @@ handoff outside 129B, not an Edit/Save blocker.
 
 ## 16. Local Verification Contract
 
-- New, Duplicate, and existing source-only instances open in Bob without a
+- New drafts, Duplicate, and existing source-only instances open in Bob without a
   published package; any future Template-created instance must use this same
   open path;
 - Builder open makes no instance-package read and sends no `publicPackage` to
@@ -460,7 +528,21 @@ handoff outside 129B, not an Edit/Save blocker.
 - denied governed edits do not alter the draft and open one exact shared Popup;
 - allowed edits alter the draft normally;
 - **Enable SEO/GEO** follows the exact system tier rule;
-- Save changes only the two source files for the exact instance;
+- first Save writes unpublished `serve-state.json` first and commits one exact
+  `instance.source.json` last; only the source key makes the instance visible;
+- later Save replaces that one source artifact and serializes with
+  existing-instance Rename/Publish/Unpublish/Delete;
+- exiting New before Save creates no instance and changes no inventory count;
+- first Save adopts the returned ID and exact persisted `baseLocale` into Bob
+  session metadata and `translationSetup` through the existing command result,
+  without a second `ck:open-editor` or a new message;
+- that adoption does not serialize or solve the simultaneous race between
+  first Save and an account-locale `PATCH`;
+- first Save alone sends `widgetType`; existing Save sends only record `config`,
+  and Roma selects its compiled artifact from the Tokyo-owned saved-instance
+  list fact without caller `widgetType` comparison/revalidation;
+- Bob contains no publication state, status receipt, public action, or
+  Publish/Republish/Unpublish command;
 - Save never invokes package generation or publication work;
 - saving a published instance leaves the public package unchanged;
 - opening or saving after downgrade preserves exact existing content, while a
@@ -476,12 +558,12 @@ handoff outside 129B, not an Edit/Save blocker.
 
 | ID | Required result | Reason |
 | --- | --- | --- |
-| V1 | Pass | Bob consumes exact compiled software, source, policy, denial, and stable identity-keyed overlay truth without positional fallback. |
+| V1 | Pass | Bob consumes exact compiled software, source, policy, denial, and stable identity-keyed overlay truth without positional fallback; existing Save consumes Tokyo's stored `widgetType` without a caller value or substitute. |
 | V2 | Pass | Denied edits remain unapplied; existing downgrade overage is preserved; and Save stores the exact draft without repair. |
-| V3 | Pass | Widget software, one draft, preview context, edit policy, source Save, and Publish handoff remain explicit. |
+| V3 | Pass | Widget software, one draft, preview context, edit policy, first-Save `widgetType` plus config, existing-Save config plus account-scoped stored instance fact, source Save, and Publish handoff remain explicit. |
 | V4 | Pass | Edit limits remain at the governed edit action after downgrade; Save does not become a second gate. |
-| V5 | Pass | A source-only unpublished instance is valid and does not depend on package recovery. |
-| V6 | Pass | Save succeeds only as source persistence; stable overlay identity gives reorder/add/delete their explicit outcomes without claiming translation generation. |
+| V5 | Pass | Exact `instance.source.json` is the visibility/creation/deletion-anchor fact; a source-only unpublished instance is valid, while a failed pre-source creation or unreachable post-Delete residual prefix cannot masquerade as an instance or depend on package recovery. |
+| V6 | Pass | New writes nothing; first Save reports exact creation plus its persisted `baseLocale` through the existing result for in-place session adoption; later Save either reports its exact serialized update or explicit `commandInProgress`; Delete reports exact source-anchor removal without waiting for residual cleanup; strict revision coordinates and stable overlay identity give divergence/reorder/add/delete their explicit outcomes without claiming publication or translation generation. |
 | V7 | Pass | Stored-package preview and public-runtime editor messaging are removed rather than renamed; Save remains source persistence. |
 | V8 | Pass | Verification remains offline evidence, not editing-runtime machinery. |
 
@@ -494,15 +576,25 @@ audit is the implementation evidence.
 all-Widget source-based Bob open/preview: present in cloud-dev
 one browser-memory draft and generic edit decision: present in cloud-dev
 one Roma upsell Popup: present in cloud-dev
-source-only Save: present in cloud-dev
+first/later source-only Save split and in-place ID adoption: implemented locally; cloud-dev verification pending
+first-Save result locale coherence: existing 201 result returns exact new instanceId and persisted account baseLocale; Bob adopts both into session metadata and translationSetup without reopen or new message; implemented locally, cloud-dev verification pending
+simultaneous first-Save/account-locale PATCH: separate race not serialized or solved by result adoption; no resolution claimed in this pass
+Save ingress ownership: first Save carries widgetType plus config; existing Save body is config-only; Roma admits record config, loads Tokyo's exact account-scoped saved-instance list fact, and selects the compiled artifact from stored widgetType without caller widgetType comparison/revalidation; implemented locally, cloud-dev verification pending
+atomic editable source: one instance.source.json containing metadata/config/content, replaced by one PUT; implemented locally, cloud-dev verification pending
+first-Save visibility: initial unpublished serve-state writes first and instance.source.json commits last; only exact source keys enumerate; implemented locally
+instance Delete commit: exact instance.source.json deletion is the logical product result; serve-state/overlay prefix cleanup and cache eviction are scheduled afterward through waitUntil and remain product-inert; implemented locally, cloud-dev verification pending
+legacy cloud-dev source topology: every saved instance using instance.config.json plus instance.content.json requires an explicit pre-GA source cutover or recreation decision; no compatibility input or remote action in this pass
+existing-instance command coordinator: implemented locally for Save/Rename/Publish/Unpublish/Delete; cloud-dev verification pending
+revision coordinates: implemented locally so Save/Rename updatedAt is strictly later than prior updatedAt and publishedAt, while Publish/Republish publishedAt is strictly later than both committed sourceUpdatedAt and prior publishedAt; no cloud-dev verification performed
 stored public package use by Bob preview: removed from the deployed path
 stable overlay identity after repeated-content Save: present in cloud-dev
 positional overlay compatibility path: absent; explicit Generate/delete cutover required for previously stored positional overlays
-account product data: unchanged
+account product data: no remote product-data work performed in this pass
 stored positional-overlay Generate/delete cutover: pending
-republish of affected pre-stable-slot public packages: pending
-product commit: e2ac3589
-main push: performed
-deploy: cloud-dev Worker deploy run `32177053173`, Roma verification run `32177053128`, and reachability run `32177415308` passed for commit `36e65d8a`
-live product: cloud-dev active; owner QA pending
+pre-GA atomic-publication cutover: deploy the corrected runtime, explicitly cut over or recreate every legacy saved instance, then explicitly Publish/Republish each instance intended to remain published so its `serve-state.json` contains the exact logical publicPackage; no compatibility fallback exists
+republish of currently published cloud-dev instances: pending; no remote product-data or Republish work performed in this pass
+prior baseline product commit: e2ac3589; current correction remains uncommitted
+main push: not performed for the current correction
+deploy: not performed for the current correction
+live product: prior Save baseline remains active; corrected first-Save path and owner QA pending
 ```

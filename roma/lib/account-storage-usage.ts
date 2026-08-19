@@ -4,8 +4,12 @@ import {
   fetchTokyoAssetControl,
 } from './tokyo-asset-control';
 
-type TokyoAccountAssetUsagePayload = {
-  storageBytesUsed?: unknown;
+type TokyoAccountAssetUsageSuccess = {
+  accountId: string;
+  storageBytesUsed: number;
+};
+
+type TokyoAccountAssetUsageFailure = {
   error?: { kind?: unknown; reasonKey?: unknown; detail?: unknown };
 };
 
@@ -29,7 +33,7 @@ export function isTokyoAssetUsageError(error: unknown): error is TokyoAssetUsage
   return error instanceof TokyoAssetUsageError;
 }
 
-function resolveTokyoAssetUsageError(payload: TokyoAccountAssetUsagePayload | null, status: number): TokyoAssetUsageError {
+function resolveTokyoAssetUsageError(payload: TokyoAccountAssetUsageFailure | null, status: number): TokyoAssetUsageError {
   const kind = asTrimmedString(payload?.error?.kind) || 'UPSTREAM_UNAVAILABLE';
   const reasonKey = asTrimmedString(payload?.error?.reasonKey);
   const detail = asTrimmedString(payload?.error?.detail);
@@ -55,13 +59,12 @@ export async function readAccountStorageBytesUsed(args: {
       requestId: args.requestId,
     }),
   });
-  const payload = (await response.json().catch(() => null)) as TokyoAccountAssetUsagePayload | null;
+  const payload = (await response.json().catch(() => null)) as
+    | TokyoAccountAssetUsageSuccess
+    | TokyoAccountAssetUsageFailure
+    | null;
   if (!response.ok) {
-    throw resolveTokyoAssetUsageError(payload, response.status);
+    throw resolveTokyoAssetUsageError(payload as TokyoAccountAssetUsageFailure | null, response.status);
   }
-  const storageBytesUsed = Number(payload?.storageBytesUsed);
-  if (!Number.isFinite(storageBytesUsed) || storageBytesUsed < 0) {
-    throw new Error('coreui.errors.assets.usage.invalidPayload');
-  }
-  return Math.trunc(storageBytesUsed);
+  return (payload as TokyoAccountAssetUsageSuccess).storageBytesUsed;
 }

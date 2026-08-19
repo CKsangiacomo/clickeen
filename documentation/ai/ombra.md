@@ -105,7 +105,7 @@ Required checks:
 ```bash
 pnpm --filter @clickeen/sanfrancisco typecheck
 pnpm --filter @clickeen/product-copilot typecheck
-pnpm --filter @clickeen/product-copilot eval:copilot
+pnpm --filter @clickeen/product-copilot test:full-loop
 pnpm --filter @clickeen/translation-agent typecheck
 pnpm --filter @clickeen/translation-agent eval:translation-agent
 ```
@@ -158,7 +158,7 @@ Use static checks plus product-path checks:
 
 ```bash
 pnpm --filter @clickeen/sanfrancisco typecheck
-pnpm --filter @clickeen/product-copilot eval:copilot
+pnpm --filter @clickeen/product-copilot test:full-loop
 pnpm --filter @clickeen/translation-agent eval:translation-agent
 gh run list --branch main --limit 10
 ```
