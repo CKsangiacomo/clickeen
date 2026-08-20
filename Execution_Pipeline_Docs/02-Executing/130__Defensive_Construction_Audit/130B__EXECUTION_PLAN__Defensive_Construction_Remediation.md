@@ -85,8 +85,8 @@ Do not inspect, change, verify, deploy, or opportunistically clean up:
 | Route/API boundary | Existing Roma command routes and existing Bob `save-instance`/Copilot transports |
 | New local protocol | Only `bob:save-control-state` and `host:save-request` inside the existing Roma/Bob iframe bridge |
 | Design authority | Existing Dieter Popup, Button, Spinner, Icon, Table, tokens, and motion |
-| Runtime surface | Roma and Bob Cloudflare Pages from `main`; Dieter source is compiled into those consumers |
-| Verification surface | Focused local behavior suites, deployed cloud-dev Roma/Builder, and owner QA |
+| Runtime surface | Roma and Bob Cloudflare Pages from `main`; the bounded San Francisco correction uses its existing Worker deploy surface; Dieter source is compiled into its consumers |
+| Verification surface | Focused local behavior suites, deployed cloud-dev Roma/Builder continuation flow, San Francisco health, and owner QA |
 
 The division of labor is fixed:
 
@@ -96,7 +96,10 @@ The division of labor is fixed:
   Copilot apply/Undo, and visible Copilot message state.
 - Dieter owns only reusable presentation and mechanics.
 - Tokyo and Michael keep their current storage and relational authority.
-- Product Copilot and San Francisco wire contracts do not change.
+- Product Copilot and San Francisco wire contracts do not change. San
+  Francisco's existing Clickeen-to-AI-SDK message adapter is the only added
+  runtime code authority after live verification exposed its continuation
+  representation defect; Product Copilot is verification-only.
 
 ## 4. Change categories
 
@@ -1117,28 +1120,55 @@ records agree, and the independent audit has no unresolved blocker.
 
 #### Step 16.1 — Commit the complete intended worktree
 
-- [ ] Re-read final status/diff and include every intended edited and untracked
+- [x] Re-read final status/diff and include every intended edited and untracked
       file; do not commit secrets or `.env.local`.
-- [ ] Commit directly on `main` under the owner's explicit authority.
-- [ ] Push `main` directly to `github/main`; no pull request exists in this
+- [x] Commit directly on `main` under the owner's explicit authority.
+- [x] Push `main` directly to `github/main`; no pull request exists in this
       deployment process.
+- [x] Record the deployed Bob/Roma correction revision:
+      `96f19874f7ba83c790377ccd9bb53016810d8c1a`.
 
-#### Step 16.2 — Observe Git-connected Pages only
+#### Step 16.2 — Observe the affected deploy surfaces
 
-- [ ] Run the documented Cloudflare API preflight before Pages inspection.
-- [ ] Observe Bob and Roma Git-connected deployments for the pushed revision.
-- [ ] Do not deploy or troubleshoot Prague, Workers, or unrelated projects.
-- [ ] Record exact commit and deployment IDs/states.
+- [x] Run the documented Cloudflare API preflight before Pages inspection.
+- [x] Observe Bob and Roma Git-connected deployments for the pushed revision.
+- [x] Do not deploy or troubleshoot Prague or unrelated Workers. San Francisco
+      is included only by the bounded Step 16.4 correction.
+- [x] Record exact deployment IDs/states: Bob
+      `33d09782-35d2-47d6-a8cf-20461414ea01` and Roma
+      `5b7ec234-c925-4443-8c3c-671d8b72c9a1`, both terminal success for
+      `96f19874f7ba83c790377ccd9bb53016810d8c1a`.
 
 #### Step 16.3 — Verify the owning live surface
 
 - [ ] Run safe signed-in Builder evidence through the documented browser/E2E
       path: active-turn mode/Undo gate, exact continuation, transcript/Undo
       retention, and Stop/terminal release.
+- [x] Record the attempted live evidence: the edit applied and sent its exact
+      continuation, but both authenticated runs failed at San Francisco's raw
+      AI SDK tool-result representation. This is the blocker closed in Step
+      16.4, not a passed smoke.
 - [ ] Re-run the Roma/Bob Save and confirmation checks that are safe with
       controlled cloud-dev data; record any identity-dependent destructive
       checks as pending rather than risking owner data.
-- [ ] Record product-data mutations and restoration exactly.
+- [x] Record product-data truth: ordinary Copilot usage/model-turn work ran;
+      the Widget edit remained unsaved and unpublished in Bob browser memory;
+      no stored source or publication changed; only ignored local E2E auth
+      state was refreshed.
+
+#### Step 16.4 — Close the continuation adapter defect exposed by live proof
+
+- [x] Record the reachable flow: a successful Bob edit sends its exact tool
+      result through Product Copilot, then San Francisco's AI SDK 7 adapter
+      rejects the raw tool-result object before the continuation model step.
+- [x] Expand the named code authority only to San Francisco's existing
+      Clickeen-contract-to-AI-SDK message adapter and focused test.
+- [x] Wrap the trusted Clickeen tool result in AI SDK 7's exact JSON output
+      member; add no product validator, fallback, route, or protocol.
+- [x] Run San Francisco typecheck/model-turn tests plus the affected Product
+      Copilot contract/full-loop tests.
+- [ ] Push directly to `main`, observe the documented Worker and Pages deploy
+      surfaces for the corrected SHA, and rerun the same signed-in smoke.
 
 **Slice 16 exit gate:** the complete correction is pushed and deployed through
 the documented direct-main process, owning live evidence is recorded honestly,

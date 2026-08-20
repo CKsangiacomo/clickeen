@@ -8,6 +8,7 @@
  */
 
 import assert from 'node:assert/strict';
+import { modelMessageSchema } from 'ai';
 import { HttpError } from '../src/http';
 import {
   convertMessages,
@@ -82,14 +83,23 @@ function testConvertMessages(): void {
   });
 
   assertPass('convert tool-result message', () => {
+    const toolResult = { ok: true, changedPaths: ['title'] };
     const result = convertMessages([
       { role: 'user', content: 'Edit title' },
       { role: 'assistant', content: null, toolCallId: 'call_1', toolName: 'apply_widget_ops', input: {} },
-      { role: 'tool', toolCallId: 'call_1', toolName: 'apply_widget_ops', result: { ok: true, changedPaths: ['title'] } },
+      { role: 'tool', toolCallId: 'call_1', toolName: 'apply_widget_ops', result: toolResult },
     ]);
     assert.equal(result.messages.length, 3);
-    assert.equal(result.messages[2].role, 'tool');
-    assert.ok(Array.isArray(result.messages[2].content));
+    assert.deepEqual(result.messages[2], {
+      role: 'tool',
+      content: [{
+        type: 'tool-result',
+        toolCallId: 'call_1',
+        toolName: 'apply_widget_ops',
+        output: { type: 'json', value: toolResult },
+      }],
+    });
+    for (const message of result.messages) modelMessageSchema.parse(message);
   });
 
   assertPass('assistant text message passes through', () => {

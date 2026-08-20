@@ -8,7 +8,7 @@
 
 import { createOpenAI } from '@ai-sdk/openai';
 import { createDeepSeek } from '@ai-sdk/deepseek';
-import { streamText, generateObject, jsonSchema, type LanguageModel } from 'ai';
+import { streamText, generateObject, jsonSchema, type JSONValue, type LanguageModel } from 'ai';
 
 import { resolveAiAgent, resolveAiModelCapability } from '@clickeen/ck-contracts/ai';
 import { assertCap, resolveGrantBudgets, verifyGrant } from '../grants';
@@ -74,7 +74,15 @@ type AiSdkMessage =
   | { role: 'user'; content: string }
   | { role: 'assistant'; content: string }
   | { role: 'assistant'; content: Array<{ type: 'tool-call'; toolCallId: string; toolName: string; input: unknown }> }
-  | { role: 'tool'; content: Array<{ type: 'tool-result'; toolCallId: string; toolName: string; output: unknown }> };
+  | {
+      role: 'tool';
+      content: Array<{
+        type: 'tool-result';
+        toolCallId: string;
+        toolName: string;
+        output: { type: 'json'; value: JSONValue };
+      }>;
+    };
 
 export function convertMessages(messages: ModelTurnMessage[]): { instructions?: string; messages: AiSdkMessage[] } {
   let instructions: string | undefined;
@@ -97,7 +105,12 @@ export function convertMessages(messages: ModelTurnMessage[]): { instructions?: 
     } else if (msg.role === 'tool') {
       converted.push({
         role: 'tool',
-        content: [{ type: 'tool-result', toolCallId: msg.toolCallId, toolName: msg.toolName, output: msg.result }],
+        content: [{
+          type: 'tool-result',
+          toolCallId: msg.toolCallId,
+          toolName: msg.toolName,
+          output: { type: 'json', value: msg.result as JSONValue },
+        }],
       });
     }
   }

@@ -68,7 +68,11 @@ every event so callers can correlate steps across continuations.
 Internal execution uses the AI SDK (`ai`, `@ai-sdk/openai`,
 `@ai-sdk/deepseek`). The AI SDK is internal plumbing only; the wire contract is
 the Clickeen-owned `model-turn-types.ts`. San Francisco never exposes AI SDK
-types on the wire.
+types on the wire. At this adapter boundary, a trusted Clickeen tool-result
+message becomes the AI SDK 7 JSON output shape
+`{ type: "json", value: result }`. San Francisco does not revalidate or
+reinterpret the result; it expresses the same exact JSON value in the SDK's
+required internal representation.
 
 Stream mode returns `content-type: text/event-stream` with these SSE events:
 

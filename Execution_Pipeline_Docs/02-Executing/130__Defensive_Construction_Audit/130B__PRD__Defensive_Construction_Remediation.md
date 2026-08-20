@@ -8,7 +8,9 @@ are tracked in Section 14
 
 **Owner:** Human product owner / architect
 
-**Execution owners:** Roma, Bob, and their existing tests and deployment surfaces
+**Execution owners:** Roma and Bob; San Francisco's existing message adapter and
+Worker deploy surface for the bounded post-deployment continuation correction;
+Product Copilot as verification only
 
 ## 1. Outcome
 
@@ -121,8 +123,8 @@ These exclusions are boundaries, not deferred findings in this PRD.
 | Storage | Existing Tokyo instance/asset storage and Michael account/member truth | No storage shape or data migration |
 | Route/API | Existing Roma command routes and Bob's existing `save-instance` / Copilot transport | Add only the typed Save-control state/click iframe bridge; do not add a route or Save result protocol |
 | Design system | Dieter popup mechanics, buttons, icons, table, tokens, and motion | Reuse mechanics; Roma and Bob retain product meaning and copy |
-| Runtime/deploy | Roma and Bob Cloudflare Pages deployments from `main` | No Prague deployment and no unrelated Worker deployment |
-| Verification | Focused local suites, cloud-dev Roma/Builder surfaces, owner QA | Local checks are not deployed-product proof |
+| Runtime/deploy | Roma and Bob Cloudflare Pages plus the bounded San Francisco Worker correction from `main` | No Prague deployment and no unrelated Worker deployment |
+| Verification | Focused local suites, cloud-dev Roma/Builder continuation flow, San Francisco health, owner QA | Local checks are not deployed-product proof |
 
 ### 5.1 Settled division of labor
 
@@ -556,7 +558,7 @@ Source codes:
 | X1 | Prague signed-in Create intent lands on Home | CU, K | **Excluded:** no Prague work in this pass |
 | X2 | Prague directory cards or embedded previews swallow clicks | CU, K | **Excluded:** no Prague work in this pass |
 | X3 | Catalog/New Builder button wording or journey needs revision | K | **Excluded:** Catalog/New Builder is not worked in this pass |
-| X4 | Any Prague Pages deployment or verification | CX | **Excluded:** this pass deploys only changed Roma/Bob surfaces |
+| X4 | Any Prague Pages deployment or verification | CX | **Excluded:** this pass deploys only the changed Roma/Bob surfaces and the bounded San Francisco correction |
 
 ### 7.9 Audit items that remain unmarked, not findings
 
@@ -951,15 +953,26 @@ canonical manuals, and this execution record. It adds no persistence, route,
 message, SSE event, retry, agent worker, model-history field, or draft-signature
 validation protocol.
 
+After the Bob/Roma correction was deployed, signed-in cloud-dev verification
+proved one adjacent execution-adapter defect on the same required continuation
+path: San Francisco passed Product Copilot's trusted JSON tool result to AI SDK
+7 as a raw object instead of the SDK's typed JSON tool-result output. The
+bounded correction therefore also includes that one San Francisco adapter
+field and its focused contract test. Product Copilot's Clickeen wire contract
+and authority do not change.
+
 Implementation, focused verification, complete-diff audit, push, deployment,
 and signed-in cloud-dev evidence for this correction are recorded only after
 they occur. The 2026-08-19 evidence in Section 13 remains historical evidence
 for the prior deployed revision and must not be read as proof of the corrected
 revision.
 
-### 14.1 Local correction evidence
+### 14.1 Correction and deployment evidence
 
-As of 2026-08-20, the bounded correction is implemented locally:
+As of 2026-08-20, the Bob/Roma correction is implemented, committed, pushed,
+and deployed. The San Francisco adapter correction exposed by the live smoke is
+implemented and locally verified but remains uncommitted, unpushed, and
+undeployed until the next direct-main deployment step:
 
 - Bob keeps active-turn ownership and the current Undo record in its existing
   session-level Copilot state. `ToolDrawer` makes mode switching unavailable
@@ -999,7 +1012,21 @@ bridge fixtures, Widget command gates, UI-copy and account-asset gates, and
 `git diff --check` pass. Bob lint retains only the same three existing cyclic
 callback dependency warnings.
 
-This is local evidence only. The correction remains uncommitted, unpushed, and
-undeployed at this point in the execution record; cloud-dev product evidence
-and any product-data state are recorded separately after the direct-main
-deployment.
+The Bob/Roma correction was committed and pushed as
+`96f19874f7ba83c790377ccd9bb53016810d8c1a`. Bob deployment
+`33d09782-35d2-47d6-a8cf-20461414ea01` and Roma deployment
+`5b7ec234-c925-4443-8c3c-671d8b72c9a1` both reached terminal success for that
+exact revision. The signed-in smoke executed the real edit successfully and
+sent its exact post-apply continuation, then failed visibly because San
+Francisco rejected the continuation's raw AI SDK tool-result output. A second
+run after refreshing the documented Roma auth state reproduced the same
+failure; this is failed live evidence, not a passed smoke.
+
+Those smoke attempts performed ordinary Product Copilot usage reservation and
+model-turn work. The resulting Widget edit remained only in Bob browser memory:
+it was not Saved or Published, so no stored instance source or public package
+changed. The auth writer refreshed only the ignored local E2E browser state.
+San Francisco typecheck and model-turn tests plus Product Copilot's turn-contract
+and full-loop tests pass for the local adapter correction. Its push, Worker
+deployment, final Pages observations, and repeated signed-in smoke remain the
+next execution step.
