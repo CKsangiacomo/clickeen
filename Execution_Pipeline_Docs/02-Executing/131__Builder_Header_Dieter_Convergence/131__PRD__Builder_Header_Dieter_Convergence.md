@@ -1,6 +1,6 @@
 # PRD 131 — Builder Header Dieter Convergence
 
-Status: **UNIFIED HEADER DEPLOYED AND VERIFIED IN CLOUD-DEV — OWNER VISUAL ACCEPTANCE PENDING**
+Status: **LOCAL HEADER-RHYTHM CORRECTION COMPLETE — CLOUD-DEV DEPLOYMENT AND OWNER VISUAL ACCEPTANCE PENDING**
 
 Owner: Clickeen product owner/architect
 
@@ -171,7 +171,8 @@ page__header[data-width="contained|full"]
 - Desktop centers the two direct children on one cross-axis. Compact stacks
   and leading-aligns them.
 - `contained` retains the centered `80rem` ordinary Page maximum. `full`
-  removes that maximum and owns the existing full-canvas header padding.
+  removes that maximum and owns only the standard inline Page inset; width
+  mode does not own block rhythm.
 - One stateless Roma `RomaPageHeader` always renders both named children and
   owns `h1.heading-2`. Callers supply only the title, existing navigation
   trigger, existing filter/state content, existing actions, and the bounded
@@ -212,3 +213,28 @@ independent V1-V8 audit: PASS on all eight; no remaining blocker
 product data: unchanged
 owner visual acceptance: pending
 ```
+
+## 12. Width-Only Header Rhythm Correction (2026-08-19, owner-directed)
+
+The first unified-header deployment exposed one remaining geometry mistake:
+the `full` width selector still carried `--space-2` block padding while the
+Builder Page removed all outer padding. That made width mode change vertical
+rhythm and produced a 24px visual separation above Bob instead of the same
+16px header/content separation used by ordinary Roma pages.
+
+The local correction restores the simple ownership law:
+
+- `page__header[data-width='full']` owns only full outer width and the standard
+  `--layout-page-padding` inline inset. It has no block padding.
+- `.roma-builder-page` retains the standard Page top inset while keeping zero
+  Page inline and bottom padding, so Bob remains full canvas.
+- the shared `page__header` `margin-block-end: var(--space-4)` is the one and
+  only gap between every Roma header and the surface below it.
+- contained headers, title and action composition, publication controls,
+  borrowed Save presentation, navigation, Bob iframe geometry, and all command
+  handlers are unchanged.
+
+Source, contract, governance, generated DevStudio reveal, Roma regression
+tests, and browser geometry assertions are updated together. Local verification
+is complete; commit, push, cloud-dev deployment, authenticated runtime evidence,
+and owner visual acceptance remain pending for this correction.

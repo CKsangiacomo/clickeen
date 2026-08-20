@@ -65,10 +65,14 @@ layering are owned by their own UI docs.
   Callers select only `contained` (the centered `80rem` maximum used by
   ordinary Page content) or `full` (no maximum for a deliberately full-width
   canvas such as Roma Builder). Width does not alter the header's inner
-  structure. Full Page rhythm is `--space-4` outer padding with
-  `--space-4` header and content separation. Compact uses `--space-4` outer
-  padding with `--space-3` header and content separation. These are not
-  duplicated as layout aliases.
+  structure or block rhythm: `full` adds only the standard
+  `--layout-page-padding` inline inset. The Page owns its outer top inset, and
+  the shared header owns the sole downstream separation through
+  `margin-block-end`. Full Page rhythm is `--space-4` outer padding with
+  `--space-4` header and content separation. A full-canvas consumer may remove
+  Page inline and bottom padding while retaining that top inset; Roma Builder
+  does so for Bob. Compact uses `--space-4` outer padding with `--space-3`
+  header and content separation. These are not duplicated as layout aliases.
 - **Vertical rhythm** - `--vertspace-1` through `--vertspace-9`. Use this for
   compact vertical breathing room inside dense controls where structural
   spacing is too coarse.

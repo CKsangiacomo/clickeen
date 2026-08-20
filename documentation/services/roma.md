@@ -75,12 +75,14 @@ block padding and `--space-2` internal gaps, while secondary cards use
 remains roomier. These are direct uses of the
 existing structural spacing scale, not a second density system.
 
-The active `/builder/:instanceId` and `/builder/new/:widgetType` routes give
-the padding-free, unconstrained body below the header to Bob. Their one Roma
+The active `/builder/:instanceId` and `/builder/new/:widgetType` routes retain
+the standard Page top inset, then give the padding-free, unconstrained body
+below the header to Bob. Their one Roma
 header uses the same `RomaPageHeader` grammar and control roles as ordinary
 domains, selecting only Dieter's `full` width so its outer width follows the
 editor canvas. Its standard Roma/Dieter inline inset remains independent of
-Bob's tighter internal workspace inset. That Roma header is the only Builder
+Bob's tighter internal workspace inset. The width mode adds no block padding;
+the shared header's block-end margin is the sole gap above Bob. That Roma header is the only Builder
 header. Bob owns Save truth and
 borrows the far-right Roma action slot only while its exact presentation phase
 is `save`, `saving`, or `saved`; Roma renders that phase and sends the one
@@ -470,7 +472,9 @@ coordinate. The account setting remains the user decision and account truth.
 
 Roma owns public widget action truth for the current account and opened saved
 instance. One shared publication control is rendered in Widgets inventory rows
-and Roma's slim Builder header. It derives Publish/Republish/Unpublish and the
+and Roma's shared Builder header. That header retains the one Roma grammar and
+vertical rhythm while selecting full-width geometry for Bob's canvas. It
+derives Publish/Republish/Unpublish and the
 published receipt from exact `updatedAt`, `publishedAt`, and publication status,
 and builds public URL/code actions from the current account and instance
 coordinate. Bob receives none of those facts or actions.

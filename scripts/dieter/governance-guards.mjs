@@ -193,7 +193,7 @@ function assertLayoutCoverage() {
       JSON.stringify({
         maxInlineSize: 'none',
         marginInline: '0',
-        padding: 'var(--space-2) var(--layout-page-padding)',
+        paddingInline: 'var(--layout-page-padding)',
       })
   ) {
     fail('main-container layout spec does not match the exact Page header width contract');
@@ -222,7 +222,7 @@ function assertLayoutCoverage() {
   const requiredCss = [
     '.page__header {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: var(--space-4);\n  box-sizing: border-box;\n  inline-size: 100%;\n  margin-block-end: var(--space-4);\n}',
     ".page__header[data-width='contained'] {\n  max-inline-size: 80rem;\n  margin-inline: auto;\n}",
-    ".page__header[data-width='full'] {\n  max-inline-size: none;\n  margin-inline: 0;\n  padding: var(--space-2) var(--layout-page-padding);\n}",
+    ".page__header[data-width='full'] {\n  max-inline-size: none;\n  margin-inline: 0;\n  padding-inline: var(--layout-page-padding);\n}",
     '.page__heading {',
     '  .page__header {\n    flex-direction: column;\n    align-items: flex-start;\n    gap: var(--space-3);\n    margin-block-end: var(--space-3);\n  }',
     '.page__heading,\n  .page__actions {\n    inline-size: 100%;\n    justify-content: flex-start;',

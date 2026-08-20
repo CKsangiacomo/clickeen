@@ -108,7 +108,9 @@ width mode rather than the ordinary contained `80rem` page column, so the
 header's outer width follows Bob's canvas below it while its internal
 horizontal inset remains the standard Roma/Dieter
 `--layout-page-padding`. The width choice does not change alignment, action
-order, state, or behavior. Bob's own container keeps its independent `space-2`
+order, state, behavior, or block rhythm. Roma's Builder Page retains the
+standard top inset and the shared header's block-end margin is the sole gap
+above Bob. Bob's own container keeps its independent `space-2`
 workspace inset. The Widgets inventory keeps its own row kit. Roma's header is
 the only Builder header and owns publication
 state/actions and compact Roma navigation. Bob has no header and receives no

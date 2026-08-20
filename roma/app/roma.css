@@ -113,7 +113,7 @@ a {
 }
 
 .main-container > .page.roma-builder-page {
-  padding: 0;
+  padding: var(--layout-page-padding) 0 0;
 }
 
 .roma-builder-page > .page__content {

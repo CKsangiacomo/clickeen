@@ -309,6 +309,14 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
   assert.match(mainContainerSpec, /"values": \["contained", "full"\]/);
   assert.match(mainContainerCss, /\.page__header\[data-width='contained'\]/);
   assert.match(mainContainerCss, /\.page__header\[data-width='full'\]/);
+  assert.match(
+    mainContainerCss,
+    /\.page__header\[data-width='full'\] \{[^}]*padding-inline: var\(--layout-page-padding\);/,
+  );
+  assert.doesNotMatch(
+    mainContainerCss,
+    /\.page__header\[data-width='full'\] \{[^}]*padding(?:-block)?:/,
+  );
   assert.match(shell, /className="page__content"/);
   assert.match(shell, /matchMedia\('\(min-width: 600px\) and \(min-height: 600px\)'\)/);
   assert.match(shell, /data-navigation-open=\{navigationOpen \? 'true' : undefined\}/);
@@ -321,7 +329,10 @@ async function testDieterLayoutTableAndPopupConsumption(): Promise<void> {
   );
   assert.doesNotMatch(romaCss, /pointer:\s*coarse|orientation:\s*portrait/);
   assert.doesNotMatch(romaCss, /\.roma-page-heading|\.roma-builder-page \.page__header/);
-  assert.match(romaCss, /\.main-container > \.page\.roma-builder-page \{\s+padding: 0;/);
+  assert.match(
+    romaCss,
+    /\.main-container > \.page\.roma-builder-page \{\s+padding: var\(--layout-page-padding\) 0 0;/,
+  );
   assert.match(romaCss, /\.roma-builder-page > \.page__content \{[\s\S]*?max-inline-size: none;[\s\S]*?margin: 0;/);
   assert.match(tableCss, /border-radius: var\(--control-radius-lg\);/);
   assert.doesNotMatch(tableCss, /box-shadow:/);

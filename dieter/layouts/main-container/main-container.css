@@ -82,7 +82,7 @@
 .page__header[data-width='full'] {
   max-inline-size: none;
   margin-inline: 0;
-  padding: var(--space-2) var(--layout-page-padding);
+  padding-inline: var(--layout-page-padding);
 }
 
 .page__heading h1,
