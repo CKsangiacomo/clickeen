@@ -124,6 +124,14 @@ The governing component product law is:
   label. Button composes the ordinary current-color Spinner before that label
   and derives its size from the Button's existing icon ladder. Spinner never
   starts, retries, completes, or interprets the command.
+- Button may carry the optional colour axis `data-tone`. `positive` uses the
+  system green treatment and `saveonly` uses the system pink treatment, both
+  with white labels. Tone is orthogonal to the required `data-type` hierarchy:
+  type states how prominent the action is, tone states which standing colour it
+  carries. `saveonly` is reserved for a Save control and must not be reused for
+  another action. Colour precedence is `type` then `tone` then `data-state`, so
+  a toned Button showing a successful result still renders the green result
+  treatment.
 - Button may carry the optional presentation state `data-state="success"`.
   It preserves the required size/type grammar, geometry, direct-child Icon and
   label composition, and disabled behavior while using the system green/white

@@ -38,8 +38,7 @@
   white-space: normal;
 }
 
-.diet-tooltip:hover::after,
-.diet-tooltip:focus-within::after {
+.diet-tooltip:hover::after {
   opacity: 1;
   visibility: visible;
 }

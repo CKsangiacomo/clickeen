@@ -498,8 +498,10 @@ authoritative coordinates directly; it adds no validator
 or same-millisecond workaround.
 
 Publish never silently Saves a dirty draft. Roma mirrors Bob's dirty boolean
-only to disable Publish/Republish with **Save first**; Unpublish remains
-available because it does not consume the draft. A successful publication
+only to disable Publish/Republish; the Builder header carries no separate
+**Save first** hint text or Republish tooltip, because the disabled control and
+the Save control already express that state. Unpublish remains available
+because it does not consume the draft. A successful publication
 command updates Roma's publication facts without reopening Bob. Cache eviction
 is not a Roma result or UI concern: Tokyo schedules it after the owning
 mutation, and no Roma route, banner, retry state, or user copy observes it.

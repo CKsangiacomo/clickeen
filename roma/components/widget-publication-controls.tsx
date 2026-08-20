@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type CSSProperties } from 'react';
 import { resolveAccountShellErrorCopy } from '../lib/account-shell-copy';
 import { buildWidgetPublicActions } from '../lib/public-widget-actions';
 import { useRomaAccountApi } from './account-api';
@@ -277,19 +277,27 @@ export function WidgetPublicationControls({
             className="diet-button"
             data-size={controlSize}
             data-type="primary"
+            data-tone="positive"
             type="button"
             disabled={!status.canMutate || disabled || Boolean(status.pendingStatus) || dirty}
             aria-busy={status.pendingStatus === 'published' || undefined}
-            title={dirty ? 'Save first' : undefined}
             onClick={() => void status.changeStatus('published')}
           >
             {status.pendingStatus === 'published' ? (
               <span className="diet-spinner" aria-hidden="true" />
-            ) : null}
+            ) : (
+              <span
+                className="diet-icon diet-icon-mask"
+                aria-hidden="true"
+                style={{
+                  '--diet-icon-source':
+                    'url("/dieter/icons/svg/arrow.trianglehead.2.counterclockwise.svg")',
+                } as CSSProperties}
+              />
+            )}
             <span className="diet-button__label">Republish</span>
           </button>
         ) : null}
-        {dirty ? <span className="body-xs">Save first</span> : null}
         {publicActions ? (
           <>
             <a
@@ -309,6 +317,13 @@ export function WidgetPublicationControls({
               type="button"
               onClick={() => setCopyCodeOpen(true)}
             >
+              <span
+                className="diet-icon diet-icon-mask"
+                aria-hidden="true"
+                style={{
+                  '--diet-icon-source': 'url("/dieter/icons/svg/square.on.square.svg")',
+                } as CSSProperties}
+              />
               <span className="diet-button__label">Copy code</span>
             </button>
           </>

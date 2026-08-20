@@ -1373,6 +1373,7 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
                 className="diet-button"
                 data-size="large"
                 data-type="primary"
+                data-tone="saveonly"
                 type="button"
                 onClick={requestBobSave}
               >
@@ -1384,6 +1385,7 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
                 className="diet-button"
                 data-size="large"
                 data-type="primary"
+                data-tone="saveonly"
                 data-loading="true"
                 type="button"
                 aria-busy="true"

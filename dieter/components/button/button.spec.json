@@ -1,26 +1,92 @@
 {
   "component": "button",
-  "syntax": "<button class='diet-button' data-size='{{SIZE}}' data-type='{{TYPE}}'>…</button>",
+  "syntax": "<button class='diet-button' data-size='{{SIZE}}' data-type='{{TYPE}}'>\u2026</button>",
   "attributes": {
-    "size": { "enum": ["small", "medium", "large"], "required": true },
-    "type": { "enum": ["primary", "secondary", "tertiary", "quaternary"], "required": true },
-    "state": { "enum": ["success"], "optional": true },
-    "ariaLabel": { "optional": true },
-    "label": { "optional": true },
-    "iconStart": { "optional": true },
-    "iconEnd": { "optional": true },
-    "iconSize": { "enum": ["12", "16", "20", "24", "28", "32", "36", "40"], "optional": true },
-    "loading": { "optional": true },
-    "tabIndex": { "optional": true },
-    "disabled": { "optional": true },
-    "path": { "optional": true }
+    "size": {
+      "enum": [
+        "small",
+        "medium",
+        "large"
+      ],
+      "required": true
+    },
+    "type": {
+      "enum": [
+        "primary",
+        "secondary",
+        "tertiary",
+        "quaternary"
+      ],
+      "required": true
+    },
+    "tone": {
+      "enum": [
+        "positive",
+        "saveonly"
+      ],
+      "optional": true
+    },
+    "state": {
+      "enum": [
+        "success"
+      ],
+      "optional": true
+    },
+    "ariaLabel": {
+      "optional": true
+    },
+    "label": {
+      "optional": true
+    },
+    "iconStart": {
+      "optional": true
+    },
+    "iconEnd": {
+      "optional": true
+    },
+    "iconSize": {
+      "enum": [
+        "12",
+        "16",
+        "20",
+        "24",
+        "28",
+        "32",
+        "36",
+        "40"
+      ],
+      "optional": true
+    },
+    "loading": {
+      "optional": true
+    },
+    "tabIndex": {
+      "optional": true
+    },
+    "disabled": {
+      "optional": true
+    },
+    "path": {
+      "optional": true
+    }
   },
-  "binding": { "type": "caller-owned-action" },
+  "binding": {
+    "type": "caller-owned-action"
+  },
   "defaults": [
     {
       "id": "button-icon-text-start",
-      "sizes": ["small", "medium", "large"],
-      "types": ["primary", "secondary", "tertiary", "quaternary"],
+      "sizes": [
+        "small",
+        "medium",
+        "large"
+      ],
+      "types": [
+        "primary",
+        "secondary",
+        "tertiary",
+        "quaternary"
+      ],
       "spec": [
         "diet-button",
         "data-size='{{size}}'",
@@ -36,8 +102,17 @@
     },
     {
       "id": "button-icon-text-end",
-      "sizes": ["small", "medium", "large"],
-      "types": ["primary", "secondary", "tertiary", "quaternary"],
+      "sizes": [
+        "small",
+        "medium",
+        "large"
+      ],
+      "types": [
+        "primary",
+        "secondary",
+        "tertiary",
+        "quaternary"
+      ],
       "spec": [
         "diet-button",
         "data-size='{{size}}'",
@@ -53,8 +128,17 @@
     },
     {
       "id": "button-icon",
-      "sizes": ["small", "medium", "large"],
-      "types": ["primary", "secondary", "tertiary", "quaternary"],
+      "sizes": [
+        "small",
+        "medium",
+        "large"
+      ],
+      "types": [
+        "primary",
+        "secondary",
+        "tertiary",
+        "quaternary"
+      ],
       "spec": [
         "diet-button",
         "data-size='{{size}}'",
@@ -70,9 +154,22 @@
     },
     {
       "id": "button-text",
-      "sizes": ["small", "medium", "large"],
-      "types": ["primary", "secondary", "tertiary", "quaternary"],
-      "spec": ["diet-button", "data-size='{{size}}'", "data-type='{{type}}'"],
+      "sizes": [
+        "small",
+        "medium",
+        "large"
+      ],
+      "types": [
+        "primary",
+        "secondary",
+        "tertiary",
+        "quaternary"
+      ],
+      "spec": [
+        "diet-button",
+        "data-size='{{size}}'",
+        "data-type='{{type}}'"
+      ],
       "context": {
         "size": "medium",
         "type": "primary",
@@ -81,8 +178,17 @@
     },
     {
       "id": "button-loading",
-      "sizes": ["small", "medium", "large"],
-      "types": ["primary", "secondary", "tertiary", "quaternary"],
+      "sizes": [
+        "small",
+        "medium",
+        "large"
+      ],
+      "types": [
+        "primary",
+        "secondary",
+        "tertiary",
+        "quaternary"
+      ],
       "spec": [
         "diet-button",
         "data-size='{{size}}'",
@@ -93,15 +199,24 @@
       "context": {
         "size": "medium",
         "type": "primary",
-        "label": "Saving…",
+        "label": "Saving\u2026",
         "loading": true,
         "disabled": true
       }
     },
     {
       "id": "button-success",
-      "sizes": ["small", "medium", "large"],
-      "types": ["primary", "secondary", "tertiary", "quaternary"],
+      "sizes": [
+        "small",
+        "medium",
+        "large"
+      ],
+      "types": [
+        "primary",
+        "secondary",
+        "tertiary",
+        "quaternary"
+      ],
       "spec": [
         "diet-button",
         "data-size='{{size}}'",
@@ -116,6 +231,32 @@
         "label": "Saved",
         "iconStart": "checkmark",
         "disabled": true
+      }
+    },
+    {
+      "id": "button-tone",
+      "sizes": [
+        "small",
+        "medium",
+        "large"
+      ],
+      "tones": [
+        "positive",
+        "saveonly"
+      ],
+      "spec": [
+        "diet-button",
+        "data-size='{{size}}'",
+        "data-type='primary'",
+        "data-tone='{{tone}}'",
+        "caller-owned action label"
+      ],
+      "context": {
+        "size": "large",
+        "type": "primary",
+        "tone": "positive",
+        "label": "Republish",
+        "iconStart": "arrow.trianglehead.2.counterclockwise"
       }
     }
   ]

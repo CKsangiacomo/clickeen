@@ -159,6 +159,12 @@ Button loading composes that ordinary Spinner before a caller-supplied loading
 label. The caller disables the Button and sets `data-loading` plus `aria-busy`
 for the exact lifetime of its command; Button derives Spinner size from its
 existing small/medium/large Icon ladder and does not own the asynchronous work.
+Button also accepts the optional colour axis `data-tone`, with `positive`
+(system green) and `saveonly` (system pink). Tone is orthogonal to the required
+`data-type` hierarchy and is overridden by `data-state="success"`, so colour
+precedence is type, then tone, then state. `saveonly` is reserved for a Save
+control.
+
 Button also accepts the optional presentation state `data-state="success"`.
 That state keeps the Button's existing size, type, children, and disabled
 semantics while using the system green/white result treatment. The caller owns
