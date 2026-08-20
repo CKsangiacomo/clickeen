@@ -1,6 +1,6 @@
 # Localization Capability
 
-STATUS: STABLE OVERLAY CONTRACT DEPLOYED — LITERAL REPEATED-IDENTITY PACKAGE CORRECTION AWAITING DEPLOY/REPUBLISH
+STATUS: STABLE OVERLAY CONTRACT AND LITERAL REPEATED-IDENTITY PACKAGE DEPLOYED AND LIVE-VERIFIED
 
 Last updated: 2026-08-20
 
@@ -282,14 +282,16 @@ relationship without a second SEO/Discovery renderer.
   by the Worker entrypoint. The deployed source schedules Tokyo's owning
   default-entrypoint tag eviction through `waitUntil` and makes its outcome
   product-inert. Cache HIT/MISS or purge success is intentionally not an
-  acceptance gate; ordinary localization and public-serving owner QA remains
-  pending.
-- Agent closure verification on 2026-08-20 proved a separate deployed package
-  producer mismatch: repeated FAQ content paths contained Mustache entity text
-  for `=` and therefore missed the exact stored overlay keys. The local shared
-  producer correction retains unsafe-character escaping while emitting the
-  canonical literal coordinate. Roma/Bob deployment, affected FAQ Republish,
-  and selected-locale repeated-content proof remain pending at this point.
+  acceptance gate. Agent-executed public-serving proof passes independently of
+  cache outcome.
+- Agent closure verification on 2026-08-20 proved and corrected a separate
+  package-producer mismatch: repeated FAQ content paths contained Mustache
+  entity text for `=` and therefore missed the exact stored overlay keys. The
+  shared producer retains unsafe-character escaping while emitting the
+  canonical literal coordinate. Commit `72e75000` is deployed; Roma
+  Republished only `VUWUJ7OQ0Y`; exact source and overlay hashes remained
+  unchanged; and unique French public HTML contains translated scalar and
+  repeated FAQ content before JavaScript.
 
 ## Verification
 

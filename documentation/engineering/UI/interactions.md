@@ -189,7 +189,9 @@ leaves a denied draft unchanged and sends the exact denial identity to Roma.
 Bob's local upsell Popup is removed; Roma hosts the one shared Popup and
 combines exact Widget context with system plan/action truth. Save persists
 editable source only and does not re-evaluate the Widget limit. Cloud-dev
-deploy proof passes; owner QA remains pending.
+deploy proof and focused Roma/Bob policy/UI gates pass. Owner acceptance is
+not an execution gate; billing remains a separate unimplemented product
+surface.
 
 ## Agent Activity
 

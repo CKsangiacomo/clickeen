@@ -184,10 +184,13 @@ owner-produced overlays; they do not project or compare values against saved
 content. The public route and publication gate remain real, and no requested
 locale falls back to base.
 
-The stable overlay contract and generic Tokyo path are deployed. A local
-producer correction for literal repeated identity selectors awaits deployment,
-affected FAQ Republish, and agent-executed selected-locale proof before final
-closure.
+The stable overlay contract, generic Tokyo path, and literal repeated-identity
+producer are deployed from `72e7500072ced840648747d66d60a670538a2f52`.
+Agent closure Republished only FAQ `VUWUJ7OQ0Y` through Roma. Its saved source
+and all 28 exact overlays remained byte-identical; `publishedAt` advanced to
+`2026-08-20T18:21:12.284Z`. Unique public base and French requests proved
+literal repeated `=` coordinates, correct scalar and repeated translations,
+correct base content, and no serving-time compatibility path.
 
 The separate pre-GA atomic source/published-serve-state cutover is complete for
 all four legacy saved cloud-dev instances under `CLICKEEN`; the two public

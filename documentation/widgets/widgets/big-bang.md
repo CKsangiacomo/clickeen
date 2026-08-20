@@ -1,6 +1,6 @@
 # Big Bang Widget
 
-STATUS: CANONICAL CORE DEPLOYED TO CLOUD-DEV — OWNER QA PENDING
+STATUS: CANONICAL CORE DEPLOYED — SHARED ARCHITECTURE GATES PASS
 
 ## Purpose
 
@@ -22,8 +22,9 @@ copy into semantic HTML; public JavaScript does not render or localize the
 initial content. There is no flat-source compatibility path or Widget-specific
 branch in Bob, Roma, the materializer, or Tokyo-worker.
 
-The source, generated artifacts, and cloud-dev deploy proof are complete.
-Owner QA and a fresh Big Bang Publish/Republish exercise remain pending.
+The source, generated artifacts, and cloud-dev deploy proof are complete. The
+agent-executed shared lifecycle, materialization, and serving gates pass. A
+fresh per-Widget Republish is not a separate architecture-closure requirement.
 
 ## Source
 

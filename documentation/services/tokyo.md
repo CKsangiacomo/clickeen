@@ -118,8 +118,8 @@ stable-identity `data-ck-content-path` slots and sets `<html lang>` before
 JavaScript. An authored `data-ck-content-attribute` names the exact HTML
 attribute target; otherwise Tokyo replaces inner content. It does not compare
 a package/source fingerprint, inject browser locale context, or revalidate
-overlay meaning. The deployment and live cloud-dev serving checks pass; owner
-QA remains pending.
+overlay meaning. Deployment and agent-executed base/package/selected-locale
+cloud-dev serving checks pass.
 
 The pre-GA atomic source/published-serve-state cutover is complete for all four
 legacy saved cloud-dev instances under `CLICKEEN`; the two public instances

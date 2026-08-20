@@ -103,7 +103,10 @@ stored overlays: 28 locale files matching the 28 active non-base locales, each
 with the exact 12 stable keys from current saved source. No positional overlay
 or pending Generate/delete cutover remains. Closure verification separately
 found an encoded repeated-key mismatch in the published HTML producer; that is
-a materializer/package correction, not a Babel or overlay-data correction.
+a materializer/package correction, not a Babel or overlay-data correction. The
+producer is deployed from `72e75000`; only FAQ `VUWUJ7OQ0Y` was Republished;
+source and overlay hashes remained unchanged; and selected-locale repeated
+content now passes live proof.
 
 The separate pre-GA atomic `instance.source.json` cutover is complete for all
 four legacy saved cloud-dev instances under `CLICKEEN`; the two public

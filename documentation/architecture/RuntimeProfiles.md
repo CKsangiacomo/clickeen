@@ -1,6 +1,6 @@
 # Runtime Profiles
 
-Last updated: 2026-08-18
+Last updated: 2026-08-20
 
 ## Canonical Runtime Surfaces
 
@@ -114,8 +114,11 @@ deployed and live-verified at product commit `e2ac3589`. The corrected
 New/first-Save/Roma-publication and product-inert cache-eviction flow is
 deployed from commit `a6678966`. Technical cloud-dev reachability,
 authenticated saved-instance Builder open, non-persisting New-open inventory
-truth, live Copilot streaming, and public serving passed on 2026-08-19; owner
-QA remains pending.
+truth, live Copilot streaming, and public serving passed on 2026-08-19.
+Agent-executed closure on 2026-08-20 additionally proved the full disposable
+lifecycle, exact post-test account restoration, Product Copilot continuation/
+Stop behavior, and Roma/Builder geometry. Owner acceptance is not a completion
+gate.
 
 ## Verification
 

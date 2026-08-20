@@ -236,10 +236,10 @@ kind or Widget-specific materializer path.
 
 Runtime code, generated artifacts, cloud-dev deployment, the completed legacy
 source/publication cutover, and public package responses prove the four-phase
-architecture. Closure verification found one package-producer mismatch for
-repeated stable identity selectors; the local generic renderer correction
-still requires deployment, affected FAQ Republish, and agent-executed live
-selected-locale proof before final closure.
+architecture. The generic repeated-identity renderer correction is deployed
+from `72e75000`; only affected FAQ `VUWUJ7OQ0Y` was Republished; its source and
+28 overlays remained exact; and agent-executed base/French public requests
+proved scalar and repeated localization before JavaScript.
 
 ## Current Widgets
 

@@ -235,7 +235,11 @@ atomic source/publication storage, and product-inert background cache eviction
 are deployed from commit `a6678966`. Worker health, Roma and Bob reachability,
 authenticated saved-instance Builder open, non-persisting New-open inventory
 truth, the live Copilot stream, and public `dev.clk.live` package serving passed
-technical cloud-dev verification on 2026-08-19; owner QA remains pending.
+technical cloud-dev verification on 2026-08-19. Agent-executed closure on
+2026-08-20 additionally proved the complete disposable New/Save/Publish/
+Republish/Unpublish/Delete lifecycle with exact baseline restoration, deployed
+Product Copilot completion/Stop behavior, and exact Roma/Builder header
+geometry. Owner acceptance is not a completion gate.
 
 The pre-GA storage cutover is complete for the four legacy saved cloud-dev
 instances under account `CLICKEEN`: each now has atomic

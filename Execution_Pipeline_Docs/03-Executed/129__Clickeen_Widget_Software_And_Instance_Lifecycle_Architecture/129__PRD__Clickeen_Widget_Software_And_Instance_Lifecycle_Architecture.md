@@ -1,6 +1,6 @@
 # PRD 129 — Clickeen Widget Software And Instance Lifecycle
 
-Status: **CLOSURE VERIFICATION IN EXECUTION — REPEATED-IDENTITY LOCALE SERVING CORRECTION REQUIRED 2026-08-20**
+Status: **EXECUTED AND CLOSED — DEPLOYED AND AGENT-VERIFIED 2026-08-20**
 
 Owner: Clickeen product owner/architect
 
@@ -453,9 +453,12 @@ replacement mechanics belong to 129C.
 PRD 129 defines one architecture for every Widget. Big Bang, Cards, Countdown,
 FAQ, and Logo Showcase are the complete deployed implementation and proof set.
 The New/Save/publication-coordinator/atomic-package/cache correction is deployed
-from `a6678966` and technically verified in cloud-dev. Clickeen is pre-GA, so
-neither the old flat Widget source shape nor the prior separate-package-object
-storage shape has a compatibility workflow. Owner QA remains pending.
+from `a6678966`; the literal stable-identity producer correction is deployed
+from `72e7500072ced840648747d66d60a670538a2f52`. Agent-executed cloud-dev
+proof covers the complete disposable lifecycle, exact public package serving,
+selected-locale repeated FAQ localization, and the shared Roma/Bob controls.
+Clickeen is pre-GA, so neither the old flat Widget source shape nor the prior
+separate-package-object storage shape has a compatibility workflow.
 
 ## 14. Execution Order Used
 
@@ -553,21 +556,21 @@ audit is the implementation evidence.
 ## 18. Reconciliation State
 
 ```text
-PRD writing: reconciled to the deployed four-phase implementation
-architecture implementation: deployed from a6678966
+PRD writing: executed, closed, and reconciled to deployed product truth on 2026-08-20
+architecture implementation: deployed from a6678966 with literal stable-identity correction from 72e7500072ced840648747d66d60a670538a2f52
 public multi-locale switcher: Edge-authored exact locale options present in cloud-dev
 runtime code: lifecycle/coordinator/atomic-publication/cache correction deployed to cloud-dev
-account product data: all four saved CLICKEEN instances cut over; two public instances Republished through Roma
+account product data: all four saved CLICKEEN instances cut over; the affected FAQ VUWUJ7OQ0Y explicitly Republished through Roma after the closure correction
 atomic editable source: deployed as one instance.source.json containing metadata/config/content; Save/Rename replace it in one PUT
 first-Save visibility: initial unpublished serve-state writes first and instance.source.json commits last; only exact source-record keys enumerate as instances
-first-Save result adoption: deployed contract; owner first-Save interaction QA pending; simultaneous first-Save/account-locale PATCH remains a separate unsolved race
+first-Save result adoption: agent-verified in cloud-dev with exact config+widgetType request, ID/baseLocale adoption, and zero Bob reopen; simultaneous first-Save/account-locale PATCH remains a separate unsolved race
 Save ingress ownership: deployed; existing Save consumes Tokyo's stored widgetType and no caller widgetType
-instance Delete commit: deployed; owner Delete interaction QA pending
+instance Delete commit: agent-verified in cloud-dev on a disposable live instance; source anchor and public routes became absent and the account baseline was restored
 legacy cloud-dev source topology: cutover complete for all four saved instances; no compatibility reader
 Tokyo git-authored product root: synced; 15 retired flat/legacy objects deleted and verified 404
-main push and product commit: a6678966
-deploy: Worker deployment, Roma/Bob runtime reachability, and Tokyo R2 product-root sync passed
-live product: corrected New/Save/Roma-publication/cache behavior is active; technical verification passed; owner QA pending
+main push and product commits: a6678966 and 72e7500072ced840648747d66d60a670538a2f52
+deploy: Bob Pages d5d22e43-e55b-4dd1-a3a6-bba9031d59c0, Roma Pages 5bdd66f5-2109-4b68-8dc0-3a61360ace41, Roma verification 32401958691, and Worker deployment 32401961856 passed for the closure revision
+live product: New exit, first/later Save, Publish, divergence, Republish, Unpublish, live Delete, public 200/404 behavior, Roma/Bob session adoption, and exact baseline restoration passed through disposable IMN5FBI9QV
 retired flat Widget source paths: removed and inactive in deployed code
 Template catalog: normal listed CLICKEEN-admin saved instances
 Template cross-account Duplicate: not implemented follow-on
@@ -579,14 +582,15 @@ publish source contention: exact sourceUpdatedAt mismatch returns `409 coreui.er
 revision coordinates: deployed Tokyo single-writer implementation; both public-instance Republish commands produced publishedAt strictly later than sourceUpdatedAt and prior publishedAt
 stable scalar/repeated overlay identity: present in cloud-dev
 authored exact attribute localization: present in cloud-dev
-pre-GA positional-overlay compatibility path: absent; explicit Generate/delete cutover is required for previously stored positional overlays
-stored positional-overlay Generate/delete cutover: pending
+pre-GA positional-overlay compatibility path: absent; no stored positional overlay remains
+stored overlay audit: the only 28 stored overlays belong to VUWUJ7OQ0Y and each has the exact current 12-key stable identity set; no Generate/delete cutover was required or performed
 pre-GA atomic-publication cutover: complete; no separate-object compatibility fallback exists
-republish of currently published cloud-dev instances: complete for LWZZR7JSG8 and VUWUJ7OQ0Y through Roma
+closure Republish: only affected FAQ VUWUJ7OQ0Y was Republished; source SHA and all 28 overlay hashes remained unchanged while its atomic public package and publishedAt advanced to 2026-08-20T18:21:12.284Z
+selected-locale public proof: unique base/CSS/JS requests returned exact 200/MIME responses; unique French HTML had lang=fr, translated scalar content, translated repeated FAQ question and answer, literal repeated identity '=', and no old English repeated question
 cache eviction: deployed source schedules the exact account-instance Cache-Tag after owning mutations through waitUntil; product results never await or inspect it
 cache policy: deployed source uses public, max-age=60, s-maxage=300, must-revalidate for generated public package responses
 cache live QA: intentionally not a product acceptance gate
-independent V1-V8 audit: passed for the implementation; remote verification introduced no V1-V8 violation
+independent V1-V8 audit: passed for the implementation, live verification, product-data mutation, and exact post-test restoration
 ```
 
 ## 19. Closure Correction — Literal Stable Identity In Materialized HTML
@@ -605,11 +609,10 @@ CLICKEEN / VUWUJ7OQ0Y source.content.fields
 -> scalar Header translation applies, repeated FAQ translation does not
 ```
 
-The stored product data is already on the final stable-identity contract. No
-Generate/delete overlay cutover is required: the only stored overlays are the
-28 locale files for `VUWUJ7OQ0Y`, and their key sets exactly match current
-saved source truth. The stale pending-cutover statements above are historical
-and must be removed during final reconciliation.
+The stored product data was already on the final stable-identity contract. No
+Generate/delete overlay cutover was required: the only stored overlays are the
+28 locale files for `VUWUJ7OQ0Y`, and their key sets exactly match the current
+saved source's 12 stable identity keys.
 
 The correction stays at the producing authority. `@clickeen/widget-foundation`
 must render trusted stable identity coordinates with a literal `=` inside the
@@ -620,23 +623,26 @@ and Widget Core remain unchanged. No FAQ branch, downstream decoder,
 compatibility key, overlay rewrite, fallback, or serving-time repair is
 authorized.
 
-Execution and proof are exact:
+Execution and proof completed exactly:
 
-1. change the shared render producer and its materializer contract test;
-2. regenerate/check all Widget artifacts, prove the documented focused FAQ
-   check preserves the complete all-Widget materializer registry, and run widget-foundation,
-   runtime-materializer, Roma, Bob, Tokyo-worker localization, and focused FAQ
-   gates;
-3. obtain an independent V1-V8 audit;
-4. push directly to `main` and observe the documented Bob/Roma Pages builds;
-5. Republish only the affected published FAQ instance `VUWUJ7OQ0Y` through
-   Roma's existing Publish route so stored `serve-state.json` receives the
+1. the shared render producer and its materializer contract test were corrected;
+2. all Widget artifacts were regenerated/checked, the focused FAQ check was
+   proved to preserve the complete all-Widget materializer registry, and the
+   widget-foundation, runtime-materializer, Roma, Bob, Tokyo-worker
+   localization, and focused FAQ gates all passed;
+3. the independent V1-V8 audit passed;
+4. commit `72e7500072ced840648747d66d60a670538a2f52` was pushed directly to
+   `main`, and the owning Bob/Roma Pages and Worker deployments passed;
+5. only the affected published FAQ instance `VUWUJ7OQ0Y` was Republished through
+   Roma's existing Publish route so stored `serve-state.json` received the
    corrected package;
-6. verify base and selected-locale public HTML through `dev.clk.live`, proving
+6. base and selected-locale public HTML through `dev.clk.live` proved
    repeated questions/answers change under the exact stored overlay while
    scalar and base content remain correct; and
-7. reconcile every PRD/manual status to the agent-executed evidence. Human
-   owner acceptance is not a closure gate.
+7. the dedicated disposable lifecycle smoke proved the complete four-phase
+   product flow and restored the exact original inventory/R2 baseline.
 
-This closure correction changes no Save/source truth and no overlay truth. The
-only remote product-data mutation is the explicit affected-instance Republish.
+This closure correction changed no saved source or overlay truth. The only
+persistent remote product-data mutation was the explicit affected-instance
+Republish, which replaced that instance's atomic public package. PRD 129 is
+executed and closed; human owner acceptance is not a closure gate.

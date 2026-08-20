@@ -1,6 +1,6 @@
 # PRD 129A — Widget Software And Start
 
-Status: **NEW-DRAFT CORRECTION DEPLOYED AND TECHNICALLY VERIFIED IN CLOUD-DEV 2026-08-19 — OWNER QA PENDING**
+Status: **EXECUTED AND CLOSED — DEPLOYED AND AGENT-VERIFIED 2026-08-20**
 
 Parent: `129__PRD__Clickeen_Widget_Software_And_Instance_Lifecycle_Architecture.md`
 
@@ -755,9 +755,10 @@ runtime recognizes two Widget architectures.
 All five current Widget source compositions, focused and all-Widget generation,
 Discovery, limit/message bindings, the shared SEO/GEO coordinate, upsell copy,
 Duplicate and the Widget software are present in cloud-dev. The corrected
-non-persisting New path is deployed; an authenticated New-open request left the
-four-instance inventory unchanged on 2026-08-19. Owner interaction QA remains
-pending.
+non-persisting New path is deployed. Agent-executed cloud-dev proof opened
+Countdown from Catalog, confirmed `instanceId: null`, exited without Save,
+observed zero account-instance mutations, and proved both Roma inventory and
+the exact R2 account-instance baseline remained unchanged.
 
 Template creation is not an active product surface and the cross-account copy
 was not implemented. Its architecture is settled: the catalog is a list of
@@ -807,7 +808,7 @@ audit is the implementation evidence.
 
 ```text
 all five canonical Widget sources and generated artifacts: deployed in cloud-dev
-New non-persisting draft: deployed; authenticated New-open left inventory at exactly four saved instances
+New non-persisting draft: agent-verified in cloud-dev; Catalog Create opened /builder/new/countdown with instanceId null and exiting wrote nothing
 prior Duplicate user flow and Bob open: deployed; authenticated saved-instance Builder open passed
 Template catalog model: normal listed CLICKEEN-admin saved instances
 Template cross-account Duplicate: not implemented
@@ -815,12 +816,13 @@ retired flat Widget source paths: removed from git and cloud-dev R2; exact URLs 
 account product data: all four legacy saved CLICKEEN instances cut over to exact instance.source.json; legacy split objects retained but unreachable
 atomic editable source: deployed as one instance.source.json containing metadata/config/content; first Save and Duplicate commit that source record last after initial unpublished serve-state
 instance visibility: only exact instance.source.json keys enumerate; partial create prefixes are not instances
-first-Save result adoption: deployed; owner first-Save interaction QA remains pending; simultaneous first-Save/account-locale PATCH remains a separate unsolved race
-instance Delete commit: deployed; owner Delete interaction QA remains pending
+first-Save result adoption: agent-verified on disposable IMN5FBI9QV with exact config+widgetType request, ID/baseLocale adoption, and zero Bob reopen/iframe reload; simultaneous first-Save/account-locale PATCH remains a separate unsolved race
+instance Delete commit: agent-verified after publishing the disposable; exact source anchor and public routes became absent
 legacy cloud-dev source topology: cutover complete for all four saved instances; no compatibility fallback
-stored positional-overlay Generate/delete cutover: pending
+stored overlay audit: all 28 stored overlays already use the exact current 12-key stable identity set; no Generate/delete cutover remained or was performed
 pre-GA atomic-publication cutover: complete; both intended-public instances Republished through Roma
-product commit and main push: a6678966
-deploy: Worker deployment, Roma/Bob runtime reachability, and Tokyo R2 product-root sync passed
-live product: corrected New path is active; technical cloud-dev verification passed; owner QA pending
+product commits and main push: a6678966 and 72e7500072ced840648747d66d60a670538a2f52
+deploy: owning Bob/Roma Pages and Worker deployments passed for the closure revision
+live product: complete disposable New/first-Save/later-Save/publication/Delete lifecycle passed; finally restored the exact original four-instance inventory/source-anchor baseline with no R2 delta
+independent V1-V8 audit: passed with no blocker
 ```

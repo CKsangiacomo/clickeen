@@ -1,6 +1,6 @@
 # PRD 129C — Publish And Generate Serving Package
 
-Status: **CLOSURE VERIFICATION IN EXECUTION — REPEATED-IDENTITY MATERIALIZATION CORRECTION REQUIRED 2026-08-20**
+Status: **EXECUTED AND CLOSED — DEPLOYED AND AGENT-VERIFIED 2026-08-20**
 
 Parent: `129__PRD__Clickeen_Widget_Software_And_Instance_Lifecycle_Architecture.md`
 
@@ -604,10 +604,10 @@ those operations exist.
   and editable attributes use their exact authored target;
 - no Widget-specific shared-service branch or alternate release workflow exists;
   and
-- focused implementation checks, exact-SHA Worker deployment, Roma/Bob
-  reachability, atomic storage cutover, two Roma Republish commands, and all
-  six public package-file responses pass in cloud-dev; owner QA remains
-  pending.
+- focused implementation checks, exact-SHA owning deployments, Roma/Bob
+  reachability, atomic storage cutover, the bounded disposable lifecycle, the
+  affected FAQ Republish, and exact base/selected-locale public package
+  responses pass in cloud-dev.
 
 ## 21. Required Final V1-V8 Audit
 
@@ -628,13 +628,13 @@ audit is the implementation evidence.
 ## 22. Reconciliation State
 
 ```text
-shared Roma-only Publish/Republish/Unpublish UI: deployed; owner interaction QA pending
+shared Roma-only Publish/Republish/Unpublish UI: agent-verified through mounted production consumers and the deployed disposable lifecycle
 publication-capacity decision before materialization: present in cloud-dev
 Roma-only complete HTML/CSS/JavaScript generation: present in cloud-dev
 all-Widget baseline Discovery and authored enabled output: present in cloud-dev
 Tokyo exact package/publication write: deployed as one atomic serve-state.json containing status, publishedAt, and exact logical publicPackage
 separate index.html/styles.css/runtime.js storage objects: removed from runtime; public filename URLs read logical package members
-Unpublish without source deletion: deployed; owner interaction QA pending
+Unpublish without source deletion: agent-verified; source bytes remained exact while all public files returned 404
 account coordinator: deployed as one lifecycle-fenced Tokyo Durable Object per account serializing existing-instance Save/Rename/Publish/Unpublish/Delete; no durable policy/count/publication truth
 live command overlap result: 409 coreui.errors.instance.commandInProgress; no mutation or automatic retry
 stale materialized source result: 409 coreui.errors.instance.sourceChanged from exact sourceUpdatedAt comparison; no publication write
@@ -642,26 +642,29 @@ revision coordinates: deployed; both live Republish commands produced publishedA
 later over-capacity result: 402 UPGRADE_REQUIRED
 stable scalar/repeated overlay identity: present in cloud-dev
 authored exact attribute localization target: present in cloud-dev
-pre-GA positional-overlay compatibility path: absent; explicit Generate/delete cutover required for previously stored positional overlays
+pre-GA positional-overlay compatibility path: absent; no stored positional overlay remains
 account suspension lifecycle runner/full deletion: documented follow-on account work, not a PRD 129 blocker
 account product data: all four saved CLICKEEN instances cut over; two public instances Republished through Roma
 atomic editable source: deployed as one instance.source.json containing metadata/config/content; Save/Rename each replace it in one PUT
 first-Save source visibility: initial unpublished serve-state writes first and instance.source.json commits last; only exact source keys enumerate
-instance Delete commit: deployed; owner Delete interaction QA pending
+instance Delete commit: agent-verified on a live disposable instance; source anchor and public files became absent
 legacy cloud-dev source topology: cutover complete for all four saved instances; no compatibility reader
-stored positional-overlay Generate/delete cutover: pending
+stored overlay audit: the only 28 overlays already use the exact current 12-key stable identity set; no Generate/delete operation was required or performed
 pre-GA atomic-publication cutover: complete; no prior-object compatibility fallback exists
 republish of currently published cloud-dev instances: complete for LWZZR7JSG8 and VUWUJ7OQ0Y through Roma
 cache eviction non-interference: deployed and deterministically tested for missing, false, synchronous throw, rejection, and pending outcomes
 generated package cache policy: `public, max-age=60, s-maxage=300, must-revalidate`
-product commit and main push: a6678966
-deploy: Worker deployment, Roma/Bob runtime reachability, and Tokyo R2 product-root sync passed
-live product: corrected publication/storage/cache runtime is active; technical verification passed; owner QA pending
+product commits and main push: a6678966 and 72e7500072ced840648747d66d60a670538a2f52
+deploy: Bob Pages d5d22e43-e55b-4dd1-a3a6-bba9031d59c0, Roma Pages 5bdd66f5-2109-4b68-8dc0-3a61360ace41, Roma verification 32401958691, and Worker deployment 32401961856 passed
+live product: Publish, Save-after-Publish divergence, Republish, Unpublish, republish-before-live-Delete, public 200/404 behavior, and exact source non-interference passed on disposable IMN5FBI9QV
+FAQ closure release: Roma Republished only VUWUJ7OQ0Y; publishedAt advanced to 2026-08-20T18:21:12.284Z while saved source and all 28 overlays remained byte-exact
+independent V1-V8 audit: passed with no blocker
 ```
 
 ## 23. Closure Materialization Correction
 
-Agent-executed closure verification found that deployed Publish materialized
+Agent-executed closure verification found that the prior deployed Publish
+materialized
 repeated stable identity coordinates with Mustache's `&#x3D;` entity text while
 stored overlay keys use the canonical literal `=`. The correction belongs to
 the one generic render producer in `@clickeen/widget-foundation`: preserve
@@ -670,9 +673,13 @@ normal HTML escaping for unsafe characters. Publish, Roma policy, Tokyo
 storage, the stable identity contract, and every Widget's Core remain
 unchanged.
 
-After the corrected Roma build is deployed, the affected published FAQ
-instance `VUWUJ7OQ0Y` must be explicitly Republished through the existing Roma
-command. That one authorized release replaces its atomic public package; it
-does not change editable source or overlays. Local materializer proof,
-independent V1-V8 audit, exact deploy evidence, and selected-locale live FAQ
-proof are required before this SubPRD closes. Owner acceptance is not a gate.
+The corrected producer is deployed at
+`72e7500072ced840648747d66d60a670538a2f52`. The affected published FAQ
+instance `VUWUJ7OQ0Y` was explicitly Republished through the existing Roma
+command. That one authorized release replaced its atomic public package and
+advanced `publishedAt`; exact saved-source and all 28 overlay hashes remained
+unchanged. Unique base/CSS/JS requests returned exact 200/MIME responses, and
+unique French HTML proved `lang=fr`, translated scalar content, translated
+repeated FAQ question and answer, literal repeated identity `=`, and absence
+of the old English repeated question. The independent V1-V8 audit passed.
+This SubPRD is closed; owner acceptance is not a gate.

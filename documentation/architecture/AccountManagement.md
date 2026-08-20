@@ -462,10 +462,12 @@ fingerprints or validate the overlay against saved source in the public
 request. The route coordinate, locale syntax, and publication gate remain real
 external/product boundaries.
 
-The all-Widget changes are deployed and verified in cloud-dev; owner QA remains
-pending. Authenticated translation list/read/write operations also trust the
-exact stored overlay coordinates and values; they do not project or compare
-them against saved source.
+The all-Widget changes are deployed and verified in cloud-dev through
+all-Widget artifact gates plus agent-executed shared lifecycle, materializer,
+and public-serving proof. Owner acceptance is not an architecture-closure
+gate. Authenticated translation list/read/write operations also trust the exact
+stored overlay coordinates and values; they do not project or compare them
+against saved source.
 
 The newer pre-GA atomic source/published-serve-state cutover is complete for
 all four legacy saved cloud-dev instances under `CLICKEEN`; the two public

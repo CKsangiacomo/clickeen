@@ -1,6 +1,6 @@
 # PRD 131 — Builder Header Dieter Convergence
 
-Status: **DEPLOYED AND AUTOMATED-VERIFIED IN CLOUD-DEV — OWNER VISUAL ACCEPTANCE PENDING**
+Status: **EXECUTED AND CLOSED — AGENT-VERIFIED IN CLOUD-DEV 2026-08-20**
 
 Owner: Clickeen product owner/architect
 
@@ -284,3 +284,31 @@ independent V1-V8 audit: PASS on all eight; no blocker
 product data: unchanged
 owner visual acceptance: pending
 ```
+
+## 15. Final Closure Evidence (2026-08-20)
+
+PRD 131 is executed and closed. Owner visual acceptance is not a closure gate;
+the operating agent verified the deployed product through the owning signed-in
+Roma/Bob surface at a deterministic 1280×720 CSS-pixel viewport.
+
+- All eleven ordinary Roma routes use the exact direct-child grammar
+  `page__heading + page__actions`, `h1.heading-2`, and `data-width="contained"`.
+  Every contained header and its content share the same x coordinate and
+  1040px width, with an exact 16px header-to-content gap.
+- Saved Builder `/builder/LWZZR7JSG8` and non-persisting New Builder
+  `/builder/new/countdown` use the same full-width header grammar. At the
+  measured viewport the Page, header, and iframe are 1072px wide; the iframe,
+  visible Bob ToolDrawer, and visible Bob Workspace each begin exactly 16px
+  below the header.
+- Heading/action center-line delta is 0px. Right-side Page commands use large
+  Dieter Buttons; existing words, types, handlers, loading/disabled states,
+  publication controls, borrowed Save, Copy Code, and Compact navigation
+  remain functional.
+- `e2e/widgets/builder-open.spec.ts` passed 2/2, the full signed-in E2E suite
+  passed 3/3, and Roma Widget command gates passed 6/6. Screenshots were
+  inspected from the passing Builder run.
+- No product data changed. The independent V1-V8 audit passed with no blocker.
+
+The implementation commits and deployment evidence in §§11–14 remain the
+source history. This final agent-executed product proof closes the previously
+recorded visual-acceptance gap without changing header functionality.

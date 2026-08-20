@@ -1,6 +1,6 @@
 # FAQ Widget
 
-STATUS: CANONICAL CORE DEPLOYED — REPEATED-IDENTITY LOCALE PACKAGE CORRECTION AWAITING DEPLOY/REPUBLISH
+STATUS: CANONICAL CORE AND REPEATED-IDENTITY LOCALIZATION DEPLOYED AND LIVE-VERIFIED
 
 ## Purpose
 
@@ -202,10 +202,11 @@ git diff --check -- tokyo/product/widgets/faq documentation/widgets/widgets/faq.
 
 Inspect the focused generated editor/materializer artifacts and materialized
 FAQ HTML/CSS/JavaScript. The canonical Core and Builder-open path are deployed.
-Closure verification found that the stored FAQ overlays are already exact but
-the published package entity-encoded repeated identity `=` selectors, so the
-local generic producer correction still requires deployment, explicit
-Republish of `VUWUJ7OQ0Y`, and selected-locale repeated question/answer proof.
+The generic literal-identity producer correction is deployed from `72e75000`.
+Roma Republished `VUWUJ7OQ0Y` without changing saved source or any of its 28
+overlays; unique base and French public responses now prove literal repeated
+coordinates plus translated scalar title, repeated question, and repeated
+answer before JavaScript.
 
 ## Hard Stops
 

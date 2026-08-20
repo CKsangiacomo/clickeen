@@ -1,6 +1,6 @@
 # PRD 129D — Serve Published Package
 
-Status: **CLOSURE VERIFICATION IN EXECUTION — REPEATED-IDENTITY LOCALE SERVING CORRECTION REQUIRED 2026-08-20**
+Status: **EXECUTED AND CLOSED — DEPLOYED AND AGENT-VERIFIED 2026-08-20**
 
 Parent: `129__PRD__Clickeen_Widget_Software_And_Instance_Lifecycle_Architecture.md`
 
@@ -295,10 +295,10 @@ a fallback label source.
 - one default-entrypoint schedules the deterministic account-instance tag for
   eviction after owning mutations without awaiting or inspecting cache outcome;
 - no Widget-specific serving branch or alternate public route exists; and
-- focused implementation checks, exact-SHA deployment, atomic source and
-  publication cutover, authenticated inventory reads, two Roma Republish
-  commands, and live package serving pass in cloud-dev; owner QA remains
-  pending.
+- focused implementation checks, exact-SHA owning deployments, atomic source
+  and publication cutover, authenticated inventory reads, the bounded
+  disposable lifecycle, the affected FAQ Republish, and exact base and
+  selected-locale public serving pass in cloud-dev.
 
 ## 13. Required Final V1-V8 Audit
 
@@ -321,7 +321,7 @@ audit is the implementation evidence.
 ```text
 stored base package serving: corrected one-artifact serving is deployed and returns all six public package-file responses for the two published instances
 atomic editable source discovery: exact instance.source.json is the only instance key; deployed and enumerates exactly four instances
-instance Delete commit: deployed; owner Delete interaction QA pending
+instance Delete commit: agent-verified on a live disposable instance; source anchor and all public file routes became absent
 legacy saved cloud-dev instances: all four cut over to exact instance.source.json; no compatibility reader
 atomic publication artifact: deployed serve-state.json contains status, publishedAt, and exact logical publicPackage
 separate package-object compatibility: absent; public index.html/styles.css/runtime.js URLs read exact logical members
@@ -332,34 +332,37 @@ package/source fingerprint readiness checks: removed from the deployed path
 per-request tier/account-lifecycle work: absent
 stable scalar/repeated overlay identity: present in cloud-dev
 authored exact attribute localization: present in cloud-dev
-pre-GA positional-overlay compatibility path: absent; explicit Generate/delete cutover required for previously stored positional overlays
+pre-GA positional-overlay compatibility path: absent; no stored positional overlay remains
 account suspension lifecycle runner/full deletion: documented follow-on account work, not a PRD 129 blocker
 account product data: all four saved CLICKEEN instances cut over; two public instances Republished through Roma
-stored positional-overlay Generate/delete cutover: pending
+stored overlay audit: the only 28 overlays already use the exact current 12-key stable identity set; no Generate/delete operation was required or performed
 pre-GA publication cutover: complete; no compatibility fallback exists
 publish/republish of current cloud-dev instances: Republish complete for LWZZR7JSG8 and VUWUJ7OQ0Y
 cache eviction non-interference: deployed and deterministically tested
 generated package cache policy: bounded revalidation deployed
 cache HIT/MISS/purge live QA: intentionally not a product acceptance gate
-product commit and main push: a6678966
-deploy: Worker deployment, Roma/Bob runtime reachability, and Tokyo R2 product-root sync passed
-live product: corrected source discovery, atomic publication serving, and cache boundary are active; technical verification passed; owner QA pending
+product commits and main push: a6678966 and 72e7500072ced840648747d66d60a670538a2f52
+deploy: Bob Pages d5d22e43-e55b-4dd1-a3a6-bba9031d59c0, Roma Pages 5bdd66f5-2109-4b68-8dc0-3a61360ace41, Roma verification 32401958691, and Worker deployment 32401961856 passed
+live product: exact base/CSS/JS 200/MIME responses, strict source/publication timestamps, Save-without-release stability, Republish replacement, Unpublish/live-Delete 404 behavior, and selected-locale FAQ output passed in cloud-dev
+FAQ closure release: only VUWUJ7OQ0Y was Republished; its source and all 28 overlays remained byte-exact while publishedAt advanced to 2026-08-20T18:21:12.284Z
+independent V1-V8 audit: passed with no blocker
 ```
 
 ## 15. Closure Serving Correction
 
 The live closure audit proved that Tokyo's generic overlay lookup is correct
 and the stored FAQ overlays already carry exact current stable identity keys.
-The deployed FAQ package is wrong: its repeated `data-ck-content-path`
-attribute values contain Mustache's escaped `&#x3D;` text instead of the
-canonical literal `=`. Consequently a selected-locale request can replace
-scalar slots while leaving repeated questions and answers in base English.
+The prior deployed FAQ package was wrong: its repeated
+`data-ck-content-path` attribute values contained Mustache's escaped
+`&#x3D;` text instead of the canonical literal `=`. Consequently a
+selected-locale request could replace scalar slots while leaving repeated
+questions and answers in base English.
 
-The serving fix is intentionally no Tokyo fix. The materializer producer must
-emit the canonical literal coordinate; Tokyo continues comparing the exact
-trusted attribute value with the exact trusted overlay key. After deployment
-and explicit Republish of `VUWUJ7OQ0Y`, live proof must show repeated FAQ
-question and answer values change for a stored non-base locale, base serving
-remains complete, and no Widget-specific branch, decoder, fallback, or runtime
-repair exists. Agent-executed functionality proof replaces the stale owner-QA
-gate.
+The serving correction was intentionally no Tokyo fix. The materializer
+producer now emits the canonical literal coordinate; Tokyo continues comparing
+the exact trusted attribute value with the exact trusted overlay key. After
+deployment and explicit Republish of `VUWUJ7OQ0Y`, unique French public HTML
+proved both repeated FAQ question and answer values changed through the stored
+overlay, scalar localization remained correct, base serving remained complete,
+and no Widget-specific branch, decoder, fallback, or runtime repair exists.
+The SubPRD is executed and closed by agent-executed functionality proof.

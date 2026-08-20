@@ -1,6 +1,6 @@
 # PRD 129B — Edit And Save Editable Instance
 
-Status: **FIRST-SAVE CORRECTION DEPLOYED WITH TECHNICAL CLOUD-DEV VERIFICATION 2026-08-19 — FIRST-SAVE OWNER QA PENDING**
+Status: **EXECUTED AND CLOSED — DEPLOYED AND AGENT-VERIFIED 2026-08-20**
 
 Parent: `129__PRD__Clickeen_Widget_Software_And_Instance_Lifecycle_Architecture.md`
 
@@ -576,20 +576,21 @@ audit is the implementation evidence.
 all-Widget source-based Bob open/preview: present in cloud-dev
 one browser-memory draft and generic edit decision: present in cloud-dev
 one Roma upsell Popup: present in cloud-dev
-first/later source-only Save split and in-place ID adoption: deployed; owner first-Save interaction QA pending
-first-Save result locale coherence: deployed contract; owner first-Save interaction QA pending
+first/later source-only Save split and in-place ID adoption: agent-verified in cloud-dev on disposable IMN5FBI9QV; first Save sent config+widgetType, later Save sent config only, and ID adoption caused zero Bob reopen/iframe reload
+first-Save result locale coherence: agent-verified; Bob adopted the exact persisted account baseLocale through the existing result
 simultaneous first-Save/account-locale PATCH: separate race not serialized or solved by result adoption; no resolution claimed in this pass
 Save ingress ownership: deployed; existing Save uses Tokyo's stored widgetType and consumes no caller widgetType
 atomic editable source and source-key visibility: deployed; all four legacy saved instances cut over
-instance Delete commit: deployed; owner Delete interaction QA pending
+instance Delete commit: agent-verified after publishing the disposable; source anchor and public files became absent and the original account baseline was restored
 existing-instance command coordinator and strict revision coordinates: deployed; Republish produced strictly newer publishedAt for both public instances
 stored public package use by Bob preview: removed from the deployed path
 stable overlay identity after repeated-content Save: present in cloud-dev
-positional overlay compatibility path: absent; explicit Generate/delete cutover required for previously stored positional overlays
+positional overlay compatibility path: absent; no stored positional overlay remains
 account product data: four saved instances cut over; two public instances Republished through Roma
-stored positional-overlay Generate/delete cutover: pending
+stored overlay audit: the only 28 overlays already have the exact current 12-key stable identity set; no Generate/delete operation was required or performed
 pre-GA atomic-publication cutover: complete; no compatibility fallback exists
-product commit and main push: a6678966
-deploy: Worker deployment, Roma/Bob runtime reachability, and Tokyo R2 product-root sync passed
-live product: corrected Save path is active; authenticated saved-instance Builder open passed; first-Save owner QA pending
+product commits and main push: a6678966 and 72e7500072ced840648747d66d60a670538a2f52
+deploy: owning Bob/Roma Pages and Worker deployments passed for the closure revision
+live product: first Save, later Save, Save-after-Publish divergence, and Republish were agent-verified through source, serve-state, inventory, Bob UI, and public output
+independent V1-V8 audit: passed with no blocker
 ```

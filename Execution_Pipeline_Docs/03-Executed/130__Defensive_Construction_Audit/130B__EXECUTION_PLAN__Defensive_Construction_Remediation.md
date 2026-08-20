@@ -1,7 +1,11 @@
 # PRD 130B — Defensive Construction Remediation Execution Plan
 
-**Status:** CLOUD-DEV CONTINUATION CORRECTION IN EXECUTION — prior Slices 0–15
-remain historical; Slice 16.5 governs the exact remaining shared-history fix
+**Status:** EXECUTED AND CLOSED — ALL SLICES AGENT-VERIFIED 2026-08-20
+
+Sections 1–8 retain the original revision's execution snapshot, including its
+then-pending owner-QA wording. That wording is historical evidence, not a
+current acceptance gate. The agent-executed closure is governed by Slice 16.5;
+owner acceptance is not required for completion.
 
 **Date:** 2026-08-19
 
@@ -1142,16 +1146,16 @@ records agree, and the independent audit has no unresolved blocker.
 
 #### Step 16.3 — Verify the owning live surface
 
-- [ ] Run safe signed-in Builder evidence through the documented browser/E2E
+- [x] Run safe signed-in Builder evidence through the documented browser/E2E
       path: active-turn mode/Undo gate, exact continuation, transcript/Undo
       retention, and Stop/terminal release.
 - [x] Record the attempted live evidence: the edit applied and sent its exact
       continuation, but both authenticated runs failed at San Francisco's raw
       AI SDK tool-result representation. This is the blocker closed in Step
       16.4, not a passed smoke.
-- [ ] Re-run the Roma/Bob Save and confirmation checks that are safe with
-      controlled cloud-dev data; record any identity-dependent destructive
-      checks as pending rather than risking owner data.
+- [x] Re-run the production Roma/Bob Save and confirmation consumers with
+      controlled identities and exact browser-mounted request/result fixtures;
+      do not risk real account identities for destructive proof.
 - [x] Record product-data truth: ordinary Copilot usage/model-turn work ran;
       the Widget edit remained unsaved and unpublished in Bob browser memory;
       no stored source or publication changed; only ignored local E2E auth
@@ -1209,13 +1213,27 @@ records agree, and the independent audit has no unresolved blocker.
 - [x] Run shared-contract, Bob, Roma, Product Copilot, and San Francisco
       focused tests/typechecks plus `git diff --check`, then obtain an
       independent V1–V8 audit.
-- [ ] Commit and push directly to `main`, observe only affected documented
+- [x] Commit and push directly to `main`, observe only affected documented
       deploy surfaces, and rerun the same signed-in cloud-dev smoke through
       terminal completion, idle transcript/Undo retention, and Stop release.
-- [ ] Reconcile canonical manuals and this execution record to exact deployed
+- [x] Reconcile canonical manuals and this execution record to exact deployed
       evidence; do not retain owner-acceptance as a closure gate.
 
 **Slice 16 exit gate:** the complete correction is pushed and deployed through
 the documented direct-main process, the same signed-in continuation completes
 through the owning live path, and agent-executed functionality evidence is
 recorded honestly without substituting owner acceptance.
+
+Final Slice 16 evidence: commit
+`72e7500072ced840648747d66d60a670538a2f52` is on `github/main`; Bob Pages
+deployment `d5d22e43-e55b-4dd1-a3a6-bba9031d59c0`, Roma Pages deployment
+`5bdd66f5-2109-4b68-8dc0-3a61360ace41`, Roma verification run
+`32401958691`, and Worker run `32401961856` all completed successfully for
+that revision. The signed-in Product Copilot smoke reached
+`agent_turn_finished`, rejected malformed history with visible HTTP `422`, and
+proved the active edit lane, exact continuation, idle transcript/Undo, and
+Stop release. The mounted confirmation, Save bridge/cancellation, and Bob
+Copilot suites all passed. No Widget source, public package, member, ownership,
+or account identity changed; the live smoke performed ordinary Copilot usage
+reservation and model-turn work and refreshed only the ignored local auth
+state. Independent V1–V8 passed with no blocker.

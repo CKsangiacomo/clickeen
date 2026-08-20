@@ -117,8 +117,9 @@ confirmation because the denied action did not mutate the draft.
 Current cloud-dev implementation: Bob's local generic upsell Popup and the second
 Upgrade-intent scaffold are removed. Bob sends the exact denied capability and
 compiled Widget message identity; Roma directly opens the one shared
-Roma/Dieter Popup described above. Cloud-dev deploy proof passes; owner QA
-remains pending.
+Roma/Dieter Popup described above. Cloud-dev deploy proof and focused Roma/Bob
+policy/UI gates pass. Owner acceptance is not an execution gate; billing
+remains a separate unimplemented product surface.
 
 ## Execution Rule
 

@@ -27,8 +27,9 @@ preview host, validator, or serving engine.
 All five built Widgets implement this topology in the deployed cloud-dev
 product. The all-Widget generator compiles each through the same Bob and Roma
 artifact path; there is no flat-source compatibility path or Widget
-discriminator. Technical deployment and live package verification pass; human
-owner product QA remains pending.
+discriminator. Technical deployment, shared lifecycle/materialization gates,
+and live package verification pass. Owner acceptance is not an architecture
+closure gate.
 
 Each Widget's internal `discovery.json` declares its system baseline, Widget
 kind, important customer-content parts, and their relationships. Users do not
@@ -62,8 +63,8 @@ logoshowcase
 
 | Widget | Current source status |
 | --- | --- |
-| Big Bang | Canonical Core deployed to cloud-dev; owner QA pending |
-| Cards | Canonical Core deployed to cloud-dev; owner QA pending |
-| Countdown | Canonical Core deployed to cloud-dev; owner QA pending |
-| FAQ | Canonical Core deployed to cloud-dev; owner QA pending |
-| Logo Showcase | Canonical Core deployed to cloud-dev; owner QA pending |
+| Big Bang | Canonical Core deployed; shared architecture gates pass |
+| Cards | Canonical Core deployed; shared architecture gates pass |
+| Countdown | Canonical Core deployed; shared architecture gates pass |
+| FAQ | Canonical Core and repeated-identity localization deployed and live-verified |
+| Logo Showcase | Canonical Core deployed; shared architecture gates pass |

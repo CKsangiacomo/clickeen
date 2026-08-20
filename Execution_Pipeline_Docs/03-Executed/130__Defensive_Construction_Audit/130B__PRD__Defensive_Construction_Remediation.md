@@ -1,8 +1,6 @@
 # PRD 130B — Defensive Construction Remediation
 
-**Status:** CLOUD-DEV CONTINUATION CORRECTION IN EXECUTION — the San Francisco
-adapter correction is deployed; exact live evidence exposed one remaining
-Bob/shared-contract history-admission defect tracked in Section 14
+**Status:** EXECUTED AND CLOSED — DEPLOYED AND AGENT-VERIFIED 2026-08-20
 
 **Date:** 2026-08-19
 
@@ -848,7 +846,10 @@ This PRD is complete only when all of the following are true:
 - the intended complete worktree is committed and pushed under explicit
   execution authority;
 - Roma and Bob deployed revisions are recorded;
-- cloud-dev owner QA is completed or each unperformed check is explicitly pending;
+- mounted production-consumer behavior and the safe owning cloud-dev paths are
+  agent-verified; unsafe destructive identity mutations are not required for
+  closure when their exact production callbacks are proved with controlled
+  identities;
 - product-data state is reported accurately; and
 - the independent V1–V8 audit passes with no unresolved blocker.
 
@@ -1065,3 +1066,43 @@ call with its exact rejected/apply result before every continuation. Otherwise
 a rejected edit can produce a provider tool-result message without its
 preceding assistant tool call. This is the same structured-history correction,
 not a new protocol or downstream validation layer.
+
+### 14.2 Final closure and deployed functionality evidence
+
+The bounded correction is complete at commit
+`72e7500072ced840648747d66d60a670538a2f52`, pushed directly to
+`github/main` with no pull request. Bob Pages deployment
+`d5d22e43-e55b-4dd1-a3a6-bba9031d59c0`, Roma Pages deployment
+`5bdd66f5-2109-4b68-8dc0-3a61360ace41`, Roma verification run
+`32401958691`, and Worker run `32401961856` all completed successfully for
+that revision.
+
+Agent-executed functionality evidence closes every accepted finding:
+
+- the mounted production confirmation owners for Widget Delete, Asset Delete,
+  both Unpublish consumers, Remove member, and Transfer ownership prove exact
+  copy, inert Cancel/backdrop, one exact confirmed request including the
+  transfer recipient, pending presentation, and visible failure;
+- the mounted production two-origin Roma/Bob Save bridge proves hidden clean
+  state, Save, Saving spinner, green checkmark plus Saved, timed disappearance,
+  edit-during-Save, failure-from-current-dirty-truth, exact first/later request
+  bodies, ID/base-locale adoption without reopen, duplicate suppression, and
+  fail-closed origin/source/stale-frame admission;
+- the mounted production Bob Copilot fixture proves Working, Applied, Not
+  applied, Stopped, one active edit lane, exact post-apply continuation, idle
+  transcript/Undo retention, and teardown cancellation; and
+- the signed-in deployed smoke reaches `agent_turn_finished`, rejects malformed
+  external history visibly with HTTP `422`, and proves live edit-lane,
+  continuation, transcript/Undo, and Stop-release behavior. The edit remains
+  unsaved and unpublished browser-memory truth.
+
+The shared history union now has mutually exclusive non-empty text and
+assistant tool-only branches. Bob records the exact assistant call and exact
+success/failure result before every continuation; Product Copilot and San
+Francisco consume that trusted branch without placeholder text, reparsing,
+fallback, or a second protocol. No Widget source, public package, member,
+ownership, or account identity changed; the live smoke performed ordinary
+Copilot usage reservation and model-turn work and refreshed only the ignored
+local auth state. All focused typechecks, lints, builds, mounted browser suites,
+cloud smoke, and independent V1-V8 audit pass. PRD 130B is executed and closed;
+owner acceptance is not a closure gate.

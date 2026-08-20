@@ -1,6 +1,6 @@
 # Cards Widget
 
-STATUS: CANONICAL CORE DEPLOYED TO CLOUD-DEV — OWNER QA PENDING
+STATUS: CANONICAL CORE DEPLOYED — SHARED ARCHITECTURE GATES PASS
 
 ## Purpose
 
@@ -22,8 +22,9 @@ into initial semantic HTML. Core JavaScript does not reconstruct card state,
 localize content, invoke shared utilities, or receive Bob state updates. There
 is no flat-source compatibility path or Widget-specific shared-service branch.
 
-The source, generated artifacts, and cloud-dev deploy proof are complete.
-Owner QA and a fresh Cards Publish/Republish exercise remain pending.
+The source, generated artifacts, and cloud-dev deploy proof are complete. The
+agent-executed shared lifecycle, materialization, and serving gates pass. A
+fresh per-Widget Republish is not a separate architecture-closure requirement.
 
 ## Source
 

@@ -1,6 +1,6 @@
 # SEO/GEO/AEO Capability
 
-STATUS: ALL CURRENT WIDGETS DEPLOYED TO CLOUD-DEV — OWNER QA PENDING
+STATUS: ALL CURRENT WIDGETS DEPLOYED — SHARED ARCHITECTURE GATES PASS
 
 ## Product Contract
 
@@ -161,8 +161,9 @@ JavaScript.
   microdata in Core.
 - The retired flat Widget clients have no compatibility path.
 - Product commit `e2ac3589` is deployed to cloud-dev; Worker/R2, Roma and Bob
-  reachability, and authenticated Builder-open evidence pass. Owner QA remains
-  pending.
+  reachability, authenticated Builder-open evidence, all-Widget artifact
+  checks, and shared lifecycle/materialization gates pass. Owner acceptance is
+  not an architecture-closure gate.
 
 ## Prague Boundary
 
