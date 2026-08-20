@@ -41,13 +41,6 @@ pnpm e2e:auth:roma-dev
 pnpm e2e:smoke:translation-agent-runtime
 ```
 
-If you need the full disposable Widget lifecycle smoke:
-
-```bash
-pnpm e2e:auth:roma-dev
-pnpm e2e:smoke:widget-lifecycle
-```
-
 If `pnpm e2e:auth:roma-dev` fails, fix the auth-state boundary:
 
 - confirm `CK_ADMIN_EMAIL` and `CK_ADMIN_PASSWORD` exist in root `.env.local`
@@ -91,7 +84,6 @@ cloud-dev product path that a real user or operator uses.
 | Roma dev-admin auth state writer | `scripts/e2e/roma-dev-auth.mjs`                        |
 | Product Copilot runtime smoke    | `scripts/e2e/roma-copilot-runtime-smoke.mjs`           |
 | Translation Agent runtime smoke  | `scripts/e2e/roma-translation-agent-runtime-smoke.mjs` |
-| Widget lifecycle runtime smoke   | `scripts/e2e/roma-widget-lifecycle-smoke.mjs`          |
 | Browser specs                    | `e2e/**`                                               |
 
 ## Default Mode
@@ -240,7 +232,6 @@ pnpm e2e:ui
 pnpm e2e:auth:roma-dev
 pnpm e2e:smoke:copilot-runtime
 pnpm e2e:smoke:translation-agent-runtime
-pnpm e2e:smoke:widget-lifecycle
 ```
 
 Required env for authenticated Roma tests:
@@ -386,43 +377,6 @@ Failure means the deployed Bob -> Roma -> Translation Agent -> San Francisco ->
 Tokyo-worker path is not proven. Do not replace this with a direct Translation
 Agent call and call the product path verified.
 
-## Widget Lifecycle Runtime Smoke
-
-After refreshing auth state, run:
-
-```bash
-pnpm e2e:smoke:widget-lifecycle
-```
-
-This is a serial, bounded, destructive-then-restoring cloud-dev proof. It uses
-the normal `CLICKEEN` owner account, Catalog, Roma, Bob, Tokyo-worker storage,
-and `dev.clk.live`. Before any mutation it requires active owner identity,
-Countdown catalog availability, publication capacity, exact Roma inventory/R2
-source-anchor agreement, and the protected FAQ instance. It performs no R2
-writes.
-
-The smoke creates one uniquely marked disposable Countdown and proves:
-
-- New exits without an instance mutation or storage change;
-- first Save sends exact `config + widgetType`, creates atomic unpublished
-  source, adopts ID/base locale in place, and does not reopen Bob;
-- Publish writes exact atomic serve state and public HTML/CSS/JavaScript;
-- later Save sends config only and advances source while public bytes stay
-  unchanged;
-- Republish advances `publishedAt` and updates public HTML;
-- confirmed Unpublish preserves source and makes public files `404`;
-- confirmed Delete of a live disposable removes its source visibility anchor
-  and leaves public files `404`; and
-- final Roma inventory and exact R2 source-anchor sets equal the preflight
-  baseline. Any owned disposable left by failure is deleted once through the
-  normal Roma route after marker verification; cleanup failure fails the run.
-
-The smoke never targets a baseline/protected instance, never retries a cleanup
-Delete, never treats residual cleanup bytes as product truth, bounds browser,
-API, public-response, and R2 reads, and prints exact JSON evidence only after
-baseline restoration. It is an operator verification tool, not a product
-runtime dependency.
-
 ## Failure Semantics
 
 | Case                                               | Result                                                            |
@@ -434,8 +388,6 @@ runtime dependency.
 | Deployed app route fails                           | Playwright spec fails against owning deployed surface             |
 | Copilot unmanaged model accepted                   | Copilot smoke fails; no-substitution law violated                 |
 | Translation generation partial/failed              | Translation smoke fails                                           |
-| Lifecycle identity/capacity/storage preflight fails | lifecycle smoke stops before mutation                             |
-| Lifecycle command or final restoration fails       | lifecycle smoke fails and reports the exact disposable coordinate |
 
 ## Verification Evidence
 
@@ -446,7 +398,6 @@ runtime dependency.
 | Builder open product path    | `e2e/widgets/builder-open.spec.ts` passes against deployed Roma/Bob                  |
 | Product Copilot path         | `pnpm e2e:smoke:copilot-runtime` JSON output                                         |
 | Translation Agent path       | `pnpm e2e:smoke:translation-agent-runtime` JSON output                               |
-| Complete Widget lifecycle    | `pnpm e2e:smoke:widget-lifecycle` JSON output                                        |
 
 `pnpm e2e` is authenticated evidence only when the authenticated specs run and
 pass. A run where authenticated specs skip because `e2e/.auth/roma-dev.json`

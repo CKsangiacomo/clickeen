@@ -37,7 +37,12 @@ It is **not** the source of truth for runtime behavior.
 - AIs may execute only when the PRD is here and is consistent with current code/contracts.
 - If gaps are found, fix the PRD here before coding.
 - PRDs receive execution numbers **only when moved into this folder**.
-- **End-of-execution requirement:** update `documentation/` to match what shipped **before** moving the PRD to `03-Executed/`.
+- **End-of-execution requirements:** update `documentation/` to match what
+  shipped and remove execution-only scripts, probes, generated reports,
+  screenshots, temporary credentials, and other temporary scaffolding
+  **before** moving the PRD to `03-Executed/`. Preserve shipped product code,
+  durable regression tests/operator tools, canonical documentation, and the
+  historical PRD/audit record.
 
 ### `03-Executed/` — Historical record (after completion)
 - Used only for history and audit.
@@ -49,7 +54,9 @@ It is **not** the source of truth for runtime behavior.
 2) **Planning → Executing** only after peer review and architecture alignment.  
 3) **Executing → Executed** only after:
    - code changes are done, and
-   - **`documentation/` is updated to match the executed PRD**.
+   - **`documentation/` is updated to match the executed PRD**, and
+   - **temporary execution artifacts are removed from the repository and
+     local evidence directories**.
 
 If any step is skipped, the pipeline is broken and docs will drift.
 

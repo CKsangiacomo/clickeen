@@ -646,3 +646,11 @@ This closure correction changed no saved source or overlay truth. The only
 persistent remote product-data mutation was the explicit affected-instance
 Republish, which replaced that instance's atomic public package. PRD 129 is
 executed and closed; human owner acceptance is not a closure gate.
+
+Post-closure repository cleanup removed the disposable lifecycle smoke and its
+operator command/manual registration after the evidence above was recorded.
+The smoke was execution scaffolding for this closure, not a permanent product
+runtime dependency or regression authority. Generated Playwright reports,
+screenshots, and the refreshed local Roma auth state were also removed. The
+runtime implementation, focused regression suites, canonical documentation,
+and this historical evidence remain.
