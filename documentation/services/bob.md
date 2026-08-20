@@ -180,7 +180,7 @@ declared icon slot at `/dieter/icons/svg/{name}.svg`; Bob does not import or
 validate against an icon registry at runtime and does not inline SVG source. Decorative icons use
 `aria-hidden="true"`; icon-only controls keep the accessible name on the
 control. Unfamiliar ToolDrawer icon actions use the Dieter CSS tooltip contract
-on hover and keyboard focus without changing their command behavior.
+on pointer hover without changing their command behavior.
 
 ## Open Contract
 
