@@ -42,6 +42,7 @@ function testOrdering() {
     assert.equal(h.entries[0].role, 'user');
     assert.equal(h.entries[0].text, 'question 1');
     assert.equal(h.entries[1].role, 'assistant');
+    assert.ok('text' in h.entries[1]);
     assert.equal(h.entries[1].text, 'answer 1');
     assert.equal(h.entries[2].role, 'user');
     assert.equal(h.entries[3].role, 'assistant');
@@ -53,6 +54,7 @@ function testOrdering() {
     h = appendAssistantText(h, 'World');
     // Should be one entry with combined text (consecutive deltas merge)
     assert.equal(h.entries.length, 1);
+    assert.ok('text' in h.entries[0]);
     assert.equal(h.entries[0].text, 'Hello World');
   });
 
@@ -63,6 +65,7 @@ function testOrdering() {
     h = appendAssistantText(h, 'a2');
     // assistant texts merge after a user message
     assert.equal(h.entries.length, 2);
+    assert.ok('text' in h.entries[1]);
     assert.equal(h.entries[1].text, 'a1a2');
   });
 }
@@ -79,6 +82,7 @@ function testToolCallOnce() {
     const last = h.entries[1];
     assert.equal(last.role, 'assistant');
     assert.ok('toolCall' in last);
+    assert.ok(!('text' in last), 'tool-only history does not invent text');
     if ('toolCall' in last && last.toolCall) {
       assert.equal(last.toolCall.toolCallId, 'call-1');
       assert.equal(last.toolCall.toolName, 'apply_widget_ops');
@@ -95,6 +99,7 @@ function testToolCallOnce() {
     const entry = h.entries[0];
     assert.ok('toolCall' in entry);
     assert.ok('toolResult' in entry);
+    assert.ok(!('text' in entry), 'tool result remains on the tool-only entry');
     if ('toolResult' in entry) {
       const result = entry.toolResult as { ok: boolean; changedPaths: string[] };
       assert.ok(result.ok);
@@ -122,6 +127,7 @@ function testToolCallOnce() {
     assert.equal(h.entries[0].role, 'user');
     assert.ok('toolCall' in h.entries[1] && 'toolResult' in h.entries[1]);
     assert.equal(h.entries[2].role, 'assistant');
+    assert.ok('text' in h.entries[2]);
     assert.equal(h.entries[2].text, 'Done!');
   });
 }
@@ -146,6 +152,8 @@ function testWireBounds() {
     const wire = toWireHistory(h);
     assert.equal(wire.length, 8);
     // Tail kept — the most recent messages
+    assert.ok('text' in wire[0]);
+    assert.ok('text' in wire[7]);
     assert.equal(wire[0].text, 'msg 4');
     assert.equal(wire[7].text, 'msg 11');
   });

@@ -1,6 +1,6 @@
 # PRD 129C — Publish And Generate Serving Package
 
-Status: **PUBLICATION/ATOMIC-STORAGE/CACHE CORRECTION DEPLOYED AND TECHNICALLY VERIFIED IN CLOUD-DEV 2026-08-19 — OWNER QA PENDING**
+Status: **CLOSURE VERIFICATION IN EXECUTION — REPEATED-IDENTITY MATERIALIZATION CORRECTION REQUIRED 2026-08-20**
 
 Parent: `129__PRD__Clickeen_Widget_Software_And_Instance_Lifecycle_Architecture.md`
 
@@ -658,3 +658,21 @@ product commit and main push: a6678966
 deploy: Worker deployment, Roma/Bob runtime reachability, and Tokyo R2 product-root sync passed
 live product: corrected publication/storage/cache runtime is active; technical verification passed; owner QA pending
 ```
+
+## 23. Closure Materialization Correction
+
+Agent-executed closure verification found that deployed Publish materialized
+repeated stable identity coordinates with Mustache's `&#x3D;` entity text while
+stored overlay keys use the canonical literal `=`. The correction belongs to
+the one generic render producer in `@clickeen/widget-foundation`: preserve
+literal `=` inside the already-quoted content-path attribute while retaining
+normal HTML escaping for unsafe characters. Publish, Roma policy, Tokyo
+storage, the stable identity contract, and every Widget's Core remain
+unchanged.
+
+After the corrected Roma build is deployed, the affected published FAQ
+instance `VUWUJ7OQ0Y` must be explicitly Republished through the existing Roma
+command. That one authorized release replaces its atomic public package; it
+does not change editable source or overlays. Local materializer proof,
+independent V1-V8 audit, exact deploy evidence, and selected-locale live FAQ
+proof are required before this SubPRD closes. Owner acceptance is not a gate.

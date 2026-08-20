@@ -1,7 +1,7 @@
 # PRD 130B — Defensive Construction Remediation Execution Plan
 
-**Status:** POST-DEPLOYMENT AUDIT CORRECTION IN EXECUTION — prior Slices 0–9
-remain historical; correction Slices 11–16 govern the current pass
+**Status:** CLOUD-DEV CONTINUATION CORRECTION IN EXECUTION — prior Slices 0–15
+remain historical; Slice 16.5 governs the exact remaining shared-history fix
 
 **Date:** 2026-08-19
 
@@ -82,11 +82,11 @@ Do not inspect, change, verify, deploy, or opportunistically clean up:
 | Product surface | Roma account domains and Roma Builder header; Bob browser-memory editor and Copilot pane |
 | Account/session coordinate | Existing Roma current account plus the existing Bob session/open target |
 | Storage coordinate | Unchanged Tokyo instance/asset storage and Michael account/member truth |
-| Route/API boundary | Existing Roma command routes and existing Bob `save-instance`/Copilot transports |
+| Route/API boundary | Existing Roma command routes, existing Bob `save-instance`/Copilot transports, and the shared external `CopilotTurnRequest` parser |
 | New local protocol | Only `bob:save-control-state` and `host:save-request` inside the existing Roma/Bob iframe bridge |
 | Design authority | Existing Dieter Popup, Button, Spinner, Icon, Table, tokens, and motion |
-| Runtime surface | Roma and Bob Cloudflare Pages from `main`; the bounded San Francisco correction uses its existing Worker deploy surface; Dieter source is compiled into its consumers |
-| Verification surface | Focused local behavior suites, deployed cloud-dev Roma/Builder continuation flow, San Francisco health, and owner QA |
+| Runtime surface | Roma and Bob Cloudflare Pages from `main`; San Francisco and Product Copilot use their existing Worker deploy surfaces only when their compiled inputs change; Dieter source is compiled into its consumers |
+| Verification surface | Focused local behavior suites and the documented signed-in cloud-dev Roma/Builder continuation, Stop, Save, confirmation, and geometry flows executed by the agent |
 
 The division of labor is fixed:
 
@@ -96,10 +96,11 @@ The division of labor is fixed:
   Copilot apply/Undo, and visible Copilot message state.
 - Dieter owns only reusable presentation and mechanics.
 - Tokyo and Michael keep their current storage and relational authority.
-- Product Copilot and San Francisco wire contracts do not change. San
-  Francisco's existing Clickeen-to-AI-SDK message adapter is the only added
-  runtime code authority after live verification exposed its continuation
-  representation defect; Product Copilot is verification-only.
+- San Francisco's existing Clickeen-to-AI-SDK message adapter remains the
+  authority for its already-deployed representation correction. The exact
+  remaining defect is owned by Bob's structured-history producer and the
+  shared external Copilot request contract; Product Copilot consumes that
+  trusted branch directly and is the cross-system verification surface.
 
 ## 4. Change categories
 
@@ -1167,9 +1168,54 @@ records agree, and the independent audit has no unresolved blocker.
       member; add no product validator, fallback, route, or protocol.
 - [x] Run San Francisco typecheck/model-turn tests plus the affected Product
       Copilot contract/full-loop tests.
-- [ ] Push directly to `main`, observe the documented Worker and Pages deploy
-      surfaces for the corrected SHA, and rerun the same signed-in smoke.
+- [x] Push directly to `main` as
+      `2ec4ea87e8914e9280606e88862abd30b6e4137c`; observe Worker run
+      `32390027307`, Bob Pages deployment
+      `30bbb9c1-3429-4493-b26c-11e31a196468`, and Roma Pages deployment
+      `ed3c41f4-e2a4-429a-a987-a730ed1521fd`, all successful for the corrected
+      revision.
+- [x] Rerun the same signed-in smoke. It passed initial edit/application and
+      continuation dispatch, then failed visibly at Roma external admission
+      with HTTP `422` because the shared history contract rejected Bob's empty
+      `text` on an assistant tool-call entry.
+
+#### Step 16.5 — Make tool-only history one exact shared branch
+
+- [x] Record the reachable flow and authority expansion before code: Bob emits
+      a tool-call history entry, Roma parses the external continuation, Product
+      Copilot converts the trusted entry to the San Francisco assistant
+      tool-call message.
+- [x] Change `CopilotHistoryEntry` so user/assistant text entries retain
+      required non-empty text while assistant tool-call entries carry
+      `toolCall` plus optional `toolResult` and no invented `text`.
+- [x] Make those TypeScript branches mutually exclusive so a caller cannot
+      construct a typed tool entry with invented text or a text entry with an
+      orphan result even though the runtime parser would reject it.
+- [x] Update the one shared external parser to admit those exact branches,
+      require assistant role for tool calls, and keep malformed browser input
+      visibly rejected. Add no downstream validator.
+- [x] Update Bob's existing `appendToolCall` producer to emit the tool-only
+      branch. Preserve ordering, result attachment, wire bounds, visible chat,
+      and session ownership.
+- [x] Record the assistant tool call plus its exact success or failure result
+      before every continuation. A rejected edit may not send a provider tool
+      result without the preceding assistant tool-call history entry.
+- [x] Prove the external parser accepts the Bob-produced tool-only call/result,
+      rejects empty text-only entries and user tool calls, and preserves exact
+      tool values.
+- [x] Prove Bob's model history emits no placeholder text and the Product
+      Copilot full loop produces exactly one assistant tool call plus one tool
+      result in provider order.
+- [x] Run shared-contract, Bob, Roma, Product Copilot, and San Francisco
+      focused tests/typechecks plus `git diff --check`, then obtain an
+      independent V1–V8 audit.
+- [ ] Commit and push directly to `main`, observe only affected documented
+      deploy surfaces, and rerun the same signed-in cloud-dev smoke through
+      terminal completion, idle transcript/Undo retention, and Stop release.
+- [ ] Reconcile canonical manuals and this execution record to exact deployed
+      evidence; do not retain owner-acceptance as a closure gate.
 
 **Slice 16 exit gate:** the complete correction is pushed and deployed through
-the documented direct-main process, owning live evidence is recorded honestly,
-and only genuinely unsafe owner-data checks remain pending.
+the documented direct-main process, the same signed-in continuation completes
+through the owning live path, and agent-executed functionality evidence is
+recorded honestly without substituting owner acceptance.

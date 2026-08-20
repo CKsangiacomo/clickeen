@@ -76,11 +76,12 @@ async function testPackageWithOneShellContract(): Promise<void> {
 }
 
 function contentMarker(identityKey: string): string {
-  return `data-ck-content-path="${identityKey.replaceAll('=', '&#x3D;')}"`;
+  return `data-ck-content-path="${identityKey}"`;
 }
 
 async function testStableContentCoordinates(): Promise<void> {
   const input = cloneInput(baseMaterializerInput);
+  input.state.headline = `A & < > " ' / \` = B`;
   input.compiled.widgetSoftware.widgetHtml = `<body>
 <section data-ck-widget="contract-widget">
   <h1 data-ck-content-path="{{$ck.headline.path}}">{{headline}}</h1>
@@ -99,7 +100,15 @@ async function testStableContentCoordinates(): Promise<void> {
   const thirdKey = 'contract-widget|item-title|items[].title|items[].id=third';
   const initial = await materializeRuntimePackage(input);
   assertSuccess(initial);
+  assert.doesNotMatch(
+    initial.files.indexHtml,
+    /data-ck-content-path="[^"]*&#x3D;/,
+  );
   assert.ok(initial.files.indexHtml.includes(contentMarker('contract-widget|headline|headline')));
+  assert.ok(
+    initial.files.indexHtml.includes('A &amp; &lt; &gt; &quot; &#39; &#x2F; &#x60; = B'),
+    'ordinary values retain HTML escaping while equals remains literal',
+  );
   assert.ok(initial.files.indexHtml.includes(contentMarker('contract-widget|eyebrow|nested.eyebrow')));
   assert.match(
     initial.files.indexHtml,

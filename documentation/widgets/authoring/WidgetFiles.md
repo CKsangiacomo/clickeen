@@ -95,6 +95,13 @@ During rendering, exact editable customer-content values receive stable
 coordinates support exact Edge overlay expression; Bob and Tokyo-worker do not
 infer Widget paths.
 
+The generic render producer writes the stable identity key literally inside
+the quoted `data-ck-content-path` attribute. Repeated selectors therefore keep
+their canonical `=` character. The renderer still HTML-escapes `&`, `<`, `>`,
+quotes, slash, and backtick in ordinary values and coordinates; it does not use
+raw interpolation. Tokyo consumes the resulting exact coordinate and does not
+decode, normalize, or accept an alternate key.
+
 `data-ck-content-path` carries the field's stable `identityKey`, not its current
 array index. Scalar keys contain Widget type, role, and field pattern; repeated
 keys additionally contain every declared `arrayItemIdentity` path and stable

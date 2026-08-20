@@ -900,8 +900,10 @@ Bob enforces a tier step limit read from the signed policy
 (`limits.maxTurnsPerThread`, default 30) and refuses a continuation past that
 limit with a visible assistant message. Bob keeps a structured model history
 (`bob/lib/copilot/model-history.ts`) of user/assistant entries plus tool calls
-and results; this is the history sent on each request and is separate from the
-visible text-only chat bubbles.
+and results. User and assistant narration are non-empty text entries; an
+assistant tool call and its optional matching result are one exact tool-only
+entry with no invented text. This is the history sent on each request and is
+separate from the visible text-only chat bubbles.
 
 ## Preview
 

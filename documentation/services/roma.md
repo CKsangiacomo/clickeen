@@ -385,6 +385,11 @@ Roma invokes it only on explicit allowed Publish. Tokyo-worker receives the resu
 strings and stores them together in one atomic published `serve-state.json`; it
 never creates, compiles, renders, or alters Widget HTML/CSS/JavaScript.
 
+The shared render producer serializes stable content-slot identities literally
+inside the quoted `data-ck-content-path` attribute, including repeated-identity
+`=` selectors, while retaining normal HTML escaping for unsafe characters.
+This is producer output, not a Tokyo decoding rule or a Widget-specific path.
+
 Initial public content and presentation exist before `runtime.js` runs. The
 materializer may
 apply the same shared services for every Widget, but it may not branch on
@@ -851,7 +856,10 @@ Roma authenticates the current account, authorizes the route through the exact
 account-scoped saved-instance fact, and accepts the externally reachable
 `CopilotTurnRequest` through the shared `parseCopilotTurnRequest` transport
 parser in `@clickeen/ck-contracts/ai` before usage reservation or grant
-issuance. It then trusts Bob's exact `currentDraftContext` and the Product
+issuance. That one browser-ingress parser admits non-empty user/assistant text
+history and the distinct assistant tool-only branch carrying `toolCall` plus an
+optional exact `toolResult`; it never substitutes placeholder text. Roma then
+trusts Bob's accepted `currentDraftContext` and history plus the Product
 Copilot event stream as Clickeen-produced truth. It does not reload Tokyo
 source or cross-check source semantics during the turn. Usage is reserved only
 on the initial turn; continuations pass `skipTurnReservation`.

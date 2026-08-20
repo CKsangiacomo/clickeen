@@ -90,7 +90,10 @@ function testContinuation() {
   assertPass('successful continuation projects the exact applyOps result', () => {
     const executeBlock = SOURCE.match(/const executeBufferedToolCall[\s\S]{0,9000}/)?.[0] ?? '';
     const continuationBlock = SOURCE.match(/const sendContinuation[\s\S]{0,2600}/)?.[0] ?? '';
-    assert.ok(executeBlock.includes('}, applied.data)'), 'successful apply passes applied.data directly');
+    assert.ok(
+      executeBlock.includes('sendContinuation(turn, toolCallId, modelStepId, toolResult, applied.data)'),
+      'successful apply passes the recorded exact result and applied.data directly',
+    );
     assert.ok(continuationBlock.includes('currentConfig: currentDraftData'), 'visible controls use the supplied current draft');
     assert.ok(continuationBlock.includes('serializeInstanceDataSignature(currentDraftData)'), 'signature uses the same exact draft');
   });

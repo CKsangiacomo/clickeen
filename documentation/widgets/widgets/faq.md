@@ -1,6 +1,6 @@
 # FAQ Widget
 
-STATUS: CANONICAL CORE DEPLOYED TO CLOUD-DEV — OWNER QA PENDING
+STATUS: CANONICAL CORE DEPLOYED — REPEATED-IDENTITY LOCALE PACKAGE CORRECTION AWAITING DEPLOY/REPUBLISH
 
 ## Purpose
 
@@ -201,9 +201,11 @@ git diff --check -- tokyo/product/widgets/faq documentation/widgets/widgets/faq.
 ```
 
 Inspect the focused generated editor/materializer artifacts and materialized
-FAQ HTML/CSS/JavaScript. The authorized cloud-dev deployment and live
-Builder-open verification pass; owner QA and a fresh FAQ Publish/Republish
-exercise remain pending.
+FAQ HTML/CSS/JavaScript. The canonical Core and Builder-open path are deployed.
+Closure verification found that the stored FAQ overlays are already exact but
+the published package entity-encoded repeated identity `=` selectors, so the
+local generic producer correction still requires deployment, explicit
+Republish of `VUWUJ7OQ0Y`, and selected-locale repeated question/answer proof.
 
 ## Hard Stops
 

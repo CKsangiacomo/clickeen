@@ -239,16 +239,17 @@ export type ProductCopilotTurnEvent =
 // ---------------------------------------------------------------------------
 
 export type CopilotHistoryEntry =
-  | { role: 'user'; text: string }
-  | { role: 'assistant'; text: string }
+  | { role: 'user'; text: string; toolCall?: never; toolResult?: never }
+  | { role: 'assistant'; text: string; toolCall?: never; toolResult?: never }
   | {
       role: 'assistant';
-      text: string;
+      text?: never;
       toolCall: { toolCallId: string; toolName: string; input: unknown };
+      toolResult?: never;
     }
   | {
       role: 'assistant';
-      text: string;
+      text?: never;
       toolCall: { toolCallId: string; toolName: string; input: unknown };
       toolResult: unknown;
     };
@@ -309,17 +310,27 @@ function parseCopilotHistoryEntry(
   if (role !== 'user' && role !== 'assistant') {
     return { ok: false, issue: { path: `${path}.role`, message: 'Role must be user or assistant.' } };
   }
-  const text = record.text;
-  if (!isNonEmptyTrimmedString(text)) {
-    return { ok: false, issue: { path: `${path}.text`, message: 'Text must be a non-empty trimmed string.' } };
-  }
-  if (text.length > COPILOT_MAX_HISTORY_TEXT_CHARS) {
-    return { ok: false, issue: { path: `${path}.text`, message: `Text must be at most ${COPILOT_MAX_HISTORY_TEXT_CHARS} characters.` } };
-  }
-
   const toolCall = record.toolCall;
   if (toolCall === undefined) {
-    return { ok: true, entry: { role, text } as CopilotHistoryEntry };
+    if (record.toolResult !== undefined) {
+      return { ok: false, issue: { path: `${path}.toolResult`, message: 'ToolResult requires a toolCall.' } };
+    }
+    const text = record.text;
+    if (!isNonEmptyTrimmedString(text)) {
+      return { ok: false, issue: { path: `${path}.text`, message: 'Text must be a non-empty trimmed string.' } };
+    }
+    if (text.length > COPILOT_MAX_HISTORY_TEXT_CHARS) {
+      return { ok: false, issue: { path: `${path}.text`, message: `Text must be at most ${COPILOT_MAX_HISTORY_TEXT_CHARS} characters.` } };
+    }
+    return role === 'user'
+      ? { ok: true, entry: { role: 'user', text } }
+      : { ok: true, entry: { role: 'assistant', text } };
+  }
+  if (role !== 'assistant') {
+    return { ok: false, issue: { path: `${path}.role`, message: 'ToolCall history entries must use the assistant role.' } };
+  }
+  if (record.text !== undefined) {
+    return { ok: false, issue: { path: `${path}.text`, message: 'Text must be absent on toolCall history entries.' } };
   }
   if (typeof toolCall !== 'object' || toolCall === null || Array.isArray(toolCall)) {
     return { ok: false, issue: { path: `${path}.toolCall`, message: 'ToolCall must be an object when present.' } };
@@ -340,17 +351,15 @@ function parseCopilotHistoryEntry(
     return {
       ok: true,
       entry: {
-        role,
-        text,
+        role: 'assistant',
         toolCall: { toolCallId: tc.toolCallId, toolName: tc.toolName, input: tc.input },
-      } as CopilotHistoryEntry,
+      },
     };
   }
   return {
     ok: true,
     entry: {
-      role,
-      text,
+      role: 'assistant',
       toolCall: { toolCallId: tc.toolCallId, toolName: tc.toolName, input: tc.input },
       toolResult,
     },

@@ -1,8 +1,8 @@
 # Localization Capability
 
-STATUS: ALL CURRENT WIDGETS DEPLOYED TO CLOUD-DEV — OWNER QA PENDING
+STATUS: STABLE OVERLAY CONTRACT DEPLOYED — LITERAL REPEATED-IDENTITY PACKAGE CORRECTION AWAITING DEPLOY/REPUBLISH
 
-Last updated: 2026-08-18
+Last updated: 2026-08-20
 
 ## Product Contract
 
@@ -220,6 +220,11 @@ they require explicit Generate Translations or explicit deletion. Bob and
 Serve contain no old-key fallback, migration-on-read, or second overlay
 schema.
 
+The CLICKEEN cloud-dev cutover is complete: `VUWUJ7OQ0Y` is the only instance
+with overlays; its 28 locale files exactly cover the 28 active non-base
+locales, and every file's 12 keys exactly match the 12 stable identity keys in
+current saved source. No Generate/delete product-data operation is pending.
+
 Bob preview supplies the exact locale policy to the shared switcher. Public
 index responses instead author `<option>` elements from the exact base locale
 and stored overlay coordinates at the Edge. The shared runtime reads those
@@ -253,7 +258,8 @@ relationship without a second SEO/Discovery renderer.
 ## Current Repository And Deploy State
 
 - Big Bang, Cards, Countdown, FAQ, and Logo Showcase use the canonical Widget
-  source contract and materialize exact localization slots in cloud-dev.
+  source contract and authored stable localization slots. The then-published
+  FAQ package's repeated-selector serialization mismatch is named below.
 - Overlay generation, Bob preview, materialized slots, and Edge expression use
   stable `identityKey` coordinates in the deployed implementation.
 - Tokyo-worker's deployed public path uses `HTMLRewriter` and contains no
@@ -263,9 +269,8 @@ relationship without a second SEO/Discovery renderer.
   run `32087699030` plus the Git-connected Bob/Roma Pages deploys. The later
   shared-composition correction `03132e5f` and verification `2b13e7c1` are also
   present on cloud-dev.
-- Remote account product data was not changed by those code deployments.
-  Previously stored positional overlays still require the documented explicit
-  Generate Translations or deletion cutover.
+- Remote account overlay truth is already fully on the stable-identity
+  contract; no positional key remains and no compatibility read exists.
 - The newer pre-GA atomic source/published-serve-state cutover is complete for
   all four legacy saved cloud-dev instances under `CLICKEEN`; the two public
   instances were Republished through Roma. There is no compatibility reader or
@@ -279,6 +284,12 @@ relationship without a second SEO/Discovery renderer.
   product-inert. Cache HIT/MISS or purge success is intentionally not an
   acceptance gate; ordinary localization and public-serving owner QA remains
   pending.
+- Agent closure verification on 2026-08-20 proved a separate deployed package
+  producer mismatch: repeated FAQ content paths contained Mustache entity text
+  for `=` and therefore missed the exact stored overlay keys. The local shared
+  producer correction retains unsafe-character escaping while emitting the
+  canonical literal coordinate. Roma/Bob deployment, affected FAQ Republish,
+  and selected-locale repeated-content proof remain pending at this point.
 
 ## Verification
 

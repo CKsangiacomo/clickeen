@@ -169,6 +169,7 @@ async function runBobDraftEditUndoSmoke(romaBase, authStatePath) {
     releaseInitialRequest = deferred();
     const continuationRequest = deferred();
     releaseContinuationRequest = deferred();
+    const continuationResponse = deferred();
     const stoppedRequest = deferred();
     const stoppedRequestFailure = deferred();
     let initialCount = 0;
@@ -178,6 +179,20 @@ async function runBobDraftEditUndoSmoke(romaBase, authStatePath) {
     page.on('requestfailed', (request) => {
       if (request !== stoppedNetworkRequest) return;
       stoppedRequestFailure.resolve(request.failure()?.errorText || 'request failed');
+    });
+
+    page.on('response', async (response) => {
+      const request = response.request();
+      if (request.method() !== 'POST' || !request.url().includes('/copilot')) return;
+      let body;
+      try {
+        body = request.postDataJSON();
+      } catch {
+        return;
+      }
+      if (body?.kind !== 'continuation') return;
+      const stream = await response.text().catch((error) => `response-read-failed: ${String(error)}`);
+      continuationResponse.resolve({ status: response.status(), stream });
     });
 
     await page.route('**/api/account/instances/*/copilot', async (route) => {
@@ -272,7 +287,13 @@ async function runBobDraftEditUndoSmoke(romaBase, authStatePath) {
     await frame.getByRole('button', { name: 'Undo' }).waitFor({ timeout: 90_000 });
     await waitForEnabled(manualMode, 90_000, 'the Copilot continuation to terminate').catch(async (error) => {
       const conversation = await frame.getByLabel('Copilot conversation').innerText().catch(() => '');
-      throw new Error(`Copilot continuation did not terminate. Conversation: ${conversation || '[empty]'}`, { cause: error });
+      const network = await within(continuationResponse.promise, 5_000, 'the continuation network response')
+        .catch((networkError) => ({ status: 'unavailable', stream: String(networkError) }));
+      throw new Error(
+        `Copilot continuation did not terminate. Conversation: ${conversation || '[empty]'}. `
+        + `Network: HTTP ${network.status} ${network.stream || '[empty]'}`,
+        { cause: error },
+      );
     });
 
     await manualMode.click();

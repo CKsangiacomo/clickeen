@@ -238,7 +238,7 @@ export function buildSanFranciscoTurnRequest(args: {
   ];
 
   for (const entry of turnRequest.conversationHistory) {
-    if ('toolCall' in entry) {
+    if (entry.toolCall !== undefined) {
       messages.push({
         role: 'assistant',
         content: null,
@@ -250,7 +250,7 @@ export function buildSanFranciscoTurnRequest(args: {
       messages.push({ role: entry.role, content: entry.text });
     }
 
-    if ('toolResult' in entry) {
+    if (entry.toolCall !== undefined && entry.toolResult !== undefined) {
       messages.push({
         role: 'tool',
         toolCallId: entry.toolCall.toolCallId,

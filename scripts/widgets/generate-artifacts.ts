@@ -476,7 +476,7 @@ async function main(): Promise<void> {
   }
   writeOrCheck(
     path.join(repoRoot, 'roma/generated/widget-materializer-artifacts.ts'),
-    generatedMaterializerIndex(widgetTypes),
+    generatedMaterializerIndex(allWidgetTypes),
   );
   console.log(
     `[generate-widget-artifacts] ${checkOnly ? 'verified' : 'wrote'} ${widgetTypes.length} widget artifact pairs`,

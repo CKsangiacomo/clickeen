@@ -340,7 +340,61 @@ async function testProductionCopilotBehavior(): Promise<void> {
     assert.equal(await page.getByText('Working', { exact: true }).count(), 0, 'text-only terminal success must clear Working');
     assert.equal(await page.getByText('Applied', { exact: true }).count(), 1, 'text-only success must not invent a second Applied result');
 
-    const failedRequest = await sendPrompt(page, 'Fail this turn', 4);
+    const rejectedRequest = await sendPrompt(page, 'Try an invalid edit', 4);
+    const rejectedTurnId = rejectedRequest.body.userTurnId as string;
+    await emit(page, rejectedRequest.requestId, agentEvent('tool_call', rejectedTurnId, {
+      toolCallId: 'invalid-call',
+      toolName: 'apply_widget_ops',
+      input: { ops: [] },
+    }, 'invalid-step'));
+    await emit(page, rejectedRequest.requestId, agentEvent('model_step_finished', rejectedTurnId, {
+      finishReason: 'tool-calls',
+      requestedProvider: 'openai',
+      requestedModel: 'test-model',
+      reportedModel: 'test-model',
+      promptTokens: 1,
+      completionTokens: 1,
+      latencyMs: 1,
+    }, 'invalid-step'));
+    await page.waitForFunction(() => (
+      (window as any).__bobCopilotHarness.commands().filter(
+        (command: HostCommand) => command.command === 'run-copilot',
+      ).length >= 5
+    ));
+    const rejectedContinuation = (await runCommands(page))[4];
+    assert.ok(rejectedContinuation, 'rejected tool application must send one continuation');
+    assert.equal(rejectedContinuation.body.kind, 'continuation');
+    const rejectedHistoryEntry = rejectedContinuation.body.conversationHistory.find(
+      (entry: any) => entry.toolCall?.toolCallId === 'invalid-call',
+    );
+    assert.ok(rejectedHistoryEntry, 'rejected continuation must retain the assistant tool call');
+    assert.equal('text' in rejectedHistoryEntry, false, 'rejected tool history must not invent assistant text');
+    assert.deepEqual(rejectedHistoryEntry.toolCall, {
+      toolCallId: 'invalid-call',
+      toolName: 'apply_widget_ops',
+      input: { ops: [] },
+    });
+    assert.deepEqual(rejectedHistoryEntry.toolResult, {
+      ok: false,
+      errors: [{ opIndex: 0, message: 'Tool call must include a non-empty ops array.' }],
+    });
+    await complete(page, rejectedRequest.requestId);
+    await emit(page, rejectedContinuation.requestId, agentEvent('model_step_finished', rejectedTurnId, {
+      finishReason: 'stop',
+      requestedProvider: 'openai',
+      requestedModel: 'test-model',
+      reportedModel: 'test-model',
+      promptTokens: 1,
+      completionTokens: 1,
+      latencyMs: 1,
+    }, 'invalid-terminal-step'));
+    await emit(page, rejectedContinuation.requestId, agentEvent('agent_turn_finished', rejectedTurnId, {}));
+    await complete(page, rejectedContinuation.requestId);
+    await page.waitForFunction(() => document.querySelector('[data-session-probe]')?.getAttribute('data-active-turn-key') === '');
+    await page.getByText('Not applied', { exact: true }).last().waitFor();
+    assert.equal(await manualMode.isEnabled(), true, 'rejected edit completion must release mode switching');
+
+    const failedRequest = await sendPrompt(page, 'Fail this turn', 6);
     const failedTurnId = failedRequest.body.userTurnId as string;
     await emit(page, failedRequest.requestId, agentEvent('agent_turn_error', failedTurnId, {
       code: 'MODEL_FAILED',
@@ -351,7 +405,7 @@ async function testProductionCopilotBehavior(): Promise<void> {
     await page.getByText('Not applied', { exact: true }).last().waitFor();
     assert.equal(await manualMode.isEnabled(), true, 'visible failure must release mode switching');
 
-    const stopRequest = await sendPrompt(page, 'Try another change', 5);
+    const stopRequest = await sendPrompt(page, 'Try another change', 7);
     assert.equal(await manualMode.isDisabled(), true);
     await page.getByRole('button', { name: 'Stop Copilot' }).click();
     await page.waitForFunction((targetRequestId) => (
@@ -380,9 +434,9 @@ async function testProductionCopilotBehavior(): Promise<void> {
     await complete(page, stopRequest.requestId);
     await page.waitForTimeout(50);
     assert.equal(await page.locator('[data-session-probe]').getAttribute('data-instance-data'), '{"title":"Before"}', 'late events after Stop must not apply');
-    assert.equal((await runCommands(page)).length, 5, 'late events after Stop must not continue');
+    assert.equal((await runCommands(page)).length, 7, 'late events after Stop must not continue');
 
-    const teardownRequest = await sendPrompt(page, 'Change during teardown', 6);
+    const teardownRequest = await sendPrompt(page, 'Change during teardown', 8);
     await page.getByText('Working', { exact: true }).last().waitFor();
     await page.evaluate(() => (window as any).__bobCopilotHarness.setDrawerMounted(false));
     await page.waitForFunction((targetRequestId) => (
@@ -410,7 +464,7 @@ async function testProductionCopilotBehavior(): Promise<void> {
     await complete(page, teardownRequest.requestId);
     await page.waitForTimeout(50);
     assert.equal(await page.locator('[data-session-probe]').getAttribute('data-instance-data'), '{"title":"Before"}', 'late events after teardown must not apply');
-    assert.equal((await runCommands(page)).length, 6, 'late events after teardown must not continue');
+    assert.equal((await runCommands(page)).length, 8, 'late events after teardown must not continue');
 
     await page.evaluate(() => (window as any).__bobCopilotHarness.setDrawerMounted(true));
     await page.getByRole('radio', { name: 'Manual' }).waitFor();

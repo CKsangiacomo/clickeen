@@ -1,6 +1,6 @@
 # Overlay Architecture
 
-Last updated: 2026-08-18
+Last updated: 2026-08-20
 
 ## Product Rule
 
@@ -127,6 +127,12 @@ After deployment, an affected locale requires an explicit Generate
 Translations operation or explicit overlay deletion. There is no positional
 read fallback, migration-on-Serve, or alternate overlay schema.
 
+CLICKEEN cloud-dev has no remaining affected positional locale: the only 28
+stored overlays are on `VUWUJ7OQ0Y`, and every file's exact 12-key set equals
+current saved stable-identity truth. The closure mismatch is instead in the
+then-published package, where repeated `=` selectors were entity-encoded by the
+materializer. The producer correction changes no overlay coordinate or data.
+
 ## Current Operations
 
 | Operation | Authority |
@@ -178,8 +184,10 @@ owner-produced overlays; they do not project or compare values against saved
 content. The public route and publication gate remain real, and no requested
 locale falls back to base.
 
-The all-Widget changes are deployed and verified in cloud-dev; owner QA remains
-pending.
+The stable overlay contract and generic Tokyo path are deployed. A local
+producer correction for literal repeated identity selectors awaits deployment,
+affected FAQ Republish, and agent-executed selected-locale proof before final
+closure.
 
 The separate pre-GA atomic source/published-serve-state cutover is complete for
 all four legacy saved cloud-dev instances under `CLICKEEN`; the two public

@@ -99,6 +99,55 @@ function testParser() {
     }
   });
 
+  assertPass('assistant tool-only history with exact result passes', () => {
+    const toolResult = { ok: true, changedPaths: ['title'] };
+    const req = {
+      ...validContinuationRequest(),
+      conversationHistory: [
+        { role: 'user', text: 'Change the title' },
+        {
+          role: 'assistant',
+          toolCall: {
+            toolCallId: 'call-1',
+            toolName: 'apply_widget_ops',
+            input: { ops: [{ op: 'set', path: 'title', value: 'Hello' }] },
+          },
+          toolResult,
+        },
+      ],
+    };
+    const result = parseCopilotTurnRequest(req);
+    assert.ok(result.ok);
+    if (result.ok) {
+      const entry = result.request.conversationHistory[1];
+      assert.ok('toolCall' in entry);
+      assert.ok(!('text' in entry));
+      assert.deepEqual(entry.toolCall.input, req.conversationHistory[1].toolCall.input);
+      assert.ok('toolResult' in entry);
+      if ('toolResult' in entry) assert.deepEqual(entry.toolResult, toolResult);
+    }
+  });
+
+  assertPass('assistant tool-only history without a result passes', () => {
+    const toolCall = {
+      toolCallId: 'call-1',
+      toolName: 'apply_widget_ops',
+      input: { ops: [{ op: 'set', path: 'title', value: 'Hello' }] },
+    };
+    const result = parseCopilotTurnRequest({
+      ...validInitialRequest(),
+      conversationHistory: [{ role: 'assistant', toolCall }],
+    });
+    assert.ok(result.ok);
+    if (result.ok) {
+      const entry = result.request.conversationHistory[0];
+      assert.ok(entry.toolCall !== undefined);
+      assert.ok(!('text' in entry));
+      assert.ok(!('toolResult' in entry));
+      assert.deepEqual(entry.toolCall, toolCall);
+    }
+  });
+
   assertPass('valid initial with routeInstanceId passes when instance matches', () => {
     const result = parseCopilotTurnRequest(validInitialRequest(), { routeInstanceId: 'inst-1' });
     assert.ok(result.ok);
@@ -174,6 +223,49 @@ function testParser() {
     const req = {
       ...validInitialRequest(),
       conversationHistory: [{ role: 'system', text: 'not allowed' }],
+    };
+    const result = parseCopilotTurnRequest(req);
+    assert.ok(!result.ok);
+  });
+
+  assertPass('rejects empty text-only history entry', () => {
+    const req = {
+      ...validInitialRequest(),
+      conversationHistory: [{ role: 'assistant', text: '' }],
+    };
+    const result = parseCopilotTurnRequest(req);
+    assert.ok(!result.ok);
+  });
+
+  assertPass('rejects user-owned tool call history entry', () => {
+    const req = {
+      ...validInitialRequest(),
+      conversationHistory: [{
+        role: 'user',
+        toolCall: { toolCallId: 'call-1', toolName: 'apply_widget_ops', input: {} },
+      }],
+    };
+    const result = parseCopilotTurnRequest(req);
+    assert.ok(!result.ok);
+  });
+
+  assertPass('rejects invented text on a tool call history entry', () => {
+    const req = {
+      ...validInitialRequest(),
+      conversationHistory: [{
+        role: 'assistant',
+        text: '',
+        toolCall: { toolCallId: 'call-1', toolName: 'apply_widget_ops', input: {} },
+      }],
+    };
+    const result = parseCopilotTurnRequest(req);
+    assert.ok(!result.ok);
+  });
+
+  assertPass('rejects orphan tool result on a text history entry', () => {
+    const req = {
+      ...validInitialRequest(),
+      conversationHistory: [{ role: 'assistant', text: 'Done', toolResult: { ok: true } }],
     };
     const result = parseCopilotTurnRequest(req);
     assert.ok(!result.ok);

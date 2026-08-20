@@ -30,6 +30,8 @@ import {
 // here to prove the trimmed history round-trips through the SF builder.
 import {
   emptyCopilotModelHistory,
+  appendToolCall,
+  appendToolResult,
   appendUserMessage,
   toWireHistory,
 } from '../../../bob/lib/copilot/model-history';
@@ -155,6 +157,13 @@ function testToolCallContinuationTurn(): void {
     // Continuation where the prior tool call lives in history (unanswered —
     // its result is supplied only via the top-level toolResult field, which is
     // the shape the failure path in Bob produces).
+    let history = emptyCopilotModelHistory();
+    history = appendUserMessage(history, 'Set the title to Hello');
+    history = appendToolCall(history, {
+      toolCallId: 'call-1',
+      toolName: 'apply_widget_ops',
+      input: { ops: [{ op: 'set', path: 'title', value: 'Hello' }] },
+    });
     const turnRequest: CopilotTurnRequest = {
       version: 1,
       kind: 'continuation',
@@ -164,19 +173,7 @@ function testToolCallContinuationTurn(): void {
       toolCallId: 'call-1',
       toolName: 'apply_widget_ops',
       toolResult: { ok: true, changedPaths: ['title'] },
-      conversationHistory: [
-        { role: 'user', text: 'Set the title to Hello' },
-        // Prior assistant tool call — NO result attached on this entry.
-        {
-          role: 'assistant',
-          text: '',
-          toolCall: {
-            toolCallId: 'call-1',
-            toolName: 'apply_widget_ops',
-            input: { ops: [{ op: 'set', path: 'title', value: 'Hello' }] },
-          },
-        },
-      ],
+      conversationHistory: toWireHistory(history),
       currentDraftContext: makeDraftContext(),
     };
 
@@ -205,6 +202,13 @@ function testContinuationCoordinates(): void {
   console.log('\n--- 3. Continuation coordinates ---');
 
   assertPass('user text, assistant tool-call, tool-result each exactly once', () => {
+    let history = emptyCopilotModelHistory();
+    history = appendUserMessage(history, 'Make the title uppercase');
+    history = appendToolCall(history, {
+      toolCallId: 'call-1',
+      toolName: 'apply_widget_ops',
+      input: { ops: [{ op: 'set', path: 'title', value: 'HELLO' }] },
+    });
     const turnRequest: CopilotTurnRequest = {
       version: 1,
       kind: 'continuation',
@@ -214,18 +218,7 @@ function testContinuationCoordinates(): void {
       toolCallId: 'call-1',
       toolName: 'apply_widget_ops',
       toolResult: { ok: true, changedPaths: ['title'] },
-      conversationHistory: [
-        { role: 'user', text: 'Make the title uppercase' },
-        {
-          role: 'assistant',
-          text: '',
-          toolCall: {
-            toolCallId: 'call-1',
-            toolName: 'apply_widget_ops',
-            input: { ops: [{ op: 'set', path: 'title', value: 'HELLO' }] },
-          },
-        },
-      ],
+      conversationHistory: toWireHistory(history),
       currentDraftContext: makeDraftContext(),
     };
 
@@ -264,6 +257,14 @@ function testNoDuplicationWhenHistoryCarriesResult(): void {
     // entry, AND sendContinuation passes the same result as the top-level
     // toolResult. The SF request must still contain the result exactly once.
     const sharedResult = { ok: true, changedPaths: ['title'] };
+    let history = emptyCopilotModelHistory();
+    history = appendUserMessage(history, 'edit the title');
+    history = appendToolCall(history, {
+      toolCallId: 'call-1',
+      toolName: 'apply_widget_ops',
+      input: { ops: [{ op: 'set', path: 'title', value: 'Hello' }] },
+    });
+    history = appendToolResult(history, 'call-1', sharedResult);
     const turnRequest: CopilotTurnRequest = {
       version: 1,
       kind: 'continuation',
@@ -273,19 +274,7 @@ function testNoDuplicationWhenHistoryCarriesResult(): void {
       toolCallId: 'call-1',
       toolName: 'apply_widget_ops',
       toolResult: sharedResult,
-      conversationHistory: [
-        { role: 'user', text: 'edit the title' },
-        {
-          role: 'assistant',
-          text: '',
-          toolCall: {
-            toolCallId: 'call-1',
-            toolName: 'apply_widget_ops',
-            input: { ops: [{ op: 'set', path: 'title', value: 'Hello' }] },
-          },
-          toolResult: sharedResult,
-        },
-      ],
+      conversationHistory: toWireHistory(history),
       currentDraftContext: makeDraftContext(),
     };
 
@@ -330,6 +319,8 @@ function testWireBoundsInTheLoop(): void {
     }
     const wire = toWireHistory(h);
     assert.equal(wire.length, MAX_CONVERSATION_HISTORY_MESSAGES);
+    assert.ok('text' in wire[0]);
+    assert.ok('text' in wire[7]);
     assert.equal(wire[0].text, 'msg 4', 'oldest tail entry is msg 4');
     assert.equal(wire[7].text, 'msg 11', 'newest entry is msg 11');
   });

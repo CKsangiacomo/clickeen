@@ -417,8 +417,18 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
     const { toolCallId, toolName, input, modelStepId } = turn.bufferedToolCall;
     turn.bufferedToolCall = null;
 
+    const recordToolExchange = (toolResult: unknown): unknown => {
+      turn.modelHistory = appendToolCall(turn.modelHistory, { toolCallId, toolName, input });
+      turn.modelHistory = appendToolResult(turn.modelHistory, toolCallId, toolResult);
+      return toolResult;
+    };
+
     const activeCompiled = compiled;
     if (!activeCompiled) {
+      recordToolExchange({
+        ok: false,
+        errors: [{ opIndex: 0, message: 'Editor context is unavailable.' }],
+      });
       pushTurnResultMessage({
         turn,
         presentationStatus: 'not-applied',
@@ -430,30 +440,32 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
 
     // Verify tool name
     if (toolName !== 'apply_widget_ops') {
+      const toolResult = recordToolExchange({
+        ok: false,
+        errors: [{ opIndex: 0, message: `Unknown tool: ${toolName}` }],
+      });
       pushTurnResultMessage({
         turn,
         presentationStatus: 'not-applied',
         text: COPILOT_INVALID_EDIT_MESSAGE,
       });
-      await sendContinuation(turn, toolCallId, modelStepId, {
-        ok: false,
-        errors: [{ opIndex: 0, message: `Unknown tool: ${toolName}` }],
-      }, instanceDataRef.current);
+      await sendContinuation(turn, toolCallId, modelStepId, toolResult, instanceDataRef.current);
       return;
     }
 
     // Extract and validate the ops batch
     const ops = (input as { ops?: unknown[] })?.ops;
     if (!Array.isArray(ops) || ops.length === 0) {
+      const toolResult = recordToolExchange({
+        ok: false,
+        errors: [{ opIndex: 0, message: 'Tool call must include a non-empty ops array.' }],
+      });
       pushTurnResultMessage({
         turn,
         presentationStatus: 'not-applied',
         text: COPILOT_INVALID_EDIT_MESSAGE,
       });
-      await sendContinuation(turn, toolCallId, modelStepId, {
-        ok: false,
-        errors: [{ opIndex: 0, message: 'Tool call must include a non-empty ops array.' }],
-      }, instanceDataRef.current);
+      await sendContinuation(turn, toolCallId, modelStepId, toolResult, instanceDataRef.current);
       return;
     }
 
@@ -465,15 +477,16 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
       ops: ops as WidgetOp[],
     });
     if (!expandedOps) {
+      const toolResult = recordToolExchange({
+        ok: false,
+        errors: [{ opIndex: 0, message: 'The edit could not be represented in this widget.' }],
+      });
       pushTurnResultMessage({
         turn,
         presentationStatus: 'not-applied',
         text: COPILOT_INVALID_EDIT_MESSAGE,
       });
-      await sendContinuation(turn, toolCallId, modelStepId, {
-        ok: false,
-        errors: [{ opIndex: 0, message: 'The edit could not be represented in this widget.' }],
-      }, instanceDataRef.current);
+      await sendContinuation(turn, toolCallId, modelStepId, toolResult, instanceDataRef.current);
       return;
     }
 
@@ -484,34 +497,36 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
       controls: activeCompiled.controls,
     });
     if (!inverseOps) {
+      const toolResult = recordToolExchange({
+        ok: false,
+        errors: [{ opIndex: 0, message: 'The edit could not be undone safely. Nothing was applied.' }],
+      });
       pushTurnResultMessage({
         turn,
         presentationStatus: 'not-applied',
         text: COPILOT_INVALID_EDIT_MESSAGE,
       });
-      await sendContinuation(turn, toolCallId, modelStepId, {
-        ok: false,
-        errors: [{ opIndex: 0, message: 'The edit could not be undone safely. Nothing was applied.' }],
-      }, instanceDataRef.current);
+      await sendContinuation(turn, toolCallId, modelStepId, toolResult, instanceDataRef.current);
       return;
     }
 
     // Apply through the existing Bob engine
     const applied = session.applyOps(expandedOps);
     if (!applied.ok) {
-      pushTurnResultMessage({
-        turn,
-        presentationStatus: 'not-applied',
-        text: COPILOT_INVALID_EDIT_MESSAGE,
-      });
-      await sendContinuation(turn, toolCallId, modelStepId, {
+      const toolResult = recordToolExchange({
         ok: false,
         errors: applied.errors.map((err) => ({
           opIndex: typeof err.opIndex === 'number' ? err.opIndex : 0,
           ...(err.path ? { path: err.path } : {}),
           message: err.message,
         })),
-      }, instanceDataRef.current);
+      });
+      pushTurnResultMessage({
+        turn,
+        presentationStatus: 'not-applied',
+        text: COPILOT_INVALID_EDIT_MESSAGE,
+      });
+      await sendContinuation(turn, toolCallId, modelStepId, toolResult, instanceDataRef.current);
       return;
     }
 
@@ -520,8 +535,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
     turn.postApplySignature = serializeInstanceDataSignature(applied.data);
 
     // Record tool call + result in the model history (once each)
-    turn.modelHistory = appendToolCall(turn.modelHistory, { toolCallId, toolName, input });
-    turn.modelHistory = appendToolResult(turn.modelHistory, toolCallId, {
+    const toolResult = recordToolExchange({
       ok: true,
       changedPaths: applied.changedPaths,
       postApplySignature: turn.postApplySignature,
@@ -548,11 +562,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
     });
 
     // Send continuation with the successful result
-    await sendContinuation(turn, toolCallId, modelStepId, {
-      ok: true,
-      changedPaths: applied.changedPaths,
-      postApplySignature: turn.postApplySignature,
-    }, applied.data);
+    await sendContinuation(turn, toolCallId, modelStepId, toolResult, applied.data);
   }, [
     compiled,
     controlsForAi,

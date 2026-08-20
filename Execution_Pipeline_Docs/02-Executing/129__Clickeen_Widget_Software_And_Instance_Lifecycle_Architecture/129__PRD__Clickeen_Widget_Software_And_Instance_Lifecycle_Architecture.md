@@ -1,6 +1,6 @@
 # PRD 129 — Clickeen Widget Software And Instance Lifecycle
 
-Status: **LIFECYCLE CORRECTION DEPLOYED AND TECHNICALLY VERIFIED IN CLOUD-DEV 2026-08-19 — OWNER QA PENDING**
+Status: **CLOSURE VERIFICATION IN EXECUTION — REPEATED-IDENTITY LOCALE SERVING CORRECTION REQUIRED 2026-08-20**
 
 Owner: Clickeen product owner/architect
 
@@ -588,3 +588,55 @@ cache policy: deployed source uses public, max-age=60, s-maxage=300, must-revali
 cache live QA: intentionally not a product acceptance gate
 independent V1-V8 audit: passed for the implementation; remote verification introduced no V1-V8 violation
 ```
+
+## 19. Closure Correction — Literal Stable Identity In Materialized HTML
+
+The agent-executed closure audit found one reachable deployed mismatch in the
+otherwise-correct stable-identity chain:
+
+```text
+CLICKEEN / VUWUJ7OQ0Y source.content.fields
+-> 12 exact stable identityKey values
+-> 28 stored non-base overlays with those same 12 keys
+-> published FAQ index.html
+-> repeated data-ck-content-path values contain Mustache's &#x3D; text
+-> Tokyo HTMLRewriter receives a decoded attribute value that does not equal
+   the stored literal identityKey
+-> scalar Header translation applies, repeated FAQ translation does not
+```
+
+The stored product data is already on the final stable-identity contract. No
+Generate/delete overlay cutover is required: the only stored overlays are the
+28 locale files for `VUWUJ7OQ0Y`, and their key sets exactly match current
+saved source truth. The stale pending-cutover statements above are historical
+and must be removed during final reconciliation.
+
+The correction stays at the producing authority. `@clickeen/widget-foundation`
+must render trusted stable identity coordinates with a literal `=` inside the
+already-quoted `data-ck-content-path` attribute while retaining Mustache's HTML
+escaping for every unsafe character and all ordinary authored values. Tokyo's
+generic content-slot lookup, stored overlays, identity contract, public route,
+and Widget Core remain unchanged. No FAQ branch, downstream decoder,
+compatibility key, overlay rewrite, fallback, or serving-time repair is
+authorized.
+
+Execution and proof are exact:
+
+1. change the shared render producer and its materializer contract test;
+2. regenerate/check all Widget artifacts, prove the documented focused FAQ
+   check preserves the complete all-Widget materializer registry, and run widget-foundation,
+   runtime-materializer, Roma, Bob, Tokyo-worker localization, and focused FAQ
+   gates;
+3. obtain an independent V1-V8 audit;
+4. push directly to `main` and observe the documented Bob/Roma Pages builds;
+5. Republish only the affected published FAQ instance `VUWUJ7OQ0Y` through
+   Roma's existing Publish route so stored `serve-state.json` receives the
+   corrected package;
+6. verify base and selected-locale public HTML through `dev.clk.live`, proving
+   repeated questions/answers change under the exact stored overlay while
+   scalar and base content remain correct; and
+7. reconcile every PRD/manual status to the agent-executed evidence. Human
+   owner acceptance is not a closure gate.
+
+This closure correction changes no Save/source truth and no overlay truth. The
+only remote product-data mutation is the explicit affected-instance Republish.

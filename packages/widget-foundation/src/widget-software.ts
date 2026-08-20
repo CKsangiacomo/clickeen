@@ -49,6 +49,10 @@ export type WidgetRenderContext = {
 
 type WidgetRenderRecord = Record<string, unknown>;
 
+function escapeWidgetHtmlValue(value: unknown): string {
+  return Mustache.escape(value).replaceAll('&#x3D;', '=');
+}
+
 export function annotateWidgetRenderCoordinates(
   value: unknown,
   concrete: string[] = [],
@@ -201,6 +205,9 @@ export function renderWidgetHtml(args: {
     },
     {
       core: args.software.coreHtml,
+    },
+    {
+      escape: escapeWidgetHtmlValue,
     },
   );
 }

@@ -1,6 +1,6 @@
 # PRD 129D — Serve Published Package
 
-Status: **ATOMIC-SERVING/CACHE CORRECTION DEPLOYED AND TECHNICALLY VERIFIED IN CLOUD-DEV 2026-08-19 — OWNER QA PENDING**
+Status: **CLOSURE VERIFICATION IN EXECUTION — REPEATED-IDENTITY LOCALE SERVING CORRECTION REQUIRED 2026-08-20**
 
 Parent: `129__PRD__Clickeen_Widget_Software_And_Instance_Lifecycle_Architecture.md`
 
@@ -345,3 +345,21 @@ product commit and main push: a6678966
 deploy: Worker deployment, Roma/Bob runtime reachability, and Tokyo R2 product-root sync passed
 live product: corrected source discovery, atomic publication serving, and cache boundary are active; technical verification passed; owner QA pending
 ```
+
+## 15. Closure Serving Correction
+
+The live closure audit proved that Tokyo's generic overlay lookup is correct
+and the stored FAQ overlays already carry exact current stable identity keys.
+The deployed FAQ package is wrong: its repeated `data-ck-content-path`
+attribute values contain Mustache's escaped `&#x3D;` text instead of the
+canonical literal `=`. Consequently a selected-locale request can replace
+scalar slots while leaving repeated questions and answers in base English.
+
+The serving fix is intentionally no Tokyo fix. The materializer producer must
+emit the canonical literal coordinate; Tokyo continues comparing the exact
+trusted attribute value with the exact trusted overlay key. After deployment
+and explicit Republish of `VUWUJ7OQ0Y`, live proof must show repeated FAQ
+question and answer values change for a stored non-base locale, base serving
+remains complete, and no Widget-specific branch, decoder, fallback, or runtime
+repair exists. Agent-executed functionality proof replaces the stale owner-QA
+gate.

@@ -1,16 +1,17 @@
 # PRD 130B — Defensive Construction Remediation
 
-**Status:** POST-DEPLOYMENT AUDIT CORRECTION IN EXECUTION — prior deployment
-remains live; corrected implementation, proof, push, deployment, and owner QA
-are tracked in Section 14
+**Status:** CLOUD-DEV CONTINUATION CORRECTION IN EXECUTION — the San Francisco
+adapter correction is deployed; exact live evidence exposed one remaining
+Bob/shared-contract history-admission defect tracked in Section 14
 
 **Date:** 2026-08-19
 
 **Owner:** Human product owner / architect
 
-**Execution owners:** Roma and Bob; San Francisco's existing message adapter and
-Worker deploy surface for the bounded post-deployment continuation correction;
-Product Copilot as verification only
+**Execution owners:** Roma and Bob; `@clickeen/ck-contracts` for the existing
+browser-ingress Copilot request contract; San Francisco's existing message
+adapter and Worker deploy surface; Product Copilot as the trusted history
+consumer and verification surface
 
 ## 1. Outcome
 
@@ -38,7 +39,8 @@ When this PRD is complete:
    and Bob borrows a small right-side Roma header slot only while its Save control
    must be shown; and
 7. canonical documentation, local verification, deployment evidence, and
-   cloud-dev owner QA agree with the shipped behavior.
+   agent-executed cloud-dev functionality evidence agree with the shipped
+   behavior.
 
 This is a product-friction correction. It does not add a new service, protocol,
 storage coordinate, schema, registry, migration, runtime probe, retry system, or
@@ -121,10 +123,10 @@ These exclusions are boundaries, not deferred findings in this PRD.
 | Product surface | Roma account domains and Bob browser-memory editor | Roma owns the one page header; Bob owns Save truth and temporarily occupies Roma's Save slot |
 | Account/session | Existing Roma current-account context; existing Bob session | No new identity, permission, or session coordinate |
 | Storage | Existing Tokyo instance/asset storage and Michael account/member truth | No storage shape or data migration |
-| Route/API | Existing Roma command routes and Bob's existing `save-instance` / Copilot transport | Add only the typed Save-control state/click iframe bridge; do not add a route or Save result protocol |
+| Route/API | Existing Roma command routes, Bob's existing `save-instance` / Copilot transport, and the shared external `CopilotTurnRequest` parser | Add only the typed Save-control state/click iframe bridge; the post-deployment correction makes the existing history union admit its exact tool-only branch and adds no route or response protocol |
 | Design system | Dieter popup mechanics, buttons, icons, table, tokens, and motion | Reuse mechanics; Roma and Bob retain product meaning and copy |
-| Runtime/deploy | Roma and Bob Cloudflare Pages plus the bounded San Francisco Worker correction from `main` | No Prague deployment and no unrelated Worker deployment |
-| Verification | Focused local suites, cloud-dev Roma/Builder continuation flow, San Francisco health, owner QA | Local checks are not deployed-product proof |
+| Runtime/deploy | Roma and Bob Cloudflare Pages plus the bounded San Francisco Worker correction from `main`; Product Copilot redeploys only when the shared contract changes its compiled Worker input | No Prague deployment and no unrelated Worker deployment |
+| Verification | Focused local suites plus the documented signed-in cloud-dev Roma/Builder continuation, Stop, Save, confirmation, and geometry flows | Local checks are not deployed-product proof; the execution agent owns the functionality evidence |
 
 ### 5.1 Settled division of labor
 
@@ -947,11 +949,13 @@ owner's explicit one-edit-at-a-time Builder law as follows:
   the exact post-apply draft returned by Bob's successful operation result.
 
 The correction is bounded to Bob session-level Copilot state and presentation,
-Roma's existing hosted Copilot cancellation handler and Cloudflare
-request-signal runtime flag, the existing Roma/Bob test harnesses, the owning
+Bob's existing structured history producer, the shared external Copilot turn
+request contract, Roma's existing hosted Copilot cancellation handler and
+Cloudflare request-signal runtime flag, San Francisco's existing AI SDK
+adapter, the existing Roma/Bob/Product Copilot test harnesses, the owning
 canonical manuals, and this execution record. It adds no persistence, route,
-message, SSE event, retry, agent worker, model-history field, or draft-signature
-validation protocol.
+message, SSE event, retry, agent worker, presentation field in model history,
+or draft-signature validation protocol.
 
 After the Bob/Roma correction was deployed, signed-in cloud-dev verification
 proved one adjacent execution-adapter defect on the same required continuation
@@ -969,10 +973,10 @@ revision.
 
 ### 14.1 Correction and deployment evidence
 
-As of 2026-08-20, the Bob/Roma correction is implemented, committed, pushed,
-and deployed. The San Francisco adapter correction exposed by the live smoke is
-implemented and locally verified but remains uncommitted, unpushed, and
-undeployed until the next direct-main deployment step:
+As of 2026-08-20, the Bob/Roma correction and the first San Francisco adapter
+correction are implemented, committed, pushed, and deployed. The repeated
+signed-in smoke now proves one remaining shared history-admission defect before
+the continuation reaches Product Copilot:
 
 - Bob keeps active-turn ownership and the current Undo record in its existing
   session-level Copilot state. `ToolDrawer` makes mode switching unavailable
@@ -1026,7 +1030,38 @@ Those smoke attempts performed ordinary Product Copilot usage reservation and
 model-turn work. The resulting Widget edit remained only in Bob browser memory:
 it was not Saved or Published, so no stored instance source or public package
 changed. The auth writer refreshed only the ignored local E2E browser state.
-San Francisco typecheck and model-turn tests plus Product Copilot's turn-contract
-and full-loop tests pass for the local adapter correction. Its push, Worker
-deployment, final Pages observations, and repeated signed-in smoke remain the
-next execution step.
+The San Francisco adapter correction was committed and pushed as
+`2ec4ea87e8914e9280606e88862abd30b6e4137c`. Cloud-dev Worker run
+`32390027307` deployed `sanfrancisco-dev` successfully and left unrelated
+Workers skipped. Bob Pages deployment
+`30bbb9c1-3429-4493-b26c-11e31a196468` and Roma Pages deployment
+`ed3c41f4-e2a4-429a-a987-a730ed1521fd` both reached terminal success for that
+revision; San Francisco health passed.
+
+The next signed-in smoke passed the initial model step, Bob apply, exact
+post-apply draft construction, and continuation dispatch, then Roma's external
+request parser returned HTTP `422 coreui.errors.copilot.invalidRequest` at
+`conversationHistory[1].text`: `Text must be a non-empty trimmed string.` The
+exact Bob history producer emits an assistant tool call as `{ role:
+'assistant', text: '', toolCall }`, while the shared contract requires non-empty
+text on every history branch. Product Copilot already represents that tool-only
+branch as an assistant tool-call message with `content: null`; no text exists to
+preserve.
+
+The bounded correction is therefore structural, not a fallback: the shared
+history union admits text entries with required non-empty text and separate
+assistant tool-only entries with no `text` field; the external parser admits
+those exact branches once; Bob emits the exact tool-only branch; and Product
+Copilot continues consuming the trusted tool call directly. Focused shared
+contract, Bob model-history, Product Copilot full-loop, typecheck, deployment,
+and the same signed-in smoke are the remaining execution steps. No placeholder
+text, normalization, retry, second parser, or alternate continuation path is
+authorized.
+
+The pre-edit trace also proved the same branch must be exact in both typed and
+failure flows. The TypeScript union must prohibit cross-branch fields rather
+than relying only on runtime admission, and Bob must record the assistant tool
+call with its exact rejected/apply result before every continuation. Otherwise
+a rejected edit can produce a provider tool-result message without its
+preceding assistant tool call. This is the same structured-history correction,
+not a new protocol or downstream validation layer.

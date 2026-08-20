@@ -233,6 +233,14 @@ grant. Product Copilot trusts that Roma-produced request; it does not parse the
 same semantic contract again. The deploy-built control capsule is exact system
 truth and is not treated as a possibly malformed optional edit context.
 
+Conversation history has two exact structured branches. User and assistant
+text entries carry required non-empty `text`. An assistant tool entry carries
+the exact `toolCall` and optional matching `toolResult` with no invented text.
+Roma admits those browser-originated branches once; Product Copilot converts
+the trusted tool-only entry directly to San Francisco's assistant tool-call
+message with `content: null` and, when present, its following tool-result
+message. No service inserts placeholder narration or reparses the branch.
+
 Product Copilot consumes the shared accepted `CopilotTurnRequest` union directly
 and does not call the browser-ingress parser again. Bob projects visible
 controls from the exact compiled artifact and current draft; when no controls
@@ -243,7 +251,7 @@ Current input limits:
 
 - conversation history: at most `COPILOT_MAX_HISTORY_ENTRIES` (8) entries;
 - conversation message text: at most `COPILOT_MAX_HISTORY_TEXT_CHARS` (2,000)
-  characters per entry.
+  characters per text entry.
 
 ## Context Capsule Rules
 
@@ -320,7 +328,9 @@ the state that was actually applied rather than a pre-apply render snapshot.
 Undo ops accumulate across the steps of one turn so a single Undo can reverse
 the whole applied batch. Bob's model history
 (`bob/lib/copilot/model-history.ts`) is the structured turn log sent on each
-request and is separate from the visible text-only chat bubbles.
+request: text turns remain text entries, while assistant tool calls/results are
+one exact tool-only entry with no placeholder text. That history is separate
+from the visible text-only chat bubbles.
 
 The visible chat thread and its current Undo record are session-level Bob
 browser-memory state. They survive idle Manual/Copilot panel switching within

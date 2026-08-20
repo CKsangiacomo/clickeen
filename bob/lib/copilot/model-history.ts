@@ -47,7 +47,7 @@ export function appendToolCall(
   return {
     entries: [
       ...history.entries,
-      { role: 'assistant', text: '', toolCall: call },
+      { role: 'assistant', toolCall: call },
     ],
   };
 }

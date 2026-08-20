@@ -331,6 +331,15 @@ serving. Missing overlay truth is `404`; an R2 or JSON read failure is `500`;
 neither falls back to base. The Worker/R2 deployment and live serving checks
 pass in cloud-dev; owner QA remains pending.
 
+Closure verification on 2026-08-20 found that Tokyo's exact lookup is correct
+but the then-published FAQ package encoded repeated identity `=` characters as
+Mustache entity text, so repeated selected-locale values did not match while
+scalar values did. The correction is in the shared materializer producer:
+emit the canonical literal coordinate. Tokyo gains no decoder, alias,
+compatibility key, fallback, or repair path. Deployment, affected FAQ
+Republish, and repeated-content live proof remain required before this note is
+reconciled to deployed completion.
+
 The pre-GA atomic source/published-serve-state cutover is complete for all four
 legacy saved cloud-dev instances under `CLICKEEN`; the two public instances
 were Republished through Roma. No compatibility reader or migration-on-read

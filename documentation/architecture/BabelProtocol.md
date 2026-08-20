@@ -1,6 +1,6 @@
 # Babel Protocol
 
-Last updated: 2026-08-18
+Last updated: 2026-08-20
 
 Babel is the exact saved-text translation protocol for account instances. It
 turns one current saved source field set into one exact overlay value map per
@@ -97,6 +97,13 @@ format. Previously stored positional overlays are not read through a
 compatibility path. After deployment, they require explicit Generate
 Translations or explicit deletion. Serve never migrates or falls back to the
 old format.
+
+The CLICKEEN pre-GA overlay cutover is complete. `VUWUJ7OQ0Y` owns the only
+stored overlays: 28 locale files matching the 28 active non-base locales, each
+with the exact 12 stable keys from current saved source. No positional overlay
+or pending Generate/delete cutover remains. Closure verification separately
+found an encoded repeated-key mismatch in the published HTML producer; that is
+a materializer/package correction, not a Babel or overlay-data correction.
 
 The separate pre-GA atomic `instance.source.json` cutover is complete for all
 four legacy saved cloud-dev instances under `CLICKEEN`; the two public
