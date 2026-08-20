@@ -59,8 +59,12 @@ line, gaps, and Compact stacking are Dieter layout truth. The header has only
 two bounded width modes: `contained` shares the centered `80rem` maximum with
 ordinary Page content, while `full` removes that maximum for a consumer whose
 canvas below is intentionally full width. The width mode never changes the
-inner grammar or product behavior. Full Page rhythm uses `--space-4` outer padding with
-`--space-4` header and content separation. Compact uses `--space-4` outer
+inner grammar, product behavior, or block rhythm. `full` owns only the removed
+maximum and the standard Page inline inset. The Page owns the top inset; the
+shared header's block-end margin is the sole space between header and content.
+Full Page rhythm uses `--space-4` outer padding with `--space-4` header and
+content separation. A full-canvas consumer may remove Page inline and bottom
+padding while retaining the same top inset. Compact uses `--space-4` outer
 padding with `--space-3` header and content separation. In Compact mode the
 same panel DOM uses its separate `12rem` maximum-width token, overlays the
 full-width page, and uses the existing elevated shadow. Consumer content uses

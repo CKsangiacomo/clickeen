@@ -81,12 +81,16 @@ commands. Dieter centers those parts vertically on the desktop row and stacks
 and leading-aligns them in Compact mode. Callers select only the bounded
 `contained` or `full` width modes: contained uses the centered `80rem` Page
 maximum, while full removes it for a deliberately full-width canvas. Width
-never changes the inner grammar, command, state, or copy. In Full mode the navigation is a
+never changes the inner grammar, command, state, copy, or block rhythm. The
+full mode contributes only the standard Page inline inset; the Page owns its
+top inset, and the common header block-end margin owns the only header/content
+separation. In Full mode the navigation is a
 foreground panel inset by `--space-2` on all sides over the application
 muted backdrop. It is `12rem` wide and uses the shared surface, no border,
 `3xl` radius, and floating shadow. The page header and content share one
 centered `80rem` maximum width in contained mode. Full Page padding is `--space-4`; header and
-content separation use `--space-4`. Compact Page padding is `--space-4`;
+content separation use `--space-4`. A full-canvas consumer may retain the same
+top inset while removing Page inline and bottom padding. Compact Page padding is `--space-4`;
 header and content separation use `--space-3`. In Compact mode the same panel
 DOM becomes an inset overlay over a full-width page, retains its separate
 `12rem` maximum-width token, and uses the existing elevated shadow.

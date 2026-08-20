@@ -20,7 +20,7 @@
     "full": {
       "maxInlineSize": "none",
       "marginInline": "0",
-      "padding": "var(--space-2) var(--layout-page-padding)"
+      "paddingInline": "var(--layout-page-padding)"
     }
   },
   "state": {

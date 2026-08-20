@@ -61,6 +61,13 @@ test.describe('Roma Builder authenticated smoke', () => {
     const iframeBox = await bobIframe.boundingBox();
     expect(iframeBox?.width ?? 0).toBeGreaterThan(900);
     expect(iframeBox?.height ?? 0).toBeGreaterThan(600);
+    expect(
+      Math.abs(
+        (iframeBox?.y ?? 0)
+          - ((builderHeaderBox?.y ?? 0) + (builderHeaderBox?.height ?? 0))
+          - 16,
+      ),
+    ).toBeLessThanOrEqual(1);
     const outerCanvasBackground = await page
       .locator('.main-container')
       .evaluate((element) => getComputedStyle(element).backgroundColor);
@@ -131,5 +138,12 @@ test.describe('Roma Builder authenticated smoke', () => {
     ).toBeLessThanOrEqual(1);
     expect(headerBox?.x).toBe(contentBox?.x);
     expect(headerBox?.width).toBe(contentBox?.width);
+    expect(
+      Math.abs(
+        (contentBox?.y ?? 0)
+          - ((headerBox?.y ?? 0) + (headerBox?.height ?? 0))
+          - 16,
+      ),
+    ).toBeLessThanOrEqual(1);
   });
 });

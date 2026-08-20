@@ -165,9 +165,12 @@ Local implementation state: all five current Widgets implement the four PRD
 source; later Save updates source; Duplicate creates an immediate saved
 unpublished copy; explicit Publish alone generates the package; and
 Tokyo-worker applies requested locale overlays to semantic HTML at the Edge.
-Roma owns publication controls in Widgets and its slim Builder header; Bob owns
-editing and Save only. The corrected lifecycle and background cache-eviction
-flow is deployed from commit `a6678966`. Cloud-dev Worker health, Roma and Bob
+Roma owns publication controls in Widgets and its shared Builder header; Bob
+owns editing and Save only. The Builder header uses the same Dieter/Roma
+grammar and vertical rhythm as every other Roma domain, selecting only the
+full-width geometry required by Bob's canvas. The corrected lifecycle and
+background cache-eviction flow is deployed from commit `a6678966`. Cloud-dev
+Worker health, Roma and Bob
 reachability, authenticated saved-instance Builder open, non-persisting
 New-open inventory truth, live Copilot streaming, and public `dev.clk.live`
 package serving passed technical verification on 2026-08-19; owner QA remains
