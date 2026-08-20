@@ -21,6 +21,7 @@
     "test": "pnpm test:accessibility-copy && pnpm test:editor-contract && pnpm test:translations-panel && pnpm test:typography-contract",
     "test:copilot-model-history": "tsx tests/run-copilot-model-history.ts",
     "test:copilot-pane-gates": "tsx tests/run-copilot-pane-gates.ts",
+    "test:copilot-pane-behavior": "tsx tests/run-copilot-pane-behavior.ts",
     "test:save-control": "tsx tests/run-save-control.ts"
   },
   "dependencies": {

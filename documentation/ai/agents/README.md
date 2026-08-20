@@ -72,7 +72,7 @@ controls and current draft.
 | Symptom | Check first | Owning doc |
 | --- | --- | --- |
 | Copilot returns model/provider error | San Francisco health, grant/model policy, provider secret | `sanfrancisco.md`, `product-copilot.md` |
-| Copilot edit not applied | Bob draft concurrency coordinate, atomic local apply, undo construction | `product-copilot.md` |
+| Copilot edit not applied | Bob active-turn ownership, atomic local apply, undo construction | `product-copilot.md` |
 | Translation generation fails before model call | Roma active locales, grant trace, Roma grant signing/verification keys | `translation-agent.md` |
 | Translation model output rejected | Translation Agent parse/path validation | `translation-agent.md` |
 | Translation write fails | Tokyo-worker grant boundary or exact R2 operation result | `translation-agent.md` |

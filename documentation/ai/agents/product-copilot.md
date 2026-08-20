@@ -298,24 +298,45 @@ Bob buffers a `tool_call` event and applies its `apply_widget_ops` batch only
 after the matching `model_step_finished` arrives (same `modelStepId`). Apply
 requires:
 
-- the current draft signature still matches the request signature;
 - inverse undo ops can be built;
 - `session.applyOps(ops)` succeeds.
 
-The draft-signature comparison is Bob's real concurrency coordinate: a human
-may have changed Bob's browser-memory draft while the turn was running. Bob is
-also the first edit-operation acceptance boundary: it accepts the external
-tool request against the exact compiled controls and current draft, including
-the authored collection minimum/maximum, then applies the accepted batch
-atomically. This is not a second Product Copilot allowlist; Product Copilot
-only owns the model-step/tool-call envelope.
+The request draft signature is part of the bounded context capsule: it tells the
+agent which browser-memory draft produced that request. It is not a second
+concurrency protocol. Manual and Copilot are mutually exclusive views over one
+Bob editing session, and an unresolved Copilot turn owns the one active edit
+lane. Bob keeps Copilot selected and makes Manual and Undo unavailable until
+the turn terminates or the user stops it. Bob is also the first edit-operation
+acceptance boundary: it accepts the external tool request against the exact
+compiled controls and current draft, including the authored collection
+minimum/maximum, then applies the accepted batch atomically. This is not a
+second Product Copilot allowlist; Product Copilot only owns the
+model-step/tool-call envelope.
 
-On success Bob opens a continuation with `priorModelStepId`, sending the tool
-result back so the agent can finish or request another step. Undo ops accumulate
-across the steps of one turn so a single Undo can reverse the whole applied
-batch. Bob's model history (`bob/lib/copilot/model-history.ts`) is the structured
-turn log sent on each request and is separate from the visible text-only chat
-bubbles.
+On success `session.applyOps(ops)` returns the exact post-apply draft. Bob builds
+the continuation context directly from that returned draft and opens the
+continuation with `priorModelStepId` and the tool result, so the next step sees
+the state that was actually applied rather than a pre-apply render snapshot.
+Undo ops accumulate across the steps of one turn so a single Undo can reverse
+the whole applied batch. Bob's model history
+(`bob/lib/copilot/model-history.ts`) is the structured turn log sent on each
+request and is separate from the visible text-only chat bubbles.
+
+The visible chat thread and its current Undo record are session-level Bob
+browser-memory state. They survive idle Manual/Copilot panel switching within
+the same Builder session. They are discarded when that session is left or
+reloaded; neither Roma nor Product Copilot persists them. Session teardown
+cancels unresolved work, settles its visible status as stopped, and rejects
+late apply or continuation work.
+
+For hosted Builder turns, Bob's existing `cancel-copilot` command names the
+active stream request id in its body and uses a separate command id for the
+acknowledgement. Roma owns the hosted `AbortController` and aborts the controller
+stored at that target stream id. Bob still marks Stop immediately as UI truth;
+the targeted host cancellation ends the actual Roma/Product Copilot request.
+Roma's Cloudflare runtime enables `enable_request_signal`, so the aborted
+browser request reaches Roma's route signal and cancels its upstream Product
+Copilot fetch.
 
 Bob gives each unresolved visible assistant message the passive status
 `Working`. A text-only successful terminal event removes that status without
@@ -345,7 +366,7 @@ Apply and Undo remain local editor operations.
 | Product Copilot Worker | upstream status | San Francisco non-OK response is propagated |
 | Product Copilot Worker | `500 PROVIDER_ERROR` | missing San Francisco config or unexpected failure |
 | Product Copilot stream | `agent_turn_error` event | multiple model tool calls, finish/tool-count inconsistency, missing terminal/continuation boundary, malformed SSE JSON transport, or `model_step_error` |
-| Bob | `Not applied` plus assistant error, no apply | request/stream failure, stale draft signature, failed undo construction, or failed local apply |
+| Bob | `Not applied` plus assistant error, no apply | request/stream failure, failed undo construction, or failed local apply |
 
 Product Copilot trusts Roma's accepted request and San Francisco's typed event
 payloads. Bob remains the first edit-operation acceptance boundary for the
@@ -415,6 +436,7 @@ workflow file.
    provider secret; `BUDGET_EXCEEDED` points at the signed timeout or step/token
    ceiling; other codes point at protocol enforcement (multiple tool calls,
    missing `modelStepId`, malformed SSE).
-7. If a tool batch is visible but not applied, inspect Bob draft signature,
+7. If a tool batch is visible but not applied, inspect active-turn ownership,
    inverse undo construction, `model_step_finished` correlation, and
-   `session.applyOps`.
+   `session.applyOps`. If a continuation has stale values, verify it was built
+   directly from the successful apply result.

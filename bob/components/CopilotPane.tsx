@@ -216,6 +216,9 @@ export function AccountCopilotPane() {
 function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps) {
   const chrome = useWidgetSessionChrome();
   const copilot = useWidgetSessionCopilot();
+  const setCopilotTurnActive = copilot.setCopilotTurnActive;
+  const setCopilotUndo = copilot.setCopilotUndo;
+  const updateCopilotThread = copilot.updateCopilotThread;
   const transport = useWidgetSessionTransport();
   const compiled = session.compiled;
 
@@ -233,13 +236,6 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
   const activeHandleRef = useRef<{ requestId: string; cancel: () => void } | null>(null);
   const streamingMessageIdRef = useRef<string | null>(null);
 
-  const [undoAvailable, setUndoAvailable] = useState(false);
-  const [activeUndoToken, setActiveUndoToken] = useState('');
-  const undoRef = useRef<{
-    ops: WidgetOp[];
-    token: string;
-    postApplySignature: string;
-  } | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
   const convoKeyRef = useRef<string | null>(null);
   const instanceDataRef = useRef(session.instanceData);
@@ -255,6 +251,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
   }, [widgetType, instanceId]);
 
   const thread = threadKey ? copilot.copilotThreads?.[threadKey] ?? null : null;
+  const undoRecord = threadKey ? copilot.copilotUndoByThread[threadKey] ?? null : null;
   const messages = useMemo(() => thread?.messages ?? [], [thread?.messages]);
   const copilotSessionId = thread?.sessionId ?? '';
   const allowModelPicker = chrome.copilot?.allowModelPicker === true;
@@ -375,6 +372,40 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
     });
   }, [pushMessage, resolveTurnVisibleMessages]);
 
+  const finishTurn = useCallback((turn: ActiveTurnState): void => {
+    if (activeTurnRef.current !== turn) return;
+    streamingMessageIdRef.current = null;
+    activeHandleRef.current = null;
+    activeTurnRef.current = null;
+    setStatus('idle');
+    if (threadKey) setCopilotTurnActive(threadKey, false);
+  }, [setCopilotTurnActive, threadKey]);
+
+  useEffect(() => {
+    return () => {
+      const turn = activeTurnRef.current;
+      if (!turn) return;
+      turn.isStopped = true;
+      activeHandleRef.current?.cancel();
+      activeHandleRef.current = null;
+      activeTurnRef.current = null;
+      streamingMessageIdRef.current = null;
+      const unresolvedMessageIds = turn.unresolvedMessageIds;
+      turn.unresolvedMessageIds = [];
+      if (threadKey && unresolvedMessageIds.length > 0) {
+        updateCopilotThread(threadKey, (current) => ({
+          ...current!,
+          messages: resolveWorkingCopilotAssistantMessages({
+            messages: current!.messages,
+            messageIds: unresolvedMessageIds,
+            resolution: 'stopped',
+          }),
+        }));
+      }
+      if (threadKey) setCopilotTurnActive(threadKey, false);
+    };
+  }, [setCopilotTurnActive, threadKey, updateCopilotThread]);
+
   // -------------------------------------------------------------------------
   // Tool execution: ONLY after model_step_finished (ground rule #6)
   // -------------------------------------------------------------------------
@@ -393,9 +424,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
         presentationStatus: 'not-applied',
         text: 'Editor context is unavailable. The edit was not applied.',
       });
-      setStatus('idle');
-      activeTurnRef.current = null;
-      activeHandleRef.current = null;
+      finishTurn(turn);
       return;
     }
 
@@ -409,7 +438,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
       await sendContinuation(turn, toolCallId, modelStepId, {
         ok: false,
         errors: [{ opIndex: 0, message: `Unknown tool: ${toolName}` }],
-      });
+      }, instanceDataRef.current);
       return;
     }
 
@@ -424,7 +453,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
       await sendContinuation(turn, toolCallId, modelStepId, {
         ok: false,
         errors: [{ opIndex: 0, message: 'Tool call must include a non-empty ops array.' }],
-      });
+      }, instanceDataRef.current);
       return;
     }
 
@@ -444,7 +473,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
       await sendContinuation(turn, toolCallId, modelStepId, {
         ok: false,
         errors: [{ opIndex: 0, message: 'The edit could not be represented in this widget.' }],
-      });
+      }, instanceDataRef.current);
       return;
     }
 
@@ -463,7 +492,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
       await sendContinuation(turn, toolCallId, modelStepId, {
         ok: false,
         errors: [{ opIndex: 0, message: 'The edit could not be undone safely. Nothing was applied.' }],
-      });
+      }, instanceDataRef.current);
       return;
     }
 
@@ -482,7 +511,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
           ...(err.path ? { path: err.path } : {}),
           message: err.message,
         })),
-      });
+      }, instanceDataRef.current);
       return;
     }
 
@@ -500,13 +529,13 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
 
     // Update the undo UI
     const undoToken = crypto.randomUUID();
-    undoRef.current = {
-      ops: turn.undoOps,
-      token: undoToken,
-      postApplySignature: turn.postApplySignature,
-    };
-    setUndoAvailable(true);
-    setActiveUndoToken(undoToken);
+    if (threadKey) {
+      setCopilotUndo(threadKey, {
+        ops: turn.undoOps,
+        token: undoToken,
+        postApplySignature: turn.postApplySignature,
+      });
+    }
 
     const appliedText = summarizeAppliedOps(expandedOps, controlsForAi);
     const resolvedExistingMessage = resolveTurnVisibleMessages(turn, 'applied');
@@ -523,14 +552,17 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
       ok: true,
       changedPaths: applied.changedPaths,
       postApplySignature: turn.postApplySignature,
-    });
+    }, applied.data);
   }, [
     compiled,
     controlsForAi,
+    finishTurn,
     pushMessage,
     pushTurnResultMessage,
     resolveTurnVisibleMessages,
     session,
+    setCopilotUndo,
+    threadKey,
   ]);
 
   // -------------------------------------------------------------------------
@@ -542,6 +574,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
     toolCallId: string,
     priorModelStepId: string,
     toolResult: unknown,
+    currentDraftData: Record<string, unknown>,
   ): Promise<void> => {
     if (turn.isStopped) return;
 
@@ -551,10 +584,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
         presentationStatus: 'not-applied',
         text: 'Editor policy is unavailable. The turn was not continued.',
       });
-      streamingMessageIdRef.current = null;
-      setStatus('idle');
-      activeTurnRef.current = null;
-      activeHandleRef.current = null;
+      finishTurn(turn);
       return;
     }
 
@@ -565,10 +595,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
         presentationStatus: 'not-applied',
         text: 'Copilot reached the step limit for this turn without completing. Try a smaller change.',
       });
-      streamingMessageIdRef.current = null;
-      setStatus('idle');
-      activeTurnRef.current = null;
-      activeHandleRef.current = null;
+      finishTurn(turn);
       return;
     }
 
@@ -581,14 +608,15 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
         presentationStatus: 'not-applied',
         text: 'Editor context is unavailable. The turn was not continued.',
       });
-      streamingMessageIdRef.current = null;
-      setStatus('idle');
-      activeTurnRef.current = null;
-      activeHandleRef.current = null;
+      finishTurn(turn);
       return;
     }
 
-    const requestSignature = serializeInstanceDataSignature(instanceDataRef.current);
+    const currentControlsForAi = buildProductCopilotControls({
+      controls: activeCompiled.controls,
+      currentConfig: currentDraftData,
+    });
+    const requestSignature = serializeInstanceDataSignature(currentDraftData);
     const body = {
       version: 1 as const,
       kind: 'continuation' as const,
@@ -605,8 +633,8 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
         displayName: activeCompiled.displayName,
         activeLocale,
         draftSignature: requestSignature,
-        controls: controlsForAi,
-        availableActions: controlsForAi.length > 0 ? ['draft_edit'] : [],
+        controls: currentControlsForAi,
+        availableActions: currentControlsForAi.length > 0 ? ['draft_edit'] : [],
         unavailableCapabilities: [
           'saved-product-mutation',
           'publish',
@@ -623,7 +651,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
     chrome,
     compiled,
     copilotSessionId,
-    controlsForAi,
+    finishTurn,
     pushTurnResultMessage,
     tierStepLimit,
   ]);
@@ -640,10 +668,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
         presentationStatus: 'not-applied',
         text: 'Editor context is not ready. Try again in a moment.',
       });
-      streamingMessageIdRef.current = null;
-      setStatus('idle');
-      activeTurnRef.current = null;
-      activeHandleRef.current = null;
+      finishTurn(turn);
       return;
     }
 
@@ -681,9 +706,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
             presentationStatus: 'not-applied',
             text: COPILOT_UNEXPECTED_FAILURE_MESSAGE,
           });
-          streamingMessageIdRef.current = null;
-          setStatus('idle');
-          activeTurnRef.current = null;
+          finishTurn(turn);
         }
       },
       () => {
@@ -696,13 +719,11 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
             presentationStatus: 'not-applied',
             text: COPILOT_UNEXPECTED_FAILURE_MESSAGE,
           });
-          streamingMessageIdRef.current = null;
-          setStatus('idle');
-          activeTurnRef.current = null;
+          finishTurn(turn);
         }
       },
     );
-  }, [chrome, pushMessage, pushTurnResultMessage, transport]);
+  }, [chrome, finishTurn, pushMessage, pushTurnResultMessage, transport]);
 
   // -------------------------------------------------------------------------
   // Event handler: dispatch each ProductCopilotTurnEvent
@@ -770,10 +791,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
               presentationStatus: 'not-applied',
               text: 'Copilot requested an edit but the request was malformed. Nothing was applied.',
             });
-            streamingMessageIdRef.current = null;
-            setStatus('idle');
-            activeTurnRef.current = null;
-            activeHandleRef.current = null;
+            finishTurn(turn);
           }
         }
         // 'stop' → the terminal agent_turn_finished event follows
@@ -783,10 +801,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
       case 'agent_turn_finished':
         // Turn complete — finalize the streaming message and clean up
         resolveTurnVisibleMessages(turn, 'complete');
-        streamingMessageIdRef.current = null;
-        setStatus('idle');
-        activeTurnRef.current = null;
-        activeHandleRef.current = null;
+        finishTurn(turn);
         break;
 
       case 'agent_turn_error': {
@@ -796,10 +811,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
           presentationStatus: 'not-applied',
           text: message || COPILOT_UNEXPECTED_FAILURE_MESSAGE,
         });
-        streamingMessageIdRef.current = null;
-        setStatus('idle');
-        activeTurnRef.current = null;
-        activeHandleRef.current = null;
+        finishTurn(turn);
         break;
       }
 
@@ -810,16 +822,14 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
           presentationStatus: 'stopped',
           text: 'Stopped. Already-applied changes remain and can be undone.',
         });
-        streamingMessageIdRef.current = null;
-        setStatus('idle');
-        activeTurnRef.current = null;
-        activeHandleRef.current = null;
+        finishTurn(turn);
         break;
     }
   }, [
     copilot,
     copilotSessionId,
     executeBufferedToolCall,
+    finishTurn,
     pushTurnResultMessage,
     resolveTurnVisibleMessages,
     threadKey,
@@ -829,6 +839,23 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
   // Send (initial) and Stop
   // -------------------------------------------------------------------------
 
+  const applyCopilotUndo = useCallback(() => {
+    if (status === 'loading' || !threadKey || !undoRecord) return;
+    if (serializeInstanceDataSignature(instanceDataRef.current) !== undoRecord.postApplySignature) {
+      pushMessage({ role: 'assistant', text: 'The widget changed after Copilot applied that edit. Undo was not applied.' });
+      setCopilotUndo(threadKey, null);
+      return;
+    }
+    const applied = session.applyOps(undoRecord.ops);
+    if (!applied.ok) {
+      pushMessage({ role: 'assistant', text: COPILOT_INVALID_EDIT_MESSAGE });
+      setCopilotUndo(threadKey, null);
+      return;
+    }
+    setCopilotUndo(threadKey, null);
+    pushMessage({ role: 'assistant', text: 'Undone.' });
+  }, [pushMessage, session, setCopilotUndo, status, threadKey, undoRecord]);
+
   const handleSend = async (promptOverride?: string) => {
     if (uiDisabledReason) return;
     if (status === 'loading') return;
@@ -837,38 +864,15 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
     const prompt = (promptOverride ?? draft).trim();
     if (!prompt) return;
 
-    // Undo handling (unchanged from the old pane)
+    // Undo remains Bob session interaction state and never enters model history.
     const normalized = prompt.toLowerCase();
-    if (normalized === 'undo' && undoRef.current) {
+    if (normalized === 'undo' && undoRecord) {
       setDraft('');
       pushMessage({ role: 'user', text: prompt });
-      const undo = undoRef.current;
-      if (serializeInstanceDataSignature(instanceDataRef.current) !== undo.postApplySignature) {
-        pushMessage({ role: 'assistant', text: 'The widget changed after Copilot applied that edit. Undo was not applied.' });
-        undoRef.current = null;
-        setUndoAvailable(false);
-        setActiveUndoToken('');
-        return;
-      }
-      const applied = session.applyOps(undo.ops);
-      if (!applied.ok) {
-        pushMessage({ role: 'assistant', text: COPILOT_INVALID_EDIT_MESSAGE });
-        undoRef.current = null;
-        setUndoAvailable(false);
-        setActiveUndoToken('');
-        return;
-      }
-      undoRef.current = null;
-      setUndoAvailable(false);
-      setActiveUndoToken('');
-      pushMessage({ role: 'assistant', text: 'Undone.' });
+      applyCopilotUndo();
       return;
     }
-    if (undoRef.current) {
-      undoRef.current = null;
-      setUndoAvailable(false);
-      setActiveUndoToken('');
-    }
+    if (threadKey && undoRecord) setCopilotUndo(threadKey, null);
 
     let sessionId = copilotSessionId;
     if (!sessionId && threadKey && compiled && widgetType) {
@@ -923,6 +927,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
     activeTurnRef.current = turn;
     streamingMessageIdRef.current = null;
 
+    if (threadKey) setCopilotTurnActive(threadKey, true);
     setStatus('loading');
     setDraft('');
     pushMessage({ role: 'user', text: prompt });
@@ -978,17 +983,15 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
     // Send no later continuation (the isStopped flag prevents it)
     // Bob ignores late events (the isStopped check in onCopilotEvent prevents them)
     // Already-applied edits remain visible (session state unchanged)
-    // Undo remains available (undoRef unchanged)
+    // The session-owned Undo record remains available.
 
     pushTurnResultMessage({
       turn,
       presentationStatus: 'stopped',
       text: 'Stopped. Already-applied changes remain and can be undone.',
     });
-    streamingMessageIdRef.current = null;
-    setStatus('idle');
-    activeTurnRef.current = null;
-  }, [pushTurnResultMessage]);
+    finishTurn(turn);
+  }, [finishTurn, pushTurnResultMessage]);
 
   // -------------------------------------------------------------------------
   // Render
@@ -1048,36 +1051,15 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
                 </div>
               ) : null}
 
-            {m.hasUndoAction && undoAvailable && m.undoToken === activeUndoToken ? (
+            {m.hasUndoAction && undoRecord && m.undoToken === undoRecord.token ? (
               <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 'var(--space-1)' }}>
                 <button
                   className="diet-button"
                   data-size="medium"
                   data-type="quaternary"
                   type="button"
-                  onClick={() => {
-                    const undo = undoRef.current;
-                    if (!undo) return;
-                    if (serializeInstanceDataSignature(instanceDataRef.current) !== undo.postApplySignature) {
-                      pushMessage({ role: 'assistant', text: 'The widget changed after Copilot applied that edit. Undo was not applied.' });
-                      undoRef.current = null;
-                      setUndoAvailable(false);
-                      setActiveUndoToken('');
-                      return;
-                    }
-                    const applied = session.applyOps(undo.ops);
-                    if (!applied.ok) {
-                      pushMessage({ role: 'assistant', text: COPILOT_INVALID_EDIT_MESSAGE });
-                      undoRef.current = null;
-                      setUndoAvailable(false);
-                      setActiveUndoToken('');
-                      return;
-                    }
-                    undoRef.current = null;
-                    setUndoAvailable(false);
-                    setActiveUndoToken('');
-                    pushMessage({ role: 'assistant', text: 'Undone.' });
-                  }}
+                  disabled={isLoading}
+                  onClick={applyCopilotUndo}
                 >
                   <span className="diet-button__label">Undo</span>
                 </button>

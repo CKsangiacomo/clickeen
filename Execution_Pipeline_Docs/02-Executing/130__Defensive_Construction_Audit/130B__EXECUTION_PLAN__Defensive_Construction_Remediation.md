@@ -1,7 +1,7 @@
 # PRD 130B — Defensive Construction Remediation Execution Plan
 
-**Status:** SLICES 0–9 COMPLETE — safe non-UI cloud verification complete;
-signed-in owner-visible Slice 10 QA pending because no browser session was available
+**Status:** POST-DEPLOYMENT AUDIT CORRECTION IN EXECUTION — prior Slices 0–9
+remain historical; correction Slices 11–16 govern the current pass
 
 **Date:** 2026-08-19
 
@@ -624,8 +624,9 @@ compiled context and nothing else in Widget Defaults changes.
 #### Step 6.3 — Preserve the AI boundaries
 
 - [x] Keep the one-tool contract, model-step buffering, terminal-event
-      enforcement, draft-signature check, atomic apply, Undo guard, grant,
-      model policy, 120-second transport timeout, and zero provider retries.
+      enforcement, request draft signature as capsule context, atomic apply,
+      Undo guard, grant, model policy, 120-second transport timeout, and zero
+      provider retries.
 - [x] Add no SSE event, response handshake, outcome API, learning record,
       Worker retry, model retry, Roma status inference, or persistence.
 
@@ -939,3 +940,206 @@ audited, pushed, and deployed. Safe non-UI cloud verification is complete with
 no product-data mutation. Slice 10's signed-in owner-visible checks remain
 explicitly pending because no product browser session was available. The
 honest status is: **deployed successfully; signed-in owner-visible QA pending**.
+
+## 9. Post-deployment audit correction execution
+
+The prior slice record above remains historical evidence for revision
+`34444e5e646cc530514e0646d27f0795259ce96d`. The Claude and Cursor audits found
+proof debt and one real stale-continuation defect after that deployment. The
+product owner also settled the governing interaction law: Manual and Copilot
+are mutually exclusive, and only one edit authority can operate on one open
+instance at a time. The following slices are the complete current correction
+plan.
+
+### Slice 11 — Re-establish authority and adjudicate the audits
+
+#### Step 11.1 — Re-read the owning law
+
+- [x] Read the mandatory architecture and strategy documents completely.
+- [x] Read the complete Bob, Roma, Product Copilot, UI interaction, testing,
+      runtime-profile, Cloudflare operation, and Pages deployment manuals.
+- [x] Read both post-execution audits and the complete PRD/execution record.
+
+#### Step 11.2 — Lock the product ruling
+
+- [x] Manual and Copilot remain mutually exclusive views over one Bob session.
+- [x] One unresolved Copilot turn owns the only active edit lane.
+- [x] Chat and its active Undo record remain Bob session-level browser memory;
+      idle mode switching must not discard them.
+- [x] Leaving or reloading Builder still discards that state; no persistence is
+      added.
+- [x] The request `draftSignature` remains context, not a concurrency validator.
+- [x] Claude's keyboard finding stays excluded, its phase finding remains
+      unproven, and its header finding remains owned by completed PRD 131.
+- [x] Cursor's stale-continuation finding and both audits' behavior-proof gaps
+      enter execution.
+
+**Slice 11 exit gate:** the correction follows the actual product interaction
+and does not manufacture a second concurrency protocol.
+
+### Slice 12 — Enforce Bob's one active edit lane
+
+#### Step 12.1 — Put ownership in existing session state
+
+- [x] Represent unresolved Copilot ownership through the existing Bob session
+      and turn lifecycle; add no global store, registry, route, or protocol.
+- [x] Keep the visible thread and current Undo record with that open session so
+      unmounting the idle Copilot panel does not delete either.
+- [x] Keep presentation-only status out of model history and the wire.
+
+#### Step 12.2 — Gate conflicting local actions
+
+- [x] While a turn is unresolved, keep Copilot selected and disable Manual.
+- [x] Disable Undo while a request or tool application is unresolved.
+- [x] Keep Stop available and preserve the existing Send/Stop command.
+- [x] Release Manual and Undo only after terminal success, visible failure, or
+      Stop settles the active turn.
+- [x] Preserve the existing one-tool/one-step envelope and atomic apply path.
+
+#### Step 12.3 — Make teardown terminal
+
+- [x] On Bob session or Copilot owner teardown, cancel the active request.
+- [x] Mark unresolved visible work stopped through the existing Bob state.
+- [x] Ignore every late event/completion for that stopped owner.
+- [x] Prove that teardown cannot apply an edit or open a continuation.
+- [x] Keep the existing cancellation envelope: Bob puts the active stream id in
+      the command body, Roma aborts the controller at that target id, and the
+      cancellation command's own id correlates its acknowledgement.
+- [x] Enable Cloudflare `enable_request_signal` for Roma so aborting the hosted
+      browser request reaches the route signal and upstream Product Copilot
+      fetch in the deployed runtime.
+
+**Slice 12 exit gate:** no current UI path can run Manual/Undo concurrently
+with unresolved Copilot work, while idle panel switching preserves chat and
+Undo exactly for the open session.
+
+### Slice 13 — Build continuation from exact applied truth
+
+#### Step 13.1 — Consume the existing apply result
+
+- [x] Keep `session.applyOps` as Bob's sole operation authority.
+- [x] On success, consume the exact post-apply `data` already returned by that
+      result.
+- [x] Build the continuation `currentDraftContext` directly from that data and
+      the exact compiled visible-control projection.
+- [x] Send the existing tool result and `priorModelStepId` unchanged.
+- [x] Do not wait for a render/effect/ref refresh and do not substitute an older
+      draft snapshot.
+
+#### Step 13.2 — Preserve failure truth
+
+- [x] A failed/rejected apply never opens a success continuation. The existing
+      error tool-result continuation, when the turn can continue, carries the
+      exact unchanged current draft.
+- [x] Failure remains `Not applied` with the existing visible error.
+- [x] No edit, history entry, tool result, or continuation is silently dropped
+      or invented.
+
+**Slice 13 exit gate:** every continuation describes the exact draft Bob just
+applied, and no new validator or wire coordinate exists.
+
+### Slice 14 — Replace duplicated and regex-only proof
+
+#### Step 14.1 — Execute the mounted Bob lifecycle
+
+- [x] Mount the production Bob session/ToolDrawer/Copilot consumer in a real
+      browser DOM rather than reimplementing its state machine in the test.
+- [x] Prove Working, text-only terminal, Applied, Not applied, and Stopped.
+- [x] Prove Manual and Undo are unavailable while unresolved and return only
+      after the exact terminal boundary.
+- [x] Prove idle Manual/Copilot switching preserves transcript and Undo.
+- [x] Prove Stop/teardown reject late apply and continuation work.
+- [x] Prove the continuation body contains values/signature derived from the
+      exact returned post-apply draft.
+
+#### Step 14.2 — Execute the real Roma/Bob Save and cancellation bridge
+
+- [x] Mount the production Builder host and Bob session boundary with their
+      real cross-origin message admission.
+- [x] Prove Bob phase emission reaches Roma's borrowed Save slot.
+- [x] Prove a Roma Save click produces exactly one accepted Bob Save command.
+- [x] Prove wrong origin, wrong source, stale iframe, and non-actionable phase
+      remain inert.
+- [x] Start a production Bob Copilot request through production Roma
+      BuilderDomain, cancel it with Bob's exact target id, and prove Roma's
+      hosted stream signal aborts before the cancellation acknowledgement.
+- [x] Pin Roma's required Cloudflare request-signal compatibility flag in the
+      same focused bridge gate; deployed propagation remains Slice 16 evidence.
+
+#### Step 14.3 — Execute all five confirmation consumers
+
+- [x] Mount Widget Delete, Asset Delete, both Unpublish consumers, Remove member,
+      and Transfer ownership through their production consumer callbacks.
+- [x] For each: first click opens, Cancel/backdrop makes no request, Confirm
+      makes one exact request, and pending/failure stays in the owning surface.
+- [x] Preserve the already-valid shared dialog and wire/protocol unit proof.
+
+**Slice 14 exit gate:** tests execute the production callback chains the audits
+identified; source-text assertions no longer masquerade as interaction proof.
+
+### Slice 15 — Reconcile and audit locally
+
+#### Step 15.1 — Reconcile operator and execution truth
+
+- [x] Update Bob, Roma, Product Copilot, and UI interaction manuals to the
+      one-active edit law, exact targeted cancellation, session-level transient
+      state, teardown, and exact continuation.
+- [x] Record audit adjudication and correction evidence in the PRD and this
+      execution plan without rewriting the historical audit files.
+- [x] Keep Roma, publication, header, Prague, invitations, Catalog/New, and all
+      other excluded laws unchanged.
+
+#### Step 15.2 — Run the complete bounded check matrix
+
+- [x] Run new Bob and Roma behavior fixtures.
+- [x] Run affected existing Copilot, Save, confirmation, command-gate, model
+      history, UI-copy, accessibility, typecheck, lint, and build checks.
+- [x] Run `git diff --check` and deterministic scope/contract scans.
+- [x] Review every changed and untracked file in the shared worktree; preserve
+      and include all intended collaborator work.
+
+#### Step 15.3 — Independent V1–V8 audit
+
+- [x] Give an independent agent the complete current diff and owning manuals.
+- [x] Resolve every reachable blocker through the named authority.
+- [x] Record V1–V8 explicitly with no local-test claim presented as live proof.
+
+The independent current-tree audit passed with no reachable blocker. V1
+silent substitution, V2 silent healing, V3 silent omission, V4 fail-open
+control, V5 corruption-as-absence, V6 partial-success masquerade, V7
+masquerade/redress, and V8 runtime test dependency all pass. This is local
+implementation evidence only; it is not cloud-dev product proof.
+
+**Slice 15 exit gate:** code, behavior proof, canonical docs, and execution
+records agree, and the independent audit has no unresolved blocker.
+
+### Slice 16 — Commit, push, deploy, and verify cloud-dev
+
+#### Step 16.1 — Commit the complete intended worktree
+
+- [ ] Re-read final status/diff and include every intended edited and untracked
+      file; do not commit secrets or `.env.local`.
+- [ ] Commit directly on `main` under the owner's explicit authority.
+- [ ] Push `main` directly to `github/main`; no pull request exists in this
+      deployment process.
+
+#### Step 16.2 — Observe Git-connected Pages only
+
+- [ ] Run the documented Cloudflare API preflight before Pages inspection.
+- [ ] Observe Bob and Roma Git-connected deployments for the pushed revision.
+- [ ] Do not deploy or troubleshoot Prague, Workers, or unrelated projects.
+- [ ] Record exact commit and deployment IDs/states.
+
+#### Step 16.3 — Verify the owning live surface
+
+- [ ] Run safe signed-in Builder evidence through the documented browser/E2E
+      path: active-turn mode/Undo gate, exact continuation, transcript/Undo
+      retention, and Stop/terminal release.
+- [ ] Re-run the Roma/Bob Save and confirmation checks that are safe with
+      controlled cloud-dev data; record any identity-dependent destructive
+      checks as pending rather than risking owner data.
+- [ ] Record product-data mutations and restoration exactly.
+
+**Slice 16 exit gate:** the complete correction is pushed and deployed through
+the documented direct-main process, owning live evidence is recorded honestly,
+and only genuinely unsafe owner-data checks remain pending.

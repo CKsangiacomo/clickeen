@@ -1,7 +1,7 @@
 name = "roma-dev"
 pages_build_output_dir = ".vercel/output/static"
 compatibility_date = "2025-12-28"
-compatibility_flags = ["nodejs_compat", "nodejs_compat_populate_process_env"]
+compatibility_flags = ["nodejs_compat", "nodejs_compat_populate_process_env", "enable_request_signal"]
 
 [vars]
 NEXT_PUBLIC_TOKYO_URL = "https://tokyo.dev.clickeen.com"

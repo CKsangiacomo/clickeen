@@ -4,6 +4,7 @@ import { DEFAULT_PANELS, TdMenu } from './TdMenu';
 import { TdMenuContent } from './TdMenuContent';
 import { AccountCopilotPane } from './CopilotPane';
 import { useWidgetSession } from '../lib/session/useWidgetSession';
+import { useWidgetSessionCopilot } from '../lib/session/useWidgetSession';
 import { TranslationsPanel } from './TranslationsPanel';
 import type { TranslatedLocalesData, TranslationSetup } from './useTranslationPreviewState';
 import { ACCOUNT_TYPOGRAPHY_SELECTION_INVALID_REASON_KEY } from '@clickeen/widget-foundation';
@@ -131,8 +132,10 @@ export function ToolDrawer({
   savedTranslationsError: string | null;
 }) {
   const session = useWidgetSession();
+  const copilot = useWidgetSessionCopilot();
   const compiled = session.compiled;
   const sessionError = session.error;
+  const copilotTurnActive = copilot.activeTurnKey !== null;
 
   const [mode, setMode] = useState<'manual' | 'copilot'>('manual');
   const [activePanel, setActivePanel] = useState<PanelId>('content');
@@ -149,6 +152,7 @@ export function ToolDrawer({
 
   const requestMode = (nextMode: 'manual' | 'copilot') => {
     if (nextMode === mode) return;
+    if (copilotTurnActive) return;
     if (!canSwitchDrawerContext()) return;
     setMode(nextMode);
   };
@@ -228,6 +232,7 @@ export function ToolDrawer({
       id={id}
       className="tooldrawer"
       data-compact-open={compactOpen ? 'true' : 'false'}
+      data-copilot-turn-active={copilotTurnActive ? 'true' : 'false'}
     >
       {/* Segmented control in the header */}
       <div className="tdheader">
@@ -239,6 +244,7 @@ export function ToolDrawer({
               name="assist-mode"
               value="manual"
               checked={mode === 'manual'}
+              disabled={copilotTurnActive}
               onChange={() => requestMode('manual')}
             />
             <span className="diet-segment__surface" aria-hidden="true" />
@@ -259,6 +265,7 @@ export function ToolDrawer({
               name="assist-mode"
               value="copilot"
               checked={mode === 'copilot'}
+              disabled={copilotTurnActive}
               onChange={() => requestMode('copilot')}
             />
             <span className="diet-segment__surface" aria-hidden="true" />

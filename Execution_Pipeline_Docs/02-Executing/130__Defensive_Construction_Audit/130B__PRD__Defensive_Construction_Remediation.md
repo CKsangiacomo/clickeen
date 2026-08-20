@@ -1,7 +1,8 @@
 # PRD 130B — Defensive Construction Remediation
 
-**Status:** IMPLEMENTED, AUDITED, PUSHED, AND DEPLOYED — signed-in cloud-dev
-owner QA pending because no product browser session was available
+**Status:** POST-DEPLOYMENT AUDIT CORRECTION IN EXECUTION — prior deployment
+remains live; corrected implementation, proof, push, deployment, and owner QA
+are tracked in Section 14
 
 **Date:** 2026-08-19
 
@@ -29,7 +30,8 @@ When this PRD is complete:
    group of controls;
 5. Product Copilot's visible assistant message cannot look complete or applied
    before the current turn and any requested Bob edit actually reach their
-   terminal result;
+   terminal result; one unresolved Copilot turn owns Bob's one active edit lane,
+   and every continuation receives the exact post-apply draft;
 6. the Builder has one Roma-owned page header; Bob's internal header is removed
    and Bob borrows a small right-side Roma header slot only while its Save control
    must be shown; and
@@ -414,6 +416,24 @@ Implementation law:
    governed model execution, undo race guard, and 120-second transport timeout.
 10. Add no SSE event, response handshake, Worker retry, model retry, or Roma
     orchestration.
+11. Manual and Copilot are mutually exclusive views over one Bob editing
+    session. While a Copilot request or tool application is unresolved, keep
+    Copilot selected, make Manual and Undo unavailable, and keep Stop available.
+    A terminal result or Stop releases the one active edit lane.
+12. Keep the visible chat thread and its current Undo record in the existing Bob
+    session-level browser-memory state so idle Manual/Copilot switching does not
+    discard them. Leaving or reloading Builder still discards them; add no
+    persistence route or storage.
+13. Build each successful continuation directly from the exact post-apply draft
+    returned by Bob's existing `applyOps` result. Do not use a pre-apply render
+    snapshot and do not add a draft-signature concurrency validator for an edit
+    overlap the product does not permit.
+14. Session teardown cancels unresolved work, settles its visible presentation,
+    and prevents late apply or continuation work.
+15. Bob's existing `cancel-copilot` command carries the active stream request id
+    as its target and keeps its own command id for acknowledgement. Roma aborts
+    the controller stored at that target id. No new message, route, or protocol
+    is added.
 
 The exact passive status words are `Working`, `Applied`, `Not applied`, and
 `Stopped`. They describe Bob's known result; they do not reinterpret model text.
@@ -898,3 +918,88 @@ their confirming mutations can be exercised safely.
 
 The honest current state is: **implementation deployed successfully; safe
 non-UI cloud checks complete; signed-in owner-visible QA pending**.
+
+## 14. Post-deployment audit correction
+
+The Claude and Cursor execution audits are retained unchanged under `audits/`
+as historical evidence. Their findings are adjudicated against the product
+owner's explicit one-edit-at-a-time Builder law as follows:
+
+- Claude F1 is architect-closed. Clickeen does not support a keyboard command
+  contract in this pass, and the shared confirmation correctly keeps Escape
+  inert.
+- Claude F2 and Cursor V1/V2 are real proof debt. The production Roma/Bob Save
+  bridge, all five mounted confirmation consumers, and the real mounted Copilot
+  lifecycle require behavior-level execution rather than source-regex or a
+  duplicated test state machine.
+- Claude F3 is not a current product defect. Roma supplies the host coordinate
+  before Bob becomes interactive; no reachable dropped-phase flow was proven.
+- Claude F4 belongs to the separately completed PRD 131 header convergence and
+  is not reopened here.
+- Cursor's proposed draft-signature rejection assumes that Manual and Copilot
+  can edit the same instance concurrently. The product owner rejects that
+  premise: they are mutually exclusive modes and one unresolved Copilot turn
+  owns Bob's single active edit lane. The correction enforces that existing
+  product law instead of adding a validator for an impossible product flow.
+- Cursor's stale continuation finding is real. The continuation must consume
+  the exact post-apply draft returned by Bob's successful operation result.
+
+The correction is bounded to Bob session-level Copilot state and presentation,
+Roma's existing hosted Copilot cancellation handler and Cloudflare
+request-signal runtime flag, the existing Roma/Bob test harnesses, the owning
+canonical manuals, and this execution record. It adds no persistence, route,
+message, SSE event, retry, agent worker, model-history field, or draft-signature
+validation protocol.
+
+Implementation, focused verification, complete-diff audit, push, deployment,
+and signed-in cloud-dev evidence for this correction are recorded only after
+they occur. The 2026-08-19 evidence in Section 13 remains historical evidence
+for the prior deployed revision and must not be read as proof of the corrected
+revision.
+
+### 14.1 Local correction evidence
+
+As of 2026-08-20, the bounded correction is implemented locally:
+
+- Bob keeps active-turn ownership and the current Undo record in its existing
+  session-level Copilot state. `ToolDrawer` makes mode switching unavailable
+  during unresolved work; `CopilotPane` makes Undo unavailable, preserves Stop,
+  converges every terminal path, and settles teardown as Stopped before
+  rejecting late work.
+- successful tool application passes the exact `applyOps` returned draft into
+  continuation construction. The continuation signature and visible control
+  values are derived from that same result.
+- Bob's existing cancellation command targets the active stream request id in
+  its body. Roma now aborts the hosted controller at that target while keeping
+  the cancellation command's own id for its acknowledgement. Roma's Cloudflare
+  configuration enables `enable_request_signal`, allowing that aborted request
+  to propagate through the route signal to Product Copilot.
+- the mounted Bob browser fixture executes the production session, ToolDrawer,
+  CopilotPane, host transport, and apply callbacks for Working, text-only
+  terminal success, Applied, Not applied, Stop, teardown, edit-lane locking,
+  idle transcript/Undo retention, and exact continuation data.
+- the mounted two-origin Save fixture executes production Roma BuilderDomain
+  above production Bob session providers. It proves first and later Save,
+  edit-during-Save, ID/base-locale adoption without reopen, result phases,
+  duplicate suppression, exact origin/source/stale-frame admission, and that a
+  production Bob cancel command aborts the exact hosted Roma stream controller.
+- the mounted Roma confirmation fixture executes the production owners for
+  Widget Delete, Asset Delete, both Unpublish consumers, Remove member, and
+  Transfer ownership, proving exact decision, pending, route, and failure
+  behavior, including the exact transfer recipient body. No confirmation or
+  Save runtime code changed.
+- the documented Product Copilot cloud smoke now requires active edit-lane
+  ownership, exact post-apply continuation facts, idle transcript/Undo
+  retention, and Stop release against the deployed Roma/Bob product path.
+
+Bob typecheck, lint, full tests, Copilot behavior/gates/model-history tests,
+Save tests, and `build:cf` pass. Roma typecheck, lint, confirmation and Save
+bridge fixtures, Widget command gates, UI-copy and account-asset gates, and
+`build:cf` pass. The smoke script syntax check and whole-tree
+`git diff --check` pass. Bob lint retains only the same three existing cyclic
+callback dependency warnings.
+
+This is local evidence only. The correction remains uncommitted, unpushed, and
+undeployed at this point in the execution record; cloud-dev product evidence
+and any product-data state are recorded separately after the direct-main
+deployment.

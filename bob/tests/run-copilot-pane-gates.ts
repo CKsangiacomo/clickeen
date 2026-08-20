@@ -12,12 +12,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import {
-  appendWorkingCopilotAssistantText,
-  COPILOT_MESSAGE_PRESENTATION_LABELS,
-  resolveWorkingCopilotAssistantMessages,
-  type CopilotMessage,
-} from '../lib/copilot/types';
+import { COPILOT_MESSAGE_PRESENTATION_LABELS } from '../lib/copilot/types';
 
 function assertPass(label: string, fn: () => void) {
   try {
@@ -31,6 +26,14 @@ function assertPass(label: string, fn: () => void) {
 
 const SOURCE = readFileSync(
   fileURLToPath(new URL('../components/CopilotPane.tsx', import.meta.url)),
+  'utf8',
+);
+const TOOL_DRAWER_SOURCE = readFileSync(
+  fileURLToPath(new URL('../components/ToolDrawer.tsx', import.meta.url)),
+  'utf8',
+);
+const SESSION_COPILOT_SOURCE = readFileSync(
+  fileURLToPath(new URL('../lib/session/useSessionCopilot.ts', import.meta.url)),
   'utf8',
 );
 
@@ -84,6 +87,14 @@ function testContinuation() {
     assert.ok(continuationBlock.includes('toolResult'), 'toolResult in body');
   });
 
+  assertPass('successful continuation projects the exact applyOps result', () => {
+    const executeBlock = SOURCE.match(/const executeBufferedToolCall[\s\S]{0,9000}/)?.[0] ?? '';
+    const continuationBlock = SOURCE.match(/const sendContinuation[\s\S]{0,2600}/)?.[0] ?? '';
+    assert.ok(executeBlock.includes('}, applied.data)'), 'successful apply passes applied.data directly');
+    assert.ok(continuationBlock.includes('currentConfig: currentDraftData'), 'visible controls use the supplied current draft');
+    assert.ok(continuationBlock.includes('serializeInstanceDataSignature(currentDraftData)'), 'signature uses the same exact draft');
+  });
+
   assertPass('continuation does NOT consume another monthly reservation', () => {
     const continuationBlock = SOURCE.match(/const sendContinuation[\s\S]{0,2000}/)?.[0] ?? '';
     assert.ok(!continuationBlock.includes('initial'), 'no kind: initial in continuation');
@@ -104,11 +115,12 @@ function testUndoAccumulation() {
     );
   });
 
-  assertPass('undoRef.current holds the accumulated list', () => {
+  assertPass('Bob session Copilot state holds the accumulated Undo record', () => {
     assert.ok(
-      SOURCE.includes('undoRef.current = {\n      ops: turn.undoOps'),
-      'undoRef stores turn.undoOps',
+      SOURCE.includes('setCopilotUndo(threadKey, {') && SOURCE.includes('ops: turn.undoOps'),
+      'session Copilot state stores turn.undoOps',
     );
+    assert.ok(SESSION_COPILOT_SOURCE.includes('copilotUndoByThread'), 'Undo state is session-owned');
   });
 
   assertPass('model history records tool call + result once each', () => {
@@ -265,8 +277,8 @@ function testDraftProjectionAndReadiness() {
   });
 
   assertPass('zero currently visible controls truthfully advertises no draft edit action', () => {
-    const availability = "availableActions: controlsForAi.length > 0 ? ['draft_edit'] : []";
-    assert.equal(SOURCE.split(availability).length - 1, 2, 'initial and continuation contexts use the same projection');
+    assert.ok(SOURCE.includes("availableActions: controlsForAi.length > 0 ? ['draft_edit'] : []"));
+    assert.ok(SOURCE.includes("availableActions: currentControlsForAi.length > 0 ? ['draft_edit'] : []"));
   });
 
   assertPass('Copilot waits for compiled, policy, and saved-instance coordinates', () => {
@@ -344,199 +356,13 @@ function testStreamingText() {
 
   assertPass('streamingMessageIdRef cleared on agent_turn_finished', () => {
     const finishedBlock = SOURCE.match(/case 'agent_turn_finished':[\s\S]{0,400}/)?.[0] ?? '';
-    assert.ok(finishedBlock.includes('streamingMessageIdRef.current = null'), 'cleared on turn finish');
+    assert.ok(finishedBlock.includes('finishTurn(turn)'), 'shared terminal cleanup clears streaming state');
   });
 
   assertPass('first text_delta creates new streaming message', () => {
     const textDeltaBlock = SOURCE.match(/case 'text_delta':[\s\S]{0,1200}/)?.[0] ?? '';
     assert.ok(textDeltaBlock.includes('streamingMessageIdRef.current ?? newId()'), 'creates new message id');
     assert.ok(textDeltaBlock.includes('appendWorkingCopilotAssistantText'), 'creates the working assistant message');
-  });
-}
-
-// ---------------------------------------------------------------------------
-// 13. Visible message result lifecycle (behavior, not source inspection)
-// ---------------------------------------------------------------------------
-
-type VisibleTransportEvent =
-  | { type: 'text_delta'; text: string }
-  | { type: 'tool_call' }
-  | { type: 'apply_succeeded' }
-  | { type: 'apply_rejected'; message: string }
-  | { type: 'agent_turn_finished' }
-  | { type: 'agent_turn_error'; message: string }
-  | { type: 'stop'; message: string };
-
-function createVisibleTranscriptTransport() {
-  let messages: CopilotMessage[] = [];
-  let unresolvedMessageIds: string[] = [];
-  let streamingMessageId: string | null = null;
-  let nextMessageId = 1;
-
-  const beginRequest = () => {
-    const messageId = `message-${nextMessageId++}`;
-    streamingMessageId = messageId;
-    unresolvedMessageIds.push(messageId);
-    messages = appendWorkingCopilotAssistantText({
-      messages,
-      messageId,
-      text: '',
-      ts: nextMessageId,
-    });
-  };
-
-  const resolve = (
-    resolution: 'complete' | 'applied' | 'not-applied' | 'stopped',
-  ): boolean => {
-    const hadUnresolvedMessage = unresolvedMessageIds.length > 0;
-    messages = resolveWorkingCopilotAssistantMessages({
-      messages,
-      messageIds: unresolvedMessageIds,
-      resolution,
-    });
-    unresolvedMessageIds = [];
-    streamingMessageId = null;
-    return hadUnresolvedMessage;
-  };
-
-  const appendResultMessage = (
-    status: 'not-applied' | 'stopped',
-    text: string,
-  ) => {
-    const resolvedExistingMessage = resolve(status);
-    messages = [
-      ...messages,
-      {
-        id: `message-${nextMessageId++}`,
-        role: 'assistant',
-        text,
-        ts: nextMessageId,
-        ...(resolvedExistingMessage ? {} : { presentationStatus: status }),
-      },
-    ];
-  };
-
-  beginRequest();
-
-  return {
-    emit(event: VisibleTransportEvent) {
-      switch (event.type) {
-        case 'text_delta': {
-          const messageId = streamingMessageId ?? `message-${nextMessageId++}`;
-          streamingMessageId = messageId;
-          if (!unresolvedMessageIds.includes(messageId)) {
-            unresolvedMessageIds.push(messageId);
-          }
-          messages = appendWorkingCopilotAssistantText({
-            messages,
-            messageId,
-            text: event.text,
-            ts: nextMessageId,
-          });
-          break;
-        }
-        case 'tool_call':
-          streamingMessageId = null;
-          break;
-        case 'apply_succeeded':
-          resolve('applied');
-          beginRequest();
-          break;
-        case 'apply_rejected':
-          appendResultMessage('not-applied', event.message);
-          beginRequest();
-          break;
-        case 'agent_turn_finished':
-          resolve('complete');
-          break;
-        case 'agent_turn_error':
-          appendResultMessage('not-applied', event.message);
-          break;
-        case 'stop':
-          appendResultMessage('stopped', event.message);
-          break;
-      }
-    },
-    messages() {
-      return messages;
-    },
-  };
-}
-
-function testVisibleMessageResultLifecycle() {
-  console.log('\n--- Visible message result lifecycle ---');
-
-  assertPass('text streams while the same assistant message remains Working', () => {
-    const transport = createVisibleTranscriptTransport();
-    assert.equal(transport.messages()[0]?.presentationStatus, 'working');
-    assert.equal(transport.messages()[0]?.text, '');
-    transport.emit({ type: 'text_delta', text: 'Done — ' });
-    transport.emit({ type: 'text_delta', text: 'updating the widget.' });
-    assert.equal(transport.messages().length, 1);
-    assert.equal(transport.messages()[0]?.text, 'Done — updating the widget.');
-    assert.equal(transport.messages()[0]?.presentationStatus, 'working');
-    assert.equal(COPILOT_MESSAGE_PRESENTATION_LABELS.working, 'Working');
-  });
-
-  assertPass('text-only terminal success completes without inventing Applied', () => {
-    const transport = createVisibleTranscriptTransport();
-    transport.emit({ type: 'text_delta', text: 'Here is the answer.' });
-    transport.emit({ type: 'agent_turn_finished' });
-    assert.equal(transport.messages()[0]?.presentationStatus, undefined);
-  });
-
-  assertPass('tool narration remains Working until apply succeeds', () => {
-    const transport = createVisibleTranscriptTransport();
-    transport.emit({ type: 'text_delta', text: 'Done — I updated it.' });
-    transport.emit({ type: 'tool_call' });
-    assert.equal(transport.messages()[0]?.presentationStatus, 'working');
-    transport.emit({ type: 'apply_succeeded' });
-    assert.equal(transport.messages()[0]?.presentationStatus, 'applied');
-    assert.equal(transport.messages()[1]?.presentationStatus, 'working');
-    transport.emit({ type: 'agent_turn_finished' });
-    assert.equal(
-      transport.messages()[1]?.presentationStatus,
-      undefined,
-      'a later text-only terminal step must not duplicate Applied',
-    );
-    assert.equal(COPILOT_MESSAGE_PRESENTATION_LABELS.applied, 'Applied');
-  });
-
-  assertPass('apply rejection marks narration Not applied and keeps a visible error', () => {
-    const transport = createVisibleTranscriptTransport();
-    transport.emit({ type: 'text_delta', text: 'I changed the heading.' });
-    transport.emit({ type: 'tool_call' });
-    transport.emit({
-      type: 'apply_rejected',
-      message: "Copilot couldn't produce a valid edit for this widget. Nothing was changed.",
-    });
-    assert.equal(transport.messages()[0]?.presentationStatus, 'not-applied');
-    assert.equal(COPILOT_MESSAGE_PRESENTATION_LABELS['not-applied'], 'Not applied');
-    assert.match(transport.messages()[1]?.text ?? '', /Nothing was changed/);
-  });
-
-  assertPass('stream failure cannot leave earlier narration looking complete', () => {
-    const transport = createVisibleTranscriptTransport();
-    transport.emit({ type: 'text_delta', text: 'Done — the edit is ready.' });
-    transport.emit({ type: 'agent_turn_error', message: 'Copilot failed unexpectedly.' });
-    assert.equal(transport.messages()[0]?.presentationStatus, 'not-applied');
-    assert.equal(transport.messages()[1]?.text, 'Copilot failed unexpectedly.');
-  });
-
-  assertPass('Stop marks only unresolved work Stopped and preserves Applied truth', () => {
-    const transport = createVisibleTranscriptTransport();
-    transport.emit({ type: 'text_delta', text: 'Applying the requested edit.' });
-    transport.emit({ type: 'tool_call' });
-    transport.emit({ type: 'apply_succeeded' });
-    transport.emit({ type: 'text_delta', text: 'Finishing the explanation.' });
-    transport.emit({
-      type: 'stop',
-      message: 'Stopped. Already-applied changes remain and can be undone.',
-    });
-    assert.equal(transport.messages()[0]?.presentationStatus, 'applied');
-    assert.equal(transport.messages()[1]?.presentationStatus, 'stopped');
-    assert.equal(COPILOT_MESSAGE_PRESENTATION_LABELS.stopped, 'Stopped');
-    assert.match(transport.messages()[2]?.text ?? '', /Already-applied changes remain/);
   });
 }
 
@@ -576,6 +402,35 @@ function testVisibleMessageLifecycleIntegration() {
   });
 }
 
+function testOneEditAuthorityAndSessionUndo() {
+  console.log('\n--- One Bob edit authority and session Undo ---');
+
+  assertPass('ToolDrawer disables both mode controls while Copilot owns the unresolved turn', () => {
+    assert.ok(TOOL_DRAWER_SOURCE.includes('const copilotTurnActive = copilot.activeTurnKey !== null'));
+    assert.equal(TOOL_DRAWER_SOURCE.split('disabled={copilotTurnActive}').length - 1, 2);
+    assert.ok(TOOL_DRAWER_SOURCE.includes('if (copilotTurnActive) return'));
+  });
+
+  assertPass('Stop and every terminal path release the session edit authority', () => {
+    assert.ok(SOURCE.includes('setCopilotTurnActive(threadKey, true)'));
+    assert.ok(SOURCE.includes('setCopilotTurnActive(threadKey, false)'));
+    assert.ok(SOURCE.includes('finishTurn(turn)'));
+  });
+
+  assertPass('component teardown marks stopped and cancels the active request', () => {
+    const teardownBlock = SOURCE.match(/useEffect\(\(\) => \{\s+return \(\) => \{[\s\S]{0,1300}/)?.[0] ?? '';
+    assert.ok(teardownBlock.includes('turn.isStopped = true'));
+    assert.ok(teardownBlock.includes('activeHandleRef.current?.cancel()'));
+    assert.ok(teardownBlock.includes("resolution: 'stopped'"));
+  });
+
+  assertPass('Undo remains session-owned and is disabled while the turn is unresolved', () => {
+    assert.ok(SESSION_COPILOT_SOURCE.includes('copilotUndoByThread'));
+    assert.ok(SOURCE.includes('disabled={isLoading}'));
+    assert.ok(!SOURCE.includes('undoRef'));
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
@@ -594,8 +449,8 @@ function run(): void {
   testExternalEditAdmission();
   testCancellationRaceSafety();
   testStreamingText();
-  testVisibleMessageResultLifecycle();
   testVisibleMessageLifecycleIntegration();
+  testOneEditAuthorityAndSessionUndo();
   console.log('\n=== All Bob CopilotPane gate tests passed ===');
 }
 

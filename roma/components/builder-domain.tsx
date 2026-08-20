@@ -99,6 +99,7 @@ type BobAccountCommandMessage =
     })
   | (BobAccountCommandMessageBase & {
       command: 'cancel-copilot';
+      body: { requestId: string };
     });
 
 type BobWidgetUpsellMessage = {
@@ -1139,10 +1140,11 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
         const requestId = message.requestId;
         const command = message.command;
         if (command === 'cancel-copilot') {
-          const controller = copilotAbortControllers.current.get(requestId);
+          const targetRequestId = message.body.requestId;
+          const controller = copilotAbortControllers.current.get(targetRequestId);
           if (controller) {
             controller.abort();
-            copilotAbortControllers.current.delete(requestId);
+            copilotAbortControllers.current.delete(targetRequestId);
             const result: HostAccountCommandResultMessage = {
               type: 'host:account-command-result',
               requestId,

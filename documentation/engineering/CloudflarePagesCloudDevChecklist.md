@@ -172,7 +172,9 @@ Dashboard action:
 - Configure the `TOKYO_PRODUCT_CONTROL` service binding on Roma Pages to target the `tokyo-assets-dev` worker.
 - Configure the `TRANSLATION_AGENT` service binding on Roma Pages to target the `translation-agent-dev` worker.
 - Configure `USAGE_KV` on Roma Pages with the namespace ids in `roma/wrangler.toml`.
-- Runtime flags: `nodejs_compat`, `nodejs_compat_populate_process_env`
+- Runtime flags: `nodejs_compat`, `nodejs_compat_populate_process_env`,
+  `enable_request_signal`. The last flag is required so client cancellation
+  reaches Roma's `request.signal` and terminates hosted Product Copilot work.
 
 Runtime host note:
 - Roma runtime truth is `BERLIN_BASE_URL=https://berlin-dev.clickeen.workers.dev` from `roma/wrangler.toml`.

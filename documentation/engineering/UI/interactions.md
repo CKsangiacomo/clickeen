@@ -224,6 +224,16 @@ current Copilot into fake streamed activity. Future longer or multi-phase
 Copilot operations may use Agent Activity only when the phases are real product
 work.
 
+Manual and Copilot are mutually exclusive editing modes. While a Copilot turn
+is unresolved, Copilot owns the one active edit lane: Manual mode and Undo are
+unavailable, while Stop remains available. A terminal result or Stop releases
+that lane. Once idle, switching between Manual and Copilot preserves the
+visible chat and its current Undo record for the open Builder session; leaving
+or reloading Builder discards both. After an edit applies, any continuation is
+built from the exact post-apply draft returned by Bob's operation authority.
+There is no second draft-signature concurrency gate, chat persistence service,
+or new wire protocol.
+
 ## Bulk Progress
 
 Bulk asset upload uses a Google Drive-style pattern:

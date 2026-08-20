@@ -818,6 +818,16 @@ account grant and pipes the Product Copilot event stream through. Bob keeps
 apply and Undo in browser memory; Roma does not forward those editor actions to
 a separate outcome or learning route.
 
+Roma owns the hosted stream's `AbortController`, keyed by the original
+`run-copilot` request id. Bob's `cancel-copilot` host command carries that exact
+active stream id in its body and has a separate command id for the cancellation
+acknowledgement. Roma aborts and removes the controller at the target stream id,
+then replies on the cancellation command id. Bob marks Stop immediately as its
+UI truth and ignores late turn events; Roma owns terminating the hosted network
+work. Roma's Cloudflare runtime enables `enable_request_signal`, so aborting the
+browser-to-Roma request reaches the route's `request.signal` and propagates to
+the Product Copilot request.
+
 Roma is the sole AI grant signing authority. It holds
 `ROMA_AI_GRANT_PRIVATE_KEY_PEM`; San Francisco, Translation Agent, and
 Tokyo-worker hold only the matching public key and accept only issuer `roma`.
@@ -889,7 +899,7 @@ Cloudflare Pages config:
 ```text
 project: roma-dev
 output: .vercel/output/static
-compatibility flags: nodejs_compat, nodejs_compat_populate_process_env
+compatibility flags: nodejs_compat, nodejs_compat_populate_process_env, enable_request_signal
 ```
 
 Before any Cloudflare Pages, custom-domain, DNS, or Pages config operation, run:

@@ -266,14 +266,28 @@ pnpm e2e:smoke:copilot-runtime
 ```
 
 The smoke uses the authenticated Roma storage state and the `CLICKEEN` account.
-It verifies three things:
+It verifies:
 
 - authenticated Roma -> Product Copilot returns an SSE stream ending in
   `agent_turn_finished`;
 - an unmanaged selected model is rejected with HTTP 422 instead of silently
   substituting another model;
-- Bob receives the Builder instance, Copilot streams an `apply_widget_ops` tool
-  step, Bob applies it in browser memory, exposes `Undo`, and Undo completes.
+- Bob receives the Builder instance and owns one active edit lane: Manual is
+  unavailable while the initial request and continuation are unresolved;
+- Copilot streams an `apply_widget_ops` tool step, Bob applies it in browser
+  memory, and the continuation carries the exact post-apply signature and
+  changed control value;
+- Manual and `Undo` remain unavailable until that continuation terminates;
+- idle Manual/Copilot switching preserves the exact visible thread and `Undo`,
+  and Undo completes; and
+- a controlled real request exposes Stop, Stop resolves the visible state to
+  `Stopped`, Manual becomes available, and the browser observes Roma abort the
+  exact targeted Copilot network request.
+
+This smoke starts normal Product Copilot turns through Roma and can consume
+their ordinary usage reservations, including the controlled turn that Stop
+then aborts. Its Widget edit is browser-memory only and is explicitly undone;
+the smoke does not Save, Publish, or mutate stored Widget source.
 
 Pass evidence is the command exiting `0` and printing JSON with:
 
@@ -295,7 +309,11 @@ Pass evidence is the command exiting `0` and printing JSON with:
     "reasonKey": "coreui.errors.copilot.invalidRequest"
   },
   "bob": {
-    "builderUrl": "[Roma Builder URL]"
+    "builderUrl": "[Roma Builder URL]",
+    "activeEditLane": "verified",
+    "continuationTruth": "verified",
+    "idleThreadAndUndo": "verified",
+    "stopRelease": "verified"
   }
 }
 ```

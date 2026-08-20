@@ -809,8 +809,8 @@ deploy-built edit-control catalog supplied by Clickeen. Bob trusts that catalog.
 Product Copilot owns the governed model turn and the one-tool-call step
 boundary. It transports the model's `apply_widget_ops` request. Bob owns the
 actual external edit-request acceptance against the exact compiled controls
-and current draft, then applies the accepted batch when its originating draft
-signature is still current.
+and current draft, then applies the accepted batch through the same
+browser-memory operation authority used by Manual editing.
 
 Bob consumes the exact compiled control metadata. Temporal boot readiness is a
 separate UI state, and a legitimately empty show-if projection advertises no
@@ -823,9 +823,24 @@ agent sees the turn. The Copilot turn streams `ProductCopilotTurnEvent` frames
 `agent_turn_finished`, `agent_turn_error`, `agent_turn_stopped`). Bob renders
 `text_delta` incrementally and executes a buffered `tool_call` only after the
 matching `model_step_finished`. Bob remains the owner of the open working copy,
-model-visible Product Copilot thread context, draft concurrency, and reversible
+model-visible Product Copilot thread context, active edit ownership, and reversible
 application of Product-Copilot-produced operations. San Francisco does not
 store Product Copilot thread state.
+
+Manual and Copilot are two mutually exclusive views over one Bob editing
+session. An unresolved Copilot turn owns the one active edit lane: Bob keeps
+Copilot selected, makes Manual unavailable, and makes Undo unavailable while
+the request or tool application is unresolved. Stop remains available. A
+terminal result or Stop releases the lane. This is the concurrency boundary;
+Bob does not compare the draft to an earlier request signature to reconstruct
+concurrency that the product does not permit.
+
+The visible chat thread and its current Undo record belong to the open Bob
+session, not to the mounted Copilot panel. After a terminal result, switching
+to Manual and back therefore preserves both for the life of that Builder
+session. Reloading or leaving Builder still discards them because Bob owns
+browser-memory editing and Product Copilot has no persisted conversation
+store.
 
 The visible assistant transcript carries presentation-only result status.
 `Working` appears while that message's request or tool application is
@@ -848,10 +863,13 @@ When a `tool_call` carries a valid `apply_widget_ops` batch and the matching
 `model_step_finished` arrives, Bob applies the batch to the browser-memory
 working copy and preview through the same in-memory op path used by manual
 controls. Bob then opens a continuation carrying the tool result and the
-`priorModelStepId`, so the agent can finish or request another step. Inverse
-undo ops accumulate across the steps of one turn so a single Undo reverses the
-whole applied batch. This does not save, publish, or mutate account persistence;
-the user still saves through the normal Roma save path.
+`priorModelStepId`, so the agent can finish or request another step. The
+successful apply result carries the exact post-apply draft, and Bob uses that
+result directly to build the continuation context; it does not read an older
+render snapshot or wait for a React effect to refresh one. Inverse undo ops
+accumulate across the steps of one turn so a single Undo reverses the whole
+applied batch. This does not save, publish, or mutate account persistence; the
+user still saves through the normal Roma save path.
 
 Repeatable controls preserve item identity. If a compiled array control exposes
 `itemIdPath`, Copilot insert values must include that id field and remove ops
@@ -866,13 +884,17 @@ step count, stop flag) and the active HTTP request handle. It consumes the
 existing Widget session transport directly. `transport.runCopilot` returns a
 `CopilotRequestHandle` carrying the `requestId` and a `completed` promise; it
 does not block on the whole agent turn. `transport.cancelCopilot` dispatches the
-`cancel-copilot` host command for that `requestId`.
+`cancel-copilot` host command with that active stream `requestId` as its target;
+the cancellation command has its own response-correlation id.
 
 The input control is a single Send/Stop toggle. Send opens an initial turn;
 Stop is UI truth. Bob marks the active turn stopped immediately on its own Stop
 action and does not wait for a server `agent_turn_stopped` event through the
 stream it is about to abort. Late events for a stopped turn are ignored and no
 further continuation is sent. Already-applied ops remain and can be undone.
+Closing the Bob session uses the same ownership rule: any unresolved request is
+cancelled, unresolved presentation becomes stopped, and late completion cannot
+apply an edit or open another continuation.
 
 Bob enforces a tier step limit read from the signed policy
 (`limits.maxTurnsPerThread`, default 30) and refuses a continuation past that

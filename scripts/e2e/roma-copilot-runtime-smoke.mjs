@@ -18,6 +18,37 @@ function cookieHeader(state) {
   return state.cookies.map((cookie) => `${cookie.name}=${cookie.value}`).join('; ');
 }
 
+function deferred() {
+  let resolve;
+  const promise = new Promise((next) => {
+    resolve = next;
+  });
+  return { promise, resolve };
+}
+
+async function within(promise, timeoutMs, label) {
+  let timeout;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise((_, reject) => {
+        timeout = setTimeout(() => reject(new Error(`Timed out waiting for ${label}`)), timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timeout) clearTimeout(timeout);
+  }
+}
+
+async function waitForEnabled(locator, timeoutMs, label) {
+  const startedAt = Date.now();
+  while (Date.now() - startedAt < timeoutMs) {
+    if (await locator.isEnabled().catch(() => false)) return;
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  throw new Error(`Timed out waiting for ${label}`);
+}
+
 async function readJson(response) {
   const text = await response.text();
   if (!text) return null;
@@ -129,32 +160,160 @@ async function runNoFallbackSmoke(romaBase, cookies, instance) {
 
 async function runBobDraftEditUndoSmoke(romaBase, authStatePath) {
   const browser = await chromium.launch({ headless: true });
+  let releaseInitialRequest;
+  let releaseContinuationRequest;
   try {
     const context = await browser.newContext({ storageState: authStatePath });
     const page = await context.newPage();
+    const initialRequest = deferred();
+    releaseInitialRequest = deferred();
+    const continuationRequest = deferred();
+    releaseContinuationRequest = deferred();
+    const stoppedRequest = deferred();
+    const stoppedRequestFailure = deferred();
+    let initialCount = 0;
+    let continuationSeen = false;
+    let stoppedNetworkRequest = null;
+
+    page.on('requestfailed', (request) => {
+      if (request !== stoppedNetworkRequest) return;
+      stoppedRequestFailure.resolve(request.failure()?.errorText || 'request failed');
+    });
+
+    await page.route('**/api/account/instances/*/copilot', async (route) => {
+      const request = route.request();
+      if (request.method() !== 'POST') {
+        await route.continue();
+        return;
+      }
+      let body;
+      try {
+        body = request.postDataJSON();
+      } catch {
+        await route.continue();
+        return;
+      }
+      if (body?.kind === 'initial') {
+        initialCount += 1;
+        if (initialCount === 1) {
+          initialRequest.resolve(body);
+          await releaseInitialRequest.promise;
+          await route.continue();
+          return;
+        }
+        if (initialCount === 2) {
+          stoppedNetworkRequest = request;
+          stoppedRequest.resolve(body);
+          await route.continue().catch(() => {});
+          return;
+        }
+      }
+      if (body?.kind === 'continuation' && !continuationSeen) {
+        continuationSeen = true;
+        continuationRequest.resolve(body);
+        await releaseContinuationRequest.promise;
+        await route.continue();
+        return;
+      }
+      await route.continue();
+    });
+
     await page.goto(new URL('/widgets', romaBase).toString(), { waitUntil: 'domcontentloaded' });
     await page.getByRole('link', { name: 'Edit' }).first().click();
     await page.waitForURL(/\/builder\/[A-Z0-9]+/, { timeout: 30_000 });
 
     const frame = page.frameLocator('iframe[title="Bob Builder"]');
-    await frame.getByRole('radio', { name: 'Manual' }).waitFor({ timeout: 30_000 });
+    const manualMode = frame.getByRole('radio', { name: 'Manual' });
+    const copilotMode = frame.getByRole('radio', { name: 'Copilot' });
+    await manualMode.waitFor({ timeout: 30_000 });
     await frame.locator('section.workspace[data-widget-ready="true"]').waitFor({ timeout: 30_000 });
-    await frame.locator('input[name="assist-mode"][value="copilot"]').click({ force: true });
+    await copilotMode.click();
     const prompt = frame.getByLabel('Copilot message');
     await prompt.waitFor({ timeout: 30_000 });
-    await prompt.fill('Use apply_widget_ops now to set the visible Header Title control to Runtime Smoke Title. Do not answer without applying the edit.');
+    const editPrompt = 'Use apply_widget_ops now to set the visible Header Title control to Runtime Smoke Title. Do not answer without applying the edit.';
+    await prompt.fill(editPrompt);
     await frame.getByRole('button', { name: 'Send to Copilot' }).click();
+    await within(initialRequest.promise, 30_000, 'the initial Builder Copilot request');
+    if (!(await manualMode.isDisabled())) {
+      throw new Error('Manual mode remained available while the Copilot request was unresolved');
+    }
+    releaseInitialRequest.resolve();
+
+    const continuationBody = await within(
+      continuationRequest.promise,
+      90_000,
+      'the post-apply Builder Copilot continuation',
+    );
+    const changedPaths = continuationBody?.toolResult?.changedPaths;
+    const postApplySignature = continuationBody?.toolResult?.postApplySignature;
+    const continuationContext = continuationBody?.currentDraftContext;
+    if (
+      continuationBody?.kind !== 'continuation'
+      || !Array.isArray(changedPaths)
+      || changedPaths.length === 0
+      || typeof postApplySignature !== 'string'
+      || continuationContext?.draftSignature !== postApplySignature
+    ) {
+      throw new Error('Copilot continuation did not carry the exact successful apply result');
+    }
+    const changedControl = continuationContext.controls?.find(
+      (control) => changedPaths.includes(control.path),
+    );
+    if (!changedControl || changedControl.currentValue !== 'Runtime Smoke Title') {
+      throw new Error('Copilot continuation did not carry the exact post-apply control value');
+    }
+
     const undoButton = frame.getByRole('button', { name: 'Undo' });
-    try {
-      await undoButton.waitFor({ timeout: 90_000 });
-    } catch (error) {
+    await undoButton.waitFor({ timeout: 30_000 });
+    if (!(await undoButton.isDisabled()) || !(await manualMode.isDisabled())) {
+      throw new Error('Manual or Undo became available before the Copilot continuation terminated');
+    }
+    releaseContinuationRequest.resolve();
+    await frame.getByRole('button', { name: 'Undo' }).waitFor({ timeout: 90_000 });
+    await waitForEnabled(manualMode, 90_000, 'the Copilot continuation to terminate').catch(async (error) => {
       const conversation = await frame.getByLabel('Copilot conversation').innerText().catch(() => '');
-      throw new Error(`Copilot did not apply an undoable edit. Conversation: ${conversation || '[empty]'}`, { cause: error });
+      throw new Error(`Copilot continuation did not terminate. Conversation: ${conversation || '[empty]'}`, { cause: error });
+    });
+
+    await manualMode.click();
+    await copilotMode.click();
+    await frame.getByText(editPrompt, { exact: true }).waitFor();
+    if (!(await undoButton.isEnabled())) {
+      throw new Error('Copilot Undo did not survive an idle Manual/Copilot switch');
     }
     await undoButton.click();
     await frame.getByText('Undone.').waitFor({ timeout: 20_000 });
-    return { builderUrl: page.url() };
+
+    await prompt.fill('Wait while I stop this turn.');
+    await frame.getByRole('button', { name: 'Send to Copilot' }).click();
+    await within(stoppedRequest.promise, 30_000, 'the controlled Stop request');
+    if (!(await manualMode.isDisabled())) {
+      throw new Error('Manual mode remained available before Stop');
+    }
+    await frame.getByRole('button', { name: 'Stop Copilot' }).click();
+    await frame.getByText('Stopped', { exact: true }).last().waitFor({ timeout: 20_000 });
+    if (!(await manualMode.isEnabled())) {
+      throw new Error('Stop did not release Manual mode');
+    }
+    const stoppedFailure = await within(
+      stoppedRequestFailure.promise,
+      20_000,
+      'Roma to abort the targeted Copilot request',
+    );
+    if (!/abort|cancel/i.test(stoppedFailure)) {
+      throw new Error(`Stop ended the Copilot request with an unexpected network result: ${stoppedFailure}`);
+    }
+
+    return {
+      builderUrl: page.url(),
+      activeEditLane: 'verified',
+      continuationTruth: 'verified',
+      idleThreadAndUndo: 'verified',
+      stopRelease: 'verified',
+    };
   } finally {
+    releaseInitialRequest?.resolve();
+    releaseContinuationRequest?.resolve();
     await browser.close();
   }
 }
