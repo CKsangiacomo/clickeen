@@ -1,6 +1,6 @@
 # PRD 131 — Builder Header Dieter Convergence
 
-Status: **LOCAL VISIBLE-SURFACE RHYTHM CORRECTION COMPLETE — CLOUD-DEV DEPLOYMENT AND OWNER VISUAL ACCEPTANCE PENDING**
+Status: **DEPLOYED AND AUTOMATED-VERIFIED IN CLOUD-DEV — OWNER VISUAL ACCEPTANCE PENDING**
 
 Owner: Clickeen product owner/architect
 
@@ -265,3 +265,22 @@ against the Roma header, in addition to the iframe, so it cannot mistake a
 correct host boundary for correct visible rhythm again. No header content,
 publication behavior, Save behavior, editor state, route, storage, or command
 path changes.
+
+## 14. Visible-Surface Correction Reconciliation
+
+```text
+implementation commit: 4ce2fcae (Fix visible Builder header gap)
+push: main -> github/main
+Bob Pages: production deployment ed3a1eeb on 4ce2fcae — success
+Roma Pages: production deployment 09da11ce on 4ce2fcae — success
+cloud-dev Roma app verify: GitHub Actions run 32318589411 — success
+cloud-dev surface reachability: GitHub Actions run 32318798559 — success
+live authenticated evidence: e2e/widgets/builder-open.spec.ts — 2/2 PASS
+  - Builder iframe remains 16px below the shared Roma header
+  - visible Bob ToolDrawer begins 16px below the shared Roma header
+  - visible Bob Workspace begins 16px below the shared Roma header
+  - ordinary Roma content retains the same 16px Full Page separation
+independent V1-V8 audit: PASS on all eight; no blocker
+product data: unchanged
+owner visual acceptance: pending
+```
