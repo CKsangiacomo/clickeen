@@ -162,6 +162,11 @@ async function testRomaOwnsBuilderPublicationChrome(): Promise<void> {
   assert.match(builderApp, /aria-label="Open tools"/);
   assert.doesNotMatch(builderApp, /TopDrawer|topdrawer|open-navigation/);
   assert.doesNotMatch(bobCss, /topdrawer/);
+  assert.match(
+    bobCss,
+    /\.builder-app \{[^}]*padding-block-start: 0;[^}]*padding-block-end: max\(var\(--space-2\), env\(safe-area-inset-bottom\)\);/,
+  );
+  assert.doesNotMatch(bobCss, /\.builder-app \{[^}]*safe-area-inset-top/);
   assert.match(bobCss, /\.editor-content > \.tooldrawer-open/);
   assert.match(bobSessionTypes, /type: 'bob:save-control-state'/);
   assert.match(bobSessionTypes, /type: 'host:save-request'/);

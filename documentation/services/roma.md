@@ -81,8 +81,10 @@ below the header to Bob. Their one Roma
 header uses the same `RomaPageHeader` grammar and control roles as ordinary
 domains, selecting only Dieter's `full` width so its outer width follows the
 editor canvas. Its standard Roma/Dieter inline inset remains independent of
-Bob's tighter internal workspace inset. The width mode adds no block padding;
-the shared header's block-end margin is the sole gap above Bob. That Roma header is the only Builder
+Bob's tighter internal inline and bottom workspace insets. The width mode adds
+no block padding; the shared header's block-end margin is the sole gap above
+Bob's visible editor surfaces, and Bob adds no top inset inside the iframe.
+That Roma header is the only Builder
 header. Bob owns Save truth and
 borrows the far-right Roma action slot only while its exact presentation phase
 is `save`, `saving`, or `saved`; Roma renders that phase and sends the one

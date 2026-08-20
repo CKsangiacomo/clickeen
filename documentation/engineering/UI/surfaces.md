@@ -64,8 +64,10 @@ maximum and the standard Page inline inset. The Page owns the top inset; the
 shared header's block-end margin is the sole space between header and content.
 Full Page rhythm uses `--space-4` outer padding with `--space-4` header and
 content separation. A full-canvas consumer may remove Page inline and bottom
-padding while retaining the same top inset. Compact uses `--space-4` outer
-padding with `--space-3` header and content separation. In Compact mode the
+padding while retaining the same top inset, but its visible surface must start
+at the resulting content boundary rather than adding another top inset. Roma
+Builder therefore gives Bob inline and bottom workspace insets only. Compact
+uses `--space-4` outer padding with `--space-3` header and content separation. In Compact mode the
 same panel DOM uses its separate `12rem` maximum-width token, overlays the
 full-width page, and uses the existing elevated shadow. Consumer content uses
 `--role-surface` for contained primary surfaces.

@@ -1,6 +1,6 @@
 # PRD 131 — Builder Header Dieter Convergence
 
-Status: **LOCAL HEADER-RHYTHM CORRECTION COMPLETE — CLOUD-DEV DEPLOYMENT AND OWNER VISUAL ACCEPTANCE PENDING**
+Status: **LOCAL VISIBLE-SURFACE RHYTHM CORRECTION COMPLETE — CLOUD-DEV DEPLOYMENT AND OWNER VISUAL ACCEPTANCE PENDING**
 
 Owner: Clickeen product owner/architect
 
@@ -235,6 +235,33 @@ The local correction restores the simple ownership law:
   handlers are unchanged.
 
 Source, contract, governance, generated DevStudio reveal, Roma regression
-tests, and browser geometry assertions are updated together. Local verification
-is complete; commit, push, cloud-dev deployment, authenticated runtime evidence,
-and owner visual acceptance remain pending for this correction.
+tests, and browser geometry assertions were updated together in commit
+`843ef14c` and pushed directly to `main`. Roma app verification run
+`32316847567`, the Worker/product-root run `32316847881`, and the affected
+Cloudflare Pages production checks completed successfully. The authenticated
+Builder test passed 2/2, but owner visual review then exposed the distinct
+visible-surface defect recorded in §13: that test proved only the iframe
+boundary and therefore did not constitute visual acceptance.
+
+## 13. Visible Bob Surface Gap Correction (2026-08-19, owner-directed)
+
+Cloud-dev visual review of §12 proved that its browser assertion stopped at the
+iframe boundary rather than the surface the owner actually sees. The deployed
+geometry was: Roma header bottom at 56px, iframe top at 72px, and Bob's
+ToolDrawer and Workspace top at 80px. Roma correctly supplied the standard
+16px separation, but Bob then added its own 8px top workspace inset, producing
+a visible 24px gap. Ordinary Roma content began at 72px and therefore exposed
+the mismatch.
+
+The correction removes only Bob's outer top inset. Bob retains its independent
+inline and bottom `space-2` insets, Roma continues to own the Builder Page top
+inset and shared header margin, and the iframe geometry remains unchanged. The
+visible ToolDrawer and Workspace now begin at the iframe top, so both ordinary
+Roma content and Builder's visible editor surface start exactly 16px below the
+shared header.
+
+The authenticated browser regression now measures the ToolDrawer and Workspace
+against the Roma header, in addition to the iframe, so it cannot mistake a
+correct host boundary for correct visible rhythm again. No header content,
+publication behavior, Save behavior, editor state, route, storage, or command
+path changes.

@@ -71,8 +71,11 @@ layering are owned by their own UI docs.
   `margin-block-end`. Full Page rhythm is `--space-4` outer padding with
   `--space-4` header and content separation. A full-canvas consumer may remove
   Page inline and bottom padding while retaining that top inset; Roma Builder
-  does so for Bob. Compact uses `--space-4` outer padding with `--space-3`
-  header and content separation. These are not duplicated as layout aliases.
+  does so for Bob. The hosted canvas must begin its visible surface at that
+  content boundary rather than adding another top inset; Bob retains only its
+  inline and bottom workspace insets. Compact uses `--space-4` outer padding
+  with `--space-3` header and content separation. These are not duplicated as
+  layout aliases.
 - **Vertical rhythm** - `--vertspace-1` through `--vertspace-9`. Use this for
   compact vertical breathing room inside dense controls where structural
   spacing is too coarse.

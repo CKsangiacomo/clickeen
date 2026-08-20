@@ -110,8 +110,10 @@ horizontal inset remains the standard Roma/Dieter
 `--layout-page-padding`. The width choice does not change alignment, action
 order, state, behavior, or block rhythm. Roma's Builder Page retains the
 standard top inset and the shared header's block-end margin is the sole gap
-above Bob. Bob's own container keeps its independent `space-2`
-workspace inset. The Widgets inventory keeps its own row kit. Roma's header is
+above Bob's visible editor surfaces. Because Roma owns that separation, Bob
+adds no top inset inside the iframe; its container keeps the independent
+`space-2` inline and bottom workspace insets. The Widgets inventory keeps its
+own row kit. Roma's header is
 the only Builder header and owns publication
 state/actions and compact Roma navigation. Bob has no header and receives no
 publication state, Publish/Republish/Unpublish command, public

@@ -58,15 +58,25 @@ test.describe('Roma Builder authenticated smoke', () => {
     await expect(borderClusterToggle).toHaveAttribute('aria-expanded', 'false');
     await borderClusterToggle.click();
     await expect(borderCluster.locator('.diet-dropdown-border').first()).toBeVisible();
-    const iframeBox = await bobIframe.boundingBox();
+    const [iframeBox, toolDrawerBox, workspaceBox] = await Promise.all([
+      bobIframe.boundingBox(),
+      bobFrame.locator('.tooldrawer').boundingBox(),
+      bobFrame.locator('.workspace').boundingBox(),
+    ]);
     expect(iframeBox?.width ?? 0).toBeGreaterThan(900);
     expect(iframeBox?.height ?? 0).toBeGreaterThan(600);
+    expect(toolDrawerBox).not.toBeNull();
+    expect(workspaceBox).not.toBeNull();
+    const builderHeaderBottom =
+      (builderHeaderBox?.y ?? 0) + (builderHeaderBox?.height ?? 0);
     expect(
-      Math.abs(
-        (iframeBox?.y ?? 0)
-          - ((builderHeaderBox?.y ?? 0) + (builderHeaderBox?.height ?? 0))
-          - 16,
-      ),
+      Math.abs((iframeBox?.y ?? 0) - builderHeaderBottom - 16),
+    ).toBeLessThanOrEqual(1);
+    expect(
+      Math.abs((toolDrawerBox?.y ?? 0) - builderHeaderBottom - 16),
+    ).toBeLessThanOrEqual(1);
+    expect(
+      Math.abs((workspaceBox?.y ?? 0) - builderHeaderBottom - 16),
     ).toBeLessThanOrEqual(1);
     const outerCanvasBackground = await page
       .locator('.main-container')
