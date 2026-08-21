@@ -159,17 +159,26 @@ Button loading composes that ordinary Spinner before a caller-supplied loading
 label. The caller disables the Button and sets `data-loading` plus `aria-busy`
 for the exact lifetime of its command; Button derives Spinner size from its
 existing small/medium/large Icon ladder and does not own the asynchronous work.
-Button also accepts the optional colour axis `data-tone`, with `positive`
-(system green) and `saveonly` (system pink). Tone is orthogonal to the required
-`data-type` hierarchy and is overridden by `data-state="success"`, so colour
-precedence is type, then tone, then state. `saveonly` is reserved for a Save
-control.
+Button also accepts the optional colour axis `data-tone`, with `republish`
+(system green) and `save` (system pink). Tone is orthogonal to the required
+`data-type` hierarchy and overrides `data-state="success"` colour, so colour
+precedence is type, then state, then tone: a control given its own tone keeps
+that colour through every state. `data-state="success"` still supplies the
+result's full-opacity disabled treatment. The tones are reserved for the named
+Save and Republish controls and remain independent of primary, secondary,
+tertiary, or quaternary hierarchy.
 
 Button also accepts the optional presentation state `data-state="success"`.
 That state keeps the Button's existing size, type, children, and disabled
 semantics while using the system green/white result treatment. The caller owns
 the successful result, its exact label and optional Icon, and the duration for
 which the result is shown; Button does not infer or retain success.
+
+Empty State owns one exact successful-zero composition: the deployed Dieter
+ellipsis Icon above one caller-owned short string. It exposes no title,
+description, CTA, recovery, loading, or error slot. Passive loading uses the
+ordinary Spinner with no visible loading prose. Consumers own the state truth;
+Dieter owns only these shared presentations.
 
 Choice Tiles owns two- and three-option selection structure, interaction,
 selected presentation, and one proportional `sm|md|lg` tile geometry. Its
@@ -350,9 +359,12 @@ meaning. The component emits only the one JSON field, owns no second metadata
 path, derives preview kind only from resolved asset content type, and releases
 pending asset resolution through `destroyDropdownUpload`.
 Every visible and accessible word is caller input. A future Widget that uses
-the component owns the field label and placeholder plus the exact five-key
-component-copy shape in its adjacent ToolDrawer label file. None of the eight
-current Widget specs declares Dropdown Upload.
+the component owns the field label and placeholder plus the exact six-key
+component-copy shape in its adjacent ToolDrawer label file. None of the five
+current Widget specs declares Dropdown Upload. The sixth key is the accessible
+loading label for automatic stored-asset resolution; its standalone Spinner
+lives in the preview. Actual Upload or Replace keeps a decorative Spinner and
+busy state on the exact Button the user operated.
 
 Dropdown Actions, Dropdown Border, Dropdown Edit, Dropdown Fill, Dropdown
 Shadow, and Dropdown Upload use the shared clickable property-menu row rule.
@@ -413,6 +425,10 @@ value, one Hex row, and one nine-column two-row palette. Only the white swatch
 has a gray resting edge; selection uses a one-pixel blue outline. Image and
 video use the same compact surface-height ladder while retaining their
 existing upload, choose, remove, and asset-browser behavior.
+Upload and Choose keep their decorative Spinner and busy state on the exact
+operated Button. Passive resolution of a saved image/video asset reference uses
+the standalone accessible Spinner in the preview. A successful zero browser
+result uses systemic Empty State, and failure remains the caller-owned alert.
 Selecting image or video without an asset writes exact `none`; the closed row
 shows only the centered `square.slash` Icon rather than retaining the prior
 mode's chip.

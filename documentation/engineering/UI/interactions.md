@@ -36,9 +36,16 @@ states to static pages. They must also not collapse different product meanings:
 `empty`, `unavailable`, `unauthorized`, and `error` are separate states when the
 user can act or the reason matters.
 
+Passive loading is always the systemic Spinner with an accessible name and no
+visible loading sentence, placeholder, or skeleton. A successful zero result
+uses the systemic Empty State: the ellipsis Icon above one short caller-owned
+string. Empty State is not the fallback branch for unresolved or failed truth.
+Command loading remains on the exact control the user operated.
+
 Roma account shell is the account-boundary reference. Its navigation and page
 frame remain visible while the Berlin-owned account context resolves; only
-the page content shows a skeleton. Roma trusts that accepted account result.
+the page content shows the systemic Spinner. Roma trusts that accepted account
+result.
 Reconciliation keeps current content
 mounted while the owning command shows pending feedback. Terminal auth or
 an unavailable account result fails closed, and a recoverable account error stays in the page
@@ -85,16 +92,16 @@ a caller field. Save is an explicit action:
 - dirty state: `Save`;
 - persistence in flight: the same Button is disabled and shows its Spinner with
   `Saving…`;
-- confirmed clean state: the Button becomes system green and shows the Dieter
-  checkmark plus `Saved` for exactly one second, then disappears;
+- confirmed clean state: the same pink Button is disabled and shows its Spinner
+  plus `Saved`; the Spinner is decorative receipt presentation, not busy state;
 - failed persistence: Bob's existing error stays visible and the control is
   `Save` when the current draft remains dirty or absent when it matches saved
   truth;
 - an accepted edit during Save keeps `Saving…` until the submitted result, then
   returns to `Save` when the current draft remains dirty, without showing a
   false `Saved`; and
-- an accepted edit during the one-second receipt cancels that receipt and
-  restores `Save` immediately.
+- an accepted edit during the saved receipt ends that receipt and restores
+  `Save` immediately. There is no receipt timer.
 
 Bob owns those four presentation phases from its exact draft/save truth. Roma
 renders the phase in the far-right slot of its one Builder header and sends one
@@ -105,6 +112,17 @@ the only persistence protocol.
 Save is source/base persistence only. It does not generate translations,
 regenerate translations, mutate locale overlays, publish, unpublish,
 rename, duplicate, or delete.
+
+## Republish
+
+Republish is Roma's separate publication command and uses the existing Button
+with `data-tone="republish"`, independent of its required hierarchy type. Its
+truthful phases are the current publication Icon plus `Republish`; a disabled,
+busy Spinner plus `Republishing…`; and, only after the exact route succeeds, a
+disabled checkmark plus `Live widget updated`. The successful receipt is not
+busy and has no timer. It belongs to the exact saved instance and saved source
+revision; a later Save or a different instance invalidates it. Initial open,
+failure, and dirty state cannot fabricate the receipt.
 
 ## Feedback Durability
 

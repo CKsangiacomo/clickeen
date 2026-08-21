@@ -197,9 +197,6 @@
   const aiSystemAgents = Array.isArray(aiAccess?.systemAgents) ? aiAccess.systemAgents : aiAgents.filter((agent) => agent?.category === 'system_agent');
 
   const POLICY_COPY = Object.freeze({
-    loading: 'Loading policy data...',
-    reloading: 'Reloading policy data...',
-    saving: 'Saving policy changes...',
     saved: 'Policy changes saved.',
     loadFailed: 'Policy data could not be loaded. Try again.',
     entitlementSaveFailed: 'Entitlement changes could not be saved. Try again.',
@@ -222,7 +219,9 @@
     aiRuntimeMatrix: null,
     aiRuntimePath: null,
     busy: true,
-    feedback: { kind: 'status', message: POLICY_COPY.loading },
+    reloading: false,
+    pendingControl: null,
+    feedback: { kind: 'loading' },
     lastSavedAt: null,
     filter: '',
     unitsByEntitlementKey: {},
@@ -232,6 +231,26 @@
     Object.assign(state, next);
     render();
   };
+
+  const entitlementControlKey = (entitlementKey, tier) => `entitlement:${entitlementKey}:${tier}`;
+  const aiControlKey = (payload) => [
+    'ai',
+    payload.agentId,
+    payload.tier,
+    payload.field,
+    payload.provider || '',
+    payload.model || '',
+  ].join(':');
+
+  function appendPendingControlState(container, control, key) {
+    if (state.pendingControl !== key) return;
+    control.setAttribute('aria-busy', 'true');
+    const spinner = document.createElement('span');
+    spinner.className = 'diet-spinner';
+    spinner.setAttribute('data-size', 'small');
+    spinner.setAttribute('aria-hidden', 'true');
+    container.appendChild(spinner);
+  }
 
   const isRecord = (value) => Boolean(value) && typeof value === 'object' && !Array.isArray(value);
   const isUsableEntitlementMatrix = (value) => isRecord(value) && Array.isArray(value.tiers) && isRecord(value.entitlements);
@@ -249,7 +268,8 @@
 
   async function saveCell({ entitlementKey, tier, value }) {
     if (state.busy) return;
-    setStatus({ busy: true, feedback: { kind: 'status', message: POLICY_COPY.saving } });
+    const pendingControl = entitlementControlKey(entitlementKey, tier);
+    setStatus({ busy: true, pendingControl, feedback: null });
     try {
       const res = await fetch('/api/entitlements/matrix/cell', {
         method: 'POST',
@@ -262,6 +282,7 @@
       if (!json?.ok || !isUsableEntitlementMatrix(json.matrix)) {
         setStatus({
           busy: false,
+          pendingControl: null,
           lastSavedAt: savedAt,
           feedback: { kind: 'alert', message: POLICY_COPY.entitlementSavedUnreadable },
         });
@@ -271,11 +292,12 @@
         matrix: json.matrix,
         matrixPath: json.path || state.matrixPath,
         busy: false,
+        pendingControl: null,
         lastSavedAt: savedAt,
         feedback: { kind: 'status', message: POLICY_COPY.saved },
       });
     } catch (_err) {
-      setStatus({ busy: false, feedback: { kind: 'alert', message: POLICY_COPY.entitlementSaveFailed } });
+      setStatus({ busy: false, pendingControl: null, feedback: { kind: 'alert', message: POLICY_COPY.entitlementSaveFailed } });
       throw new Error('ENTITLEMENT_SAVE_FAILED');
     }
   }
@@ -292,7 +314,8 @@
 
   async function saveAiRuntimeCell(payload) {
     if (state.busy) return;
-    setStatus({ busy: true, feedback: { kind: 'status', message: POLICY_COPY.saving } });
+    const pendingControl = aiControlKey(payload);
+    setStatus({ busy: true, pendingControl, feedback: null });
     try {
       const res = await fetch('/api/ai-runtime/matrix/cell', {
         method: 'POST',
@@ -305,6 +328,7 @@
       if (!json?.ok || !isUsableAiRuntimeMatrix(json.matrix)) {
         setStatus({
           busy: false,
+          pendingControl: null,
           lastSavedAt: savedAt,
           feedback: { kind: 'alert', message: POLICY_COPY.aiSavedUnreadable },
         });
@@ -314,11 +338,12 @@
         aiRuntimeMatrix: json.matrix,
         aiRuntimePath: json.path || state.aiRuntimePath,
         busy: false,
+        pendingControl: null,
         lastSavedAt: savedAt,
         feedback: { kind: 'status', message: POLICY_COPY.saved },
       });
     } catch (_err) {
-      setStatus({ busy: false, feedback: { kind: 'alert', message: POLICY_COPY.aiSaveFailed } });
+      setStatus({ busy: false, pendingControl: null, feedback: { kind: 'alert', message: POLICY_COPY.aiSaveFailed } });
       throw new Error('AI_POLICY_SAVE_FAILED');
     }
   }
@@ -385,11 +410,22 @@
     reloadBtn.setAttribute('data-size', 'md');
     reloadBtn.setAttribute('data-variant', 'secondary');
     reloadBtn.type = 'button';
-    reloadBtn.innerHTML = '<span class="diet-button__label">Reload</span>';
+    if (state.reloading) {
+      reloadBtn.dataset.loading = 'true';
+      reloadBtn.setAttribute('aria-busy', 'true');
+      const spinner = document.createElement('span');
+      spinner.className = 'diet-spinner';
+      spinner.setAttribute('aria-hidden', 'true');
+      reloadBtn.appendChild(spinner);
+    }
+    const reloadLabel = document.createElement('span');
+    reloadLabel.className = 'diet-button__label';
+    reloadLabel.textContent = 'Reload';
+    reloadBtn.appendChild(reloadLabel);
     reloadBtn.disabled = state.busy;
     reloadBtn.addEventListener('click', async () => {
       if (state.busy) return;
-      setStatus({ busy: true, feedback: { kind: 'status', message: POLICY_COPY.reloading } });
+      setStatus({ busy: true, reloading: true, feedback: null });
       try {
         const [next, nextAiRuntime] = await Promise.all([fetchMatrix(), fetchAiRuntimeMatrix()]);
         setStatus({
@@ -398,10 +434,11 @@
           aiRuntimeMatrix: nextAiRuntime.matrix,
           aiRuntimePath: nextAiRuntime.path,
           busy: false,
+          reloading: false,
           feedback: null,
         });
       } catch (_err) {
-        setStatus({ busy: false, feedback: { kind: 'alert', message: POLICY_COPY.loadFailed } });
+        setStatus({ busy: false, reloading: false, feedback: { kind: 'alert', message: POLICY_COPY.loadFailed } });
       }
     });
 
@@ -416,6 +453,7 @@
     const disabled = state.busy;
 
     const safeId = `ent_${String(key)}_${String(tier)}`.replace(/[^a-zA-Z0-9_-]+/g, '_');
+    const pendingKey = entitlementControlKey(key, tier);
 
     const cell = document.createElement('div');
     cell.className = `entitlements-cell entitlements-cell--${entitlement.kind}`;
@@ -449,6 +487,7 @@
 
       cell.classList.add('entitlements-cell--flag');
       cell.appendChild(wrapper);
+      if (input) appendPendingControlState(cell, input, pendingKey);
       return td;
     }
 
@@ -599,6 +638,7 @@
     }
 
     cell.appendChild(isBytes ? bytesWrap : wrapper);
+    if (input) appendPendingControlState(cell, input, pendingKey);
     return td;
   }
 
@@ -861,9 +901,10 @@
     return section;
   }
 
-  function renderEditableAiToggleCell({ id, checked, label, onChange }) {
+  function renderEditableAiToggleCell({ id, checked, label, pendingKey, onChange }) {
     const td = renderReadonlyToggleCell({ id, checked, label });
     const input = td.querySelector('input');
+    const cell = td.querySelector('.entitlements-cell') || td;
     if (input) {
       input.disabled = state.busy;
       input.tabIndex = 0;
@@ -874,6 +915,7 @@
           input.checked = !input.checked;
         }
       });
+      appendPendingControlState(cell, input, pendingKey);
     }
     return td;
   }
@@ -888,6 +930,8 @@
   function renderAiNumberCell({ agentId, tier, field, value, allowNull = false }) {
     const td = document.createElement('td');
     td.className = 'body-s entitlements-table__value';
+    const cell = document.createElement('div');
+    cell.className = 'entitlements-cell';
 
     const input = document.createElement('input');
     input.className = 'diet-valuefield__field';
@@ -897,12 +941,13 @@
     input.placeholder = allowNull ? 'none' : '0';
     input.value = value === null || typeof value === 'undefined' ? '' : String(value);
     input.setAttribute('aria-label', `${agentId} ${tier} ${field}`);
+    const payload = { agentId, tier, field };
 
     const commit = async () => {
       const parsed = parseNumberish(input.value);
       const nextValue = parsed === null && allowNull ? null : parsed;
       try {
-        await saveAiRuntimeCell({ agentId, tier, field, value: nextValue });
+        await saveAiRuntimeCell({ ...payload, value: nextValue });
       } catch (_err) {
         const config = getAiRuntimeConfig(agentId, tier);
         const current =
@@ -920,7 +965,9 @@
         input.blur();
       }
     });
-    td.appendChild(input);
+    cell.appendChild(input);
+    appendPendingControlState(cell, input, aiControlKey(payload));
+    td.appendChild(cell);
     return td;
   }
 
@@ -931,11 +978,14 @@
 
     const td = document.createElement('td');
     td.className = 'body-s entitlements-table__value';
+    const cell = document.createElement('div');
+    cell.className = 'entitlements-cell';
 
     const select = document.createElement('select');
     select.className = 'entitlements-unit body-xs';
     select.disabled = state.busy;
     select.setAttribute('aria-label', `${agent.agentId} ${tier} default model`);
+    const payload = { agentId: agent.agentId, tier, field: 'defaultModel' };
 
     Object.entries(config?.modelsByProvider || {}).forEach(([provider, policy]) => {
       (policy?.allowed || []).forEach((model) => {
@@ -950,12 +1000,14 @@
     select.addEventListener('change', async () => {
       const [provider, model] = String(select.value || '').split('::');
       try {
-        await saveAiRuntimeCell({ agentId: agent.agentId, tier, field: 'defaultModel', value: { provider, model } });
+        await saveAiRuntimeCell({ ...payload, value: { provider, model } });
       } catch (_err) {
         render();
       }
     });
-    td.appendChild(select);
+    cell.appendChild(select);
+    appendPendingControlState(cell, select, aiControlKey(payload));
+    td.appendChild(cell);
     return td;
   }
 
@@ -976,10 +1028,7 @@
     section.appendChild(hint);
 
     if (!state.aiRuntimeMatrix) {
-      const loading = document.createElement('p');
-      loading.className = 'body-s';
-      loading.textContent = 'Loading AI runtime policy...';
-      section.appendChild(loading);
+      section.appendChild(createLoadingState());
       return section;
     }
 
@@ -1085,17 +1134,21 @@
                 label: `${agent.agentId} ${model.model} ${tier} allowed`,
               });
             }
+            const pendingPayload = {
+              agentId: agent.agentId,
+              tier,
+              field: 'allowedModel',
+              provider: model.provider,
+              model: model.model,
+            };
             return renderEditableAiToggleCell({
               id: `ai_allowed_${agent.agentId}_${model.provider}_${model.model}_${tier}`,
               checked,
               label: `${agent.agentId} ${model.model} ${tier} allowed`,
+              pendingKey: aiControlKey(pendingPayload),
               onChange: (value) =>
                 saveAiRuntimeCell({
-                  agentId: agent.agentId,
-                  tier,
-                  field: 'allowedModel',
-                  provider: model.provider,
-                  model: model.model,
+                  ...pendingPayload,
                   value,
                 }),
             });
@@ -1125,11 +1178,13 @@
               if (!editable) {
                 return renderReadonlyToggleCell({ id: `ai_${field}_${agent.agentId}_${tier}`, checked: Boolean(value), label: `${agent.agentId} ${tier} ${field}` });
               }
+              const pendingPayload = { agentId: agent.agentId, tier, field };
               return renderEditableAiToggleCell({
                 id: `ai_${field}_${agent.agentId}_${tier}`,
                 checked: Boolean(value),
                 label: `${agent.agentId} ${tier} ${field}`,
-                onChange: (nextValue) => saveAiRuntimeCell({ agentId: agent.agentId, tier, field, value: nextValue }),
+                pendingKey: aiControlKey(pendingPayload),
+                onChange: (nextValue) => saveAiRuntimeCell({ ...pendingPayload, value: nextValue }),
               });
             }
             return editable
@@ -1147,11 +1202,28 @@
 
   function renderOperationFeedback(container) {
     if (!state.feedback) return;
+    if (state.feedback.kind === 'loading') {
+      container.appendChild(createLoadingState());
+      return;
+    }
     const feedback = document.createElement('p');
     feedback.className = 'body-s entitlements-operation-feedback';
     feedback.setAttribute('role', state.feedback.kind === 'alert' ? 'alert' : 'status');
     feedback.textContent = state.feedback.message;
     container.appendChild(feedback);
+  }
+
+  function createLoadingState() {
+    const loading = document.createElement('div');
+    loading.className = 'diet-loading-state';
+    loading.setAttribute('role', 'status');
+    loading.setAttribute('aria-label', 'Loading');
+    const spinner = document.createElement('span');
+    spinner.className = 'diet-spinner';
+    spinner.setAttribute('data-size', 'medium');
+    spinner.setAttribute('aria-hidden', 'true');
+    loading.appendChild(spinner);
+    return loading;
   }
 
   function render() {

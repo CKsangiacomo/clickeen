@@ -20,6 +20,12 @@ inspectability.
 - Hide decorative icons and decorative media from semantic output.
 - Name dialog, popover, sheet, banner, and status surfaces honestly.
 - Keep operation status and error feedback visible and semantically honest.
+- Give a standalone passive-loading Spinner an accessible status name; hide a
+  Spinner inside a labelled command Button as decorative.
+- Expose `aria-busy` only while a command is genuinely pending. Save's `Saved`
+  Spinner and Republish's successful checkmark are receipts, not busy state.
+- Keep the Empty State ellipsis Icon decorative and expose its one short string
+  as the complete successful-zero message.
 - Keep generated, translated, and user-authored text inspectable.
 - Resolve backend/service errors and reason keys to product copy before display.
   Raw reason keys and locale/tier tokens are not user copy unless the product

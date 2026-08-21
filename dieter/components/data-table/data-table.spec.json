@@ -9,7 +9,7 @@
     "indeterminate": "caller sets the select-all checkbox indeterminate property and aria-checked='mixed' for a partial selection",
     "sorting": "caller owns sort state, row order, and the exact current Table sort icon",
     "rowActions": "caller-composed Dieter controls",
-    "loadingAndEmpty": "caller renders one truthful state row with exact resolved copy",
+    "loadingAndEmpty": "caller renders the systemic Spinner for loading or systemic Empty State with one exact resolved short string",
     "pagination": "caller-rendered controls and summary; Dieter owns only slot geometry",
     "localization": "all visible and accessible strings are exact caller inputs",
     "hydrator": "none"
@@ -52,22 +52,22 @@
     {
       "id": "loading",
       "title": "Loading",
-      "spec": ["The caller exposes truthful pending state and exact copy"],
-      "html": "<div class='diet-data-table' data-state='loading'><div class='diet-table'><table class='diet-table__table' aria-busy='true'><caption class='sr-only'>Operational records</caption><thead><tr><th class='label-s' scope='col'>Name</th><th class='label-s' scope='col'>Status</th></tr></thead><tbody><tr><td class='diet-data-table__state-cell' colspan='2'><div class='diet-data-table__state body-s' role='status'>Loading records…</div></td></tr></tbody></table></div></div>",
+      "spec": ["The caller exposes truthful pending state through the systemic Spinner"],
+      "html": "<div class='diet-data-table' data-state='loading'><div class='diet-table'><table class='diet-table__table' aria-busy='true'><caption class='sr-only'>Operational records</caption><thead><tr><th class='label-s' scope='col'>Name</th><th class='label-s' scope='col'>Status</th></tr></thead><tbody><tr><td class='diet-data-table__state-cell' colspan='2'><div class='diet-loading-state' role='status' aria-label='Loading'><span class='diet-spinner' data-size='medium' aria-hidden='true'></span></div></td></tr></tbody></table></div></div>",
       "context": {}
     },
     {
       "id": "empty",
       "title": "Empty",
-      "spec": ["The caller supplies the empty-state title and guidance"],
-      "html": "<div class='diet-data-table' data-state='empty'><div class='diet-table'><table class='diet-table__table'><caption class='sr-only'>Operational records</caption><thead><tr><th class='label-s' scope='col'>Name</th><th class='label-s' scope='col'>Status</th></tr></thead><tbody><tr><td class='diet-data-table__state-cell' colspan='2'><div class='diet-data-table__state'><strong class='diet-data-table__state-title label-s'>No records yet</strong><span class='body-s'>Create the first record to get started.</span></div></td></tr></tbody></table></div></div>",
+      "spec": ["The caller supplies one short string to the systemic Empty State"],
+      "html": "<div class='diet-data-table' data-state='empty'><div class='diet-table'><table class='diet-table__table'><caption class='sr-only'>Operational records</caption><thead><tr><th class='label-s' scope='col'>Name</th><th class='label-s' scope='col'>Status</th></tr></thead><tbody><tr><td class='diet-data-table__state-cell' colspan='2'><div class='diet-empty-state'><span class='diet-empty-state__icon diet-icon diet-icon-mask' data-icon='ellipsis' style=\"--diet-icon-source: url('/dieter/icons/svg/ellipsis.svg')\" aria-hidden='true'></span><span class='diet-empty-state__label body-s'>No records</span></div></td></tr></tbody></table></div></div>",
       "context": {}
     },
     {
       "id": "filtered-empty",
       "title": "Filtered empty",
       "spec": ["Filtered empty remains distinct from an empty dataset"],
-      "html": "<div class='diet-data-table' data-state='filtered-empty'><div class='diet-table'><table class='diet-table__table'><caption class='sr-only'>Filtered operational records</caption><thead><tr><th class='label-s' scope='col'>Name</th><th class='label-s' scope='col'>Status</th></tr></thead><tbody><tr><td class='diet-data-table__state-cell' colspan='2'><div class='diet-data-table__state'><strong class='diet-data-table__state-title label-s'>No matching records</strong><span class='body-s'>Change or clear the current filters.</span></div></td></tr></tbody></table></div></div>",
+      "html": "<div class='diet-data-table' data-state='filtered-empty'><div class='diet-table'><table class='diet-table__table'><caption class='sr-only'>Filtered operational records</caption><thead><tr><th class='label-s' scope='col'>Name</th><th class='label-s' scope='col'>Status</th></tr></thead><tbody><tr><td class='diet-data-table__state-cell' colspan='2'><div class='diet-empty-state'><span class='diet-empty-state__icon diet-icon diet-icon-mask' data-icon='ellipsis' style=\"--diet-icon-source: url('/dieter/icons/svg/ellipsis.svg')\" aria-hidden='true'></span><span class='diet-empty-state__label body-s'>No matching records</span></div></td></tr></tbody></table></div></div>",
       "context": {}
     },
     {

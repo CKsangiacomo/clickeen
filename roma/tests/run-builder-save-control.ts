@@ -149,6 +149,13 @@ async function buildBobHarness(): Promise<string> {
                 Edit while saving
               </button>
               <button
+                data-edit-after-save
+                type="button"
+                onClick={() => session.applyOps([{ op: 'set', path: 'title', value: 'After Save completed' }])}
+              >
+                Edit after saving
+              </button>
+              <button
                 data-spoof-wrong-host-origin
                 type="button"
                 onClick={() => window.dispatchEvent(new MessageEvent('message', {
@@ -488,6 +495,7 @@ async function assertBorrowedSaveVisible(page: Page): Promise<void> {
   const save = page.getByRole('button', { name: 'Save', exact: true });
   await save.waitFor();
   assert.equal(await save.isEnabled(), true);
+  assert.equal(await save.getAttribute('data-tone'), 'save');
   assert.equal(await page.getByRole('button', { name: 'Saving…' }).count(), 0);
   assert.equal(await page.getByRole('button', { name: 'Saved' }).count(), 0);
 }
@@ -550,7 +558,10 @@ async function testProductionRomaBobSaveBridge(): Promise<void> {
       }
 
       await page.getByRole('button', { name: 'Save', exact: true }).click();
-      await page.getByRole('button', { name: 'Saving…' }).waitFor();
+      const firstSaving = page.getByRole('button', { name: 'Saving…' });
+      await firstSaving.waitFor();
+      assert.equal(await firstSaving.getAttribute('data-tone'), 'save');
+      assert.equal(await firstSaving.getAttribute('aria-busy'), 'true');
       const firstSaveCalls = await waitForSaveCallCount(page, 1);
       assert.deepEqual(firstSaveCalls[0], {
         method: 'POST',
@@ -605,11 +616,15 @@ async function testProductionRomaBobSaveBridge(): Promise<void> {
       const saved = page.getByRole('button', { name: 'Saved' });
       await saved.waitFor();
       assert.equal(await saved.getAttribute('data-state'), 'success');
+      assert.equal(await saved.getAttribute('data-tone'), 'save');
+      assert.equal(await saved.getAttribute('aria-busy'), null);
+      assert.equal(await saved.locator('.diet-spinner').count(), 1);
       assert.equal(await saved.isDisabled(), true);
       assert.equal(await bobProbeAttribute(bobFrame, 'data-dirty'), 'false');
       assert.equal(await bobProbeAttribute(bobFrame, 'data-saving'), 'false');
-      await saved.waitFor({ state: 'detached' });
-      assert.equal(await page.getByRole('button', { name: 'Save', exact: true }).count(), 0);
+      await bobFrame.locator('[data-edit-after-save]').click();
+      await assertBorrowedSaveVisible(page);
+      assert.equal(await bobProbeAttribute(bobFrame, 'data-dirty'), 'true');
       assert.equal(
         await page.evaluate(() => (window as RomaHarnessWindow).__romaSaveFixture.openCalls()),
         1,

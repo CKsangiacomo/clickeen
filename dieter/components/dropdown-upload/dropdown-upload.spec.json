@@ -1,6 +1,6 @@
 {
   "component": "dropdown-upload",
-  "syntax": "<tooldrawer-field type='dropdown-upload' size='{{SIZE}}' path='{{PATH}}' label='{{LABEL}}' placeholder='{{PLACEHOLDER}}' value='{{VALUE}}' accept='{{ACCEPT}}' upload-label='{{UPLOAD_LABEL}}' replace-label='{{REPLACE_LABEL}}' remove-label='{{REMOVE_LABEL}}' upload-asset-error-label='{{UPLOAD_ASSET_ERROR_LABEL}}' preview-asset-error-label='{{PREVIEW_ASSET_ERROR_LABEL}}' />",
+  "syntax": "<tooldrawer-field type='dropdown-upload' size='{{SIZE}}' path='{{PATH}}' label='{{LABEL}}' placeholder='{{PLACEHOLDER}}' value='{{VALUE}}' accept='{{ACCEPT}}' loading-label='{{LOADING_LABEL}}' upload-label='{{UPLOAD_LABEL}}' replace-label='{{REPLACE_LABEL}}' remove-label='{{REMOVE_LABEL}}' upload-asset-error-label='{{UPLOAD_ASSET_ERROR_LABEL}}' preview-asset-error-label='{{PREVIEW_ASSET_ERROR_LABEL}}' />",
   "attributes": {
     "size": { "enum": ["sm", "md", "lg"], "default": "md" },
     "path": { "optional": true },
@@ -8,6 +8,7 @@
     "placeholder": { "required": true },
     "value": { "optional": true, "default": "null" },
     "accept": { "optional": true },
+    "loadingLabel": { "required": true },
     "uploadLabel": { "required": true },
     "replaceLabel": { "required": true },
     "removeLabel": { "required": true },
@@ -22,7 +23,8 @@
   "features": {
     "job": "Upload, preview, replace, or remove one account asset for one caller-owned field.",
     "value": "One exact JSON value is projected before hydration and emitted after upload or remove.",
-    "copy": "The caller supplies every visible word; Dieter owns no product copy.",
+    "copy": "The caller supplies every visible and accessible word; Dieter owns no product copy.",
+    "loading": "Stored-asset resolution renders only the systemic Spinner, exposes the caller-owned accessible status label, and clears busy truth on result or error.",
     "policy": "The account-assets route remains the upload and account-policy authority."
   },
   "defaults": [
@@ -40,6 +42,7 @@
         "value": "null",
         "path": "",
         "accept": "image/*,.svg",
+        "loadingLabel": "Loading",
         "uploadLabel": "Upload",
         "replaceLabel": "Replace",
         "removeLabel": "Remove",
@@ -67,6 +70,7 @@
         "value": "{\"assetRef\":\"devstudio-upload-sample\",\"name\":\"brand-mark.svg\"}",
         "path": "",
         "accept": "image/*,.svg",
+        "loadingLabel": "Loading",
         "uploadLabel": "Upload",
         "replaceLabel": "Replace",
         "removeLabel": "Remove",

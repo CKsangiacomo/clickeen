@@ -1,8 +1,9 @@
 'use client';
 
-import { useMemo, useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { resolveAccountShellErrorCopy } from '../lib/account-shell-copy';
 import { buildWidgetPublicActions } from '../lib/public-widget-actions';
+import { ROMA_UI_COPY } from '../lib/ui-copy';
 import { useRomaAccountApi } from './account-api';
 import { useRomaAccountContext } from './roma-account-context';
 import { RomaCommandConfirmationDialog } from './roma-command-confirmation-dialog';
@@ -28,6 +29,11 @@ type PublicationStatusArgs = {
   onPendingChange?: (pending: boolean) => void;
 };
 
+type PublicationReceipt = {
+  instanceId: string;
+  sourceUpdatedAt: string;
+};
+
 function useWidgetPublicationStatus({
   instance,
   dirty,
@@ -42,17 +48,27 @@ function useWidgetPublicationStatus({
   const [error, setError] = useState<string | null>(null);
   const [upsell, setUpsell] = useState<UpsellPresentation | null>(null);
   const [unpublishConfirmationOpen, setUnpublishConfirmationOpen] = useState(false);
+  const [publicationReceipt, setPublicationReceipt] = useState<PublicationReceipt | null>(null);
+
+  useEffect(() => {
+    setPublicationReceipt((current) => current?.instanceId === instance.instanceId ? current : null);
+  }, [instance.instanceId]);
 
   const published = instance.status === 'published';
   const savedChangesNotLive = published
     && instance.publishedAt !== null
     && instance.updatedAt > instance.publishedAt;
   const publishBlocked = dirty && !published;
+  const liveWidgetUpdated = publicationReceipt?.instanceId === instance.instanceId
+    && publicationReceipt.sourceUpdatedAt === instance.updatedAt
+    && published;
 
   const changeStatus = async (nextStatus: 'published' | 'unpublished') => {
-    if (!canMutate || disabled || pendingStatus) return;
-    if (nextStatus === 'published' && dirty) return;
+    if (!canMutate || disabled || pendingStatus) return false;
+    if (nextStatus === 'published' && dirty) return false;
 
+    const isRepublish = nextStatus === 'published' && savedChangesNotLive;
+    setPublicationReceipt(null);
     setPendingStatus(nextStatus);
     onPendingChange?.(true);
     setError(null);
@@ -65,11 +81,18 @@ function useWidgetPublicationStatus({
       if (response.status === 402) {
         const denied = await response.json() as { upgrade: PublicationCapacityUpgrade };
         setUpsell(buildPublicationCapacityUpsell(denied.upgrade, accountPolicy));
-        return;
+        return false;
       }
       if (!response.ok) {
         const failed = await response.json() as { error: { reasonKey: string } };
         throw new Error(failed.error.reasonKey);
+      }
+
+      if (isRepublish) {
+        setPublicationReceipt({
+          instanceId: instance.instanceId,
+          sourceUpdatedAt: instance.updatedAt,
+        });
       }
 
       const transitionedInstance = { ...instance, status: nextStatus };
@@ -96,12 +119,14 @@ function useWidgetPublicationStatus({
           'The publication state changed, but its latest status could not be refreshed.',
         ));
       }
+      return true;
     } catch (statusError) {
       const message = statusError instanceof Error ? statusError.message : String(statusError);
       setError(resolveAccountShellErrorCopy(
         message,
         'Updating widget status failed. Please try again.',
       ));
+      return false;
     } finally {
       setPendingStatus(null);
       onPendingChange?.(false);
@@ -114,6 +139,7 @@ function useWidgetPublicationStatus({
       void changeStatus(nextStatus);
       return;
     }
+    setError(null);
     setUnpublishConfirmationOpen(true);
   };
 
@@ -121,6 +147,7 @@ function useWidgetPublicationStatus({
     canMutate,
     published,
     savedChangesNotLive,
+    liveWidgetUpdated,
     publishBlocked,
     pendingStatus,
     error,
@@ -130,9 +157,9 @@ function useWidgetPublicationStatus({
     requestStatusChange,
     unpublishConfirmationOpen,
     cancelUnpublish: () => setUnpublishConfirmationOpen(false),
-    confirmUnpublish: () => {
-      setUnpublishConfirmationOpen(false);
-      void changeStatus('unpublished');
+    confirmUnpublish: async () => {
+      const succeeded = await changeStatus('unpublished');
+      if (succeeded) setUnpublishConfirmationOpen(false);
     },
   };
 }
@@ -170,12 +197,12 @@ export function WidgetPublicationState({
       <label
         className="diet-toggle roma-widget-status-toggle"
         data-size="md"
-        aria-busy={Boolean(status.pendingStatus) || undefined}
+        aria-busy={status.pendingStatus === 'published' || undefined}
         title={status.publishBlocked ? 'Save first' : undefined}
       >
         <span className="diet-toggle__label sr-only">
-          Published: {instance.displayName}
-          {status.pendingStatus ? ', updating' : ''}
+          {instance.displayName ? `Published: ${instance.displayName}` : 'Published widget'}
+          {status.pendingStatus === 'published' ? ', updating' : ''}
         </span>
         <input
           className="diet-toggle__input sr-only"
@@ -188,8 +215,9 @@ export function WidgetPublicationState({
         <span className="diet-toggle__switch" aria-hidden="true">
           <span className="diet-toggle__knob" />
         </span>
+        {status.pendingStatus === 'published' ? <span className="diet-spinner" data-size="small" aria-hidden="true" /> : null}
       </label>
-      {status.error ? <span className="body-xs" role="alert">{status.error}</span> : null}
+      {status.error && !status.unpublishConfirmationOpen ? <span className="body-xs" role="alert">{status.error}</span> : null}
       <RomaUpsellDialog
         open={Boolean(status.upsell)}
         reason={status.upsell?.body}
@@ -199,8 +227,12 @@ export function WidgetPublicationState({
       <RomaCommandConfirmationDialog
         open={status.unpublishConfirmationOpen}
         title="Take this widget offline?"
-        body={`“${instance.displayName}” will be taken offline. Its saved source remains, and it can be published again.`}
+        body={instance.displayName
+          ? `“${instance.displayName}” will be taken offline. Its saved source remains, and it can be published again.`
+          : 'This widget will be taken offline. Its saved source remains, and it can be published again.'}
         confirmLabel="Unpublish"
+        pending={status.pendingStatus === 'unpublished'}
+        error={status.error}
         onCancel={status.cancelUnpublish}
         onConfirm={status.confirmUnpublish}
       />
@@ -252,12 +284,12 @@ export function WidgetPublicationControls({
         <label
           className="diet-toggle roma-widget-status-toggle"
           data-size="sm"
-          aria-busy={Boolean(status.pendingStatus) || undefined}
+          aria-busy={status.pendingStatus === 'published' || undefined}
           title={status.publishBlocked ? 'Save first' : undefined}
         >
           <span className="diet-toggle__label sr-only">
-            Published: {instance.displayName}
-            {status.pendingStatus ? ', updating' : ''}
+            {instance.displayName ? `Published: ${instance.displayName}` : 'Published widget'}
+            {status.pendingStatus === 'published' ? ', updating' : ''}
           </span>
           <input
             className="diet-toggle__input sr-only"
@@ -270,14 +302,35 @@ export function WidgetPublicationControls({
           <span className="diet-toggle__switch" aria-hidden="true">
             <span className="diet-toggle__knob" />
           </span>
+          {status.pendingStatus === 'published' ? <span className="diet-spinner" data-size="small" aria-hidden="true" /> : null}
         </label>
         ) : null}
-        {status.savedChangesNotLive ? (
+        {status.liveWidgetUpdated ? (
           <button
             className="diet-button"
             data-size={controlSize}
             data-type="primary"
-            data-tone="positive"
+            data-tone="republish"
+            data-state="success"
+            type="button"
+            disabled
+          >
+            <span
+              className="diet-icon diet-icon-mask"
+              aria-hidden="true"
+              style={{
+                '--diet-icon-source': 'url("/dieter/icons/svg/checkmark.svg")',
+              } as CSSProperties}
+            />
+            <span className="diet-button__label">{ROMA_UI_COPY.commands.liveWidgetUpdated}</span>
+          </button>
+        ) : status.savedChangesNotLive ? (
+          <button
+            className="diet-button"
+            data-size={controlSize}
+            data-type="primary"
+            data-tone="republish"
+            data-loading={status.pendingStatus === 'published' ? 'true' : undefined}
             type="button"
             disabled={!status.canMutate || disabled || Boolean(status.pendingStatus) || dirty}
             aria-busy={status.pendingStatus === 'published' || undefined}
@@ -295,7 +348,11 @@ export function WidgetPublicationControls({
                 } as CSSProperties}
               />
             )}
-            <span className="diet-button__label">Republish</span>
+            <span className="diet-button__label">
+              {status.pendingStatus === 'published'
+                ? ROMA_UI_COPY.commands.republishing
+                : ROMA_UI_COPY.commands.republish}
+            </span>
           </button>
         ) : null}
         {publicActions ? (
@@ -329,7 +386,7 @@ export function WidgetPublicationControls({
           </>
         ) : null}
       </div>
-      {status.error ? <span className="body-xs" role="alert">{status.error}</span> : null}
+      {status.error && !status.unpublishConfirmationOpen ? <span className="body-xs" role="alert">{status.error}</span> : null}
       <RomaUpsellDialog
         open={Boolean(status.upsell)}
         reason={status.upsell?.body}
@@ -345,8 +402,12 @@ export function WidgetPublicationControls({
       <RomaCommandConfirmationDialog
         open={status.unpublishConfirmationOpen}
         title="Take this widget offline?"
-        body={`“${instance.displayName}” will be taken offline. Its saved source remains, and it can be published again.`}
+        body={instance.displayName
+          ? `“${instance.displayName}” will be taken offline. Its saved source remains, and it can be published again.`
+          : 'This widget will be taken offline. Its saved source remains, and it can be published again.'}
         confirmLabel="Unpublish"
+        pending={status.pendingStatus === 'unpublished'}
+        error={status.error}
         onCancel={status.cancelUnpublish}
         onConfirm={status.confirmUnpublish}
       />

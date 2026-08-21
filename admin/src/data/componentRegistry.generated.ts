@@ -15,20 +15,21 @@ import spec11 from "../../../dieter/components/dropdown-edit/dropdown-edit.spec.
 import spec12 from "../../../dieter/components/dropdown-fill/dropdown-fill.spec.json";
 import spec13 from "../../../dieter/components/dropdown-shadow/dropdown-shadow.spec.json";
 import spec14 from "../../../dieter/components/dropdown-upload/dropdown-upload.spec.json";
-import spec15 from "../../../dieter/components/menuactions/menuactions.spec.json";
-import spec16 from "../../../dieter/components/object-manager/object-manager.spec.json";
-import spec17 from "../../../dieter/components/popover/popover.spec.json";
-import spec18 from "../../../dieter/components/popup/popup.spec.json";
-import spec19 from "../../../dieter/components/repeater/repeater.spec.json";
-import spec20 from "../../../dieter/components/segmented/segmented.spec.json";
-import spec21 from "../../../dieter/components/slider/slider.spec.json";
-import spec22 from "../../../dieter/components/spinner/spinner.spec.json";
-import spec23 from "../../../dieter/components/table/table.spec.json";
-import spec24 from "../../../dieter/components/tabs/tabs.spec.json";
-import spec25 from "../../../dieter/components/textfield/textfield.spec.json";
-import spec26 from "../../../dieter/components/toggle/toggle.spec.json";
-import spec27 from "../../../dieter/components/tooltip/tooltip.spec.json";
-import spec28 from "../../../dieter/components/valuefield/valuefield.spec.json";
+import spec15 from "../../../dieter/components/empty-state/empty-state.spec.json";
+import spec16 from "../../../dieter/components/menuactions/menuactions.spec.json";
+import spec17 from "../../../dieter/components/object-manager/object-manager.spec.json";
+import spec18 from "../../../dieter/components/popover/popover.spec.json";
+import spec19 from "../../../dieter/components/popup/popup.spec.json";
+import spec20 from "../../../dieter/components/repeater/repeater.spec.json";
+import spec21 from "../../../dieter/components/segmented/segmented.spec.json";
+import spec22 from "../../../dieter/components/slider/slider.spec.json";
+import spec23 from "../../../dieter/components/spinner/spinner.spec.json";
+import spec24 from "../../../dieter/components/table/table.spec.json";
+import spec25 from "../../../dieter/components/tabs/tabs.spec.json";
+import spec26 from "../../../dieter/components/textfield/textfield.spec.json";
+import spec27 from "../../../dieter/components/toggle/toggle.spec.json";
+import spec28 from "../../../dieter/components/tooltip/tooltip.spec.json";
+import spec29 from "../../../dieter/components/valuefield/valuefield.spec.json";
 import template0 from "../../../dieter/components/agent-activity/agent-activity.html?raw";
 import template1 from "../../../dieter/components/badge/badge.html?raw";
 import template2 from "../../../dieter/components/banner/banner.html?raw";
@@ -44,20 +45,21 @@ import template11 from "../../../dieter/components/dropdown-edit/dropdown-edit.h
 import template12 from "../../../dieter/components/dropdown-fill/dropdown-fill.html?raw";
 import template13 from "../../../dieter/components/dropdown-shadow/dropdown-shadow.html?raw";
 import template14 from "../../../dieter/components/dropdown-upload/dropdown-upload.html?raw";
-import template15 from "../../../dieter/components/menuactions/menuactions.html?raw";
-import template16 from "../../../dieter/components/object-manager/object-manager.html?raw";
-import template17 from "../../../dieter/components/popover/popover.html?raw";
-import template18 from "../../../dieter/components/popup/popup.html?raw";
-import template19 from "../../../dieter/components/repeater/repeater.html?raw";
-import template20 from "../../../dieter/components/segmented/segmented.html?raw";
-import template21 from "../../../dieter/components/slider/slider.html?raw";
-import template22 from "../../../dieter/components/spinner/spinner.html?raw";
-import template23 from "../../../dieter/components/table/table.html?raw";
-import template24 from "../../../dieter/components/tabs/tabs.html?raw";
-import template25 from "../../../dieter/components/textfield/textfield.html?raw";
-import template26 from "../../../dieter/components/toggle/toggle.html?raw";
-import template27 from "../../../dieter/components/tooltip/tooltip.html?raw";
-import template28 from "../../../dieter/components/valuefield/valuefield.html?raw";
+import template15 from "../../../dieter/components/empty-state/empty-state.html?raw";
+import template16 from "../../../dieter/components/menuactions/menuactions.html?raw";
+import template17 from "../../../dieter/components/object-manager/object-manager.html?raw";
+import template18 from "../../../dieter/components/popover/popover.html?raw";
+import template19 from "../../../dieter/components/popup/popup.html?raw";
+import template20 from "../../../dieter/components/repeater/repeater.html?raw";
+import template21 from "../../../dieter/components/segmented/segmented.html?raw";
+import template22 from "../../../dieter/components/slider/slider.html?raw";
+import template23 from "../../../dieter/components/spinner/spinner.html?raw";
+import template24 from "../../../dieter/components/table/table.html?raw";
+import template25 from "../../../dieter/components/tabs/tabs.html?raw";
+import template26 from "../../../dieter/components/textfield/textfield.html?raw";
+import template27 from "../../../dieter/components/toggle/toggle.html?raw";
+import template28 from "../../../dieter/components/tooltip/tooltip.html?raw";
+import template29 from "../../../dieter/components/valuefield/valuefield.html?raw";
 import css0 from "../../../dieter/components/agent-activity/agent-activity.css?raw";
 import css1 from "../../../dieter/components/badge/badge.css?raw";
 import css2 from "../../../dieter/components/banner/banner.css?raw";
@@ -73,23 +75,24 @@ import css11 from "../../../dieter/components/dropdown-edit/dropdown-edit.css?ra
 import css12 from "../../../dieter/components/dropdown-fill/dropdown-fill.css?raw";
 import css13 from "../../../dieter/components/dropdown-shadow/dropdown-shadow.css?raw";
 import css14 from "../../../dieter/components/dropdown-upload/dropdown-upload.css?raw";
-import css15 from "../../../dieter/components/icon/icon.css?raw";
-import css16 from "../../../dieter/components/menuactions/menuactions.css?raw";
-import css17 from "../../../dieter/components/object-manager/object-manager.css?raw";
-import css18 from "../../../dieter/components/popover/popover.css?raw";
-import css19 from "../../../dieter/components/popup/popup.css?raw";
-import css20 from "../../../dieter/components/repeater/repeater.css?raw";
-import css21 from "../../../dieter/components/segmented/segmented.css?raw";
-import css22 from "../../../dieter/components/shared/civil-date-calendar.css?raw";
-import css23 from "../../../dieter/components/shared/property-row.css?raw";
-import css24 from "../../../dieter/components/slider/slider.css?raw";
-import css25 from "../../../dieter/components/spinner/spinner.css?raw";
-import css26 from "../../../dieter/components/table/table.css?raw";
-import css27 from "../../../dieter/components/tabs/tabs.css?raw";
-import css28 from "../../../dieter/components/textfield/textfield.css?raw";
-import css29 from "../../../dieter/components/toggle/toggle.css?raw";
-import css30 from "../../../dieter/components/tooltip/tooltip.css?raw";
-import css31 from "../../../dieter/components/valuefield/valuefield.css?raw";
+import css15 from "../../../dieter/components/empty-state/empty-state.css?raw";
+import css16 from "../../../dieter/components/icon/icon.css?raw";
+import css17 from "../../../dieter/components/menuactions/menuactions.css?raw";
+import css18 from "../../../dieter/components/object-manager/object-manager.css?raw";
+import css19 from "../../../dieter/components/popover/popover.css?raw";
+import css20 from "../../../dieter/components/popup/popup.css?raw";
+import css21 from "../../../dieter/components/repeater/repeater.css?raw";
+import css22 from "../../../dieter/components/segmented/segmented.css?raw";
+import css23 from "../../../dieter/components/shared/civil-date-calendar.css?raw";
+import css24 from "../../../dieter/components/shared/property-row.css?raw";
+import css25 from "../../../dieter/components/slider/slider.css?raw";
+import css26 from "../../../dieter/components/spinner/spinner.css?raw";
+import css27 from "../../../dieter/components/table/table.css?raw";
+import css28 from "../../../dieter/components/tabs/tabs.css?raw";
+import css29 from "../../../dieter/components/textfield/textfield.css?raw";
+import css30 from "../../../dieter/components/toggle/toggle.css?raw";
+import css31 from "../../../dieter/components/tooltip/tooltip.css?raw";
+import css32 from "../../../dieter/components/valuefield/valuefield.css?raw";
 
 export const specModules: Record<string, ComponentSpec> = {
   "../../../dieter/components/agent-activity/agent-activity.spec.json": spec0 as ComponentSpec,
@@ -107,20 +110,21 @@ export const specModules: Record<string, ComponentSpec> = {
   "../../../dieter/components/dropdown-fill/dropdown-fill.spec.json": spec12 as ComponentSpec,
   "../../../dieter/components/dropdown-shadow/dropdown-shadow.spec.json": spec13 as ComponentSpec,
   "../../../dieter/components/dropdown-upload/dropdown-upload.spec.json": spec14 as ComponentSpec,
-  "../../../dieter/components/menuactions/menuactions.spec.json": spec15 as ComponentSpec,
-  "../../../dieter/components/object-manager/object-manager.spec.json": spec16 as ComponentSpec,
-  "../../../dieter/components/popover/popover.spec.json": spec17 as ComponentSpec,
-  "../../../dieter/components/popup/popup.spec.json": spec18 as ComponentSpec,
-  "../../../dieter/components/repeater/repeater.spec.json": spec19 as ComponentSpec,
-  "../../../dieter/components/segmented/segmented.spec.json": spec20 as ComponentSpec,
-  "../../../dieter/components/slider/slider.spec.json": spec21 as ComponentSpec,
-  "../../../dieter/components/spinner/spinner.spec.json": spec22 as ComponentSpec,
-  "../../../dieter/components/table/table.spec.json": spec23 as ComponentSpec,
-  "../../../dieter/components/tabs/tabs.spec.json": spec24 as ComponentSpec,
-  "../../../dieter/components/textfield/textfield.spec.json": spec25 as ComponentSpec,
-  "../../../dieter/components/toggle/toggle.spec.json": spec26 as ComponentSpec,
-  "../../../dieter/components/tooltip/tooltip.spec.json": spec27 as ComponentSpec,
-  "../../../dieter/components/valuefield/valuefield.spec.json": spec28 as ComponentSpec,
+  "../../../dieter/components/empty-state/empty-state.spec.json": spec15 as ComponentSpec,
+  "../../../dieter/components/menuactions/menuactions.spec.json": spec16 as ComponentSpec,
+  "../../../dieter/components/object-manager/object-manager.spec.json": spec17 as ComponentSpec,
+  "../../../dieter/components/popover/popover.spec.json": spec18 as ComponentSpec,
+  "../../../dieter/components/popup/popup.spec.json": spec19 as ComponentSpec,
+  "../../../dieter/components/repeater/repeater.spec.json": spec20 as ComponentSpec,
+  "../../../dieter/components/segmented/segmented.spec.json": spec21 as ComponentSpec,
+  "../../../dieter/components/slider/slider.spec.json": spec22 as ComponentSpec,
+  "../../../dieter/components/spinner/spinner.spec.json": spec23 as ComponentSpec,
+  "../../../dieter/components/table/table.spec.json": spec24 as ComponentSpec,
+  "../../../dieter/components/tabs/tabs.spec.json": spec25 as ComponentSpec,
+  "../../../dieter/components/textfield/textfield.spec.json": spec26 as ComponentSpec,
+  "../../../dieter/components/toggle/toggle.spec.json": spec27 as ComponentSpec,
+  "../../../dieter/components/tooltip/tooltip.spec.json": spec28 as ComponentSpec,
+  "../../../dieter/components/valuefield/valuefield.spec.json": spec29 as ComponentSpec,
 };
 
 export const templateModules: Record<string, string> = {
@@ -139,20 +143,21 @@ export const templateModules: Record<string, string> = {
   "../../../dieter/components/dropdown-fill/dropdown-fill.html": template12,
   "../../../dieter/components/dropdown-shadow/dropdown-shadow.html": template13,
   "../../../dieter/components/dropdown-upload/dropdown-upload.html": template14,
-  "../../../dieter/components/menuactions/menuactions.html": template15,
-  "../../../dieter/components/object-manager/object-manager.html": template16,
-  "../../../dieter/components/popover/popover.html": template17,
-  "../../../dieter/components/popup/popup.html": template18,
-  "../../../dieter/components/repeater/repeater.html": template19,
-  "../../../dieter/components/segmented/segmented.html": template20,
-  "../../../dieter/components/slider/slider.html": template21,
-  "../../../dieter/components/spinner/spinner.html": template22,
-  "../../../dieter/components/table/table.html": template23,
-  "../../../dieter/components/tabs/tabs.html": template24,
-  "../../../dieter/components/textfield/textfield.html": template25,
-  "../../../dieter/components/toggle/toggle.html": template26,
-  "../../../dieter/components/tooltip/tooltip.html": template27,
-  "../../../dieter/components/valuefield/valuefield.html": template28,
+  "../../../dieter/components/empty-state/empty-state.html": template15,
+  "../../../dieter/components/menuactions/menuactions.html": template16,
+  "../../../dieter/components/object-manager/object-manager.html": template17,
+  "../../../dieter/components/popover/popover.html": template18,
+  "../../../dieter/components/popup/popup.html": template19,
+  "../../../dieter/components/repeater/repeater.html": template20,
+  "../../../dieter/components/segmented/segmented.html": template21,
+  "../../../dieter/components/slider/slider.html": template22,
+  "../../../dieter/components/spinner/spinner.html": template23,
+  "../../../dieter/components/table/table.html": template24,
+  "../../../dieter/components/tabs/tabs.html": template25,
+  "../../../dieter/components/textfield/textfield.html": template26,
+  "../../../dieter/components/toggle/toggle.html": template27,
+  "../../../dieter/components/tooltip/tooltip.html": template28,
+  "../../../dieter/components/valuefield/valuefield.html": template29,
 };
 
 export const cssModules: Record<string, string> = {
@@ -171,21 +176,22 @@ export const cssModules: Record<string, string> = {
   "../../../dieter/components/dropdown-fill/dropdown-fill.css": css12,
   "../../../dieter/components/dropdown-shadow/dropdown-shadow.css": css13,
   "../../../dieter/components/dropdown-upload/dropdown-upload.css": css14,
-  "../../../dieter/components/icon/icon.css": css15,
-  "../../../dieter/components/menuactions/menuactions.css": css16,
-  "../../../dieter/components/object-manager/object-manager.css": css17,
-  "../../../dieter/components/popover/popover.css": css18,
-  "../../../dieter/components/popup/popup.css": css19,
-  "../../../dieter/components/repeater/repeater.css": css20,
-  "../../../dieter/components/segmented/segmented.css": css21,
-  "../../../dieter/components/shared/civil-date-calendar.css": css22,
-  "../../../dieter/components/shared/property-row.css": css23,
-  "../../../dieter/components/slider/slider.css": css24,
-  "../../../dieter/components/spinner/spinner.css": css25,
-  "../../../dieter/components/table/table.css": css26,
-  "../../../dieter/components/tabs/tabs.css": css27,
-  "../../../dieter/components/textfield/textfield.css": css28,
-  "../../../dieter/components/toggle/toggle.css": css29,
-  "../../../dieter/components/tooltip/tooltip.css": css30,
-  "../../../dieter/components/valuefield/valuefield.css": css31,
+  "../../../dieter/components/empty-state/empty-state.css": css15,
+  "../../../dieter/components/icon/icon.css": css16,
+  "../../../dieter/components/menuactions/menuactions.css": css17,
+  "../../../dieter/components/object-manager/object-manager.css": css18,
+  "../../../dieter/components/popover/popover.css": css19,
+  "../../../dieter/components/popup/popup.css": css20,
+  "../../../dieter/components/repeater/repeater.css": css21,
+  "../../../dieter/components/segmented/segmented.css": css22,
+  "../../../dieter/components/shared/civil-date-calendar.css": css23,
+  "../../../dieter/components/shared/property-row.css": css24,
+  "../../../dieter/components/slider/slider.css": css25,
+  "../../../dieter/components/spinner/spinner.css": css26,
+  "../../../dieter/components/table/table.css": css27,
+  "../../../dieter/components/tabs/tabs.css": css28,
+  "../../../dieter/components/textfield/textfield.css": css29,
+  "../../../dieter/components/toggle/toggle.css": css30,
+  "../../../dieter/components/tooltip/tooltip.css": css31,
+  "../../../dieter/components/valuefield/valuefield.css": css32,
 };

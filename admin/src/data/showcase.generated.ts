@@ -14,27 +14,28 @@ import html11 from "../html/components/dropdown-edit.html?raw";
 import html12 from "../html/components/dropdown-fill.html?raw";
 import html13 from "../html/components/dropdown-shadow.html?raw";
 import html14 from "../html/components/dropdown-upload.html?raw";
-import html15 from "../html/components/menuactions.html?raw";
-import html16 from "../html/components/object-manager.html?raw";
-import html17 from "../html/components/popover.html?raw";
-import html18 from "../html/components/popup.html?raw";
-import html19 from "../html/components/repeater.html?raw";
-import html20 from "../html/components/segmented.html?raw";
-import html21 from "../html/components/slider.html?raw";
-import html22 from "../html/components/spinner.html?raw";
-import html23 from "../html/components/table.html?raw";
-import html24 from "../html/components/tabs.html?raw";
-import html25 from "../html/components/textfield.html?raw";
-import html26 from "../html/components/toggle.html?raw";
-import html27 from "../html/components/tooltip.html?raw";
-import html28 from "../html/components/valuefield.html?raw";
-import html29 from "../html/foundations/colors.html?raw";
-import html30 from "../html/foundations/core-styles.html?raw";
-import html31 from "../html/foundations/icons.html?raw";
-import html32 from "../html/foundations/layouts.html?raw";
-import html33 from "../html/foundations/typography.html?raw";
-import html34 from "../html/tools/entitlements.html?raw";
-import html35 from "../html/tools/llm-management.html?raw";
+import html15 from "../html/components/empty-state.html?raw";
+import html16 from "../html/components/menuactions.html?raw";
+import html17 from "../html/components/object-manager.html?raw";
+import html18 from "../html/components/popover.html?raw";
+import html19 from "../html/components/popup.html?raw";
+import html20 from "../html/components/repeater.html?raw";
+import html21 from "../html/components/segmented.html?raw";
+import html22 from "../html/components/slider.html?raw";
+import html23 from "../html/components/spinner.html?raw";
+import html24 from "../html/components/table.html?raw";
+import html25 from "../html/components/tabs.html?raw";
+import html26 from "../html/components/textfield.html?raw";
+import html27 from "../html/components/toggle.html?raw";
+import html28 from "../html/components/tooltip.html?raw";
+import html29 from "../html/components/valuefield.html?raw";
+import html30 from "../html/foundations/colors.html?raw";
+import html31 from "../html/foundations/core-styles.html?raw";
+import html32 from "../html/foundations/icons.html?raw";
+import html33 from "../html/foundations/layouts.html?raw";
+import html34 from "../html/foundations/typography.html?raw";
+import html35 from "../html/tools/entitlements.html?raw";
+import html36 from "../html/tools/llm-management.html?raw";
 
 export const staticShowcaseModules: Record<string, string> = {
   "../html/components/agent-activity.html": html0,
@@ -52,25 +53,26 @@ export const staticShowcaseModules: Record<string, string> = {
   "../html/components/dropdown-fill.html": html12,
   "../html/components/dropdown-shadow.html": html13,
   "../html/components/dropdown-upload.html": html14,
-  "../html/components/menuactions.html": html15,
-  "../html/components/object-manager.html": html16,
-  "../html/components/popover.html": html17,
-  "../html/components/popup.html": html18,
-  "../html/components/repeater.html": html19,
-  "../html/components/segmented.html": html20,
-  "../html/components/slider.html": html21,
-  "../html/components/spinner.html": html22,
-  "../html/components/table.html": html23,
-  "../html/components/tabs.html": html24,
-  "../html/components/textfield.html": html25,
-  "../html/components/toggle.html": html26,
-  "../html/components/tooltip.html": html27,
-  "../html/components/valuefield.html": html28,
-  "../html/foundations/colors.html": html29,
-  "../html/foundations/core-styles.html": html30,
-  "../html/foundations/icons.html": html31,
-  "../html/foundations/layouts.html": html32,
-  "../html/foundations/typography.html": html33,
-  "../html/tools/entitlements.html": html34,
-  "../html/tools/llm-management.html": html35,
+  "../html/components/empty-state.html": html15,
+  "../html/components/menuactions.html": html16,
+  "../html/components/object-manager.html": html17,
+  "../html/components/popover.html": html18,
+  "../html/components/popup.html": html19,
+  "../html/components/repeater.html": html20,
+  "../html/components/segmented.html": html21,
+  "../html/components/slider.html": html22,
+  "../html/components/spinner.html": html23,
+  "../html/components/table.html": html24,
+  "../html/components/tabs.html": html25,
+  "../html/components/textfield.html": html26,
+  "../html/components/toggle.html": html27,
+  "../html/components/tooltip.html": html28,
+  "../html/components/valuefield.html": html29,
+  "../html/foundations/colors.html": html30,
+  "../html/foundations/core-styles.html": html31,
+  "../html/foundations/icons.html": html32,
+  "../html/foundations/layouts.html": html33,
+  "../html/foundations/typography.html": html34,
+  "../html/tools/entitlements.html": html35,
+  "../html/tools/llm-management.html": html36,
 };

@@ -1,9 +1,10 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { createContext, useContext, useEffect, useMemo } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { resolveAccountShellErrorCopy } from '../lib/account-shell-copy';
+import { RomaLoadingState } from './roma-system-state';
 import {
   resolveAccountPolicyFromRomaAuthz,
   resolveActiveRomaAccount,
@@ -66,31 +67,35 @@ export function RomaAccountProvider({ children }: { children: ReactNode }) {
 
 export function RomaAccountBoundary({ children }: { children: ReactNode }) {
   const state = useContext(RomaAccountContext);
+  const [retryPending, setRetryPending] = useState(false);
+  const [retryReason, setRetryReason] = useState<string | null>(null);
   if (!state) {
     throw new Error('RomaAccountBoundary must be used within RomaAccountProvider');
   }
 
   const { me, value } = state;
-  if ((!value && me.loading) || me.error === AUTH_REQUIRED_REASON_KEY) {
-    return (
-      <section
-        className="rd-canvas-module roma-account-loading"
-        role="status"
-        aria-label={me.error === AUTH_REQUIRED_REASON_KEY ? 'Opening sign in' : 'Loading page'}
-      >
-        <span aria-hidden="true" />
-        <span aria-hidden="true" />
-        <span aria-hidden="true" />
-      </section>
-    );
+  const visibleError = me.error ?? (retryPending ? retryReason : null);
+  const retry = async () => {
+    if (retryPending) return;
+    setRetryReason(me.error ?? 'coreui.errors.auth.contextUnavailable');
+    setRetryPending(true);
+    try {
+      await me.reload();
+    } finally {
+      setRetryPending(false);
+    }
+  };
+
+  if (!value && me.loading && !retryPending) {
+    return <RomaLoadingState className="rd-canvas-module roma-account-loading" />;
   }
 
-  if (me.error || !value) {
+  if (visibleError || !value) {
     return (
       <section className="rd-canvas-module" role="alert">
         <p className="body-m">
           {resolveAccountShellErrorCopy(
-            me.error ?? 'coreui.errors.auth.contextUnavailable',
+            visibleError ?? 'coreui.errors.auth.contextUnavailable',
             'This account is unavailable right now. Please try again.',
           )}
         </p>
@@ -99,9 +104,13 @@ export function RomaAccountBoundary({ children }: { children: ReactNode }) {
             className="diet-button"
             data-size="medium"
             data-type="primary"
+            data-loading={retryPending || undefined}
             type="button"
-            onClick={() => void me.reload()}
+            aria-busy={retryPending || undefined}
+            onClick={() => void retry()}
+            disabled={retryPending}
           >
+            {retryPending ? <span className="diet-spinner" aria-hidden="true" /> : null}
             <span className="diet-button__label">Retry</span>
           </button>
         </div>

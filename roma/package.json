@@ -15,6 +15,7 @@
     "test:instance-save-boundary": "tsx tests/run-instance-save-boundary.ts",
     "test:translation-outcomes": "tsx tests/run-translation-outcomes.ts",
     "test:ui-copy": "tsx tests/run-ui-copy.ts",
+    "test:system-states": "tsx tests/run-system-states.ts",
     "test:widget-defaults-panels": "node tests/run-widget-defaults-panels.mjs",
     "pretest:widget-defaults-typography": "node ../scripts/widgets/generate-artifacts.mjs",
     "test:widget-defaults-typography": "tsx tests/run-widget-defaults-typography.ts",
@@ -23,7 +24,8 @@
     "pretypecheck": "node ../scripts/widgets/generate-artifacts.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test:copilot-route": "tsx tests/run-copilot-route-gates.ts",
-    "test:builder-save-control": "tsx tests/run-builder-save-control.ts"
+    "test:builder-save-control": "tsx tests/run-builder-save-control.ts",
+    "test:builder-command-controls": "tsx tests/run-builder-command-controls.ts"
   },
   "dependencies": {
     "@clickeen/bob": "workspace:*",

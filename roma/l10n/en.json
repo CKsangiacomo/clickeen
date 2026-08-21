@@ -1,0 +1,23 @@
+{
+  "state": {
+    "loadingAccessibleLabel": "Loading",
+    "empty": {
+      "widgets": "No widgets",
+      "filteredWidgets": "No matching widgets",
+      "widgetTypes": "No widget types",
+      "assets": "No assets",
+      "filteredAssets": "No matching assets",
+      "teamMembers": "No team members",
+      "invitations": "No pending invitations",
+      "ownerCandidates": "No eligible members"
+    }
+  },
+  "commands": {
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "Saved",
+    "republish": "Republish",
+    "republishing": "Republishing…",
+    "liveWidgetUpdated": "Live widget updated"
+  }
+}

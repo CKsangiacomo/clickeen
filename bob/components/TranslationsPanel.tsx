@@ -15,6 +15,7 @@ import {
 import type { AgentActivityEvent } from '../lib/session/sessionTypes';
 import type { TranslatedLocalesData, TranslationSetup } from './useTranslationPreviewState';
 import { listPreviewableLocales } from '../lib/translations-preview';
+import { bobUiCopy } from '../l10n/ui-copy';
 
 const CANONICAL_LOCALES = normalizeCanonicalLocalesFile(localesJson);
 const BUILDER_UI_LOCALE = 'en';
@@ -292,15 +293,14 @@ export function TranslationsPanel({
     translationPreviewLocale && localeValues.includes(translationPreviewLocale)
       ? translationPreviewLocale
       : baseLocale;
-  const selectOptions =
-    localeOptions.length > 0
-      ? localeOptions
-      : [
-          {
-            value: '',
-            label: 'Base locale only',
-          },
-        ];
+  const selectOptions = localeOptions;
+  const savedTranslationsPending = !savedTranslationsError && (
+    Boolean(instanceId && baseLocale && !translatedLocales) || savedTranslationsLoading
+  );
+  const savedTranslationsEmpty = Boolean(
+    translatedLocales && translatedLocales.translations.length === 0,
+  );
+  const translationsPending = isStartingTranslations || isGeneratingTranslations;
   const generateButton = {
     disabled:
       isStartingTranslations ||
@@ -310,7 +310,9 @@ export function TranslationsPanel({
       session.isDirty ||
       !hasActiveLocales ||
       !hasTranslatableFields,
-    label: isGeneratingTranslations ? 'Generating translations...' : 'Generate translations',
+    label: translationsPending
+      ? bobUiCopy.commands.translations.pending
+      : bobUiCopy.commands.translations.ready,
     message: generateButtonMessage,
   };
   const activityRows = useMemo(() => buildActivityRows(activityEvents), [activityEvents]);
@@ -351,12 +353,7 @@ export function TranslationsPanel({
     setGenerationFeedback(null);
   }, [instanceId]);
   if (!session.compiled) {
-    return (
-      <div className="tdmenucontent">
-        <div className="heading-3">Translations</div>
-        <div className="label-s label-muted">Load a widget to inspect its locales.</div>
-      </div>
-    );
+    return null;
   }
 
   return (
@@ -376,10 +373,15 @@ export function TranslationsPanel({
             className="diet-button"
             data-size="small"
             data-type="primary"
+            data-loading={translationsPending ? 'true' : undefined}
             type="button"
             disabled={generateButton.disabled}
+            aria-busy={translationsPending ? 'true' : undefined}
             onClick={() => void runGenerateTranslations()}
           >
+            {translationsPending ? (
+              <span className="diet-spinner" aria-hidden="true" />
+            ) : null}
             <span className="diet-button__label">{generateButton.label}</span>
           </button>
           {generateButton.message ? (
@@ -407,9 +409,13 @@ export function TranslationsPanel({
             </div>
           ) : null}
         </div>
-        {savedTranslationsLoading && !savedTranslationsError ? (
-          <div className="body-s" role="status" aria-live="polite">
-            Loading saved translations...
+        {savedTranslationsPending ? (
+          <div
+            className="diet-loading-state"
+            role="status"
+            aria-label={bobUiCopy.states.loading.accessibleLabel}
+          >
+            <span className="diet-spinner" data-size="medium" aria-hidden="true" />
           </div>
         ) : null}
         {savedTranslationsError ? (
@@ -417,13 +423,27 @@ export function TranslationsPanel({
             {savedTranslationsError}
           </div>
         ) : null}
-        <SelectField
-          label="Preview locale"
-          value={localeValue}
-          onChange={onTranslationPreviewLocaleChange}
-          options={selectOptions}
-          disabled={!selectOptions[0]?.value}
-        />
+        {!savedTranslationsPending && !savedTranslationsError && savedTranslationsEmpty ? (
+          <div className="diet-empty-state">
+            <span
+              className="diet-empty-state__icon diet-icon diet-icon-mask"
+              style={{ '--diet-icon-source': 'url("/dieter/icons/svg/ellipsis.svg")' } as React.CSSProperties}
+              aria-hidden="true"
+            />
+            <span className="diet-empty-state__label body-s">
+              {bobUiCopy.states.empty.translations}
+            </span>
+          </div>
+        ) : null}
+        {!savedTranslationsPending && !savedTranslationsError && !savedTranslationsEmpty ? (
+          <SelectField
+            label="Preview locale"
+            value={localeValue}
+            onChange={onTranslationPreviewLocaleChange}
+            options={selectOptions}
+            disabled={!selectOptions[0]?.value}
+          />
+        ) : null}
       </div>
     </div>
   );

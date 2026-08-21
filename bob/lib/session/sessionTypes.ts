@@ -30,8 +30,7 @@ export type SaveControlTransition =
   | { type: 'draft-changed'; isDirty: boolean }
   | { type: 'save-started' }
   | { type: 'save-succeeded'; currentDraftMatchesSubmitted: boolean }
-  | { type: 'save-failed'; isDirty: boolean }
-  | { type: 'receipt-elapsed'; isDirty: boolean };
+  | { type: 'save-failed'; isDirty: boolean };
 
 export function resolveSaveControlPhase(
   current: SaveControlPhase,
@@ -48,8 +47,6 @@ export function resolveSaveControlPhase(
       return transition.currentDraftMatchesSubmitted ? 'saved' : 'save';
     case 'save-failed':
       return transition.isDirty ? 'save' : 'hidden';
-    case 'receipt-elapsed':
-      return current === 'saved' ? (transition.isDirty ? 'save' : 'hidden') : current;
   }
 }
 
@@ -69,7 +66,7 @@ export type SessionMeta = {
   instanceId: string | null;
   baseLocale: string;
   widgetname: string;
-  label: string;
+  label: string | null;
   fontLibrary: AccountFontLibrary;
   translationSetup: TranslationSetup;
 } | null;
@@ -87,7 +84,7 @@ export type EditorOpenMessage = {
   policy: Policy;
   accountPublicId: string;
   instanceId: string | null;
-  label: string;
+  label: string | null;
   copilot: CopilotRuntimeUi;
   translationSetup: TranslationSetup;
 };

@@ -136,9 +136,8 @@ async function testRomaOwnsBuilderPublicationChrome(): Promise<void> {
   assert.doesNotMatch(pageHeader, /useState|useEffect|onClick|onChange/);
   assert.match(builderSource, /<WidgetPublicationControls/);
   assert.match(widgetsSource, /showingInitialWidgetsLoading \|\| \(displayedInstances\.length > 0/);
-  assert.match(widgetsSource, /<td className="body-m" colSpan=\{5\}>[\s\S]*<span role="status">Loading widgets\.\.\.<\/span>/);
-  assert.match(builderSource, /activeInstanceId \? 'Loading widget…' : 'Untitled widget'/);
-  assert.match(builderSource, /activeInstanceId \? 'Loading publication status…' : 'Save to create this widget'/);
+  assert.match(widgetsSource, /<td className="diet-data-table__state-cell" colSpan=\{5\}>[\s\S]*<RomaLoadingState \/>/);
+  assert.doesNotMatch(widgetsSource, /Loading widgets\.\.\./);
   assert.match(builderSource, /className="roma-nav-trigger diet-button"/);
   assert.match(builderSource, /onClick=\{\(\) => openNavigation\(navigationButtonRef\.current\)\}/);
   assert.match(builderSource, /readBobSaveControlPhase\(\{/);
@@ -183,7 +182,7 @@ async function testRomaOwnsBuilderPublicationChrome(): Promise<void> {
   assert.match(clipboard, /finally \{\s+element\?\.remove\(\);/);
   assert.match(publicationControls, />Open public widget</);
   assert.match(publicationControls, />Copy code</);
-  assert.match(publicationControls, />Republish</);
+  assert.match(publicationControls, /ROMA_UI_COPY\.commands\.republish/);
   assert.match(publicationControls, /nextStatus === 'published' && dirty/);
   assert.match(publicationControls, /publishBlocked = dirty && !published/);
   assert.match(publicationControls, /checked=\{status\.published\}/);
@@ -273,7 +272,8 @@ async function testWidgetsListComposition(): Promise<void> {
   assert.match(source, />Rename<\/span>/);
   assert.match(source, />Duplicate<\/span>/);
   assert.match(source, />Delete<\/span>/);
-  assert.match(source, /No \{statusFilter\} widgets\./);
+  assert.match(source, /ROMA_UI_COPY\.state\.empty\.filteredWidgets/);
+  assert.doesNotMatch(source, /No \{statusFilter\} widgets\./);
   assert.doesNotMatch(source, /groupedInstances|displayedGroups|groupSorts|changeGroupSort/);
   assert.doesNotMatch(romaCss, /roma-widget-group/);
   assert.doesNotMatch(source, /menuWidth|menuHeight/);

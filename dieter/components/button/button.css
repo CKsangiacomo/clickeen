@@ -162,24 +162,6 @@
   --button-active-bg: color-mix(in oklab, var(--color-text), transparent 75%);
 }
 
-.diet-button[data-tone='positive'] {
-  --button-bg: var(--color-system-green);
-  --button-color: var(--color-system-white);
-  --button-hover-bg: color-mix(in oklab, var(--color-system-green), var(--state-darken-target) 22%);
-  --button-hover-color: var(--color-system-white);
-  --button-active-bg: color-mix(in oklab, var(--color-system-green), var(--state-darken-target) 40%);
-  --button-active-color: var(--color-system-white);
-}
-
-.diet-button[data-tone='saveonly'] {
-  --button-bg: var(--color-system-pink);
-  --button-color: var(--color-system-white);
-  --button-hover-bg: color-mix(in oklab, var(--color-system-pink), var(--state-darken-target) 22%);
-  --button-hover-color: var(--color-system-white);
-  --button-active-bg: color-mix(in oklab, var(--color-system-pink), var(--state-darken-target) 40%);
-  --button-active-color: var(--color-system-white);
-}
-
 .diet-button[data-state='success'] {
   --button-bg: var(--color-system-green);
   --button-color: var(--color-system-white);
@@ -192,4 +174,22 @@
 .diet-button[data-state='success']:disabled,
 .diet-button[data-state='success'][aria-disabled='true'] {
   opacity: 1;
+}
+
+.diet-button[data-tone='republish'] {
+  --button-bg: var(--color-system-green);
+  --button-color: var(--color-system-white);
+  --button-hover-bg: color-mix(in oklab, var(--color-system-green), var(--state-darken-target) 22%);
+  --button-hover-color: var(--color-system-white);
+  --button-active-bg: color-mix(in oklab, var(--color-system-green), var(--state-darken-target) 40%);
+  --button-active-color: var(--color-system-white);
+}
+
+.diet-button[data-tone='save'] {
+  --button-bg: var(--color-system-pink);
+  --button-color: var(--color-system-white);
+  --button-hover-bg: color-mix(in oklab, var(--color-system-pink), var(--state-darken-target) 22%);
+  --button-hover-color: var(--color-system-white);
+  --button-active-bg: color-mix(in oklab, var(--color-system-pink), var(--state-darken-target) 40%);
+  --button-active-color: var(--color-system-white);
 }

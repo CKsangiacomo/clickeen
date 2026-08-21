@@ -10,11 +10,48 @@ async function run() {
     new URL("../components/ToolDrawer.tsx", import.meta.url),
     "utf8",
   );
+  const translationsPanelSource = await readFile(
+    new URL("../components/TranslationsPanel.tsx", import.meta.url),
+    "utf8",
+  );
+  const workspaceSource = await readFile(
+    new URL("../components/Workspace.tsx", import.meta.url),
+    "utf8",
+  );
+  const uiCopy = JSON.parse(
+    await readFile(new URL("../l10n/en.json", import.meta.url), "utf8"),
+  ) as {
+    states: {
+      loading: { accessibleLabel: string };
+      empty: { translations: string };
+    };
+  };
+  const retiredToolDrawerCopy = new RegExp(
+    `${["Loading", "widget"].join(" ")}|${["No", "controls"].join(" ")}`,
+  );
+  const retiredTranslationsCopy = new RegExp(
+    `${["Loading", "saved", "translations"].join(" ")}|${["Base", "locale", "only"].join(" ")}`,
+  );
+  const retiredWorkspaceCopy = new RegExp(
+    `${["Loading", "preview"].join(" ")}|${["Loading", "saved", "translation"].join(" ")}`,
+  );
   assert.match(
     toolDrawerSource,
     /dialog\.diet-popup\[data-objects-modal\]\[open\]/,
   );
   assert.doesNotMatch(toolDrawerSource, /diet-object-manager__modal/);
+  assert.match(toolDrawerSource, /className="tdmenucontent diet-loading-state"/);
+  assert.match(toolDrawerSource, /className="diet-spinner"/);
+  assert.doesNotMatch(toolDrawerSource, retiredToolDrawerCopy);
+  assert.match(translationsPanelSource, /className="diet-empty-state"/);
+  assert.match(translationsPanelSource, /diet-empty-state__icon diet-icon diet-icon-mask/);
+  assert.match(translationsPanelSource, /className="diet-loading-state"/);
+  assert.doesNotMatch(translationsPanelSource, retiredTranslationsCopy);
+  assert.match(workspaceSource, /kind: 'loading'/);
+  assert.match(workspaceSource, /className="diet-loading-state"/);
+  assert.doesNotMatch(workspaceSource, retiredWorkspaceCopy);
+  assert.equal(uiCopy.states.loading.accessibleLabel, "Loading");
+  assert.equal(uiCopy.states.empty.translations, "No translations");
 
   const {
     CopilotUserFacingError,

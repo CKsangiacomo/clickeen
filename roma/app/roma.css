@@ -177,24 +177,7 @@ a {
 }
 
 .roma-account-loading {
-  align-content: start;
   min-height: 8rem;
-}
-
-.roma-account-loading > span {
-  display: block;
-  width: 75%;
-  height: var(--control-size-sm);
-  border-radius: var(--control-radius-xl);
-  background: var(--role-surface-muted);
-}
-
-.roma-account-loading > span:first-child {
-  width: 35%;
-}
-
-.roma-account-loading > span:last-child {
-  width: 55%;
 }
 
 .roma-builder-page .roma-account-loading {
@@ -371,8 +354,7 @@ a {
   inline-size: 11rem;
 }
 
-.roma-widget-instance-id,
-.roma-widget-action-status {
+.roma-widget-instance-id {
   color: var(--color-text-secondary);
 }
 

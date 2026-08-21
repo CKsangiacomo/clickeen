@@ -11,7 +11,7 @@ type UploadValue = {
   name: string;
 };
 
-type PreviewKind = 'empty' | 'loading' | 'image' | 'video' | 'doc';
+type PreviewKind = 'empty' | 'loading' | 'image' | 'video' | 'doc' | 'error';
 
 type DropdownUploadState = {
   root: HTMLElement;
@@ -20,6 +20,7 @@ type DropdownUploadState = {
   headerValue: HTMLElement;
   headerValueLabel: HTMLElement;
   panel: HTMLElement;
+  previewFrame: HTMLElement;
   previewImg: HTMLImageElement;
   previewVideo: HTMLVideoElement;
   previewExt: HTMLElement;
@@ -33,6 +34,7 @@ type DropdownUploadState = {
   fileInput: HTMLInputElement;
   uploadErrorCopy: string;
   previewErrorCopy: string;
+  filePickerButton: HTMLButtonElement | null;
   value: UploadValue | null;
   resolveRequestId: number;
   destroyed: boolean;
@@ -84,6 +86,7 @@ function createState(root: HTMLElement, accountAssets: AccountAssetsClient): Dro
     headerValue: root.querySelector<HTMLElement>('.diet-dropdown-header-value')!,
     headerValueLabel: root.querySelector<HTMLElement>('.diet-dropdown-upload__label')!,
     panel: root.querySelector<HTMLElement>('.diet-dropdown-upload__panel')!,
+    previewFrame: root.querySelector<HTMLElement>('.diet-dropdown-upload__preview-frame')!,
     previewImg: root.querySelector<HTMLImageElement>('.diet-dropdown-upload__preview-img')!,
     previewVideo: root.querySelector<HTMLVideoElement>('.diet-dropdown-upload__preview-video')!,
     previewExt: root.querySelector<HTMLElement>('.diet-dropdown-upload__preview-ext')!,
@@ -97,6 +100,7 @@ function createState(root: HTMLElement, accountAssets: AccountAssetsClient): Dro
     fileInput: root.querySelector<HTMLInputElement>('.diet-dropdown-upload__file-input')!,
     uploadErrorCopy: root.dataset.copyUploadAssetError!,
     previewErrorCopy: root.dataset.copyPreviewAssetError!,
+    filePickerButton: null,
     value: null,
     resolveRequestId: 0,
     destroyed: false,
@@ -120,6 +124,7 @@ function installHandlers(state: DropdownUploadState): void {
 
   const pickFile = (event: Event) => {
     event.preventDefault();
+    state.filePickerButton = event.currentTarget as HTMLButtonElement;
     state.fileInput.value = '';
     state.fileInput.click();
   };
@@ -131,7 +136,9 @@ function installHandlers(state: DropdownUploadState): void {
   });
   state.fileInput.addEventListener('change', () => {
     const file = state.fileInput.files?.[0];
-    if (file) void uploadSelectedFile(state, file);
+    const commandButton = state.filePickerButton;
+    state.filePickerButton = null;
+    if (file && commandButton) void uploadSelectedFile(state, file, commandButton);
   });
 
   state.previewImg.addEventListener('error', () => {
@@ -142,8 +149,12 @@ function installHandlers(state: DropdownUploadState): void {
   });
 }
 
-async function uploadSelectedFile(state: DropdownUploadState, file: File): Promise<void> {
-  setUploading(state, true);
+async function uploadSelectedFile(
+  state: DropdownUploadState,
+  file: File,
+  commandButton: HTMLButtonElement,
+): Promise<void> {
+  setUploading(state, commandButton, true);
   clearError(state);
   try {
     const asset = await state.accountAssets.uploadAsset(file, 'api');
@@ -158,7 +169,7 @@ async function uploadSelectedFile(state: DropdownUploadState, file: File): Promi
     }
     setError(state, state.uploadErrorCopy);
   } finally {
-    if (!state.destroyed) setUploading(state, false);
+    if (!state.destroyed) setUploading(state, commandButton, false);
   }
 }
 
@@ -222,6 +233,7 @@ function renderEmpty(state: DropdownUploadState): void {
   state.root.dataset.hasFile = 'false';
   state.panel.dataset.hasFile = 'false';
   state.panel.dataset.kind = 'empty';
+  state.previewFrame.setAttribute('aria-busy', 'false');
   state.headerValue.dataset.muted = 'true';
   state.headerValueLabel.textContent = state.headerValueLabel.dataset.placeholder!;
   state.previewName.textContent = '';
@@ -235,6 +247,7 @@ function renderSelected(state: DropdownUploadState, value: UploadValue, kind: Pr
   state.root.dataset.hasFile = 'true';
   state.panel.dataset.hasFile = 'true';
   state.panel.dataset.kind = kind;
+  state.previewFrame.setAttribute('aria-busy', kind === 'loading' ? 'true' : 'false');
   state.headerValue.dataset.muted = 'false';
   state.headerValueLabel.textContent = value.name;
   state.previewName.textContent = value.name;
@@ -250,14 +263,33 @@ function clearMedia(state: DropdownUploadState): void {
   state.previewVideo.removeAttribute('src');
 }
 
-function setUploading(state: DropdownUploadState, uploading: boolean): void {
+function setUploading(
+  state: DropdownUploadState,
+  commandButton: HTMLButtonElement,
+  uploading: boolean,
+): void {
   state.root.dataset.uploading = uploading ? 'true' : 'false';
   state.uploadButton.disabled = uploading;
   state.replaceButton.disabled = uploading;
   state.removeButton.disabled = uploading;
+
+  if (uploading) {
+    commandButton.dataset.loading = 'true';
+    commandButton.setAttribute('aria-busy', 'true');
+  } else {
+    delete commandButton.dataset.loading;
+    commandButton.removeAttribute('aria-busy');
+  }
+
+  const spinner = commandButton.querySelector<HTMLElement>(':scope > .diet-spinner');
+  if (spinner) spinner.hidden = !uploading;
 }
 
 function setError(state: DropdownUploadState, copy: string): void {
+  if (state.panel.dataset.kind === 'loading') {
+    state.panel.dataset.kind = 'error';
+    state.previewFrame.setAttribute('aria-busy', 'false');
+  }
   state.previewError.textContent = copy;
   state.previewError.hidden = false;
 }

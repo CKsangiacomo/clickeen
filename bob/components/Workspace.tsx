@@ -17,6 +17,7 @@ import {
 import { useWidgetSession, useWidgetSessionChrome } from '../lib/session/useWidgetSession';
 import { mapTranslationOverlayValuesToCurrentPaths } from '../lib/translations-preview';
 import { dieterIconStyle } from './dieterIcon';
+import { bobUiCopy } from '../l10n/ui-copy';
 
 const BLOCKED_SWITCHER_COPY =
   'Translations not available while in editing mode. Preview translations in Translations panel.';
@@ -533,16 +534,15 @@ export function Workspace({
   const previewStatus = !hasWidget
     ? null
     : savedTranslationPreviewBlocked
-      ? {
-          error: Boolean(savedTranslationsError),
-          text: savedTranslationsError || 'Loading saved translation...',
-        }
+      ? savedTranslationsError
+        ? { kind: 'error' as const, text: savedTranslationsError }
+        : { kind: 'loading' as const }
       : previewError
-        ? { error: true, text: previewError }
+        ? { kind: 'error' as const, text: previewError }
         : !iframeHasState
-          ? { error: false, text: 'Loading preview...' }
+          ? { kind: 'loading' as const }
           : switcherNotice
-            ? { error: false, text: switcherNotice }
+            ? { kind: 'notice' as const, text: switcherNotice }
             : null;
 
   return (
@@ -570,11 +570,21 @@ export function Workspace({
           !iframeHasState && iframeBackdrop ? ({ background: iframeBackdrop } as any) : undefined
         }
       />
-      {previewStatus ? (
+      {previewStatus?.kind === 'loading' ? (
+        <div className="workspace-status-overlay">
+          <div
+            className="diet-loading-state"
+            role="status"
+            aria-label={bobUiCopy.states.loading.accessibleLabel}
+          >
+            <span className="diet-spinner" data-size="medium" aria-hidden="true" />
+          </div>
+        </div>
+      ) : previewStatus ? (
         <div
-          className={`workspace-status-overlay${previewStatus.error ? ' workspace-status-overlay--error' : ''}`}
-          role={previewStatus.error ? 'alert' : 'status'}
-          aria-live={previewStatus.error ? undefined : 'polite'}
+          className={`workspace-status-overlay${previewStatus.kind === 'error' ? ' workspace-status-overlay--error' : ''}`}
+          role={previewStatus.kind === 'error' ? 'alert' : 'status'}
+          aria-live={previewStatus.kind === 'error' ? undefined : 'polite'}
         >
           <span className="label-s">{previewStatus.text}</span>
         </div>

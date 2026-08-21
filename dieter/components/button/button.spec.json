@@ -21,8 +21,8 @@
     },
     "tone": {
       "enum": [
-        "positive",
-        "saveonly"
+        "save",
+        "republish"
       ],
       "optional": true
     },
@@ -72,6 +72,12 @@
   },
   "binding": {
     "type": "caller-owned-action"
+  },
+  "contract": {
+    "hierarchy": "The required primary, secondary, tertiary, or quaternary type remains the independent visual-hierarchy axis.",
+    "saveTone": "data-tone='save' keeps the editor Save command pink across ready, pending, and completed presentation.",
+    "republishTone": "data-tone='republish' keeps the release command green across ready, pending, and completed presentation.",
+    "stateAuthority": "The caller owns command phase, exact label, icon or Spinner composition, disabled state, and aria-busy truth."
   },
   "defaults": [
     {
@@ -199,7 +205,7 @@
       "context": {
         "size": "medium",
         "type": "primary",
-        "label": "Saving\u2026",
+        "label": "Working\u2026",
         "loading": true,
         "disabled": true
       }
@@ -228,35 +234,73 @@
         "size": "medium",
         "type": "primary",
         "state": "success",
-        "label": "Saved",
+        "label": "Completed",
         "iconStart": "checkmark",
         "disabled": true
       }
     },
     {
-      "id": "button-tone",
-      "sizes": [
-        "small",
-        "medium",
-        "large"
-      ],
-      "tones": [
-        "positive",
-        "saveonly"
-      ],
-      "spec": [
-        "diet-button",
-        "data-size='{{size}}'",
-        "data-type='primary'",
-        "data-tone='{{tone}}'",
-        "caller-owned action label"
-      ],
+      "id": "button-save-ready",
+      "title": "Save ready",
+      "spec": ["data-type='primary'", "data-tone='save'", "caller-owned Save phase"],
+      "context": { "size": "medium", "type": "primary", "tone": "save", "label": "Save" }
+    },
+    {
+      "id": "button-save-pending",
+      "title": "Save pending",
+      "spec": ["data-tone='save'", "data-loading='true'", "disabled and aria-busy"],
       "context": {
-        "size": "large",
+        "size": "medium",
         "type": "primary",
-        "tone": "positive",
+        "tone": "save",
+        "label": "Saving…",
+        "loading": true,
+        "disabled": true
+      }
+    },
+    {
+      "id": "button-save-complete",
+      "title": "Save complete",
+      "spec": ["data-tone='save'", "data-state='success'", "Spinner is decorative; not aria-busy"],
+      "html": "<button class='diet-button' data-size='medium' data-type='primary' data-tone='save' data-state='success' type='button' disabled><span class='diet-spinner' aria-hidden='true'></span><span class='diet-button__label'>Saved</span></button>"
+    },
+    {
+      "id": "button-republish-ready",
+      "title": "Republish ready",
+      "spec": ["data-type='primary'", "data-tone='republish'", "current Republish Icon"],
+      "context": {
+        "size": "medium",
+        "type": "primary",
+        "tone": "republish",
         "label": "Republish",
         "iconStart": "arrow.trianglehead.2.counterclockwise"
+      }
+    },
+    {
+      "id": "button-republish-pending",
+      "title": "Republish pending",
+      "spec": ["data-tone='republish'", "data-loading='true'", "disabled and aria-busy"],
+      "context": {
+        "size": "medium",
+        "type": "primary",
+        "tone": "republish",
+        "label": "Republishing…",
+        "loading": true,
+        "disabled": true
+      }
+    },
+    {
+      "id": "button-republish-complete",
+      "title": "Republish complete",
+      "spec": ["data-tone='republish'", "data-state='success'", "caller-owned publication result"],
+      "context": {
+        "size": "medium",
+        "type": "primary",
+        "tone": "republish",
+        "state": "success",
+        "label": "Live widget updated",
+        "iconStart": "checkmark",
+        "disabled": true
       }
     }
   ]

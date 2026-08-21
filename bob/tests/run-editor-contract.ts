@@ -1109,6 +1109,7 @@ function testDropdownUploadCopyJoin(): void {
     labels: {
       components: {
         'dropdown-upload': {
+          loading: 'Loading',
           previewAssetError: 'Preview failed.',
           remove: 'Remove',
           replace: 'Replace',
@@ -1139,6 +1140,7 @@ function testDropdownUploadCopyJoin(): void {
   const uploadLine = lines.find((line) => /\btype='dropdown-upload'/.test(line));
   assert.ok(uploadLine, 'Dropdown Upload compiles');
   for (const expected of [
+    "loading-label='Loading'",
     "preview-asset-error-label='Preview failed.'",
     "remove-label='Remove'",
     "replace-label='Replace'",

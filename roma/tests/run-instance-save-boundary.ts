@@ -75,7 +75,9 @@ async function testNewDraftPersistsOnlyOnFirstSave(): Promise<void> {
   assert.match(bootSource, /savedInstanceDataSignature = message\.instanceId === null\s+\? null/);
   assert.match(bootSource, /isDirty: message\.instanceId === null/);
   assert.doesNotMatch(bobTypes, /publishStatus|publishedAt|sourceUpdatedAt|publicActions/);
-  assert.match(toolDrawer, />Loading widget…</);
+  assert.match(toolDrawer, /className="tdmenucontent diet-loading-state"/);
+  assert.match(toolDrawer, /<span className="diet-spinner" data-size="medium" aria-hidden="true" \/>/);
+  assert.doesNotMatch(toolDrawer, /Loading widget…/);
 }
 
 async function testExplicitTranslationRouteSurvives(): Promise<void> {
@@ -97,7 +99,7 @@ async function testExplicitTranslationRouteSurvives(): Promise<void> {
   assert.match(translationRouteSource, /activeLocalesToGenerate/);
   assert.match(translationRouteSource, /generateAccountInstanceTranslations\(\{[\s\S]*onActivity: activity/);
   assert.doesNotMatch(translationRouteSource, /materializeRuntimePackage|localePackages|LocalePackage/);
-  assert.match(panelSource, /Generate translations/);
+  assert.match(panelSource, /bobUiCopy\.commands\.translations\.ready/);
   assert.match(panelSource, /generateTranslations/);
   assert.doesNotMatch(panelSource, /localePackages|localized package|public package/i);
   assert.match(translationValuesRouteSource, /export async function PUT/);

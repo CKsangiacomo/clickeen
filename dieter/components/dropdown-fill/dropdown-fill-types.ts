@@ -12,7 +12,6 @@ export type DropdownFillCopy = {
   addGradientStop: string;
   editGradientStop: string;
   loadAssetsError: string;
-  loadingAssets: string;
   noAssets: string;
   previewAssetError: string;
   removeGradientStop: string;
@@ -57,6 +56,7 @@ export type DropdownFillState = {
   gradientDrag?: { id: string; pointerId: number };
   imagePanel: HTMLElement | null;
   imagePreview: HTMLElement | null;
+  imagePreviewLoading: HTMLElement | null;
   imageBrowser: HTMLElement | null;
   imageBrowserMessage: HTMLElement | null;
   imageBrowserList: HTMLElement | null;
@@ -71,6 +71,7 @@ export type DropdownFillState = {
   imageResolveRequestId: number;
   videoPanel: HTMLElement | null;
   videoPreview: HTMLVideoElement | null;
+  videoPreviewLoading: HTMLElement | null;
   videoBrowser: HTMLElement | null;
   videoBrowserMessage: HTMLElement | null;
   videoBrowserList: HTMLElement | null;

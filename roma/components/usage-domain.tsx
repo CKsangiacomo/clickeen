@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { formatAccountTierLabel, formatBytes } from '../lib/format';
 import { useRomaAccountApi } from './account-api';
 import { useRomaAccountContext } from './roma-account-context';
+import { RomaLoadingState } from './roma-system-state';
 
 type UsageStorageResponse = {
   accountId: string;
@@ -22,7 +23,7 @@ export function UsageDomain() {
   const storageLimit = entitlements.limits['storage.bytes.max'] ?? null;
   const storageLimitLabel =
     typeof storageLimit === 'number' && Number.isFinite(storageLimit) && storageLimit > 0 ? formatBytes(storageLimit) : 'Unlimited';
-  const storageUsedLabel = storageLoading ? 'Loading...' : storageBytesUsed == null ? 'Unavailable' : formatBytes(storageBytesUsed);
+  const storageUsedLabel = storageBytesUsed == null ? null : formatBytes(storageBytesUsed);
 
   useEffect(() => {
     let cancelled = false;
@@ -65,15 +66,18 @@ export function UsageDomain() {
       </section>
 
       <section className="rd-canvas-module">
+        {storageLoading ? <RomaLoadingState /> : null}
         <div className="roma-grid roma-grid--three">
           <article className="roma-card">
             <h2 className="heading-6">Current plan</h2>
             <p className="body-s">{formatAccountTierLabel(activeAccount.tier)}</p>
           </article>
-          <article className="roma-card">
-            <h2 className="heading-6">Storage used</h2>
-            <p className="body-s">{storageUsedLabel}</p>
-          </article>
+          {storageUsedLabel !== null ? (
+            <article className="roma-card">
+              <h2 className="heading-6">Storage used</h2>
+              <p className="body-s">{storageUsedLabel}</p>
+            </article>
+          ) : null}
           <article className="roma-card">
             <h2 className="heading-6">Storage limit</h2>
             <p className="body-s">{storageLimitLabel}</p>

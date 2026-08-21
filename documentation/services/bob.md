@@ -206,7 +206,7 @@ Roma opens Bob:
   "policy": "[policySnapshot]",
   "accountPublicId": "[accountPublicId]",
   "instanceId": "[instanceId|null]",
-  "label": "[displayName]",
+  "label": "[displayName|null]",
   "copilot": "[copilotRuntimeUi]",
   "translationSetup": "[translationSetup]"
 }
@@ -400,12 +400,13 @@ Bob treats the Save response as editable-source persistence truth only.
 Bob derives one local Save presentation phase from its exact draft signature
 and existing Save result: clean is `hidden`, dirty is `save`, in flight is
 `saving`, and a matching successful result is `saved`. Roma renders that phase
-in the borrowed far-right header slot: Save; disabled Spinner plus `Saving…`;
-then the system-green checkmark plus `Saved` for exactly one second before the
-control disappears. Failure keeps Bob's existing error and derives Save or
+in the borrowed far-right header slot as one special pink control: `Save`;
+disabled Spinner plus `Saving…`; then disabled Spinner plus `Saved`. The saved
+receipt is not busy and persists until an actual draft/open transition; it has
+no arbitrary timer. Failure keeps Bob's existing error and derives Save or
 hidden from current dirty truth. An accepted edit during Save keeps Saving
 until the submitted result, then returns to Save when the current draft remains
-dirty; an edit during the receipt cancels the receipt immediately. First Save keeps
+dirty; an edit during the receipt ends it immediately. First Save keeps
 its existing in-place ID/base-locale adoption and does not reopen Bob. The
 Spinner and success presentation do not start, retry, complete, persist, or
 reinterpret the Save command.
@@ -471,12 +472,17 @@ column declarations, so the complete modal Save batch uses the ordinary
 compiled-control boundary without hidden Dropdown Fill fields. Bob also owns
 the account-font capability
 filtering applied to generic Dropdown Actions; Dieter does not inspect
-typography paths or font metadata. Bob chrome and other reusable Dieter
-component copy remain their current
-English source. Bob receives no UI locale,
-loads no UI-language file at runtime, and does not change an open editor
-session's UI language. The person preference stored by Berlin/Michael is
-dormant and is not a current Bob session input.
+typography paths or font metadata. Bob Chrome state/command copy is currently
+resolved from the minimal English `bob/l10n/en.json` catalog; this correction
+does not install UI-language selection or translation generation. Bob receives
+no UI locale, selects no alternate UI-language file at runtime, and does not
+change an open editor session's UI language. The person preference stored by
+Berlin/Michael is dormant and is not a current Bob session input.
+
+Passive loading uses Dieter's systemic Spinner without visible loading prose.
+A successful zero translations result uses Dieter's ellipsis Empty State with
+one short Bob-owned string. Unavailable, error, and command states remain
+separate and never render as empty.
 
 Widget upsell copy is a separate Widget-owned locale artifact. The build joins
 its exact message ids to `limits.json`; Bob transports the selected compiled
@@ -704,7 +710,11 @@ declared `linear|radial|conic` kind; the removed CSS-only gradient shape is not
 accepted as a compatibility value. The Dieter primitive owns Enabled and its
 existing Segmented mode selector. Bob receives only the exact fill input event;
 it does not own a parallel enabled field, remove-fill action, mode UI, or Fill
-layout rule.
+layout rule. Dieter keeps Upload/Choose command Spinners on their exact Buttons,
+uses the standalone accessible Spinner only for passive saved-asset resolution,
+and distinguishes successful-zero Empty State from asset-read failure. Bob
+preserves the root pending-work truth that blocks panel replacement during
+those nested commands.
 
 Dropdown Shadow is the shared Dieter exact-JSON shadow editor. The compiler
 joins its exact fourteen component/composition labels and every generated Stage/Pod/card
@@ -720,8 +730,9 @@ before panel replacement.
 Dropdown Upload is the shared Dieter single-file account-asset editor. It
 compiles as one JSON control at one Widget path and binds exact `null` or
 `{assetRef:string,name:string}` browser-memory truth. The compiler joins the
-exact five component words from the declaring Widget's adjacent English label
-file; it does not retain the retired second metadata path or source marker.
+exact six component words—including the accessible passive-loading label—from
+the declaring Widget's adjacent English label file; it does not retain the
+retired second metadata path or source marker.
 The component uses Bob's existing account-assets client and current-account
 command chain. None of the five current Widget specs declares it, so current
 editor artifacts contain no Upload control and this component pass does not

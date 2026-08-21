@@ -5,10 +5,12 @@ import { useCallback, useEffect, useState } from 'react';
 import { formatAccountRoleLabel } from '../lib/format';
 import { resolvePersonLabel } from '../lib/person-profile';
 import { resolveAccountShellErrorCopy, resolveAccountShellReason } from '../lib/account-shell-copy';
+import { ROMA_UI_COPY } from '../lib/ui-copy';
 import { useRomaAccountApi } from './account-api';
 import { DieterDropdownActions } from './dieter-dropdown-actions';
 import { DieterTextfield } from './dieter-textfield';
 import { useRomaAccountContext } from './roma-account-context';
+import { RomaEmptyState, RomaLoadingState } from './roma-system-state';
 
 type AccountMembersResponse = {
   accountId: string;
@@ -46,17 +48,23 @@ export function TeamDomain() {
   const canManage = accountPolicy.role === 'owner' || accountPolicy.role === 'admin';
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [retryPending, setRetryPending] = useState(false);
   const [members, setMembers] = useState<AccountMembersResponse | null>(null);
   const [invitations, setInvitations] = useState<AccountInvitationsResponse | null>(null);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState('viewer');
   const [inviteLoading, setInviteLoading] = useState(false);
+  const [revokingInvitationId, setRevokingInvitationId] = useState<string | null>(null);
   const [inviteError, setInviteError] = useState<string | null>(null);
   const accountId = accountContext.accountId;
+  const invitationCommandPending = inviteLoading || revokingInvitationId !== null;
 
-  const refreshMembers = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const refreshMembers = useCallback(async (options?: { command?: boolean }) => {
+    const command = options?.command === true;
+    if (!command) {
+      setLoading(true);
+      setError(null);
+    }
     try {
       const response = await accountApi.fetchRaw(`/api/account/team`, {
         method: 'GET',
@@ -76,9 +84,18 @@ export function TeamDomain() {
       setMembers(null);
       setError(resolveAccountShellErrorCopy(message, 'Failed to load team members. Please try again.'));
     } finally {
-      setLoading(false);
+      if (!command) setLoading(false);
     }
   }, [accountApi]);
+
+  const retryMembers = useCallback(async () => {
+    setRetryPending(true);
+    try {
+      await refreshMembers({ command: true });
+    } finally {
+      setRetryPending(false);
+    }
+  }, [refreshMembers]);
 
   const refreshInvitations = useCallback(async () => {
     if (!canManage) {
@@ -146,7 +163,7 @@ export function TeamDomain() {
   const revokeInvitation = useCallback(
     async (invitationId: string) => {
       if (!accountId || !canManage) return;
-      setInviteLoading(true);
+      setRevokingInvitationId(invitationId);
       setInviteError(null);
       try {
         const response = await accountApi.fetchRaw(`/api/account/team/invitations/${encodeURIComponent(invitationId)}`, {
@@ -163,7 +180,7 @@ export function TeamDomain() {
         const reason = nextError instanceof Error ? nextError.message : String(nextError);
         setInviteError(resolveAccountShellErrorCopy(reason, 'Revoking the invitation failed. Please try again.'));
       } finally {
-        setInviteLoading(false);
+        setRevokingInvitationId(null);
       }
     },
     [accountApi, accountId, canManage, refreshInvitations],
@@ -177,14 +194,24 @@ export function TeamDomain() {
         {error ? (
           <div className="roma-inline-stack" role="alert">
             <p className="body-m">{error}</p>
-            <button className="diet-button" data-size="medium" data-type="tertiary" type="button" onClick={() => void refreshMembers()} disabled={loading}>
+            <button
+              className="diet-button"
+              data-size="medium"
+              data-type="tertiary"
+              data-loading={retryPending || undefined}
+              type="button"
+              aria-busy={retryPending || undefined}
+              onClick={() => void retryMembers()}
+              disabled={retryPending}
+            >
+              {retryPending ? <span className="diet-spinner" aria-hidden="true" /> : null}
               <span className="diet-button__label">Retry</span>
             </button>
           </div>
         ) : null}
       </section>
 
-      {loading && !members && !error ? <section className="rd-canvas-module body-m" role="status">Loading team members...</section> : null}
+      {loading && !members && !error ? <RomaLoadingState className="rd-canvas-module" /> : null}
 
       {members ? (
         <section className="rd-canvas-module">
@@ -204,16 +231,16 @@ export function TeamDomain() {
                     <Link href={`/team/${encodeURIComponent(member.userId)}`} className="diet-button" data-size="medium" data-type="tertiary">
                       <span className="diet-button__label">{resolveMemberLabel(member)}</span>
                     </Link>
-                    <div className="body-s">{member.profile?.primaryEmail ?? 'No primary email recorded'}</div>
+                    {member.profile?.primaryEmail ? <div className="body-s">{member.profile.primaryEmail}</div> : null}
                   </td>
                   <td className="body-s">{formatAccountRoleLabel(member.role)}</td>
-                  <td className="body-s">{member.createdAt ?? 'unknown'}</td>
+                  <td className="body-s">{member.createdAt}</td>
                 </tr>
               ))}
               {members.members.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="body-s">
-                    No members found for this account.
+                  <td colSpan={3} className="diet-data-table__state-cell">
+                    <RomaEmptyState>{ROMA_UI_COPY.state.empty.teamMembers}</RomaEmptyState>
                   </td>
                 </tr>
               ) : null}
@@ -237,7 +264,7 @@ export function TeamDomain() {
                 type="email"
                 value={inviteEmail}
                 onChange={(event) => setInviteEmail(event.target.value)}
-                disabled={inviteLoading}
+                disabled={invitationCommandPending}
               />
               <DieterDropdownActions
                 className="roma-field"
@@ -246,7 +273,7 @@ export function TeamDomain() {
                 ariaLabel="Choose invitation role"
                 value={inviteRole}
                 onChange={setInviteRole}
-                disabled={inviteLoading}
+                disabled={invitationCommandPending}
                 options={[
                   { value: 'viewer', label: formatAccountRoleLabel('viewer') },
                   { value: 'editor', label: formatAccountRoleLabel('editor') },
@@ -259,10 +286,13 @@ export function TeamDomain() {
                 className="diet-button"
                 data-size="medium"
                 data-type="primary"
+                data-loading={inviteLoading || undefined}
                 type="button"
+                aria-busy={inviteLoading || undefined}
                 onClick={() => void issueInvitation()}
-                disabled={inviteLoading || !inviteEmail.trim()}
+                disabled={invitationCommandPending || !inviteEmail.trim()}
               >
+                {inviteLoading ? <span className="diet-spinner" aria-hidden="true" /> : null}
                 <span className="diet-button__label">{inviteLoading ? 'Saving...' : 'Create invitation'}</span>
               </button>
             </div>
@@ -292,25 +322,30 @@ export function TeamDomain() {
                         className="diet-button"
                         data-size="medium"
                         data-type="tertiary"
+                        data-loading={revokingInvitationId === invitation.invitationId || undefined}
                         type="button"
+                        aria-busy={revokingInvitationId === invitation.invitationId || undefined}
                         onClick={() => void revokeInvitation(invitation.invitationId)}
-                        disabled={inviteLoading}
+                        disabled={invitationCommandPending}
                       >
-                        <span className="diet-button__label">Revoke</span>
+                        {revokingInvitationId === invitation.invitationId ? <span className="diet-spinner" aria-hidden="true" /> : null}
+                        <span className="diet-button__label">
+                          {revokingInvitationId === invitation.invitationId ? 'Revoking…' : 'Revoke'}
+                        </span>
                       </button>
                     </td>
                   </tr>
                 ))}
-                {!invitations ? (
+                {!invitations ? (!inviteError ? (
                   <tr>
-                    <td colSpan={4} className="body-s">
-                      <span role="status">Loading invitations...</span>
+                    <td colSpan={4} className="diet-data-table__state-cell">
+                      <RomaLoadingState />
                     </td>
                   </tr>
-                ) : invitations.invitations.length === 0 ? (
+                ) : null) : invitations.invitations.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="body-s">
-                      No pending invitations.
+                    <td colSpan={4} className="diet-data-table__state-cell">
+                      <RomaEmptyState>{ROMA_UI_COPY.state.empty.invitations}</RomaEmptyState>
                     </td>
                   </tr>
                 ) : null}

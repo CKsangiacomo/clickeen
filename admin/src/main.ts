@@ -4,6 +4,7 @@ import '@dieter/components/icon/icon.css';
 import '@dieter/components/badge/badge.css';
 import '@dieter/components/button/button.css';
 import '@dieter/components/spinner/spinner.css';
+import '@dieter/components/empty-state/empty-state.css';
 import '@dieter/components/popup/popup.css';
 import '@dieter/components/shared/property-row.css';
 import '@dieter/components/shared/civil-date-calendar.css';
@@ -399,6 +400,7 @@ function hydrateDieterComponents(scope: Element | DocumentFragment): () => void 
   hydrateDropdownUpload(scope, { accountAssets: showcaseAccountAssets });
   hydrateDropdownEdit(scope);
   hydrateSlider(scope);
+  hydrateIcons(scope);
   return () => destroyDieterComponents(scope);
 }
 
@@ -524,10 +526,10 @@ async function openTokenEditor(
         </header>
         <div class="diet-popup__body devstudio-token-editor__body">
           <div class="diet-dropdown-actions diet-popover-host" data-size="sm" data-state="closed">
-            <input class="diet-dropdown-actions__value-field" name="token" type="hidden" value="" data-placeholder="Loading token source…" />
+            <input class="diet-dropdown-actions__value-field" name="token" type="hidden" value="" data-placeholder="" />
             <button class="diet-dropdown-header diet-dropdown-actions__control" type="button" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="devstudio-token-editor-token-label" disabled>
               <span class="diet-dropdown-header-label label-xs" id="devstudio-token-editor-token-label">Token</span>
-              <span class="diet-dropdown-header-value body-xs" data-muted="true">Loading token source…</span>
+              <span class="diet-dropdown-header-value body-xs" data-muted="true"></span>
             </button>
             <div class="diet-popover diet-dropdown-actions__popover" role="listbox" aria-label="Editable Dieter tokens" data-state="closed">
               <div class="diet-popover__header">
@@ -542,7 +544,9 @@ async function openTokenEditor(
               <input class="diet-textfield__field" name="value" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" aria-label="Value" aria-describedby="devstudio-token-editor-status" disabled />
             </label>
           </div>
-          <div class="devstudio-token-editor__diff body-xs" id="devstudio-token-editor-status" aria-live="polite">Loading token source…</div>
+          <div class="devstudio-token-editor__diff body-xs diet-loading-state" id="devstudio-token-editor-status" role="status" aria-label="Loading" aria-live="polite">
+            <span class="diet-spinner" data-size="medium" aria-hidden="true"></span>
+          </div>
         </div>
         <footer class="diet-popup__footer">
           <div class="diet-popup__actions">
@@ -550,6 +554,7 @@ async function openTokenEditor(
               <span class="diet-button__label">Cancel</span>
             </button>
             <button class="diet-button" data-size="medium" data-type="primary" type="submit" data-token-editor-commit disabled>
+              <span class="diet-spinner" aria-hidden="true" hidden></span>
               <span class="diet-button__label">Confirm commit</span>
             </button>
           </div>
@@ -588,18 +593,22 @@ async function openTokenEditor(
   const input = dialog.querySelector<HTMLInputElement>('input[name="value"]');
   const diff = dialog.querySelector<HTMLElement>('.devstudio-token-editor__diff');
   const commitButton = dialog.querySelector<HTMLButtonElement>('[data-token-editor-commit]');
+  const commitSpinner = commitButton?.querySelector<HTMLElement>('.diet-spinner') ?? null;
   const keepEditingButton = dialog.querySelector<HTMLButtonElement>('[data-token-editor-keep]');
   const discardButton = dialog.querySelector<HTMLButtonElement>('[data-token-editor-discard]');
   const closeButtons = Array.from(
     dialog.querySelectorAll<HTMLButtonElement>('[data-token-editor-close]'),
   );
-  if (!form || !editorView || !discardView || !tokenInput || !tokenTrigger || !tokenMenu || !input || !diff || !commitButton || !keepEditingButton || !discardButton) {
+  if (!form || !editorView || !discardView || !tokenInput || !tokenTrigger || !tokenMenu || !input || !diff || !commitButton || !commitSpinner || !keepEditingButton || !discardButton) {
     closeTokenEditor();
     return;
   }
 
   const setStatus = (message: string, state = 'ready') => {
     form.dataset.state = state;
+    diff.classList.remove('diet-loading-state');
+    diff.removeAttribute('aria-label');
+    diff.setAttribute('role', state === 'error' ? 'alert' : 'status');
     diff.textContent = message;
   };
 
@@ -612,6 +621,14 @@ async function openTokenEditor(
   };
   const setSaving = (next: boolean) => {
     saving = next;
+    if (next) {
+      commitButton.dataset.loading = 'true';
+      commitButton.setAttribute('aria-busy', 'true');
+    } else {
+      delete commitButton.dataset.loading;
+      commitButton.removeAttribute('aria-busy');
+    }
+    commitSpinner.hidden = !next;
     tokenTrigger.disabled = next;
     tokenMenu.querySelectorAll<HTMLButtonElement>('.diet-dropdown-actions__menuaction').forEach((button) => {
       button.disabled = next;
@@ -747,7 +764,6 @@ async function openTokenEditor(
         return;
       }
       setSaving(true);
-      setStatus(`Committing ${current.value} → ${value}…`, 'saving');
       try {
         const nextTokens = await saveDieterToken(kind, token, value);
         const next = nextTokens.find((entry) => entry.token === token);

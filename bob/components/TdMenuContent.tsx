@@ -1,6 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import { type PanelId } from '../lib/types';
 import type { ApplyWidgetOpsResult, WidgetOp } from '../lib/ops';
 import { useWidgetSession } from '../lib/session/useWidgetSession';
 import { resolvePathFromTarget } from './td-menu-content/fieldValue';
@@ -9,7 +8,6 @@ import { useTdMenuBindings } from './td-menu-content/useTdMenuBindings';
 import { useTdMenuHydration } from './td-menu-content/useTdMenuHydration';
 
 type TdMenuContentProps = {
-  panelId: PanelId | null;
   panelLabel: string;
   panelHtml: string;
   instanceData: Record<string, unknown>;
@@ -25,7 +23,6 @@ type TdMenuContentProps = {
 };
 
 export function TdMenuContent({
-  panelId,
   panelLabel,
   panelHtml,
   instanceData,
@@ -92,14 +89,6 @@ export function TdMenuContent({
     activePathRef,
     showIfEntriesRef,
   });
-
-  if (!panelId) {
-    return (
-      <div className="tdmenucontent">
-        <div className="heading-3">No controls</div>
-      </div>
-    );
-  }
 
   return (
     <div className="tdmenucontent">

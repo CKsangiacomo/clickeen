@@ -60,13 +60,21 @@ editor is unchanged. Dirty dismissal opens discard confirmation, backdrop
 dismissal is disabled, Cancel follows the same dirty rule, and Confirm Commit
 persists through the existing validated write lane. Native `beforeunload`, where
 needed at the browser boundary, is not replaced by an in-product dialog helper.
+While token source or policy truth is being read, DevStudio uses the systemic
+Dieter Spinner with an accessible status name and no visible loading sentence,
+placeholder, or skeleton. Read failure remains an explicit error and does not
+become loading or empty presentation.
 The editor uses the shared native-dialog lifecycle while keeping token state and
 source commit behavior in DevStudio. Token selection uses Dieter Dropdown
 Actions and token value editing uses Dieter Textfield; every action uses the
 Dieter button contract loaded by the DevStudio shell. The work body and dirty-discard
 body are mutually exclusive states in the same native dialog; they never stack.
 Token fields remain disabled until source truth loads, and every editor and
-dismissal control remains disabled while a commit is in flight.
+dismissal control remains disabled while a commit is in flight. Confirm Commit
+owns the decorative Spinner for that exact command. On the policy page, each
+cell write keeps its Spinner and busy state at the exact edited control, while
+Reload keeps them on the Reload Button; neither command borrows the passive
+page Spinner or a separate pending sentence.
 
 The editor has three source-file lanes: foundation, color, and typography.
 Foundation edits are exposed from the generated Core styles and Layouts pages
@@ -109,7 +117,7 @@ header, row, cell, border, or overflow presentation locally.
 
 Hash routes are generated from `admin/src/html/**` and route data in
 `admin/src/data/routes.ts`. There is no separate design-system admin app. The
-current generated inventory is 5 Foundation routes, 29 Dieter Component routes,
+current generated inventory is 5 Foundation routes, 30 Dieter Component routes,
 and 2 Policy routes. CSS-only Dieter contracts do not create empty showcase
 routes.
 

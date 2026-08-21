@@ -9,7 +9,7 @@
   `dieter/components/index.ts`.
 - System mechanics (hydration model, spec binding, build): see [`dieter.md`](dieter.md). This doc is the per-component lookup; that doc explains the system once.
 
-## Catalog (31 non-empty source directories including `shared`)
+## Catalog (32 non-empty source directories including `shared`)
 
 Legend: ✅ exported from `index.ts` · Direct host import · ⊘ no custom hydrator.
 
@@ -39,6 +39,7 @@ Legend: ✅ exported from `index.ts` · Direct host import · ⊘ no custom hydr
 | dropdowns   | `dropdown-edit`    | `hydrateDropdownEdit` / `destroyDropdownEdit`, exact inline HTML string         | ✅     |
 | dropdowns   | `menuactions`      | native action row, unbound                                                      | ⊘      |
 | feedback    | `banner`           | Caller-owned persistent message, actions, and dismissal                         | ⊘      |
+| feedback    | `empty-state`       | Successful-zero ellipsis Icon plus one caller-owned short string                | ⊘      |
 | composites  | `popover`          | — (CSS/HTML/spec; container)                                                    | ⊘      |
 | structural  | `table`            | semantic table visual base and overflow shell                                   | ⊘      |
 | structural  | `data-table`       | controlled operational composition over Table                                  | ⊘      |
@@ -124,14 +125,16 @@ The governing component product law is:
   label. Button composes the ordinary current-color Spinner before that label
   and derives its size from the Button's existing icon ladder. Spinner never
   starts, retries, completes, or interprets the command.
-- Button may carry the optional colour axis `data-tone`. `positive` uses the
-  system green treatment and `saveonly` uses the system pink treatment, both
+- Button may carry the optional colour axis `data-tone`. `republish` uses the
+  system green treatment and `save` uses the system pink treatment, both
   with white labels. Tone is orthogonal to the required `data-type` hierarchy:
   type states how prominent the action is, tone states which standing colour it
-  carries. `saveonly` is reserved for a Save control and must not be reused for
-  another action. Colour precedence is `type` then `tone` then `data-state`, so
-  a toned Button showing a successful result still renders the green result
-  treatment.
+  carries. `save` and `republish` are reserved for those two named commands and
+  must not be reused for other actions. Colour precedence is `type` then
+  `data-state` then `tone`: a
+  control given its own tone keeps that colour through every state, including a
+  successful result. `data-state="success"` still supplies the result's
+  full-opacity disabled treatment.
 - Button may carry the optional presentation state `data-state="success"`.
   It preserves the required size/type grammar, geometry, direct-child Icon and
   label composition, and disabled behavior while using the system green/white
@@ -253,6 +256,11 @@ The governing component product law is:
   dispatches that supplied generic reason. The primitive does not own an
   account, route, policy reason set, or Widget-specific media rule. All visible and accessible
   words are caller inputs from the Widget-adjacent ToolDrawer label file.
+  Upload and Choose are commands: only the exact operated Button carries the
+  decorative Spinner and busy state. Passive resolution of a saved image or
+  video `assetRef` instead uses the standalone accessible Spinner in the
+  preview. A successful zero asset-browser result uses systemic Empty State;
+  read or preview failure remains an alert.
   There is no inferred media capability, component copy catalog, fallback
   fill, repaired value, or compatibility value shape.
 
@@ -289,8 +297,11 @@ The governing component product law is:
   Roma/Tokyo remain the policy and storage authorities. Dieter does not impose
   file limits, infer a Widget path, persist a second metadata field, author
   visible copy, or own a locale catalog. The caller supplies the label,
-  placeholder, action words, and failure copy. Product Widget use resolves the
-  five component words from that Widget's adjacent ToolDrawer label file.
+  placeholder, accessible loading label, action words, and failure copy.
+  Product Widget use resolves the six component words from that Widget's
+  adjacent ToolDrawer label file. Automatic stored-asset resolution uses the
+  standalone accessible Spinner in the preview. Actual Upload or Replace keeps
+  its decorative Spinner and busy state on the exact operated Button.
   Preview kind is resolved from the account asset's exact content type rather
   than guessed from the filename. The caller-owned asset client decides
   whether an upload failure is an upsell request or the component's
@@ -609,6 +620,13 @@ As a standalone status it receives a caller-owned accessible label. Inside a
 labelled Button it is decorative. Reduced motion keeps a static progress glyph;
 the caller remains the sole authority for whether work is actually pending.
 
+Empty State is the one successful-zero presentation: a centered Dieter
+ellipsis Icon above exactly one caller-owned short string. It has no title,
+description, action, recovery, loading, or error slot. Consumers use it only
+after an owning read succeeds with zero results. Passive loading uses the
+standalone Spinner and no visible loading prose; missing truth does not borrow
+Empty State.
+
 ## Tooltip Contract
 
 Unfamiliar icon-only actions use one governed Dieter Tooltip contract. A label
@@ -643,5 +661,5 @@ Current inventory detail: Dieter components are source modules imported
 directly by each application only where that application actually uses them;
 there is no universal consumer and no runtime component manifest.
 `shared/` contains helpers and is not a rendered component.
-DevStudio generates 29 source-backed component pages. Historical 126 audits
+DevStudio generates 30 source-backed component pages. Historical 126 audits
 remain point-in-time evidence.

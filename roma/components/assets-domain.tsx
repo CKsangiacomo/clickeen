@@ -4,6 +4,7 @@ import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type Chang
 import type { AccountAssetRecord } from '@clickeen/ck-contracts';
 import { createDialogLifecycle } from '../../dieter/components/shared/dialog-lifecycle';
 import { formatBytes, formatNumber } from '../lib/format';
+import { ROMA_UI_COPY } from '../lib/ui-copy';
 import { useRomaAccountApi, type RomaAccountApi } from './account-api';
 import { DieterDropdownActions } from './dieter-dropdown-actions';
 import { parseApiErrorReason } from './same-origin-json';
@@ -12,6 +13,7 @@ import { RomaAccountNoticeModal } from './roma-account-notice-modal';
 import { RomaCommandConfirmationDialog } from './roma-command-confirmation-dialog';
 import { RomaDomainErrorBoundary } from './roma-domain-error-boundary';
 import { RomaShell } from './roma-shell';
+import { RomaEmptyState, RomaLoadingState } from './roma-system-state';
 
 type DeleteAssetPayload = {
   accountId: string;
@@ -48,6 +50,7 @@ type AssetsHeaderActions = {
   singleUploadBusy: boolean;
   bulkUploadBusy: boolean;
   listLoading: boolean;
+  listRefreshPending: boolean;
 };
 
 const DEFAULT_ASSET_SORT: AssetSort = { key: 'filename', direction: 'ascending' };
@@ -98,8 +101,6 @@ function formatBulkItemStatus(status: BulkItemStatus): string {
       return 'Uploaded';
     case 'failed':
       return 'Failed';
-    default:
-      return 'Unavailable';
   }
 }
 
@@ -167,37 +168,46 @@ export function AssetsPage() {
             className="diet-button"
             data-size="large"
             data-type="primary"
+            data-loading={headerActions.singleUploadBusy || undefined}
             type="button"
+            aria-busy={headerActions.singleUploadBusy || undefined}
             onClick={headerActions.uploadAsset}
             disabled={actionsBusy}
           >
+            {headerActions.singleUploadBusy ? <span className="diet-spinner" aria-hidden="true" /> : null}
             <span className="diet-button__label">{headerActions.singleUploadBusy ? 'Uploading…' : 'Upload asset'}</span>
           </button>
           <button
             className="diet-button"
             data-size="large"
             data-type="secondary"
+            data-loading={headerActions.bulkUploadBusy || undefined}
             type="button"
+            aria-busy={headerActions.bulkUploadBusy || undefined}
             onClick={headerActions.uploadBulk}
             disabled={actionsBusy}
           >
+            {headerActions.bulkUploadBusy ? <span className="diet-spinner" aria-hidden="true" /> : null}
             <span className="diet-button__label">{headerActions.bulkUploadBusy ? 'Uploading…' : 'Upload in bulk'}</span>
           </button>
           <button
             className="diet-button"
             data-size="large"
             data-type="tertiary"
+            data-loading={headerActions.listRefreshPending || undefined}
             type="button"
+            aria-busy={headerActions.listRefreshPending || undefined}
             onClick={headerActions.refresh}
             disabled={headerActions.listLoading || actionsBusy}
           >
-            <span className="diet-button__label">{headerActions.listLoading ? 'Refreshing…' : 'Refresh list'}</span>
+            {headerActions.listRefreshPending ? <span className="diet-spinner" aria-hidden="true" /> : null}
+            <span className="diet-button__label">{headerActions.listRefreshPending ? 'Refreshing…' : 'Refresh list'}</span>
           </button>
         </>
       ) : null}
     >
       <RomaAccountNoticeModal />
-      <Suspense fallback={<section className="rd-canvas-module">Loading domain...</section>}>
+      <Suspense fallback={<RomaLoadingState className="rd-canvas-module" />}>
         <RomaDomainErrorBoundary domainLabel="Assets" resetKey="assets">
           <AssetsDomain assetFilter={assetFilter} onHeaderActions={setHeaderActions} />
         </RomaDomainErrorBoundary>
@@ -234,6 +244,8 @@ export function AssetsDomain({
   const [storageBytesUsed, setStorageBytesUsed] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [listRefreshPending, setListRefreshPending] = useState(false);
+  const [retryPending, setRetryPending] = useState(false);
   const [deletingAssetRef, setDeletingAssetRef] = useState<string | null>(null);
   const [deleteConfirmationAsset, setDeleteConfirmationAsset] = useState<AccountAssetRecord | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -263,9 +275,10 @@ export function AssetsDomain({
     return () => dialogLifecycle.destroy();
   }, [bulkUploadOpen]);
 
-  const refreshAssets = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const refreshAssets = useCallback(async (options?: { passive?: boolean; preserveError?: boolean }) => {
+    const passive = options?.passive !== false;
+    if (passive) setLoading(true);
+    if (!options?.preserveError) setError(null);
     try {
       const assetsResponse = await accountApi.fetchRaw(`/api/account/assets`, {
         method: 'GET',
@@ -282,9 +295,27 @@ export function AssetsDomain({
       const message = err instanceof Error ? err.message : String(err);
       setError(resolveAssetErrorCopy(message, 'Failed to load assets. Please try again.'));
     } finally {
-      setLoading(false);
+      if (passive) setLoading(false);
     }
   }, [accountApi]);
+
+  const refreshAssetsFromControl = useCallback(async () => {
+    setListRefreshPending(true);
+    try {
+      await refreshAssets({ passive: false, preserveError: true });
+    } finally {
+      setListRefreshPending(false);
+    }
+  }, [refreshAssets]);
+
+  const retryAssets = useCallback(async () => {
+    setRetryPending(true);
+    try {
+      await refreshAssets({ passive: false, preserveError: true });
+    } finally {
+      setRetryPending(false);
+    }
+  }, [refreshAssets]);
 
   useEffect(() => {
     void refreshAssets();
@@ -292,19 +323,22 @@ export function AssetsDomain({
 
   const deleteAsset = useCallback(
     async (asset: AccountAssetRecord) => {
-      if (!accountId) return;
+      if (!accountId) return false;
       if (!asset.assetRef) {
         setDeleteError('Asset delete failed. Invalid asset reference.');
-        return;
+        return false;
       }
       setDeletingAssetRef(asset.assetRef);
       setDeleteError(null);
       try {
         await requestDeleteAsset(accountApi, accountPublicId, asset.assetRef);
-        await refreshAssets();
+        setDeleteConfirmationAsset(null);
+        void refreshAssets();
+        return true;
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         setDeleteError(resolveDeleteErrorCopy(message));
+        return false;
       } finally {
         setDeletingAssetRef(null);
       }
@@ -315,6 +349,7 @@ export function AssetsDomain({
   const handleDeleteAsset = useCallback(
     (asset: AccountAssetRecord) => {
       if (!accountId) return;
+      setDeleteError(null);
       setDeleteConfirmationAsset(asset);
     },
     [accountId],
@@ -462,11 +497,12 @@ export function AssetsDomain({
   const headerActions = useMemo<AssetsHeaderActions>(() => ({
     uploadAsset: () => singleUploadInputRef.current?.click(),
     uploadBulk: () => bulkUploadInputRef.current?.click(),
-    refresh: () => void refreshAssets(),
+    refresh: () => void refreshAssetsFromControl(),
     singleUploadBusy,
     bulkUploadBusy,
     listLoading: loading,
-  }), [bulkUploadBusy, loading, refreshAssets, singleUploadBusy]);
+    listRefreshPending,
+  }), [bulkUploadBusy, listRefreshPending, loading, refreshAssetsFromControl, singleUploadBusy]);
 
   useEffect(() => {
     onHeaderActions?.(headerActions);
@@ -475,8 +511,12 @@ export function AssetsDomain({
     };
   }, [headerActions, onHeaderActions]);
 
-  const storedAssetsLabel = assets == null ? (loading ? 'Loading...' : 'Unavailable') : formatNumber(assets.length);
-  const storageUsedLabel = storageBytesUsed == null ? (loading ? 'Loading...' : 'Unavailable') : formatBytes(storageBytesUsed);
+  const storedAssetsLabel = assets == null
+    ? null
+    : formatNumber(assets.length);
+  const storageUsedLabel = storageBytesUsed == null
+    ? null
+    : formatBytes(storageBytesUsed);
 
   return (
     <>
@@ -486,22 +526,34 @@ export function AssetsDomain({
         {error ? (
           <div className="roma-inline-stack" role="alert">
             <p className="body-m">{error}</p>
-            <button className="diet-button" data-size="medium" data-type="tertiary" type="button" onClick={() => void refreshAssets()} disabled={loading}>
+            <button
+              className="diet-button"
+              data-size="medium"
+              data-type="tertiary"
+              data-loading={retryPending || undefined}
+              type="button"
+              aria-busy={retryPending || undefined}
+              onClick={() => void retryAssets()}
+              disabled={retryPending}
+            >
+              {retryPending ? <span className="diet-spinner" aria-hidden="true" /> : null}
               <span className="diet-button__label">Retry</span>
             </button>
           </div>
         ) : null}
-        <p className="body-m">Stored assets: {storedAssetsLabel}</p>
-        <p className="body-m">
-          Storage used: {storageUsedLabel} / {storageLimit == null ? 'unlimited' : formatBytes(storageLimit)}
-        </p>
+        {storedAssetsLabel !== null ? <p className="body-m">Stored assets: {storedAssetsLabel}</p> : null}
+        {storageUsedLabel !== null ? (
+          <p className="body-m">
+            Storage used: {storageUsedLabel} / {storageLimit == null ? 'unlimited' : formatBytes(storageLimit)}
+          </p>
+        ) : null}
         {uploadSizeLimitBytes != null ? <p className="body-m">Per-file upload limit: {formatBytes(uploadSizeLimitBytes)}</p> : null}
 
         <input ref={singleUploadInputRef} type="file" hidden onChange={handleSingleFileChange} aria-label="Upload single asset" />
         <input ref={bulkUploadInputRef} type="file" multiple hidden onChange={handleBulkFileChange} aria-label="Upload multiple assets" />
 
         {singleUploadError ? <p className="body-m" role="alert">Upload failed: {singleUploadError}</p> : null}
-        {deleteError ? <p className="body-m" role="alert">Failed to delete asset: {deleteError}</p> : null}
+        {deleteError && !deleteConfirmationAsset ? <p className="body-m" role="alert">Failed to delete asset: {deleteError}</p> : null}
       </section>
 
       <section className="rd-canvas-module">
@@ -595,23 +647,25 @@ export function AssetsDomain({
                     onClick={() => handleDeleteAsset(asset)}
                     disabled={deletingAssetRef === asset.assetRef}
                   >
-                    <span className="diet-button__label">{deletingAssetRef === asset.assetRef ? 'Deleting...' : 'Delete'}</span>
+                    <span className="diet-button__label">Delete</span>
                   </button>
                 </td>
               </tr>
             ))}
             {assets == null ? (
               <tr>
-                <td colSpan={5} className="body-s">
-                  <span role={loading ? 'status' : 'alert'}>
-                    {loading ? 'Loading assets...' : 'Assets are unavailable right now.'}
-                  </span>
+                <td colSpan={5} className="diet-data-table__state-cell">
+                  {loading ? <RomaLoadingState /> : null}
                 </td>
               </tr>
             ) : sortedAssets.length === 0 ? (
               <tr>
-                <td colSpan={5} className="body-s">
-                  {assets.length === 0 ? 'No assets found for this account.' : 'No assets match this filter.'}
+                <td colSpan={5} className="diet-data-table__state-cell">
+                  <RomaEmptyState>
+                    {assets.length === 0
+                      ? ROMA_UI_COPY.state.empty.assets
+                      : ROMA_UI_COPY.state.empty.filteredAssets}
+                  </RomaEmptyState>
                 </td>
               </tr>
             ) : null}
@@ -711,10 +765,11 @@ export function AssetsDomain({
           ? `Deleting “${deleteConfirmationAsset.filename}” removes the asset. Widgets that use it may stop displaying it. This cannot be undone.`
           : ''}
         confirmLabel="Delete asset"
+        pending={Boolean(deleteConfirmationAsset && deletingAssetRef === deleteConfirmationAsset.assetRef)}
+        error={deleteError}
         onCancel={() => setDeleteConfirmationAsset(null)}
         onConfirm={() => {
           const asset = deleteConfirmationAsset;
-          setDeleteConfirmationAsset(null);
           if (asset) void deleteAsset(asset);
         }}
       />

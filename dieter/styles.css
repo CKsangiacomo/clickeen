@@ -11,6 +11,7 @@
 @import url('./components/date-range-picker/date-range-picker.css');
 @import url('./components/datefield/datefield.css');
 @import url('./components/data-table/data-table.css');
+@import url('./components/empty-state/empty-state.css');
 @import url('./components/dropdown-actions/dropdown-actions.css');
 @import url('./components/slider/slider.css');
 @import url('./components/dropdown-border/dropdown-border.css');

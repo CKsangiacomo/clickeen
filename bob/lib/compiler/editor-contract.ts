@@ -110,7 +110,7 @@ const DROPDOWN_FILL_COMPONENT_LABEL_ATTRIBUTES = [
   ['hue', 'hue-label'],
   ['imageFill', 'image-fill-label'],
   ['loadAssetsError', 'load-assets-error-label'],
-  ['loadingAssets', 'loading-assets-label'],
+  ['loading', 'loading-label'],
   ['noAssets', 'no-assets-label'],
   ['opacity', 'opacity-label'],
   ['previewAssetError', 'preview-asset-error-label'],
@@ -128,6 +128,7 @@ type DropdownFillEditorLabels = {
 };
 
 const DROPDOWN_UPLOAD_COMPONENT_LABEL_ATTRIBUTES = [
+  ['loading', 'loading-label'],
   ['previewAssetError', 'preview-asset-error-label'],
   ['remove', 'remove-label'],
   ['replace', 'replace-label'],

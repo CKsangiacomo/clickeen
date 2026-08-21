@@ -3,7 +3,7 @@
 export type WidgetInstance = {
   instanceId: string;
   widgetType: string;
-  displayName: string;
+  displayName: string | null;
   status: 'published' | 'unpublished';
   publishedAt: string | null;
   updatedAt: string;
@@ -28,7 +28,6 @@ export type RomaWidgetsCacheEntry = {
 
 type RomaWidgetsFetchJson = <T = unknown>(url: string, init?: RequestInit & { timeoutMs?: number }) => Promise<T>;
 
-export const DEFAULT_INSTANCE_DISPLAY_NAME = 'Untitled widget';
 const ROMA_WIDGETS_CACHE_TTL_MS = 5 * 60 * 1000;
 const romaWidgetsCache = new Map<string, RomaWidgetsCacheEntry>();
 const romaWidgetsInflight = new Map<string, Promise<RomaWidgetsResponse>>();

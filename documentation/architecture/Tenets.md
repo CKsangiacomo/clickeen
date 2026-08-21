@@ -172,6 +172,15 @@ serves nothing at that boundary. It does not substitute another account,
 another locale, another model, another provider, another storage path, or stale
 compatibility shape.
 
+Presentation follows the same law. A data slot does not show invented prose,
+a placeholder, a skeleton, or an empty state while its truth is unresolved.
+Passive loading uses the systemic Spinner as state presentation, never as a
+replacement data value. A systemic
+Empty State is allowed only after the owning read succeeds and proves an exact
+zero result; it is the Dieter ellipsis Icon above one caller-owned short string.
+Errors, unavailability, unauthorized results, corrupt truth, and partial
+success remain their own visible states and never masquerade as empty.
+
 Deterministic defaults are allowed only when they are the explicit contract of
 that request parameter and do not change identity or claim unavailable work
 completed.
@@ -559,6 +568,12 @@ Widget message contract, and Roma composition respectively.
 Shared component presentation belongs in an existing Dieter primitive or
 shared Dieter source. A consumer-specific exception remains consumer
 composition; it does not become a new Dieter variant, branch, or special case.
+
+Passive loading and successful-zero presentation are shared Dieter contracts.
+Loading uses Spinner without visible loading prose. Empty State uses the fixed
+ellipsis Icon and one caller-owned short string, with no title, description, or
+action slot. Command feedback stays on the exact control that initiated the
+work; it is not a passive loading or empty-state fallback.
 
 ## Tenet 14: Documentation Is Operator Truth
 

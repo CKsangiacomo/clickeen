@@ -9,6 +9,7 @@ import { useRomaAccountApi } from './account-api';
 import { DieterDropdownActions } from './dieter-dropdown-actions';
 import { RomaCommandConfirmationDialog } from './roma-command-confirmation-dialog';
 import { useRomaAccountContext } from './roma-account-context';
+import { RomaLoadingState } from './roma-system-state';
 
 type TeamMemberProfile = {
   userId: string;
@@ -68,12 +69,12 @@ function resolveMemberDisplayName(profile: TeamMemberProfile | null, memberId: s
 
 function formatNullableValue(value: string | null | undefined): string {
   const normalized = String(value || '').trim();
-  return normalized || 'Not set';
+  return normalized;
 }
 
 function formatCountryValue(value: string | null | undefined): string {
   const country = String(value || '').trim();
-  if (!country) return 'Not set';
+  if (!country) return '';
   try {
     const displayNames = new Intl.DisplayNames(undefined, { type: 'region' });
     return displayNames.of(country) || country;
@@ -89,6 +90,7 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
   const canManage = accountPolicy.role === 'owner' || accountPolicy.role === 'admin';
 
   const [loading, setLoading] = useState(true);
+  const [retryPending, setRetryPending] = useState(false);
   const [member, setMember] = useState<TeamMemberResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [mutationError, setMutationError] = useState<string | null>(null);
@@ -99,9 +101,12 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
 
   const accountId = accountContext.accountId;
 
-  const refreshMember = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const refreshMember = useCallback(async (options?: { command?: boolean }) => {
+    const command = options?.command === true;
+    if (!command) {
+      setLoading(true);
+      setError(null);
+    }
     try {
       const response = await accountApi.fetchRaw(`/api/account/team/members/${encodeURIComponent(memberId)}`, {
         method: 'GET',
@@ -122,9 +127,18 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
       setMember(null);
       setError(resolveTeamMemberErrorCopy(reason, 'Failed to load this team member. Please try again.'));
     } finally {
-      setLoading(false);
+      if (!command) setLoading(false);
     }
   }, [accountApi, memberId]);
+
+  const retryMember = useCallback(async () => {
+    setRetryPending(true);
+    try {
+      await refreshMember({ command: true });
+    } finally {
+      setRetryPending(false);
+    }
+  }, [refreshMember]);
 
   useEffect(() => {
     void refreshMember();
@@ -160,7 +174,7 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
   }, [accountApi, accountId, canManage, member, memberId, reload, roleDraft]);
 
   const removeMember = useCallback(async () => {
-    if (!accountId || !canManage || !member || member.member.role === 'owner') return;
+    if (!accountId || !canManage || !member || member.member.role === 'owner') return false;
     setRemovingMember(true);
     setMutationError(null);
     try {
@@ -173,11 +187,14 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
       if (!response.ok) {
         throw new Error(resolveErrorReason(payload, `HTTP_${response.status}`));
       }
-      await reload();
+      setRemoveConfirmationName(null);
       router.push('/team');
+      void reload();
+      return true;
     } catch (nextError) {
       const reason = nextError instanceof Error ? nextError.message : String(nextError);
       setMutationError(resolveTeamMemberErrorCopy(reason, 'Removing the team member failed. Please try again.'));
+      return false;
     } finally {
       setRemovingMember(false);
     }
@@ -198,13 +215,23 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
       {error ? (
         <section className="rd-canvas-module" role="alert">
           <p className="body-m">{error}</p>
-          <button className="diet-button" data-size="medium" data-type="tertiary" type="button" onClick={() => void refreshMember()} disabled={loading}>
+          <button
+            className="diet-button"
+            data-size="medium"
+            data-type="tertiary"
+            data-loading={retryPending || undefined}
+            type="button"
+            aria-busy={retryPending || undefined}
+            onClick={() => void retryMember()}
+            disabled={retryPending}
+          >
+            {retryPending ? <span className="diet-spinner" aria-hidden="true" /> : null}
             <span className="diet-button__label">Retry</span>
           </button>
         </section>
       ) : null}
 
-      {loading && !member && !error ? <section className="rd-canvas-module body-m" role="status">Loading team member...</section> : null}
+      {loading && !member && !error ? <RomaLoadingState className="rd-canvas-module" /> : null}
 
       {member ? (
         <>
@@ -212,12 +239,12 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
             <div className="roma-inline-stack" style={{ justifyContent: 'space-between', gap: '12px' }}>
               <div>
                 <h2 className="heading-3">{resolveMemberDisplayName(member.member.profile, member.member.userId)}</h2>
-                <p className="body-s">{member.member.profile?.primaryEmail ?? 'No primary email recorded'}</p>
+                {member.member.profile?.primaryEmail ? <p className="body-s">{member.member.profile.primaryEmail}</p> : null}
               </div>
               <div>
                 <p className="label-s">Role</p>
                 <p className="body-m">{formatAccountRoleLabel(member.member.role)}</p>
-                <p className="body-s">Joined: {member.member.createdAt ?? 'unknown'}</p>
+                {member.member.createdAt ? <p className="body-s">Joined: {member.member.createdAt}</p> : null}
               </div>
             </div>
           </section>
@@ -248,10 +275,13 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
                 className="diet-button"
                 data-size="medium"
                 data-type="primary"
+                data-loading={savingRole || undefined}
                 type="button"
+                aria-busy={savingRole || undefined}
                 onClick={() => void saveRole()}
                 disabled={!canManage || member.member.role === 'owner' || savingRole || !isAccountRoleValue(roleDraft) || roleDraft === member.member.role}
               >
+                {savingRole ? <span className="diet-spinner" aria-hidden="true" /> : null}
                 <span className="diet-button__label">{savingRole ? 'Saving...' : 'Save role'}</span>
               </button>
               <button
@@ -259,12 +289,15 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
                 data-size="medium"
                 data-type="tertiary"
                 type="button"
-                onClick={() => setRemoveConfirmationName(
-                  resolveMemberDisplayName(member.member.profile, member.member.userId),
-                )}
+                onClick={() => {
+                  setMutationError(null);
+                  setRemoveConfirmationName(
+                    resolveMemberDisplayName(member.member.profile, member.member.userId),
+                  );
+                }}
                 disabled={!canManage || member.member.role === 'owner' || removingMember}
               >
-                <span className="diet-button__label">{removingMember ? 'Removing...' : 'Remove member'}</span>
+                <span className="diet-button__label">Remove member</span>
               </button>
             </div>
           </section>
@@ -300,7 +333,7 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
             </div>
           </section>
 
-          {mutationError ? (
+          {mutationError && removeConfirmationName === null ? (
             <section className="rd-canvas-module" role="alert">
               <p className="body-m">{mutationError}</p>
             </section>
@@ -314,9 +347,10 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
           ? `“${removeConfirmationName}” will lose access to this account.`
           : ''}
         confirmLabel="Remove member"
+        pending={removingMember}
+        error={mutationError}
         onCancel={() => setRemoveConfirmationName(null)}
         onConfirm={() => {
-          setRemoveConfirmationName(null);
           void removeMember();
         }}
       />

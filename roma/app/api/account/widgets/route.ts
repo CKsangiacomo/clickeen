@@ -6,12 +6,10 @@ import {
 import { resolveCurrentAccountRouteContext, withSession } from '../_lib/current-account-route';
 
 export const runtime = 'edge';
-const DEFAULT_INSTANCE_DISPLAY_NAME = 'Untitled widget';
-
 type WidgetInstance = {
   instanceId: string;
   widgetType: string;
-  displayName: string;
+  displayName: string | null;
   status: 'published' | 'unpublished';
   updatedAt: string;
   publishedAt: string | null;
@@ -91,7 +89,7 @@ export async function GET(request: NextRequest) {
     return {
       instanceId: instance.instanceId,
       widgetType: instance.widgetType,
-      displayName: instance.displayName ?? DEFAULT_INSTANCE_DISPLAY_NAME,
+      displayName: instance.displayName,
       status: instance.publishStatus,
       publishedAt: instance.publishedAt,
       updatedAt: instance.updatedAt,

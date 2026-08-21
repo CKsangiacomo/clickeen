@@ -8,6 +8,8 @@ type RomaCommandConfirmationDialogProps = {
   title: string;
   body: string;
   confirmLabel: string;
+  pending?: boolean;
+  error?: string | null;
   onCancel: () => void;
   onConfirm: () => void;
 };
@@ -16,17 +18,25 @@ function OpenRomaCommandConfirmationDialog({
   title,
   body,
   confirmLabel,
+  pending = false,
+  error = null,
   onCancel,
   onConfirm,
 }: Omit<RomaCommandConfirmationDialogProps, 'open'>) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const cancelButtonRef = useRef<HTMLButtonElement>(null);
   const lifecycleRef = useRef<DialogLifecycle | null>(null);
-  const decisionMadeRef = useRef(false);
+  const confirmRequestedRef = useRef(false);
+  const pendingRef = useRef(pending);
   const onCancelRef = useRef(onCancel);
   const onConfirmRef = useRef(onConfirm);
   const titleId = useId();
   const bodyId = useId();
+
+  useEffect(() => {
+    pendingRef.current = pending;
+    if (!pending) confirmRequestedRef.current = false;
+  }, [pending]);
 
   useEffect(() => {
     onCancelRef.current = onCancel;
@@ -37,16 +47,14 @@ function OpenRomaCommandConfirmationDialog({
   }, [onConfirm]);
 
   const handleCancel = useCallback(() => {
-    if (decisionMadeRef.current) return;
-    decisionMadeRef.current = true;
+    if (pendingRef.current || confirmRequestedRef.current) return;
     lifecycleRef.current?.close();
     onCancelRef.current();
   }, []);
 
   const handleConfirm = useCallback(() => {
-    if (decisionMadeRef.current) return;
-    decisionMadeRef.current = true;
-    lifecycleRef.current?.close();
+    if (pendingRef.current || confirmRequestedRef.current) return;
+    confirmRequestedRef.current = true;
     onConfirmRef.current();
   }, []);
 
@@ -81,6 +89,7 @@ function OpenRomaCommandConfirmationDialog({
       </header>
       <div className="diet-popup__body">
         <p id={bodyId} className="body-m">{body}</p>
+        {error ? <p className="body-s" role="alert">{error}</p> : null}
       </div>
       <footer className="diet-popup__footer">
         <div className="diet-popup__actions">
@@ -91,6 +100,7 @@ function OpenRomaCommandConfirmationDialog({
             data-type="secondary"
             type="button"
             onClick={handleCancel}
+            disabled={pending}
           >
             <span className="diet-button__label">Cancel</span>
           </button>
@@ -98,9 +108,13 @@ function OpenRomaCommandConfirmationDialog({
             className="diet-button"
             data-size="medium"
             data-type="primary"
+            data-loading={pending || undefined}
             type="button"
+            aria-busy={pending || undefined}
             onClick={handleConfirm}
+            disabled={pending}
           >
+            {pending ? <span className="diet-spinner" aria-hidden="true" /> : null}
             <span className="diet-button__label">{confirmLabel}</span>
           </button>
         </div>
@@ -116,6 +130,8 @@ export function RomaCommandConfirmationDialog(props: RomaCommandConfirmationDial
       title={props.title}
       body={props.body}
       confirmLabel={props.confirmLabel}
+      pending={props.pending}
+      error={props.error}
       onCancel={props.onCancel}
       onConfirm={props.onConfirm}
     />

@@ -9,6 +9,7 @@ import { TranslationsPanel } from './TranslationsPanel';
 import type { TranslatedLocalesData, TranslationSetup } from './useTranslationPreviewState';
 import { ACCOUNT_TYPOGRAPHY_SELECTION_INVALID_REASON_KEY } from '@clickeen/widget-foundation';
 import { dieterIconStyle } from './dieterIcon';
+import { bobUiCopy } from '../l10n/ui-copy';
 
 const BUILDER_ERROR_COPY: Record<string, string> = {
   'coreui.errors.auth.required': 'You need to sign in again to keep editing this widget.',
@@ -185,7 +186,7 @@ export function ToolDrawer({
   }, [compiled]);
   const menuPanels = useMemo(() => {
     if (!compiled?.panels?.length) {
-      return DEFAULT_PANELS.filter((panel) => panel.id !== 'translations');
+      return [];
     }
     const availableIds = new Set(compiled.panels.map((panel) => panel.id));
     return DEFAULT_PANELS.filter((panel) => {
@@ -200,12 +201,15 @@ export function ToolDrawer({
   const alertBackground = 'color-mix(in oklab, var(--color-system-red-5), transparent 85%)';
   const alertLabelColor = 'var(--role-error)';
   const sessionErrorLines = sessionError ? resolveSessionErrorLines(sessionError) : [];
-  const activePanelNode = !compiled ? (
-    <div className="tdmenucontent">
-      <div className="heading-3">Content</div>
-      <div className="label-s label-muted">Loading widget…</div>
+  const activePanelNode = !compiled && !sessionError ? (
+    <div
+      className="tdmenucontent diet-loading-state"
+      role="status"
+      aria-label={bobUiCopy.states.loading.accessibleLabel}
+    >
+      <span className="diet-spinner" data-size="medium" aria-hidden="true" />
     </div>
-  ) : activePanel === 'translations' ? (
+  ) : !compiled ? null : activePanel === 'translations' ? (
     <TranslationsPanel
       agentActivityTitle={compiled.toolDrawerLabels.components['agent-activity'].title}
       translationPreviewLocale={translationPreviewLocale}
@@ -218,7 +222,6 @@ export function ToolDrawer({
     />
   ) : (
     <TdMenuContent
-      panelId={activePanel}
       panelLabel={panelsById[activePanel]!.label}
       panelHtml={panelsById[activePanel]!.html}
       instanceData={session.instanceData}
@@ -303,7 +306,9 @@ export function ToolDrawer({
       <div className="tdcontent">
         {mode === 'manual' ? (
           <>
-            <TdMenu active={activePanel} panels={menuPanels} onSelect={requestPanel} />
+            {compiled ? (
+              <TdMenu active={activePanel} panels={menuPanels} onSelect={requestPanel} />
+            ) : null}
             {sessionError ? (
               <div
                 role="alert"

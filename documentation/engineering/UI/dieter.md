@@ -35,8 +35,8 @@ program.
 - `tokens.css` — `@import`s the three above.
 
 **Layouts and components (middle).** `dieter/layouts/main-container/*` owns the
-shared application Layout/Page structure. The 31 non-empty source directories
-under `dieter/components/*` comprise 30 component directories plus the
+shared application Layout/Page structure. The 32 non-empty source directories
+under `dieter/components/*` comprise 31 component directories plus the
 non-rendered `shared/` helper directory. Component source shape varies by
 contract; see [`components.md`](components.md) for the exact catalog and
 hydration/spec model.

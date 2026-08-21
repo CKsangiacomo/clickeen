@@ -273,7 +273,7 @@
           "hue": "$label:component.dropdown-fill.hue.label",
           "imageFill": "$label:component.dropdown-fill.image-fill.label",
           "loadAssetsError": "$label:component.dropdown-fill.load-assets-error.label",
-          "loadingAssets": "$label:component.dropdown-fill.loading-assets.label",
+          "loading": "$label:component.dropdown-fill.loading.label",
           "noAssets": "$label:component.dropdown-fill.no-assets.label",
           "opacity": "$label:component.dropdown-fill.opacity.label",
           "previewAssetError": "$label:component.dropdown-fill.preview-asset-error.label",

@@ -17,6 +17,7 @@ import {
   type BobSaveControlStateMessage,
 } from '../lib/builder-host-protocol';
 import { formatAccountTierLabel } from '../lib/format';
+import { ROMA_UI_COPY } from '../lib/ui-copy';
 import { useRomaAccountApi } from './account-api';
 import { getWidgetEditorArtifact } from './widget-editor-artifact';
 import { useRomaAccountContext } from './roma-account-context';
@@ -185,7 +186,7 @@ type BobOpenEditorMessage = {
   accountPublicId: string;
   instanceId: string | null;
   baseLocale: string;
-  label: string;
+  label: string | null;
   widgetname: string;
   compiled: CompiledWidget;
   instanceData: Record<string, unknown>;
@@ -202,7 +203,7 @@ type BobOpenEditorMessage = {
 type BobOpenEditorPayload = Omit<BobOpenEditorMessage, 'requestId'>;
 
 type BuilderOpenResponseBase = {
-  displayName: string;
+  displayName: string | null;
   widgetType: string;
   baseLocale: string;
   config: Record<string, unknown>;
@@ -587,6 +588,7 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
     return decodeBuilderPathWidgetType(pathname) || String(initialWidgetType || '').trim();
   });
   const [openError, setOpenError] = useState<string | null>(null);
+  const [openRetryPending, setOpenRetryPending] = useState(false);
   const [publicationInstance, setPublicationInstance] = useState<WidgetInstance | null>(null);
   const [bobIsDirty, setBobIsDirty] = useState(false);
   const [bobSaveControlPhase, setBobSaveControlPhase] = useState<BobSaveControlPhase>('hidden');
@@ -843,7 +845,7 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
             const nextInstance: WidgetInstance = {
               instanceId: created.instanceId,
               widgetType: created.widgetType,
-              displayName: created.displayName || 'Untitled widget',
+              displayName: created.displayName,
               status: created.status,
               publishedAt: created.publishedAt,
               updatedAt: created.updatedAt,
@@ -974,7 +976,7 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
     [bobBaseUrl],
   );
 
-  const openActiveInstanceInBob = useCallback(async (force = false) => {
+  const openActiveInstanceInBob = useCallback(async (force = false, preserveError = false) => {
     const targetWindow = iframeRef.current?.contentWindow;
     if (!targetWindow || (!activeInstanceId && !activeWidgetType)) return;
     const targetKey = activeInstanceId
@@ -987,7 +989,7 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
 
     const openSeq = ++openDispatchSeqRef.current;
     setBobSaveControlPhase('hidden');
-    setOpenError(null);
+    if (!preserveError) setOpenError(null);
 
     try {
       const openPath = activeInstanceId
@@ -1066,6 +1068,15 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
       }
     }
   }, [accountApi, accountPolicy, activeAccount, activeInstanceId, activeWidgetType, currentUrl, postOpenEditorAndWait, router]);
+
+  const retryOpenActiveInstance = useCallback(async () => {
+    setOpenRetryPending(true);
+    try {
+      await openActiveInstanceInBob(true, true);
+    } finally {
+      setOpenRetryPending(false);
+    }
+  }, [openActiveInstanceInBob]);
 
   const openActiveInstanceInBobRef = useRef(openActiveInstanceInBob);
   useEffect(() => {
@@ -1311,7 +1322,17 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
         <div className="rd-canvas-module roma-builder-error">
           <p className="body-m">{builderOpenErrorCopy}</p>
           <div className="rd-canvas-module__actions">
-            <button className="diet-button" data-size="medium" data-type="primary" type="button" onClick={() => void openActiveInstanceInBob(true)}>
+            <button
+              className="diet-button"
+              data-size="medium"
+              data-type="primary"
+              data-loading={openRetryPending || undefined}
+              type="button"
+              aria-busy={openRetryPending || undefined}
+              onClick={() => void retryOpenActiveInstance()}
+              disabled={openRetryPending}
+            >
+              {openRetryPending ? <span className="diet-spinner" aria-hidden="true" /> : null}
               <span className="diet-button__label">Retry</span>
             </button>
           </div>
@@ -1373,11 +1394,11 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
                 className="diet-button"
                 data-size="large"
                 data-type="primary"
-                data-tone="saveonly"
+                data-tone="save"
                 type="button"
                 onClick={requestBobSave}
               >
-                <span className="diet-button__label">Save</span>
+                <span className="diet-button__label">{ROMA_UI_COPY.commands.save}</span>
               </button>
             ) : null}
             {bobSaveControlPhase === 'saving' ? (
@@ -1385,14 +1406,14 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
                 className="diet-button"
                 data-size="large"
                 data-type="primary"
-                data-tone="saveonly"
+                data-tone="save"
                 data-loading="true"
                 type="button"
                 aria-busy="true"
                 disabled
               >
                 <span className="diet-spinner" aria-hidden="true" />
-                <span className="diet-button__label">Saving…</span>
+                <span className="diet-button__label">{ROMA_UI_COPY.commands.saving}</span>
               </button>
             ) : null}
             {bobSaveControlPhase === 'saved' ? (
@@ -1400,18 +1421,13 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
                 className="diet-button"
                 data-size="large"
                 data-type="primary"
+                data-tone="save"
                 data-state="success"
                 type="button"
                 disabled
               >
-                <Image
-                  className="diet-icon"
-                  src="/dieter/icons/svg/checkmark.svg"
-                  alt=""
-                  width={20}
-                  height={20}
-                />
-                <span className="diet-button__label">Saved</span>
+                <span className="diet-spinner" aria-hidden="true" />
+                <span className="diet-button__label">{ROMA_UI_COPY.commands.saved}</span>
               </button>
             ) : null}
           </>

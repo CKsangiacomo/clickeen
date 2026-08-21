@@ -1,0 +1,25 @@
+{
+  "component": "empty-state",
+  "syntax": "<div class='diet-empty-state'><span class='diet-empty-state__icon diet-icon diet-icon-mask' data-icon='ellipsis' style=\"--diet-icon-source: url('/dieter/icons/svg/ellipsis.svg')\" aria-hidden='true'></span><span class='diet-empty-state__label body-s'>{{LABEL}}</span></div>",
+  "attributes": {
+    "label": { "required": true }
+  },
+  "binding": { "type": "caller-owned-empty-result" },
+  "contract": {
+    "condition": "The caller renders Empty State only after an authoritative successful read returns zero applicable items.",
+    "icon": "The component always uses dieter/icons/svg/ellipsis.svg and exposes no icon variant.",
+    "copy": "The caller supplies exactly one resolved short string.",
+    "actions": "No action, title, description, or guidance slot exists."
+  },
+  "defaults": [
+    {
+      "id": "empty-state",
+      "spec": [
+        "diet-empty-state",
+        "ellipsis.svg",
+        "one caller-owned short string"
+      ],
+      "context": { "label": "No items" }
+    }
+  ]
+}

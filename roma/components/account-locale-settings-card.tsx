@@ -5,6 +5,7 @@ import { normalizeCanonicalLocalesFile, normalizeLocaleToken, resolveLocaleLabel
 import localesJson from '@clickeen/l10n/locales.json';
 import { useRomaAccountApi } from './account-api';
 import { DieterDropdownActions } from './dieter-dropdown-actions';
+import { RomaLoadingState } from './roma-system-state';
 
 type AccountLocalesPayload = {
   activeLocales: string[];
@@ -120,6 +121,7 @@ export function AccountLocaleSettingsCard(args: {
 }) {
   const accountApi = useRomaAccountApi();
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [settingsReady, setSettingsReady] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -161,6 +163,15 @@ export function AccountLocaleSettingsCard(args: {
 
   useEffect(() => {
     void loadSettings();
+  }, [loadSettings]);
+
+  const refreshSettings = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await loadSettings();
+    } finally {
+      setRefreshing(false);
+    }
   }, [loadSettings]);
 
   const baseLocale = normalizeLocaleToken(draftBaseLocale) ?? '';
@@ -229,10 +240,20 @@ export function AccountLocaleSettingsCard(args: {
 
       {!settingsReady ? (
         <div className="roma-inline-stack">
-          {!error ? <p className="body-m" role="status">Loading account languages...</p> : null}
+          {!error && !refreshing ? <RomaLoadingState /> : null}
           <div className="rd-canvas-module__actions">
-            <button className="diet-button" data-size="medium" data-type="tertiary" type="button" disabled={loading || saving} onClick={() => void loadSettings()}>
-              <span className="diet-button__label">{loading ? 'Refreshing…' : 'Refresh'}</span>
+            <button
+              className="diet-button"
+              data-size="medium"
+              data-type="tertiary"
+              data-loading={refreshing || undefined}
+              type="button"
+              aria-busy={refreshing || undefined}
+              disabled={loading || saving}
+              onClick={() => void refreshSettings()}
+            >
+              {refreshing ? <span className="diet-spinner" aria-hidden="true" /> : null}
+              <span className="diet-button__label">{refreshing ? 'Refreshing…' : 'Refresh'}</span>
             </button>
           </div>
         </div>
@@ -301,17 +322,30 @@ export function AccountLocaleSettingsCard(args: {
           </div>
 
           <div className="rd-canvas-module__actions">
-            <button className="diet-button" data-size="medium" data-type="tertiary" type="button" disabled={loading || saving} onClick={() => void loadSettings()}>
-              <span className="diet-button__label">{loading ? 'Refreshing…' : 'Refresh'}</span>
+            <button
+              className="diet-button"
+              data-size="medium"
+              data-type="tertiary"
+              data-loading={refreshing || undefined}
+              type="button"
+              aria-busy={refreshing || undefined}
+              disabled={loading || saving}
+              onClick={() => void refreshSettings()}
+            >
+              {refreshing ? <span className="diet-spinner" aria-hidden="true" /> : null}
+              <span className="diet-button__label">{refreshing ? 'Refreshing…' : 'Refresh'}</span>
             </button>
             <button
               className="diet-button"
               data-size="medium"
               data-type="primary"
+              data-loading={saving || undefined}
               type="button"
+              aria-busy={saving || undefined}
               disabled={loading || saving || !args.canEdit}
               onClick={() => void saveSettings()}
             >
+              {saving ? <span className="diet-spinner" aria-hidden="true" /> : null}
               <span className="diet-button__label">{saving ? 'Saving…' : 'Save languages'}</span>
             </button>
           </div>

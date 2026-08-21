@@ -101,6 +101,7 @@
 .diet-dropdown-upload__preview-img,
 .diet-dropdown-upload__preview-video,
 .diet-dropdown-upload__preview-doc,
+.diet-dropdown-upload__preview-loading,
 .diet-dropdown-upload__preview-empty {
   display: none;
 }
@@ -134,6 +135,10 @@
 }
 
 .diet-dropdown-upload__panel[data-kind='doc'] .diet-dropdown-upload__preview-doc {
+  display: grid;
+}
+
+.diet-dropdown-upload__panel[data-kind='loading'] .diet-dropdown-upload__preview-loading {
   display: grid;
 }
 

@@ -5,7 +5,6 @@ import type { AccountFontLibrary } from '@clickeen/widget-foundation';
 import {
   acceptsHostSaveRequest,
   createInitialSessionState,
-  resolveSaveControlPhase,
   type BobSaveControlStateMessage,
   type SessionState,
 } from './sessionTypes';
@@ -79,22 +78,6 @@ export function WidgetDocumentSessionProvider({ children }: { children: ReactNod
     setMeta: chrome.setMeta,
     executeAccountCommand: transport.executeAccountCommand,
   });
-
-  useEffect(() => {
-    if (state.saveControlPhase !== 'saved') return undefined;
-    const timer = window.setTimeout(() => {
-      const current = stateRef.current;
-      const saveControlPhase = resolveSaveControlPhase(current.saveControlPhase, {
-        type: 'receipt-elapsed',
-        isDirty: current.isDirty,
-      });
-      if (saveControlPhase === current.saveControlPhase) return;
-      const nextState = { ...current, saveControlPhase };
-      stateRef.current = nextState;
-      setState(nextState);
-    }, 1_000);
-    return () => window.clearTimeout(timer);
-  }, [state.saveControlPhase]);
 
   useEffect(() => {
     const targetOrigin = transport.hostOriginRef.current;

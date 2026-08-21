@@ -251,7 +251,17 @@ export function ProfileDomain() {
           </p>
         ) : null}
         <div className="roma-inline-stack" style={{ justifyContent: 'flex-end', gap: '12px', marginTop: '12px' }}>
-          <button className="diet-button" data-size="medium" data-type="primary" type="button" onClick={() => void saveProfile()} disabled={saving}>
+          <button
+            className="diet-button"
+            data-size="medium"
+            data-type="primary"
+            data-loading={saving || undefined}
+            type="button"
+            aria-busy={saving || undefined}
+            onClick={() => void saveProfile()}
+            disabled={saving}
+          >
+            {saving ? <span className="diet-spinner" aria-hidden="true" /> : null}
             <span className="diet-button__label">{saving ? 'Saving...' : 'Save settings'}</span>
           </button>
         </div>

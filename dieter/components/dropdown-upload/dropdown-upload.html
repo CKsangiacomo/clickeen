@@ -41,7 +41,14 @@
 
     <div class="diet-popover__body">
       <div class="diet-dropdown-upload__panel" data-has-file="false" data-kind="empty">
-        <div class="diet-dropdown-upload__preview-frame">
+        <div class="diet-dropdown-upload__preview-frame" aria-busy="false">
+          <div
+            class="diet-dropdown-upload__preview-loading diet-loading-state"
+            role="status"
+            aria-label="{{loadingLabel}}"
+          >
+            <span class="diet-spinner" data-size="medium" aria-hidden="true"></span>
+          </div>
           <img class="diet-dropdown-upload__preview-img" alt="" />
           <video
             class="diet-dropdown-upload__preview-video"
@@ -72,6 +79,7 @@
             data-size="{{buttonSize}}"
             data-type="tertiary"
           >
+            <span class="diet-spinner" aria-hidden="true" hidden></span>
             <span class="diet-button__label">{{uploadLabel}}</span>
           </button>
           <div class="diet-dropdown-upload__file-actions" hidden>
@@ -81,6 +89,7 @@
               data-size="{{buttonSize}}"
               data-type="tertiary"
             >
+              <span class="diet-spinner" aria-hidden="true" hidden></span>
               <span class="diet-button__label">{{replaceLabel}}</span>
             </button>
             <button

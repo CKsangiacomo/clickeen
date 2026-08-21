@@ -4,6 +4,7 @@ import { isUuid } from '@clickeen/ck-contracts';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRomaMe } from './use-roma-me';
+import { RomaLoadingState } from './roma-system-state';
 
 type AcceptInviteDomainProps = {
   token: string;
@@ -80,7 +81,7 @@ export function AcceptInviteDomain({ token }: AcceptInviteDomainProps) {
     return (
       <main className="page roma-standalone-page">
         <div className="page__content">
-          <section className="rd-canvas-module body-m" role="status">Loading invitation context...</section>
+          <RomaLoadingState className="rd-canvas-module" />
         </div>
       </main>
     );
@@ -117,10 +118,13 @@ export function AcceptInviteDomain({ token }: AcceptInviteDomainProps) {
               className="diet-button"
               data-size="medium"
               data-type="primary"
+              data-loading={loading || undefined}
               type="button"
+              aria-busy={loading || undefined}
               onClick={() => void acceptInvitation()}
               disabled={loading}
             >
+              {loading ? <span className="diet-spinner" aria-hidden="true" /> : null}
               <span className="diet-button__label">{loading ? 'Accepting...' : 'Accept invitation'}</span>
             </button>
             <Link className="diet-button" data-size="medium" data-type="tertiary" href="/home">

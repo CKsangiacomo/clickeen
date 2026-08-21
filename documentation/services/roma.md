@@ -134,7 +134,12 @@ and repeated events after a decision invoke no product command; one explicit
 Confirm invokes the already-owned command once. The current consumers are
 Widget Delete, Asset Delete, Unpublish in both Roma publication surfaces,
 Remove member, and Transfer ownership. Each consumer retains its existing
-route, authorization, pending state, visible error, and result handling. No
+route and authorization. The dialog stays mounted while the exact command
+runs; its Confirm Button owns the Spinner and busy state, and a command failure
+remains in that dialog for retry. Exact command success closes it before any
+separate passive reconciliation read, whose failure cannot turn the completed
+mutation into a retryable command. The obscured originating control does not
+duplicate the command Spinner. No
 invitation command or invitation workflow is part of this composition.
 
 Roma owns one shared account upsell Popup and assembles it from truths with
@@ -236,11 +241,16 @@ The Berlin profile also carries `primaryLanguage` and dormant
 does not expose the boolean, choose a product UI locale, fetch UI translations,
 or pass a UI locale into Bob.
 
+The approved loading, empty, Save, and Republish strings are currently resolved
+from the minimal English `roma/l10n/en.json` catalog. This correction creates
+one structured English source for those exact states; it does not begin the
+separate UI-language selection or translation pass.
+
 The authenticated layout keeps one bootstrap provider mounted across Roma
 route transitions. The shared `main-container`, `left-nav`, and page frame render
 immediately; only `page__content` waits for the first complete, authenticated
-account and authz result from Berlin. That first wait uses a content skeleton,
-not implementation-status copy or a blank replacement screen.
+account and authz result from Berlin. That first wait uses the systemic Dieter
+Spinner without visible loading copy, a skeleton, or a replacement data value.
 
 Account mutations explicitly reconcile through the same bootstrap authority.
 While that request is pending, Roma retains the already authoritative page and
@@ -490,6 +500,18 @@ opens the shared confirmation in both the inventory and Builder header; the
 dialog names the exact Widget, says it will go offline while saved source
 remains, and sends the existing Unpublish command only after explicit confirm.
 
+Republish is one special green Button, independent of its required Dieter
+hierarchy type. Ready uses the current publication Icon plus `Republish`;
+pending uses a disabled, busy Spinner plus `Republishing…`; and only the exact
+successful publication route yields the disabled, non-busy checkmark receipt
+`Live widget updated`. The receipt has no timer and is keyed to the exact saved
+instance and source `updatedAt`; changing instance or later saving invalidates
+it. Initial open and failure do not invent success.
+
+The Builder Save control is the separate special pink Button. Bob owns its
+phase truth; Roma renders `Save`, disabled busy Spinner plus `Saving…`, or
+disabled non-busy Spinner plus `Saved` without adding a timer or checkmark.
+
 Tokyo is the single timestamp writer. Save and Rename each return `updatedAt`
 strictly later than the previous `updatedAt` and any `publishedAt`.
 Publish/Republish returns `publishedAt` strictly later than both the exact
@@ -539,9 +561,10 @@ account list. Their headers use the shared `small` Dieter sort control. The acti
 sort uses `chevron.up.2` or `chevron.down.2` with
 `--color-system-black`; inactive sorts use `chevron.down.dotted.2` with
 `--color-system-gray`. On a cache-cold first load, that same Table and all five
-headers remain mounted; one status row spanning the columns says
-`Loading widgets...`. Roma does not replace the inventory with a loose loading
-paragraph and then shift into a Table.
+headers remain mounted; one status row spanning the columns contains the
+systemic Spinner and no visible loading prose. A successful zero
+inventory or filter result uses the systemic ellipsis Empty State and one short
+Roma-owned string; Browse or other CTA content is not part of that state.
 
 Rename, Duplicate, and Delete use the same unbound Dieter Menu Actions row.
 Roma owns their exact Chrome wording and command handlers; Menu Actions owns
@@ -594,8 +617,10 @@ account resolution, those two independent reads start together and are awaited
 once. The instance-facts failure retains deterministic priority when both fail;
 otherwise the definitions failure is returned. Roma adds no cache, timeout,
 probe, retry, fallback, or alternate read to this cold path. Tokyo-worker
-returns stored `displayName` as string or `null`; Roma applies the UI fallback
-label for product rendering.
+returns stored `displayName` as string or `null`; Roma preserves that exact
+truth. A saved instance with no display name renders no name. The explicit
+`Untitled widget` label belongs only to a new browser-memory draft before its
+first Save; it is not substituted for a saved instance's missing name.
 
 Local implementation: New and Duplicate do not enforce
 `widgets.instances.max`. New writes nothing; Duplicate writes an immediate

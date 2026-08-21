@@ -1,0 +1,16 @@
+{
+  "states": {
+    "loading": {
+      "accessibleLabel": "Loading"
+    },
+    "empty": {
+      "translations": "No translations"
+    }
+  },
+  "commands": {
+    "translations": {
+      "ready": "Generate translations",
+      "pending": "Generating translations..."
+    }
+  }
+}

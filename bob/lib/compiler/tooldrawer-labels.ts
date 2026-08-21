@@ -44,7 +44,7 @@ const COPY_ATTRIBUTE_NAMES = new Set([
   'hue-label',
   'image-fill-label',
   'load-assets-error-label',
-  'loading-assets-label',
+  'loading-label',
   'no-assets-label',
   'opacity-label',
   'preview-asset-error-label',

@@ -1,6 +1,6 @@
 # PRD 127 — UI Localization And Design-System Passes
 
-Status: **EXECUTING — STAGE 1 COMPLETE; STAGE 2 IN PROGRESS**
+Status: **EXECUTING — STAGE 2 IN PROGRESS; PROGRAM PAUSED FOR SYSTEMIC CORRECTION PASSES**
 
 Owner: Clickeen product owner/architect
 
@@ -158,9 +158,9 @@ the code is convenient there.
 | Stage                      | Status                                                                                                                                                                                                                                               | Release state                                                         |
 | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
 | Stage 1 — Scaffold only    | Complete                                                                                                                                                                                                                                             | Committed, pushed, and deployed; no non-English experience is exposed |
-| Stage 2 — Dieter UI pass   | In progress: Foundations and the current 29-component inventory are complete and re-audited; the latest source-backed additions are Badge, Banner, Data Table, Spinner, and governed Tooltip, while Datefield and Date Range Picker remain DevStudio-only consumer-agnostic primitives; Big Bang, Countdown, Cards, FAQ, and Logo Showcase plus their five-Widget system reconciliation are complete and live in cloud-dev | The Widget-system pass and FAQ Content authority hard cut are deployed and reconciled in cloud-dev; the Roma Assets workspace remains planning-only behind its recorded owner authority gates |
-| Stage 3 — Bob UI pass      | Not started                                                                                                                                                                                                                                          | No authority to begin until explicitly directed                       |
-| Stage 4 — Roma UI pass     | Not started                                                                                                                                                                                                                                          | No authority to begin until explicitly directed                       |
+| Stage 2 — Dieter UI pass   | In progress: Foundations and the current 30-component inventory include the systemic Empty State, Spinner, and named Save/Republish Button tones; the broader stage remains paused for further owner-led correction passes | Current correction is local source truth only; prior cloud-dev evidence does not prove this uncommitted pass |
+| Stage 3 — Bob UI pass      | Not started as a localization stage; an explicit cross-surface correction removed invented loading/empty fallbacks and corrected Save state without authorizing the full pass | Program remains paused; no UI-language selection or translations were introduced |
+| Stage 4 — Roma UI pass     | Not started as a localization stage; an explicit cross-surface correction removed invented loading/empty fallbacks and corrected Save/Republish state without authorizing the full pass | Program remains paused; no UI-language selection or translations were introduced |
 | Stage 5 — Translation pass | Not started                                                                                                                                                                                                                                          | No translations may be generated yet                                  |
 
 Update this table when a stage actually changes state. Do not infer completion
@@ -480,6 +480,27 @@ Do not start the next stage until the human product owner/architect explicitly
 authorizes it.
 
 ## 14. Execution Record
+
+### Systemic Loading, Empty, Save, And Republish Correction (2026-08-20)
+
+The product owner paused continued PRD 127/128 execution and authorized this
+cross-surface correction first. Dieter now owns one passive-loading presentation
+(Spinner, no visible loading prose) and one successful-zero presentation
+(ellipsis Icon plus one short caller-owned string). AI-authored loading and
+empty fallback branches were removed from the affected Bob, Roma, Data Table,
+Dropdown Fill, and Bulk Edit paths. Errors and unavailable truth remain separate.
+
+Save is the named pink Button in all phases: `Save`, Spinner + `Saving…`, and
+Spinner + `Saved`; the saved receipt is not busy and has no timer. Republish is
+the named green Button: current Icon + `Republish`, Spinner + `Republishing…`,
+and checkmark + `Live widget updated`; its receipt exists only after the exact
+successful route and is invalidated by instance/source change. Minimal English
+Bob/Roma state catalogs were introduced only to stop scattering these exact
+owner-approved strings. This does not begin Stage 3 or Stage 4 localization,
+does not generate translations, and does not resume either PRD program.
+
+This record describes uncommitted local source until a separately authorized
+commit/deploy and owning-surface verification occur.
 
 ### Stage 2 — Dieter And DevStudio UI Pass
 

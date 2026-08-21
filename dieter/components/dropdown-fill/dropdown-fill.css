@@ -362,6 +362,19 @@
   block-size: 100%;
 }
 
+.diet-dropdown-fill__preview-loading {
+  position: relative;
+  z-index: 3;
+}
+
+.diet-dropdown-fill__preview-loading[hidden] {
+  display: none;
+}
+
+.diet-dropdown-fill__panel[data-resolving='true'] .diet-dropdown-fill__empty-media-icon {
+  display: none;
+}
+
 .diet-dropdown-fill__panel[data-has-image='true'] .diet-dropdown-fill__empty-media-icon,
 .diet-dropdown-fill__panel[data-has-video='true'] .diet-dropdown-fill__empty-media-icon {
   display: none;
@@ -487,9 +500,8 @@
   white-space: nowrap;
 }
 
-.diet-dropdown-fill__asset-browser-empty {
+.diet-dropdown-fill__asset-browser .diet-empty-state {
   padding: var(--space-2, 0.5rem);
-  color: color-mix(in oklab, var(--color-system-black), transparent 35%);
 }
 
 .diet-dropdown-fill__file-input,

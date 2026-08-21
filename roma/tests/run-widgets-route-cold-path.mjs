@@ -181,7 +181,7 @@ assert.deepEqual(await successResponse.json(), {
     {
       instanceId: 'instance-1',
       widgetType: 'faq',
-      displayName: 'Untitled widget',
+      displayName: null,
       status: 'unpublished',
       updatedAt: '2026-08-19T10:00:00.000Z',
       publishedAt: null,

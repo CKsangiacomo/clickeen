@@ -119,7 +119,17 @@ export function RomaAccountNoticeModal() {
           <Link className="diet-button" data-size="medium" data-type="tertiary" href="/settings">
             <span className="diet-button__label">Open settings</span>
           </Link>
-          <button className="diet-button" data-size="medium" data-type="primary" type="button" onClick={() => void dismiss()} disabled={dismissLoading}>
+          <button
+            className="diet-button"
+            data-size="medium"
+            data-type="primary"
+            data-loading={dismissLoading || undefined}
+            type="button"
+            aria-busy={dismissLoading || undefined}
+            onClick={() => void dismiss()}
+            disabled={dismissLoading}
+          >
+            {dismissLoading ? <span className="diet-spinner" aria-hidden="true" /> : null}
             <span className="diet-button__label">{dismissLoading ? 'Dismissing...' : 'Dismiss'}</span>
           </button>
         </div>

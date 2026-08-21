@@ -9,6 +9,7 @@ import {
   resolveAccountShellErrorCopy,
   resolveAccountShellReason,
 } from '../lib/account-shell-copy';
+import { ROMA_UI_COPY } from '../lib/ui-copy';
 import { useRomaAccountApi } from './account-api';
 import { DieterDropdownActions } from './dieter-dropdown-actions';
 import { DieterTextfield } from './dieter-textfield';
@@ -18,11 +19,11 @@ import { RomaCommandConfirmationDialog } from './roma-command-confirmation-dialo
 import { useRomaAccountContext } from './roma-account-context';
 import { RomaDomainErrorBoundary } from './roma-domain-error-boundary';
 import { RomaShell } from './roma-shell';
+import { RomaEmptyState, RomaLoadingState } from './roma-system-state';
 import { WidgetPublicationControls } from './widget-publication-controls';
 import {
   buildBuilderRoute,
   buildNewBuilderRoute,
-  DEFAULT_INSTANCE_DISPLAY_NAME,
   isRomaWidgetsCacheFresh,
   loadRomaWidgetsForAccount,
   readRomaWidgetsCache,
@@ -71,7 +72,7 @@ export function WidgetsPage({ view }: { view: WidgetsView }) {
       ) : null}
     >
       <RomaAccountNoticeModal />
-      <Suspense fallback={null}>
+      <Suspense fallback={<RomaLoadingState className="rd-canvas-module" />}>
         <RomaDomainErrorBoundary domainLabel="Widgets" resetKey="widgets">
           <WidgetsDomain
             view={view}
@@ -129,11 +130,14 @@ export function WidgetsDomain({
     setCatalog(widgets.catalog);
   }, []);
 
-  const refreshWidgets = useCallback(async (args?: { force?: boolean }) => {
+  const refreshWidgets = useCallback(async (args?: { force?: boolean; command?: boolean }) => {
     const force = args?.force === true;
+    const command = args?.command === true;
     const cached = readRomaWidgetsCache(productAccountId);
 
-    if (!force && cached) {
+    if (command) {
+      setDomainRefreshing(true);
+    } else if (!force && cached) {
       applyWidgets(cached.data);
       setDomainLoading(false);
       setDataError(null);
@@ -142,7 +146,7 @@ export function WidgetsDomain({
     } else {
       setDomainLoading(true);
     }
-    setDataError(null);
+    if (!command) setDataError(null);
     try {
       const normalized = await loadRomaWidgetsForAccount({
         accountId: productAccountId,
@@ -201,8 +205,8 @@ export function WidgetsDomain({
       .filter((instance) => statusFilter === 'all' || instance.status === statusFilter)
       .slice()
       .sort((left, right) => {
-        const leftName = left.displayName || DEFAULT_INSTANCE_DISPLAY_NAME;
-        const rightName = right.displayName || DEFAULT_INSTANCE_DISPLAY_NAME;
+        const leftName = left.displayName ?? '';
+        const rightName = right.displayName ?? '';
         const primary = sort.key === 'widget'
           ? catalogByWidgetType.get(left.widgetType)!.displayName.localeCompare(
               catalogByWidgetType.get(right.widgetType)!.displayName,
@@ -329,7 +333,7 @@ export function WidgetsDomain({
 
   const handleDuplicateInstance = useCallback(
     async (instance: WidgetInstance) => {
-      if (!productAccountId || !canMutateWidgets) return;
+      if (!productAccountId || !canMutateWidgets) return false;
       const actionKey = `duplicate:${instance.instanceId}`;
       setActiveActionKey(actionKey);
       setMutationError(null);
@@ -364,10 +368,13 @@ export function WidgetsDomain({
         await accountApi.fetchJson<{ deleted?: boolean }>(`/api/account/instances/${encodeURIComponent(instance.instanceId)}`, {
           method: 'DELETE',
         });
-        await refreshWidgets({ force: true });
+        setDeleteConfirmationInstance(null);
+        void refreshWidgets({ force: true });
+        return true;
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         setMutationError(resolveAccountShellErrorCopy(message, 'Deleting the widget failed. Please try again.'));
+        return false;
       } finally {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
@@ -380,7 +387,7 @@ export function WidgetsDomain({
     setMutationError(null);
     setRenameError(null);
     setRenamingInstanceId(instance.instanceId);
-    setRenameDraft(instance.displayName || DEFAULT_INSTANCE_DISPLAY_NAME);
+    setRenameDraft(instance.displayName ?? '');
   }, [canMutateWidgets]);
 
   const cancelRename = useCallback(() => {
@@ -436,51 +443,50 @@ export function WidgetsDomain({
 
   return (
     <>
-      {widgetDataError || mutationError || renameError || (view === 'catalog' && initialDataLoading) ? (
-        <section className="rd-canvas-module" role={widgetDataError || mutationError || renameError ? 'alert' : 'status'}>
+      {widgetDataError || mutationError || renameError ? (
+        <section className="rd-canvas-module" role="alert">
           {widgetDataError ? (
             <div className="roma-inline-stack">
               <p className="body-m">{widgetDataError}</p>
-              <button className="diet-button" data-size="medium" data-type="tertiary" type="button" onClick={() => void refreshWidgets({ force: true })} disabled={domainLoading || domainRefreshing}>
+              <button
+                className="diet-button"
+                data-size="medium"
+                data-type="tertiary"
+                data-loading={domainRefreshing || undefined}
+                type="button"
+                aria-busy={domainRefreshing || undefined}
+                onClick={() => void refreshWidgets({ force: true, command: true })}
+                disabled={domainRefreshing}
+              >
+                {domainRefreshing ? <span className="diet-spinner" aria-hidden="true" /> : null}
                 <span className="diet-button__label">Retry</span>
               </button>
             </div>
           ) : null}
-          {mutationError ? (
+          {mutationError && !deleteConfirmationInstance ? (
             <div className="roma-inline-stack">
               <p className="body-m">{mutationError}</p>
             </div>
           ) : null}
           {renameError ? <p className="body-m">{renameError}</p> : null}
 
-          {view === 'catalog' && initialDataLoading ? <p className="body-m">Loading widgets...</p> : null}
         </section>
       ) : null}
+
+      {view === 'catalog' && initialDataLoading ? <RomaLoadingState className="rd-canvas-module" /> : null}
 
       {view === 'your-widgets' ? (
           <>
             {!domainLoading && canRenderWidgetData && widgetInstances.length === 0 ? (
-              <section className="rd-canvas-module">
-                <p className="body-m">No widgets yet.</p>
-                {canMutateWidgets && catalog.length > 0 ? (
-                  <div className="rd-canvas-module__actions">
-                    <Link
-                      className="diet-button"
-                      data-size="medium"
-                      data-type="primary"
-                      href="/widgets/catalog"
-                    >
-                      <span className="diet-button__label">Browse widget catalog</span>
-                    </Link>
-                  </div>
-                ) : null}
-              </section>
+              <RomaEmptyState className="rd-canvas-module">
+                {ROMA_UI_COPY.state.empty.widgets}
+              </RomaEmptyState>
             ) : null}
 
             {!domainLoading && canRenderWidgetData && statusFilter !== 'all' && widgetInstances.length > 0 && displayedInstances.length === 0 ? (
-              <section className="rd-canvas-module">
-                <p className="body-m">No {statusFilter} widgets.</p>
-              </section>
+              <RomaEmptyState className="rd-canvas-module">
+                {ROMA_UI_COPY.state.empty.filteredWidgets}
+              </RomaEmptyState>
             ) : null}
 
             {showingInitialWidgetsLoading || (displayedInstances.length > 0 && canRenderWidgetData) ? (
@@ -562,12 +568,12 @@ export function WidgetsDomain({
                 <tbody>
                   {showingInitialWidgetsLoading ? (
                     <tr>
-                      <td className="body-m" colSpan={5}>
-                        <span role="status">Loading widgets...</span>
+                      <td className="diet-data-table__state-cell" colSpan={5}>
+                        <RomaLoadingState />
                       </td>
                     </tr>
                   ) : displayedInstances.map((instance) => {
-                    const instanceName = instance.displayName || DEFAULT_INSTANCE_DISPLAY_NAME;
+                    const instanceName = instance.displayName;
                     const widgetDisplayName = catalogByWidgetType.get(instance.widgetType)!.displayName;
                     const isSelected = selectedInstanceId === instance.instanceId;
                     const renameActionKey = `rename:${instance.instanceId}`;
@@ -575,11 +581,7 @@ export function WidgetsDomain({
                     const isRenaming = renamingInstanceId === instance.instanceId;
                     const rowActionsDisabled = Boolean(activeActionKey) || isRenaming;
                     const actionsOpen = openWidgetActions?.instanceId === instance.instanceId;
-                    const secondaryActionStatus = activeActionKey === `duplicate:${instance.instanceId}`
-                      ? 'Duplicating…'
-                      : activeActionKey === `delete:${instance.instanceId}`
-                        ? 'Deleting…'
-                        : null;
+                    const secondaryActionPending = activeActionKey === `duplicate:${instance.instanceId}`;
                     return (
                       <tr key={instance.instanceId} data-selected={isSelected ? 'true' : undefined} aria-current={isSelected ? 'true' : undefined}>
                         <td className="body-s">{widgetDisplayName}</td>
@@ -620,17 +622,20 @@ export function WidgetsDomain({
                                   className="diet-button"
                                   data-size="medium"
                                   data-type="primary"
+                                  data-loading={activeActionKey === renameActionKey || undefined}
                                   type="button"
+                                  aria-busy={activeActionKey === renameActionKey || undefined}
                                   onClick={() => void handleRenameInstance(instance)}
                                   disabled={Boolean(activeActionKey)}
                                 >
+                                  {activeActionKey === renameActionKey ? <span className="diet-spinner" aria-hidden="true" /> : null}
                                   <span className="diet-button__label">{activeActionKey === renameActionKey ? 'Renaming...' : 'Rename'}</span>
                                 </button>
                               </div>
                             </div>
                           ) : (
                             <>
-                              {instanceName}
+                              {instanceName ?? null}
                               {isSelected ? ' (selected)' : ''}
                             </>
                           )}
@@ -677,15 +682,14 @@ export function WidgetsDomain({
                                   <span className="diet-button__label">Edit</span>
                                 </Link>
                               )}
-                              {secondaryActionStatus ? (
-                                <span className="body-xs roma-widget-action-status" role="status">{secondaryActionStatus}</span>
-                              ) : null}
                               <button
                                 className="diet-button"
                                 data-size="medium"
                                 data-type="quaternary"
+                                data-loading={secondaryActionPending || undefined}
                                 type="button"
-                                aria-label={`More actions for ${instanceName}`}
+                                aria-label={instanceName ? `More actions for ${instanceName}` : 'More actions'}
+                                aria-busy={secondaryActionPending || undefined}
                                 aria-haspopup="menu"
                                 aria-controls="roma-widget-actions-menu"
                                 aria-expanded={actionsOpen}
@@ -699,7 +703,11 @@ export function WidgetsDomain({
                                   setOpenWidgetActions({ instanceId: instance.instanceId, position: null });
                                 }}
                               >
-                                <Image className="diet-icon" src="/dieter/icons/svg/ellipsis.svg" alt="" width={16} height={16} aria-hidden="true" />
+                                {secondaryActionPending ? (
+                                  <span className="diet-spinner" aria-hidden="true" />
+                                ) : (
+                                  <Image className="diet-icon" src="/dieter/icons/svg/ellipsis.svg" alt="" width={16} height={16} aria-hidden="true" />
+                                )}
                               </button>
                             </div>
                           ) : (
@@ -745,9 +753,9 @@ export function WidgetsDomain({
               </div>
             </section>
           ) : (
-            <section className="rd-canvas-module">
-              <p className="body-m">No widget types available.</p>
-            </section>
+            <RomaEmptyState className="rd-canvas-module">
+              {ROMA_UI_COPY.state.empty.widgetTypes}
+            </RomaEmptyState>
           )
         ) : null}
 
@@ -758,7 +766,9 @@ export function WidgetsDomain({
               id="roma-widget-actions-menu"
               className="diet-popover roma-widget-actions-popover"
               role="menu"
-              aria-label={`Actions for ${openWidgetActionsInstance.displayName || DEFAULT_INSTANCE_DISPLAY_NAME}`}
+              aria-label={openWidgetActionsInstance.displayName
+                ? `Actions for ${openWidgetActionsInstance.displayName}`
+                : 'Widget actions'}
               data-positioned={openWidgetActions.position ? 'true' : 'false'}
               style={{
                 top: openWidgetActions.position?.top ?? 0,
@@ -796,6 +806,7 @@ export function WidgetsDomain({
                 role="menuitem"
                 onClick={() => {
                   closeWidgetActions();
+                  setMutationError(null);
                   setDeleteConfirmationInstance(openWidgetActionsInstance);
                 }}
               >
@@ -809,13 +820,16 @@ export function WidgetsDomain({
         open={Boolean(deleteConfirmationInstance)}
         title="Delete this widget?"
         body={deleteConfirmationInstance
-          ? `Deleting “${deleteConfirmationInstance.displayName}” removes its saved source and makes any published version unavailable. This cannot be undone.`
+          ? deleteConfirmationInstance.displayName
+            ? `Deleting “${deleteConfirmationInstance.displayName}” removes its saved source and makes any published version unavailable. This cannot be undone.`
+            : 'Deleting this widget removes its saved source and makes any published version unavailable. This cannot be undone.'
           : ''}
         confirmLabel="Delete widget"
+        pending={Boolean(deleteConfirmationInstance && activeActionKey === `delete:${deleteConfirmationInstance.instanceId}`)}
+        error={mutationError}
         onCancel={() => setDeleteConfirmationInstance(null)}
         onConfirm={() => {
           const instance = deleteConfirmationInstance;
-          setDeleteConfirmationInstance(null);
           if (instance) void handleDeleteInstance(instance);
         }}
       />

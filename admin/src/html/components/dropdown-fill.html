@@ -20,7 +20,6 @@
   data-copy-add-gradient-stop="Add gradient stop"
   data-copy-edit-gradient-stop="Edit gradient stop"
   data-copy-load-assets-error="Assets could not be loaded."
-  data-copy-loading-assets="Loading assets…"
   data-copy-no-assets="No assets"
   data-copy-preview-asset-error="Asset preview could not be loaded."
   data-copy-remove-gradient-stop="Remove gradient stop"
@@ -363,8 +362,11 @@
         </div>
 
         <div class="diet-dropdown-fill__panel diet-dropdown-fill__panel--image body-xs" data-panel="image" data-has-image="false">
-        <div class="diet-dropdown-fill__image-preview" aria-hidden="true">
-          <span class="diet-dropdown-fill__empty-media-icon" data-icon="photo"></span>
+        <div class="diet-dropdown-fill__image-preview" aria-busy="false">
+          <span class="diet-dropdown-fill__empty-media-icon" data-icon="photo" aria-hidden="true"></span>
+          <div class="diet-dropdown-fill__preview-loading diet-loading-state" role="status" aria-label="Loading" hidden>
+            <span class="diet-spinner" data-size="medium" aria-hidden="true"></span>
+          </div>
         </div>
         <div class="diet-dropdown-fill__image-actions">
           <div class="diet-dropdown-fill__image-controls-left">
@@ -377,6 +379,7 @@
               title="Upload"
             >
               <span class="diet-icon" aria-hidden="true" data-icon="square.and.arrow.up"></span>
+              <span class="diet-spinner" aria-hidden="true" hidden></span>
             </button>
             <button
               type="button"
@@ -387,6 +390,7 @@
               title="Choose from assets"
             >
               <span class="diet-icon" aria-hidden="true" data-icon="tray"></span>
+              <span class="diet-spinner" aria-hidden="true" hidden></span>
             </button>
           </div>
           <div class="diet-dropdown-fill__image-controls-right">
@@ -403,7 +407,7 @@
           </div>
         </div>
         <div class="diet-dropdown-fill__asset-browser diet-dropdown-fill__asset-browser--image" hidden>
-          <div class="diet-dropdown-fill__asset-browser-message body-s" role="status"></div>
+          <div class="diet-dropdown-fill__asset-browser-message body-s" role="alert" hidden></div>
           <div class="diet-dropdown-fill__asset-browser-list"></div>
         </div>
         <div class="diet-dropdown-fill__asset-message label-xs" role="alert" hidden></div>
@@ -411,10 +415,13 @@
         </div>
 
         <div class="diet-dropdown-fill__panel diet-dropdown-fill__panel--video body-xs" data-panel="video" data-has-video="false">
-        <div class="diet-dropdown-fill__video-frame" aria-hidden="true">
-          <video class="diet-dropdown-fill__video-preview" muted playsinline preload="metadata"></video>
-          <div class="diet-dropdown-fill__video-placeholder">
+        <div class="diet-dropdown-fill__video-frame" aria-busy="false">
+          <video class="diet-dropdown-fill__video-preview" muted playsinline preload="metadata" aria-hidden="true"></video>
+          <div class="diet-dropdown-fill__video-placeholder" aria-hidden="true">
             <span class="diet-dropdown-fill__empty-media-icon" data-icon="play.square"></span>
+          </div>
+          <div class="diet-dropdown-fill__preview-loading diet-loading-state" role="status" aria-label="Loading" hidden>
+            <span class="diet-spinner" data-size="medium" aria-hidden="true"></span>
           </div>
         </div>
         <div class="diet-dropdown-fill__video-actions">
@@ -428,6 +435,7 @@
               title="Upload"
             >
               <span class="diet-icon" aria-hidden="true" data-icon="square.and.arrow.up"></span>
+              <span class="diet-spinner" aria-hidden="true" hidden></span>
             </button>
             <button
               type="button"
@@ -438,6 +446,7 @@
               title="Choose from assets"
             >
               <span class="diet-icon" aria-hidden="true" data-icon="tray"></span>
+              <span class="diet-spinner" aria-hidden="true" hidden></span>
             </button>
           </div>
           <div class="diet-dropdown-fill__video-controls-right">
@@ -454,7 +463,7 @@
           </div>
         </div>
         <div class="diet-dropdown-fill__asset-browser diet-dropdown-fill__asset-browser--video" hidden>
-          <div class="diet-dropdown-fill__asset-browser-message body-s" role="status"></div>
+          <div class="diet-dropdown-fill__asset-browser-message body-s" role="alert" hidden></div>
           <div class="diet-dropdown-fill__asset-browser-list"></div>
         </div>
         <div class="diet-dropdown-fill__asset-message label-xs" role="alert" hidden></div>
@@ -482,7 +491,6 @@
   data-copy-add-gradient-stop="Add gradient stop"
   data-copy-edit-gradient-stop="Edit gradient stop"
   data-copy-load-assets-error="Assets could not be loaded."
-  data-copy-loading-assets="Loading assets…"
   data-copy-no-assets="No assets"
   data-copy-preview-asset-error="Asset preview could not be loaded."
   data-copy-remove-gradient-stop="Remove gradient stop"
@@ -825,8 +833,11 @@
         </div>
 
         <div class="diet-dropdown-fill__panel diet-dropdown-fill__panel--image body-xs" data-panel="image" data-has-image="false">
-        <div class="diet-dropdown-fill__image-preview" aria-hidden="true">
-          <span class="diet-dropdown-fill__empty-media-icon" data-icon="photo"></span>
+        <div class="diet-dropdown-fill__image-preview" aria-busy="false">
+          <span class="diet-dropdown-fill__empty-media-icon" data-icon="photo" aria-hidden="true"></span>
+          <div class="diet-dropdown-fill__preview-loading diet-loading-state" role="status" aria-label="Loading" hidden>
+            <span class="diet-spinner" data-size="medium" aria-hidden="true"></span>
+          </div>
         </div>
         <div class="diet-dropdown-fill__image-actions">
           <div class="diet-dropdown-fill__image-controls-left">
@@ -839,6 +850,7 @@
               title="Upload"
             >
               <span class="diet-icon" aria-hidden="true" data-icon="square.and.arrow.up"></span>
+              <span class="diet-spinner" aria-hidden="true" hidden></span>
             </button>
             <button
               type="button"
@@ -849,6 +861,7 @@
               title="Choose from assets"
             >
               <span class="diet-icon" aria-hidden="true" data-icon="tray"></span>
+              <span class="diet-spinner" aria-hidden="true" hidden></span>
             </button>
           </div>
           <div class="diet-dropdown-fill__image-controls-right">
@@ -865,7 +878,7 @@
           </div>
         </div>
         <div class="diet-dropdown-fill__asset-browser diet-dropdown-fill__asset-browser--image" hidden>
-          <div class="diet-dropdown-fill__asset-browser-message body-s" role="status"></div>
+          <div class="diet-dropdown-fill__asset-browser-message body-s" role="alert" hidden></div>
           <div class="diet-dropdown-fill__asset-browser-list"></div>
         </div>
         <div class="diet-dropdown-fill__asset-message label-xs" role="alert" hidden></div>
@@ -873,10 +886,13 @@
         </div>
 
         <div class="diet-dropdown-fill__panel diet-dropdown-fill__panel--video body-xs" data-panel="video" data-has-video="false">
-        <div class="diet-dropdown-fill__video-frame" aria-hidden="true">
-          <video class="diet-dropdown-fill__video-preview" muted playsinline preload="metadata"></video>
-          <div class="diet-dropdown-fill__video-placeholder">
+        <div class="diet-dropdown-fill__video-frame" aria-busy="false">
+          <video class="diet-dropdown-fill__video-preview" muted playsinline preload="metadata" aria-hidden="true"></video>
+          <div class="diet-dropdown-fill__video-placeholder" aria-hidden="true">
             <span class="diet-dropdown-fill__empty-media-icon" data-icon="play.square"></span>
+          </div>
+          <div class="diet-dropdown-fill__preview-loading diet-loading-state" role="status" aria-label="Loading" hidden>
+            <span class="diet-spinner" data-size="medium" aria-hidden="true"></span>
           </div>
         </div>
         <div class="diet-dropdown-fill__video-actions">
@@ -890,6 +906,7 @@
               title="Upload"
             >
               <span class="diet-icon" aria-hidden="true" data-icon="square.and.arrow.up"></span>
+              <span class="diet-spinner" aria-hidden="true" hidden></span>
             </button>
             <button
               type="button"
@@ -900,6 +917,7 @@
               title="Choose from assets"
             >
               <span class="diet-icon" aria-hidden="true" data-icon="tray"></span>
+              <span class="diet-spinner" aria-hidden="true" hidden></span>
             </button>
           </div>
           <div class="diet-dropdown-fill__video-controls-right">
@@ -916,7 +934,7 @@
           </div>
         </div>
         <div class="diet-dropdown-fill__asset-browser diet-dropdown-fill__asset-browser--video" hidden>
-          <div class="diet-dropdown-fill__asset-browser-message body-s" role="status"></div>
+          <div class="diet-dropdown-fill__asset-browser-message body-s" role="alert" hidden></div>
           <div class="diet-dropdown-fill__asset-browser-list"></div>
         </div>
         <div class="diet-dropdown-fill__asset-message label-xs" role="alert" hidden></div>
@@ -944,7 +962,6 @@
   data-copy-add-gradient-stop="Add gradient stop"
   data-copy-edit-gradient-stop="Edit gradient stop"
   data-copy-load-assets-error="Assets could not be loaded."
-  data-copy-loading-assets="Loading assets…"
   data-copy-no-assets="No assets"
   data-copy-preview-asset-error="Asset preview could not be loaded."
   data-copy-remove-gradient-stop="Remove gradient stop"
@@ -1287,8 +1304,11 @@
         </div>
 
         <div class="diet-dropdown-fill__panel diet-dropdown-fill__panel--image body-xs" data-panel="image" data-has-image="false">
-        <div class="diet-dropdown-fill__image-preview" aria-hidden="true">
-          <span class="diet-dropdown-fill__empty-media-icon" data-icon="photo"></span>
+        <div class="diet-dropdown-fill__image-preview" aria-busy="false">
+          <span class="diet-dropdown-fill__empty-media-icon" data-icon="photo" aria-hidden="true"></span>
+          <div class="diet-dropdown-fill__preview-loading diet-loading-state" role="status" aria-label="Loading" hidden>
+            <span class="diet-spinner" data-size="medium" aria-hidden="true"></span>
+          </div>
         </div>
         <div class="diet-dropdown-fill__image-actions">
           <div class="diet-dropdown-fill__image-controls-left">
@@ -1301,6 +1321,7 @@
               title="Upload"
             >
               <span class="diet-icon" aria-hidden="true" data-icon="square.and.arrow.up"></span>
+              <span class="diet-spinner" aria-hidden="true" hidden></span>
             </button>
             <button
               type="button"
@@ -1311,6 +1332,7 @@
               title="Choose from assets"
             >
               <span class="diet-icon" aria-hidden="true" data-icon="tray"></span>
+              <span class="diet-spinner" aria-hidden="true" hidden></span>
             </button>
           </div>
           <div class="diet-dropdown-fill__image-controls-right">
@@ -1327,7 +1349,7 @@
           </div>
         </div>
         <div class="diet-dropdown-fill__asset-browser diet-dropdown-fill__asset-browser--image" hidden>
-          <div class="diet-dropdown-fill__asset-browser-message body-s" role="status"></div>
+          <div class="diet-dropdown-fill__asset-browser-message body-s" role="alert" hidden></div>
           <div class="diet-dropdown-fill__asset-browser-list"></div>
         </div>
         <div class="diet-dropdown-fill__asset-message label-xs" role="alert" hidden></div>
@@ -1335,10 +1357,13 @@
         </div>
 
         <div class="diet-dropdown-fill__panel diet-dropdown-fill__panel--video body-xs" data-panel="video" data-has-video="false">
-        <div class="diet-dropdown-fill__video-frame" aria-hidden="true">
-          <video class="diet-dropdown-fill__video-preview" muted playsinline preload="metadata"></video>
-          <div class="diet-dropdown-fill__video-placeholder">
+        <div class="diet-dropdown-fill__video-frame" aria-busy="false">
+          <video class="diet-dropdown-fill__video-preview" muted playsinline preload="metadata" aria-hidden="true"></video>
+          <div class="diet-dropdown-fill__video-placeholder" aria-hidden="true">
             <span class="diet-dropdown-fill__empty-media-icon" data-icon="play.square"></span>
+          </div>
+          <div class="diet-dropdown-fill__preview-loading diet-loading-state" role="status" aria-label="Loading" hidden>
+            <span class="diet-spinner" data-size="medium" aria-hidden="true"></span>
           </div>
         </div>
         <div class="diet-dropdown-fill__video-actions">
@@ -1352,6 +1377,7 @@
               title="Upload"
             >
               <span class="diet-icon" aria-hidden="true" data-icon="square.and.arrow.up"></span>
+              <span class="diet-spinner" aria-hidden="true" hidden></span>
             </button>
             <button
               type="button"
@@ -1362,6 +1388,7 @@
               title="Choose from assets"
             >
               <span class="diet-icon" aria-hidden="true" data-icon="tray"></span>
+              <span class="diet-spinner" aria-hidden="true" hidden></span>
             </button>
           </div>
           <div class="diet-dropdown-fill__video-controls-right">
@@ -1378,7 +1405,7 @@
           </div>
         </div>
         <div class="diet-dropdown-fill__asset-browser diet-dropdown-fill__asset-browser--video" hidden>
-          <div class="diet-dropdown-fill__asset-browser-message body-s" role="status"></div>
+          <div class="diet-dropdown-fill__asset-browser-message body-s" role="alert" hidden></div>
           <div class="diet-dropdown-fill__asset-browser-list"></div>
         </div>
         <div class="diet-dropdown-fill__asset-message label-xs" role="alert" hidden></div>
@@ -1410,7 +1437,6 @@
   data-copy-add-gradient-stop="Add gradient stop"
   data-copy-edit-gradient-stop="Edit gradient stop"
   data-copy-load-assets-error="Assets could not be loaded."
-  data-copy-loading-assets="Loading assets…"
   data-copy-no-assets="No assets"
   data-copy-preview-asset-error="Asset preview could not be loaded."
   data-copy-remove-gradient-stop="Remove gradient stop"
@@ -1753,8 +1779,11 @@
         </div>
 
         <div class="diet-dropdown-fill__panel diet-dropdown-fill__panel--image body-xs" data-panel="image" data-has-image="false">
-        <div class="diet-dropdown-fill__image-preview" aria-hidden="true">
-          <span class="diet-dropdown-fill__empty-media-icon" data-icon="photo"></span>
+        <div class="diet-dropdown-fill__image-preview" aria-busy="false">
+          <span class="diet-dropdown-fill__empty-media-icon" data-icon="photo" aria-hidden="true"></span>
+          <div class="diet-dropdown-fill__preview-loading diet-loading-state" role="status" aria-label="Loading" hidden>
+            <span class="diet-spinner" data-size="medium" aria-hidden="true"></span>
+          </div>
         </div>
         <div class="diet-dropdown-fill__image-actions">
           <div class="diet-dropdown-fill__image-controls-left">
@@ -1767,6 +1796,7 @@
               title="Upload"
             >
               <span class="diet-icon" aria-hidden="true" data-icon="square.and.arrow.up"></span>
+              <span class="diet-spinner" aria-hidden="true" hidden></span>
             </button>
             <button
               type="button"
@@ -1777,6 +1807,7 @@
               title="Choose from assets"
             >
               <span class="diet-icon" aria-hidden="true" data-icon="tray"></span>
+              <span class="diet-spinner" aria-hidden="true" hidden></span>
             </button>
           </div>
           <div class="diet-dropdown-fill__image-controls-right">
@@ -1793,7 +1824,7 @@
           </div>
         </div>
         <div class="diet-dropdown-fill__asset-browser diet-dropdown-fill__asset-browser--image" hidden>
-          <div class="diet-dropdown-fill__asset-browser-message body-s" role="status"></div>
+          <div class="diet-dropdown-fill__asset-browser-message body-s" role="alert" hidden></div>
           <div class="diet-dropdown-fill__asset-browser-list"></div>
         </div>
         <div class="diet-dropdown-fill__asset-message label-xs" role="alert" hidden></div>
@@ -1801,10 +1832,13 @@
         </div>
 
         <div class="diet-dropdown-fill__panel diet-dropdown-fill__panel--video body-xs" data-panel="video" data-has-video="false">
-        <div class="diet-dropdown-fill__video-frame" aria-hidden="true">
-          <video class="diet-dropdown-fill__video-preview" muted playsinline preload="metadata"></video>
-          <div class="diet-dropdown-fill__video-placeholder">
+        <div class="diet-dropdown-fill__video-frame" aria-busy="false">
+          <video class="diet-dropdown-fill__video-preview" muted playsinline preload="metadata" aria-hidden="true"></video>
+          <div class="diet-dropdown-fill__video-placeholder" aria-hidden="true">
             <span class="diet-dropdown-fill__empty-media-icon" data-icon="play.square"></span>
+          </div>
+          <div class="diet-dropdown-fill__preview-loading diet-loading-state" role="status" aria-label="Loading" hidden>
+            <span class="diet-spinner" data-size="medium" aria-hidden="true"></span>
           </div>
         </div>
         <div class="diet-dropdown-fill__video-actions">
@@ -1818,6 +1852,7 @@
               title="Upload"
             >
               <span class="diet-icon" aria-hidden="true" data-icon="square.and.arrow.up"></span>
+              <span class="diet-spinner" aria-hidden="true" hidden></span>
             </button>
             <button
               type="button"
@@ -1828,6 +1863,7 @@
               title="Choose from assets"
             >
               <span class="diet-icon" aria-hidden="true" data-icon="tray"></span>
+              <span class="diet-spinner" aria-hidden="true" hidden></span>
             </button>
           </div>
           <div class="diet-dropdown-fill__video-controls-right">
@@ -1844,7 +1880,7 @@
           </div>
         </div>
         <div class="diet-dropdown-fill__asset-browser diet-dropdown-fill__asset-browser--video" hidden>
-          <div class="diet-dropdown-fill__asset-browser-message body-s" role="status"></div>
+          <div class="diet-dropdown-fill__asset-browser-message body-s" role="alert" hidden></div>
           <div class="diet-dropdown-fill__asset-browser-list"></div>
         </div>
         <div class="diet-dropdown-fill__asset-message label-xs" role="alert" hidden></div>
@@ -1876,7 +1912,6 @@
   data-copy-add-gradient-stop="Add gradient stop"
   data-copy-edit-gradient-stop="Edit gradient stop"
   data-copy-load-assets-error="Assets could not be loaded."
-  data-copy-loading-assets="Loading assets…"
   data-copy-no-assets="No assets"
   data-copy-preview-asset-error="Asset preview could not be loaded."
   data-copy-remove-gradient-stop="Remove gradient stop"
@@ -2219,8 +2254,11 @@
         </div>
 
         <div class="diet-dropdown-fill__panel diet-dropdown-fill__panel--image body-xs" data-panel="image" data-has-image="false">
-        <div class="diet-dropdown-fill__image-preview" aria-hidden="true">
-          <span class="diet-dropdown-fill__empty-media-icon" data-icon="photo"></span>
+        <div class="diet-dropdown-fill__image-preview" aria-busy="false">
+          <span class="diet-dropdown-fill__empty-media-icon" data-icon="photo" aria-hidden="true"></span>
+          <div class="diet-dropdown-fill__preview-loading diet-loading-state" role="status" aria-label="Loading" hidden>
+            <span class="diet-spinner" data-size="medium" aria-hidden="true"></span>
+          </div>
         </div>
         <div class="diet-dropdown-fill__image-actions">
           <div class="diet-dropdown-fill__image-controls-left">
@@ -2233,6 +2271,7 @@
               title="Upload"
             >
               <span class="diet-icon" aria-hidden="true" data-icon="square.and.arrow.up"></span>
+              <span class="diet-spinner" aria-hidden="true" hidden></span>
             </button>
             <button
               type="button"
@@ -2243,6 +2282,7 @@
               title="Choose from assets"
             >
               <span class="diet-icon" aria-hidden="true" data-icon="tray"></span>
+              <span class="diet-spinner" aria-hidden="true" hidden></span>
             </button>
           </div>
           <div class="diet-dropdown-fill__image-controls-right">
@@ -2259,7 +2299,7 @@
           </div>
         </div>
         <div class="diet-dropdown-fill__asset-browser diet-dropdown-fill__asset-browser--image" hidden>
-          <div class="diet-dropdown-fill__asset-browser-message body-s" role="status"></div>
+          <div class="diet-dropdown-fill__asset-browser-message body-s" role="alert" hidden></div>
           <div class="diet-dropdown-fill__asset-browser-list"></div>
         </div>
         <div class="diet-dropdown-fill__asset-message label-xs" role="alert" hidden></div>
@@ -2267,10 +2307,13 @@
         </div>
 
         <div class="diet-dropdown-fill__panel diet-dropdown-fill__panel--video body-xs" data-panel="video" data-has-video="false">
-        <div class="diet-dropdown-fill__video-frame" aria-hidden="true">
-          <video class="diet-dropdown-fill__video-preview" muted playsinline preload="metadata"></video>
-          <div class="diet-dropdown-fill__video-placeholder">
+        <div class="diet-dropdown-fill__video-frame" aria-busy="false">
+          <video class="diet-dropdown-fill__video-preview" muted playsinline preload="metadata" aria-hidden="true"></video>
+          <div class="diet-dropdown-fill__video-placeholder" aria-hidden="true">
             <span class="diet-dropdown-fill__empty-media-icon" data-icon="play.square"></span>
+          </div>
+          <div class="diet-dropdown-fill__preview-loading diet-loading-state" role="status" aria-label="Loading" hidden>
+            <span class="diet-spinner" data-size="medium" aria-hidden="true"></span>
           </div>
         </div>
         <div class="diet-dropdown-fill__video-actions">
@@ -2284,6 +2327,7 @@
               title="Upload"
             >
               <span class="diet-icon" aria-hidden="true" data-icon="square.and.arrow.up"></span>
+              <span class="diet-spinner" aria-hidden="true" hidden></span>
             </button>
             <button
               type="button"
@@ -2294,6 +2338,7 @@
               title="Choose from assets"
             >
               <span class="diet-icon" aria-hidden="true" data-icon="tray"></span>
+              <span class="diet-spinner" aria-hidden="true" hidden></span>
             </button>
           </div>
           <div class="diet-dropdown-fill__video-controls-right">
@@ -2310,7 +2355,7 @@
           </div>
         </div>
         <div class="diet-dropdown-fill__asset-browser diet-dropdown-fill__asset-browser--video" hidden>
-          <div class="diet-dropdown-fill__asset-browser-message body-s" role="status"></div>
+          <div class="diet-dropdown-fill__asset-browser-message body-s" role="alert" hidden></div>
           <div class="diet-dropdown-fill__asset-browser-list"></div>
         </div>
         <div class="diet-dropdown-fill__asset-message label-xs" role="alert" hidden></div>

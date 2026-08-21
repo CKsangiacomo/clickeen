@@ -10,6 +10,7 @@ import { useRomaAccountApi } from './account-api';
 import { getWidgetEditorArtifact } from './widget-editor-artifact';
 import { WidgetDefaultsBuilderControls } from './widget-defaults-builder-controls';
 import { RomaUnsavedChangesDialog } from './roma-unsaved-changes-dialog';
+import { RomaLoadingState } from './roma-system-state';
 
 type AccountWidgetDefaultsDocument = {
   accountId: string;
@@ -126,6 +127,7 @@ export function WidgetDefaultsDomain() {
   const [coreControlsReady, setCoreControlsReady] = useState<Record<string, boolean>>({});
   const [coreContractErrors, setCoreContractErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
+  const [reloadPending, setReloadPending] = useState(false);
   const [compiledLoading, setCompiledLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -155,9 +157,12 @@ export function WidgetDefaultsDomain() {
     widgetTypes.length > 0 &&
     widgetTypes.every((widgetType) => Object.prototype.hasOwnProperty.call(compiledWidgets, widgetType));
 
-  const loadDefaults = useCallback(async () => {
-    setLoading(true);
-    setError('');
+  const loadDefaults = useCallback(async (options?: { command?: boolean }) => {
+    const command = options?.command === true;
+    if (!command) {
+      setLoading(true);
+      setError('');
+    }
     try {
       const payload = await accountApi.fetchJson<WidgetDefaultsPayload>(
         '/api/account/widget-defaults',
@@ -165,12 +170,22 @@ export function WidgetDefaultsDomain() {
       );
       setBaseline(cloneDefaults(payload.widgetDefaults));
       setDraft(cloneDefaults(payload.widgetDefaults));
+      setError('');
     } catch {
       setError(WIDGET_DEFAULTS_LOAD_ERROR_COPY);
     } finally {
-      setLoading(false);
+      if (!command) setLoading(false);
     }
   }, [accountApi]);
+
+  const reloadDefaults = useCallback(async () => {
+    setReloadPending(true);
+    try {
+      await loadDefaults({ command: true });
+    } finally {
+      setReloadPending(false);
+    }
+  }, [loadDefaults]);
 
   useEffect(() => {
     void loadDefaults();
@@ -372,25 +387,25 @@ export function WidgetDefaultsDomain() {
   }, [accountApi, draft, saveBlocked, saving]);
 
   if (loading) {
-    return (
-      <section className="rd-canvas-module body-m" role="status">
-        Loading widget defaults...
-      </section>
-    );
+    return <RomaLoadingState className="rd-canvas-module" />;
   }
 
   if (!draft) {
     return (
       <section className="rd-canvas-module" role="alert">
-        <p className="body-m">{error || 'Widget defaults are unavailable.'}</p>
+        {error ? <p className="body-m">{error}</p> : null}
         <div className="rd-canvas-module__actions">
           <button
             className="diet-button"
             data-size="medium"
             data-type="primary"
+            data-loading={reloadPending || undefined}
             type="button"
-            onClick={() => void loadDefaults()}
+            aria-busy={reloadPending || undefined}
+            onClick={() => void reloadDefaults()}
+            disabled={reloadPending}
           >
+            {reloadPending ? <span className="diet-spinner" aria-hidden="true" /> : null}
             <span className="diet-button__label">Reload</span>
           </button>
         </div>
@@ -413,11 +428,7 @@ export function WidgetDefaultsDomain() {
         </section>
       );
     }
-    return (
-      <section className="rd-canvas-module body-m" role="status">
-        Loading Builder controls...
-      </section>
-    );
+    return <RomaLoadingState className="rd-canvas-module" />;
   }
 
   if (commonContractError) {
@@ -462,11 +473,7 @@ export function WidgetDefaultsDomain() {
       <section className="widget-defaults">
         <div className="widget-defaults-toolbar">
           <div>
-            {compiledLoading ? (
-              <p className="body-s" role="status">
-                Loading Builder controls...
-              </p>
-            ) : null}
+            {compiledLoading ? <RomaLoadingState inline /> : null}
             {error ? (
               <p className="body-s widget-defaults-error" role="alert">
                 {error}
@@ -488,10 +495,13 @@ export function WidgetDefaultsDomain() {
               className="diet-button"
               data-size="medium"
               data-type="primary"
+              data-loading={saving || undefined}
               type="button"
+              aria-busy={saving || undefined}
               disabled={!dirty || saving || saveBlocked}
               onClick={() => void save()}
             >
+              {saving ? <span className="diet-spinner" aria-hidden="true" /> : null}
               <span className="diet-button__label">{saving ? 'Saving...' : 'Save'}</span>
             </button>
           </div>

@@ -162,10 +162,10 @@
     <figure class="dieter-component-preview-full-wrapper">
       <figcaption class="spec-wrapper dieter-spec-wrapper">
         <strong class="body-s">Loading</strong>
-        <span class="spec-line body-xs">The caller exposes truthful pending state and exact copy</span>
+        <span class="spec-line body-xs">The caller exposes truthful pending state through the systemic Spinner</span>
       </figcaption>
       <div class="dieter-preview">
-        <div class='diet-data-table' data-state='loading'><div class='diet-table'><table class='diet-table__table' aria-busy='true'><caption class='sr-only'>Operational records</caption><thead><tr><th class='label-s' scope='col'>Name</th><th class='label-s' scope='col'>Status</th></tr></thead><tbody><tr><td class='diet-data-table__state-cell' colspan='2'><div class='diet-data-table__state body-s' role='status'>Loading records…</div></td></tr></tbody></table></div></div>
+        <div class='diet-data-table' data-state='loading'><div class='diet-table'><table class='diet-table__table' aria-busy='true'><caption class='sr-only'>Operational records</caption><thead><tr><th class='label-s' scope='col'>Name</th><th class='label-s' scope='col'>Status</th></tr></thead><tbody><tr><td class='diet-data-table__state-cell' colspan='2'><div class='diet-loading-state' role='status' aria-label='Loading'><span class='diet-spinner' data-size='medium' aria-hidden='true'></span></div></td></tr></tbody></table></div></div>
       </div>
     </figure>
     </div>
@@ -175,10 +175,10 @@
     <figure class="dieter-component-preview-full-wrapper">
       <figcaption class="spec-wrapper dieter-spec-wrapper">
         <strong class="body-s">Empty</strong>
-        <span class="spec-line body-xs">The caller supplies the empty-state title and guidance</span>
+        <span class="spec-line body-xs">The caller supplies one short string to the systemic Empty State</span>
       </figcaption>
       <div class="dieter-preview">
-        <div class='diet-data-table' data-state='empty'><div class='diet-table'><table class='diet-table__table'><caption class='sr-only'>Operational records</caption><thead><tr><th class='label-s' scope='col'>Name</th><th class='label-s' scope='col'>Status</th></tr></thead><tbody><tr><td class='diet-data-table__state-cell' colspan='2'><div class='diet-data-table__state'><strong class='diet-data-table__state-title label-s'>No records yet</strong><span class='body-s'>Create the first record to get started.</span></div></td></tr></tbody></table></div></div>
+        <div class='diet-data-table' data-state='empty'><div class='diet-table'><table class='diet-table__table'><caption class='sr-only'>Operational records</caption><thead><tr><th class='label-s' scope='col'>Name</th><th class='label-s' scope='col'>Status</th></tr></thead><tbody><tr><td class='diet-data-table__state-cell' colspan='2'><div class='diet-empty-state'><span class='diet-empty-state__icon diet-icon diet-icon-mask' data-icon='ellipsis' style="--diet-icon-source: url('/dieter/icons/svg/ellipsis.svg')" aria-hidden='true'></span><span class='diet-empty-state__label body-s'>No records</span></div></td></tr></tbody></table></div></div>
       </div>
     </figure>
     </div>
@@ -191,7 +191,7 @@
         <span class="spec-line body-xs">Filtered empty remains distinct from an empty dataset</span>
       </figcaption>
       <div class="dieter-preview">
-        <div class='diet-data-table' data-state='filtered-empty'><div class='diet-table'><table class='diet-table__table'><caption class='sr-only'>Filtered operational records</caption><thead><tr><th class='label-s' scope='col'>Name</th><th class='label-s' scope='col'>Status</th></tr></thead><tbody><tr><td class='diet-data-table__state-cell' colspan='2'><div class='diet-data-table__state'><strong class='diet-data-table__state-title label-s'>No matching records</strong><span class='body-s'>Change or clear the current filters.</span></div></td></tr></tbody></table></div></div>
+        <div class='diet-data-table' data-state='filtered-empty'><div class='diet-table'><table class='diet-table__table'><caption class='sr-only'>Filtered operational records</caption><thead><tr><th class='label-s' scope='col'>Name</th><th class='label-s' scope='col'>Status</th></tr></thead><tbody><tr><td class='diet-data-table__state-cell' colspan='2'><div class='diet-empty-state'><span class='diet-empty-state__icon diet-icon diet-icon-mask' data-icon='ellipsis' style="--diet-icon-source: url('/dieter/icons/svg/ellipsis.svg')" aria-hidden='true'></span><span class='diet-empty-state__label body-s'>No matching records</span></div></td></tr></tbody></table></div></div>
       </div>
     </figure>
     </div>

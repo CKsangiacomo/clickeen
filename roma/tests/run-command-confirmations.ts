@@ -508,7 +508,6 @@ async function assertConfirmation(args: {
   body: string;
   confirmLabel: string;
   expectedCall: MutationCall;
-  pendingText: string;
   failureText: string;
 }): Promise<void> {
   const { page } = args;
@@ -536,16 +535,23 @@ async function assertConfirmation(args: {
     (button as HTMLButtonElement).click();
     (button as HTMLButtonElement).click();
   });
-  await confirmedDialog.waitFor({ state: 'detached' });
 
   const afterConfirm = await mutationCalls(page);
   assert.equal(afterConfirm.length, before.length + 1, `${args.title}: Confirm must invoke one command`);
   assert.deepEqual(afterConfirm.at(-1), args.expectedCall, `${args.title}: command boundary must stay exact`);
-  await args.surface.getByText(args.pendingText, { exact: true }).waitFor();
+  await confirmedDialog.waitFor();
+  assert.equal(await confirm.getAttribute('aria-busy'), 'true', `${args.title}: exact Confirm control must own pending`);
+  assert.equal(await confirm.locator('.diet-spinner').count(), 1, `${args.title}: exact Confirm control must show one Spinner`);
+  assert.equal(await confirmedDialog.getByRole('button', { name: 'Cancel' }).isDisabled(), true, `${args.title}: pending confirmation cannot dismiss`);
 
   await settleNextFailure(page);
-  await args.surface.getByText(args.failureText, { exact: true }).waitFor();
+  await confirmedDialog.getByText(args.failureText, { exact: true }).waitFor();
+  assert.equal(await confirm.getAttribute('aria-busy'), null, `${args.title}: failure must clear pending from Confirm`);
+  assert.equal(await confirm.locator('.diet-spinner').count(), 0, `${args.title}: failure must clear the Confirm Spinner`);
+  assert.equal(await confirm.isEnabled(), true, `${args.title}: failure must leave Confirm available for retry`);
   assert.equal((await mutationCalls(page)).length, before.length + 1, `${args.title}: failure must not retry the command`);
+  await confirmedDialog.getByRole('button', { name: 'Cancel' }).click();
+  await confirmedDialog.waitFor({ state: 'detached' });
 }
 
 async function testFiveProductionConsumers(): Promise<void> {
@@ -584,7 +590,6 @@ async function testFiveProductionConsumers(): Promise<void> {
       body: 'Deleting “Support FAQ” removes its saved source and makes any published version unavailable. This cannot be undone.',
       confirmLabel: 'Delete widget',
       expectedCall: { method: 'DELETE', path: '/api/account/instances/instance-1' },
-      pendingText: 'Deleting…',
       failureText: 'Saving failed. Please try again.',
     });
 
@@ -597,7 +602,6 @@ async function testFiveProductionConsumers(): Promise<void> {
       body: '“Support FAQ” will be taken offline. Its saved source remains, and it can be published again.',
       confirmLabel: 'Unpublish',
       expectedCall: { method: 'POST', path: '/api/account/instances/instance-1/unpublish' },
-      pendingText: 'Published: Support FAQ, updating',
       failureText: 'Saving failed. Please try again.',
     });
 
@@ -610,8 +614,7 @@ async function testFiveProductionConsumers(): Promise<void> {
       body: 'Deleting “hero.png” removes the asset. Widgets that use it may stop displaying it. This cannot be undone.',
       confirmLabel: 'Delete asset',
       expectedCall: { method: 'DELETE', path: '/api/account/assets/asset-1' },
-      pendingText: 'Deleting...',
-      failureText: 'Failed to delete asset: Asset delete failed on the server. Please try again.',
+      failureText: 'Asset delete failed on the server. Please try again.',
     });
 
     const publicationSurface = page.locator('[data-surface="unpublish"]');
@@ -623,7 +626,6 @@ async function testFiveProductionConsumers(): Promise<void> {
       body: '“Publication FAQ” will be taken offline. Its saved source remains, and it can be published again.',
       confirmLabel: 'Unpublish',
       expectedCall: { method: 'POST', path: '/api/account/instances/instance-publication/unpublish' },
-      pendingText: 'Published: Publication FAQ, updating',
       failureText: 'Saving failed. Please try again.',
     });
 
@@ -636,7 +638,6 @@ async function testFiveProductionConsumers(): Promise<void> {
       body: '“Ada Lovelace” will lose access to this account.',
       confirmLabel: 'Remove member',
       expectedCall: { method: 'DELETE', path: '/api/account/team/members/member-2' },
-      pendingText: 'Removing...',
       failureText: 'Saving the membership failed. Please try again.',
     });
 
@@ -654,7 +655,6 @@ async function testFiveProductionConsumers(): Promise<void> {
         path: '/api/account/owner-transfer',
         body: { nextOwnerUserId: 'member-2' },
       },
-      pendingText: 'Transferring ownership...',
       failureText: 'Saving account settings failed. Please try again.',
     });
 

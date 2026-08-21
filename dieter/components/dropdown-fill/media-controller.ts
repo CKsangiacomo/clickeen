@@ -17,14 +17,48 @@ export type MediaControllerDeps = {
   updateHeader: (state: DropdownFillState, opts: DropdownFillHeaderUpdate) => void;
 };
 
-function setFillUploadingState(state: DropdownFillState, uploading: boolean): void {
-  state.root.dataset.uploading = uploading ? 'true' : 'false';
-  if (state.uploadButton) state.uploadButton.disabled = uploading;
-  if (state.chooseButton) state.chooseButton.disabled = uploading;
-  if (state.removeButton) state.removeButton.disabled = uploading;
-  if (state.videoUploadButton) state.videoUploadButton.disabled = uploading;
-  if (state.videoChooseButton) state.videoChooseButton.disabled = uploading;
-  if (state.videoRemoveButton) state.videoRemoveButton.disabled = uploading;
+function setFillCommandPending(
+  state: DropdownFillState,
+  commandButton: HTMLButtonElement,
+  pending: boolean,
+): void {
+  state.root.dataset.uploading = pending ? 'true' : 'false';
+  [
+    state.uploadButton,
+    state.chooseButton,
+    state.removeButton,
+    state.videoUploadButton,
+    state.videoChooseButton,
+    state.videoRemoveButton,
+  ].forEach((button) => {
+    if (button) button.disabled = pending;
+  });
+
+  if (pending) {
+    commandButton.dataset.loading = 'true';
+    commandButton.setAttribute('aria-busy', 'true');
+  } else {
+    delete commandButton.dataset.loading;
+    commandButton.removeAttribute('aria-busy');
+  }
+
+  const icon = commandButton.querySelector<HTMLElement>(':scope > .diet-icon');
+  const spinner = commandButton.querySelector<HTMLElement>(':scope > .diet-spinner');
+  if (icon) icon.hidden = pending;
+  if (spinner) spinner.hidden = !pending;
+}
+
+function setStoredAssetResolving(
+  state: DropdownFillState,
+  kind: 'image' | 'video',
+  resolving: boolean,
+): void {
+  const panel = kind === 'image' ? state.imagePanel : state.videoPanel;
+  const preview = kind === 'image' ? state.imagePreview : state.videoPreview?.parentElement;
+  const loadingState = kind === 'image' ? state.imagePreviewLoading : state.videoPreviewLoading;
+  if (panel) panel.dataset.resolving = resolving ? 'true' : 'false';
+  if (preview) preview.setAttribute('aria-busy', resolving ? 'true' : 'false');
+  if (loadingState) loadingState.hidden = !resolving;
 }
 
 function formatSizeBytes(sizeBytes: number): string {
@@ -126,6 +160,7 @@ export function setImageSrc(
   opts: SetMediaSrcOptions,
   deps: MediaControllerDeps,
 ): void {
+  setStoredAssetResolving(state, 'image', false);
   const shouldUpdateHeader = opts.updateHeader !== false;
   state.imageSrc = src;
   if (opts.commit) {
@@ -153,6 +188,7 @@ export function setVideoSrc(
   opts: SetMediaSrcOptions,
   deps: MediaControllerDeps,
 ): void {
+  setStoredAssetResolving(state, 'video', false);
   const shouldUpdateHeader = opts.updateHeader !== false;
   state.videoSrc = src;
   if (opts.commit) {
@@ -193,8 +229,16 @@ function renderAssetBrowserRows(args: {
 
   if (!args.assets.length) {
     const empty = document.createElement('div');
-    empty.className = 'diet-dropdown-fill__asset-browser-empty body-s';
-    empty.textContent = args.state.copy.noAssets;
+    empty.className = 'diet-empty-state';
+    const icon = document.createElement('span');
+    icon.className = 'diet-empty-state__icon diet-icon diet-icon-mask';
+    icon.dataset.icon = 'ellipsis';
+    icon.style.setProperty('--diet-icon-source', "url('/dieter/icons/svg/ellipsis.svg')");
+    icon.setAttribute('aria-hidden', 'true');
+    const label = document.createElement('span');
+    label.className = 'diet-empty-state__label body-s';
+    label.textContent = args.state.copy.noAssets;
+    empty.append(icon, label);
     browserList.appendChild(empty);
     return;
   }
@@ -263,15 +307,12 @@ async function openAssetBrowser(args: {
 
   setBrowserOpen(oppositeBrowser, oppositeButton, false);
   setBrowserOpen(browser, button, true);
-  setFillUploadingState(args.state, true);
-  browserMessage?.setAttribute('role', 'status');
-  setAssetPanelMessage(browserMessage, args.state.copy.loadingAssets);
+  setFillCommandPending(args.state, button, true);
+  setAssetPanelMessage(browserMessage, '');
   clearAssetBrowser(browserList);
 
   try {
     const assets = filterAssetsForKind(await args.state.accountAssets.listAssets(), args.kind);
-    browserMessage?.setAttribute('role', 'status');
-    setAssetPanelMessage(browserMessage, assets.length ? '' : args.state.copy.noAssets);
     renderAssetBrowserRows({
       state: args.state,
       kind: args.kind,
@@ -279,11 +320,10 @@ async function openAssetBrowser(args: {
       deps: args.deps,
     });
   } catch {
-    browserMessage?.setAttribute('role', 'alert');
     setAssetPanelMessage(browserMessage, args.state.copy.loadAssetsError);
     clearAssetBrowser(browserList);
   } finally {
-    setFillUploadingState(args.state, false);
+    setFillCommandPending(args.state, button, false);
   }
 }
 
@@ -293,7 +333,9 @@ async function handleAssetUpload(args: {
   file: File;
   deps: MediaControllerDeps;
 }): Promise<void> {
-  setFillUploadingState(args.state, true);
+  const button = args.kind === 'image' ? args.state.uploadButton : args.state.videoUploadButton;
+  if (!button) return;
+  setFillCommandPending(args.state, button, true);
   setAssetPanelMessage(args.kind === 'image' ? args.state.imageMessage : args.state.videoMessage, '');
 
   try {
@@ -316,7 +358,7 @@ async function handleAssetUpload(args: {
       args.state.copy.uploadAssetError,
     );
   } finally {
-    setFillUploadingState(args.state, false);
+    setFillCommandPending(args.state, button, false);
   }
 }
 
@@ -358,11 +400,15 @@ export async function resolveImageAsset(state: DropdownFillState, deps: MediaCon
     },
     isCurrent: (requestId, assetRef) =>
       state.imageResolveRequestId === requestId && state.imageAssetRef === assetRef,
-    onStart: () => setAssetPanelMessage(state.imageMessage, ''),
+    onStart: () => {
+      setAssetPanelMessage(state.imageMessage, '');
+      setStoredAssetResolving(state, 'image', true);
+    },
     onResolved: (asset) => {
       setImageSrc(state, asset.url, { commit: false }, deps);
     },
     onError: () => {
+      setStoredAssetResolving(state, 'image', false);
       setAssetPanelMessage(state.imageMessage, state.copy.previewAssetError);
     },
   });
@@ -378,11 +424,15 @@ export async function resolveVideoAsset(state: DropdownFillState, deps: MediaCon
     },
     isCurrent: (requestId, assetRef) =>
       state.videoResolveRequestId === requestId && state.videoAssetRef === assetRef,
-    onStart: () => setAssetPanelMessage(state.videoMessage, ''),
+    onStart: () => {
+      setAssetPanelMessage(state.videoMessage, '');
+      setStoredAssetResolving(state, 'video', true);
+    },
     onResolved: (asset) => {
       setVideoSrc(state, asset.url, { commit: false }, deps);
     },
     onError: () => {
+      setStoredAssetResolving(state, 'video', false);
       setAssetPanelMessage(state.videoMessage, state.copy.previewAssetError);
     },
   });

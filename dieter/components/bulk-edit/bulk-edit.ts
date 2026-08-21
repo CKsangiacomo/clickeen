@@ -40,8 +40,16 @@ function buildRows(path: string, rowPath: string, strips: unknown[]): BulkRow[] 
 function renderEmpty(tableWrap: HTMLElement, label: string) {
   tableWrap.innerHTML = '';
   const empty = document.createElement('div');
-  empty.className = 'diet-bulk-edit__empty body-s';
-  empty.textContent = label;
+  empty.className = 'diet-empty-state';
+  const icon = document.createElement('span');
+  icon.className = 'diet-empty-state__icon diet-icon diet-icon-mask';
+  icon.dataset.icon = 'ellipsis';
+  icon.style.setProperty('--diet-icon-source', "url('/dieter/icons/svg/ellipsis.svg')");
+  icon.setAttribute('aria-hidden', 'true');
+  const copy = document.createElement('span');
+  copy.className = 'diet-empty-state__label body-s';
+  copy.textContent = label;
+  empty.append(icon, copy);
   tableWrap.appendChild(empty);
 }
 

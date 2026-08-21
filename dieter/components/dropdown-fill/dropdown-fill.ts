@@ -115,6 +115,7 @@ function createState(root: HTMLElement, accountAssets: AccountAssetsClient): Dro
   const gradientActiveStopId = gradientStops[0]?.id ?? '';
   const imagePanel = root.querySelector<HTMLElement>(".diet-dropdown-fill__panel--image");
   const imagePreview = root.querySelector<HTMLElement>('.diet-dropdown-fill__image-preview');
+  const imagePreviewLoading = imagePreview?.querySelector<HTMLElement>('.diet-dropdown-fill__preview-loading') ?? null;
   const imageBrowser = root.querySelector<HTMLElement>('.diet-dropdown-fill__asset-browser--image');
   const imageBrowserMessage = imageBrowser?.querySelector<HTMLElement>('.diet-dropdown-fill__asset-browser-message') ?? null;
   const imageBrowserList = imageBrowser?.querySelector<HTMLElement>('.diet-dropdown-fill__asset-browser-list') ?? null;
@@ -125,6 +126,7 @@ function createState(root: HTMLElement, accountAssets: AccountAssetsClient): Dro
   const fileInput = root.querySelector<HTMLInputElement>('.diet-dropdown-fill__file-input');
   const videoPanel = root.querySelector<HTMLElement>('.diet-dropdown-fill__panel--video');
   const videoPreview = root.querySelector<HTMLVideoElement>('.diet-dropdown-fill__video-preview');
+  const videoPreviewLoading = videoPanel?.querySelector<HTMLElement>('.diet-dropdown-fill__preview-loading') ?? null;
   const videoBrowser = root.querySelector<HTMLElement>('.diet-dropdown-fill__asset-browser--video');
   const videoBrowserMessage = videoBrowser?.querySelector<HTMLElement>('.diet-dropdown-fill__asset-browser-message') ?? null;
   const videoBrowserList = videoBrowser?.querySelector<HTMLElement>('.diet-dropdown-fill__asset-browser-list') ?? null;
@@ -151,7 +153,6 @@ function createState(root: HTMLElement, accountAssets: AccountAssetsClient): Dro
       addGradientStop: root.dataset.copyAddGradientStop!,
       editGradientStop: root.dataset.copyEditGradientStop!,
       loadAssetsError: root.dataset.copyLoadAssetsError!,
-      loadingAssets: root.dataset.copyLoadingAssets!,
       noAssets: root.dataset.copyNoAssets!,
       previewAssetError: root.dataset.copyPreviewAssetError!,
       removeGradientStop: root.dataset.copyRemoveGradientStop!,
@@ -191,6 +192,7 @@ function createState(root: HTMLElement, accountAssets: AccountAssetsClient): Dro
     gradient: { kind: DEFAULT_GRADIENT.kind, angle: DEFAULT_GRADIENT.angle },
     imagePanel,
     imagePreview,
+    imagePreviewLoading,
     imageBrowser,
     imageBrowserMessage,
     imageBrowserList,
@@ -205,6 +207,7 @@ function createState(root: HTMLElement, accountAssets: AccountAssetsClient): Dro
     imageResolveRequestId: 0,
     videoPanel,
     videoPreview,
+    videoPreviewLoading,
     videoBrowser,
     videoBrowserMessage,
     videoBrowserList,

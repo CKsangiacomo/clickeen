@@ -7,7 +7,9 @@ import { resolvePersonLabel } from '../lib/person-profile';
 import { useRomaAccountApi } from './account-api';
 import { AccountLocaleSettingsCard } from './account-locale-settings-card';
 import { DieterDropdownActions } from './dieter-dropdown-actions';
+import { ROMA_UI_COPY } from '../lib/ui-copy';
 import { RomaCommandConfirmationDialog } from './roma-command-confirmation-dialog';
+import { RomaEmptyState, RomaLoadingState } from './roma-system-state';
 import { useRomaAccountContext } from './roma-account-context';
 
 type AccountMember = {
@@ -57,7 +59,7 @@ export function SettingsDomain() {
 
   const [members, setMembers] = useState<AccountMembersResponse | null>(null);
   const [membersError, setMembersError] = useState<string | null>(null);
-  const [membersLoading, setMembersLoading] = useState(false);
+  const [membersLoading, setMembersLoading] = useState(activeAccount.role === 'owner');
 
   const [nextOwnerUserId, setNextOwnerUserId] = useState('');
   const [ownerTransferLoading, setOwnerTransferLoading] = useState(false);
@@ -97,7 +99,7 @@ export function SettingsDomain() {
   }, [activeAccount?.role, loadMembers]);
 
   const transferOwner = useCallback(async (ownerUserId: string) => {
-    if (!activeAccountId) return;
+    if (!activeAccountId) return false;
     setOwnerTransferLoading(true);
     setOwnerTransferError(null);
     try {
@@ -112,10 +114,13 @@ export function SettingsDomain() {
       if (!response.ok) {
         throw new Error(resolveErrorReason(payload, `HTTP_${response.status}`));
       }
+      setOwnerTransferConfirmationCandidate(null);
       window.location.assign('/home');
+      return true;
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error);
       setOwnerTransferError(resolveSettingsErrorCopy(reason, 'Ownership transfer failed. Please try again.'));
+      return false;
     } finally {
       setOwnerTransferLoading(false);
     }
@@ -123,8 +128,10 @@ export function SettingsDomain() {
 
   const canManageAccount = activeAccount.role === 'owner';
   const canEditLocales = activeAccount.role === 'owner' || activeAccount.role === 'admin';
-  const ownerCandidates = members?.members.filter((member) => member.userId !== data.user.id && member.role !== 'owner') ?? [];
-  const selectedOwnerCandidate = ownerCandidates.find((member) => member.userId === nextOwnerUserId) ?? null;
+  const ownerCandidates = members
+    ? members.members.filter((member) => member.userId !== data.user.id && member.role !== 'owner')
+    : null;
+  const selectedOwnerCandidate = ownerCandidates?.find((member) => member.userId === nextOwnerUserId) ?? null;
 
   return (
     <>
@@ -162,16 +169,17 @@ export function SettingsDomain() {
         <p className="body-m">Owner transfer is the only way to change who the account belongs to.</p>
         {!canManageAccount ? <p className="body-s">Only the current owner can transfer ownership.</p> : null}
         {membersError ? <p className="body-m" role="alert">{membersError}</p> : null}
-        <div className="roma-toolbar">
+        {canManageAccount && membersLoading && !members && !membersError ? <RomaLoadingState /> : null}
+        {(!canManageAccount || ownerCandidates) ? <div className="roma-toolbar">
           <DieterDropdownActions
             className="roma-owner-select"
             value={nextOwnerUserId}
             onChange={setNextOwnerUserId}
             ariaLabel="Select next owner"
-            disabled={!canManageAccount || membersLoading || ownerTransferLoading || ownerCandidates.length === 0}
+            disabled={!canManageAccount || membersLoading || ownerTransferLoading || !ownerCandidates?.length}
             options={[
               { value: '', label: 'Select next owner' },
-              ...ownerCandidates.map((member) => ({
+              ...(ownerCandidates ?? []).map((member) => ({
                 value: member.userId,
                 label: `${resolvePersonLabel(member.profile, member.userId)} (${member.profile?.primaryEmail ?? member.userId})`,
               })),
@@ -182,15 +190,19 @@ export function SettingsDomain() {
             data-size="medium"
             data-type="primary"
             type="button"
-            onClick={() => setOwnerTransferConfirmationCandidate(selectedOwnerCandidate)}
+            onClick={() => {
+              setOwnerTransferError(null);
+              setOwnerTransferConfirmationCandidate(selectedOwnerCandidate);
+            }}
             disabled={!canManageAccount || ownerTransferLoading || !selectedOwnerCandidate}
           >
-            <span className="diet-button__label">{ownerTransferLoading ? 'Transferring…' : 'Transfer ownership'}</span>
+            <span className="diet-button__label">Transfer ownership</span>
           </button>
-        </div>
-        {ownerTransferLoading ? <p className="body-s" role="status">Transferring ownership...</p> : null}
-        {ownerCandidates.length === 0 && canManageAccount ? <p className="body-s" role="status">Add another member before transferring ownership.</p> : null}
-        {ownerTransferError ? <p className="body-m" role="alert">{ownerTransferError}</p> : null}
+        </div> : null}
+        {ownerCandidates?.length === 0 && canManageAccount ? (
+          <RomaEmptyState>{ROMA_UI_COPY.state.empty.ownerCandidates}</RomaEmptyState>
+        ) : null}
+        {ownerTransferError && ownerTransferConfirmationCandidate === null ? <p className="body-m" role="alert">{ownerTransferError}</p> : null}
       </section>
 
       <RomaCommandConfirmationDialog
@@ -200,10 +212,11 @@ export function SettingsDomain() {
           ? `“${resolvePersonLabel(ownerTransferConfirmationCandidate.profile, ownerTransferConfirmationCandidate.userId)}” will become Owner of this account, and you will become Admin.`
           : ''}
         confirmLabel="Transfer ownership"
+        pending={ownerTransferLoading}
+        error={ownerTransferError}
         onCancel={() => setOwnerTransferConfirmationCandidate(null)}
         onConfirm={() => {
           const candidate = ownerTransferConfirmationCandidate;
-          setOwnerTransferConfirmationCandidate(null);
           if (candidate) void transferOwner(candidate.userId);
         }}
       />

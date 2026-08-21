@@ -9,7 +9,7 @@ import {
 
 export type BuilderOpenEnvelope = {
   instanceId: string;
-  displayName: string;
+  displayName: string | null;
   widgetType: string;
   baseLocale: string;
   config: Record<string, unknown>;
@@ -188,7 +188,7 @@ export async function loadBuilderOpenEnvelope(args: {
     ok: true,
     value: {
       instanceId: instance.value.row.instanceId,
-      displayName: instance.value.row.displayName || 'Untitled widget',
+      displayName: instance.value.row.displayName,
       widgetType: instance.value.row.widgetType,
       baseLocale: instance.value.row.baseLocale,
       config: instance.value.config,

@@ -1,6 +1,6 @@
 # PRD 128D — Bob And Roma Interactive Agent Transport
 
-Status: **EXECUTING — IMPLEMENTATION COMPLETE; TRANSPORT + CANCELLATION BUILT; TYPECHECK CLEAN**
+Status: **EXECUTING — IMPLEMENTATION COMPLETE; RELEASE PAUSED FOR SYSTEMIC CORRECTION PASSES**
 
 Depends on: 128A, 128B, 128C
 
@@ -350,6 +350,18 @@ Automated and browser tests must cover:
   cut.
 
 ## Execution Record
+
+### Cross-Surface State Correction (2026-08-20)
+
+The owner paused continued PRD 128 release work before deployment. The Bob/Roma
+transport remains unchanged, but adjacent Builder state presentation was
+corrected: passive waits use Spinner without invented loading prose; successful
+zero collections use the systemic ellipsis Empty State; Save is the persistent
+pink `Save` / `Saving…` / `Saved` control; and Republish is the green
+`Republish` / `Republishing…` / `Live widget updated` control backed by an exact
+successful route receipt. The correction does not resume or broaden the agent
+transport scope. Release remains paused pending this pass and any similar
+owner-directed passes, then a fresh 128F source/deploy verification.
 
 ### 128D Implementation (2026-08-13)
 

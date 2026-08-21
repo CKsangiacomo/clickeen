@@ -1,6 +1,6 @@
 # PRD 128 — Clickeen Agent Runtime Foundation
 
-Status: **EXECUTING — 128B/128C/128D/128E IMPLEMENTATION COMPLETE; 128F SOURCE RECONCILIATION COMPLETE; DEPLOY PENDING**
+Status: **EXECUTING — RELEASE PAUSED FOR SYSTEMIC CORRECTIONS; 128F RECONCILIATION MUST BE RERUN**
 
 Owner: Clickeen product owner/architect
 
@@ -350,14 +350,16 @@ Do not place chronological execution logs between normative requirements.
 | 128C | Implementation complete; old protocol deleted; 12 stream tests pass |
 | 128D | Implementation complete; transport + cancellation built; typecheck clean |
 | 128E | Implementation complete; 14 eval + worker test pass; typecheck clean |
-| 128F | Source reconciliation complete; deploy pending |
+| 128F | Prior source reconciliation is historical; release paused and reconciliation must be rerun after owner-directed correction passes |
 
 ## Execution Record
 
-128B, 128C, 128D, and 128E implementation is complete and verified; 128F source
-reconciliation is complete with deploy pending. See the per-slice Execution
-Records in those sub-PRDs. 128F (hard-cut release) remains pending live
-deploy, exact-SHA evidence, and independent V1–V8 audit. Append further
+128B, 128C, 128D, and 128E implementation remains complete. The product owner
+paused release for systemic correction passes, so 128F's prior source
+reconciliation is historical evidence rather than proof for the current working
+tree. See the per-slice Execution Records in those sub-PRDs. 128F remains
+pending a fresh complete gate, separately authorized commit/deploy, exact-SHA
+evidence, live verification, and independent V1–V8 audit. Append further
 verified implementation and release evidence to the relevant sub-PRD Execution
 Record; do not place chronological execution logs between normative
 requirements.

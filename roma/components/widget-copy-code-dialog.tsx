@@ -17,7 +17,7 @@ export function WidgetCopyCodeDialog({
   onClose,
 }: {
   open: boolean;
-  instanceName: string;
+  instanceName: string | null;
   actions: WidgetPublicActions | null;
   onClose: () => void;
 }) {
@@ -86,7 +86,9 @@ export function WidgetCopyCodeDialog({
         </button>
       </header>
       <div className="diet-popup__body">
-        <p className="body-m">Use {instanceName} on your website.</p>
+        <p className="body-m">
+          {instanceName ? <>Use {instanceName} on your website.</> : 'Use this widget on your website.'}
+        </p>
         {complete && actions ? (
           <div className="roma-widget-code-list">
             {COPY_OPTIONS.map((option) => (

@@ -1,6 +1,6 @@
 # PRD 128F — Hard-Cut Release And Ombra Readiness
 
-Status: **EXECUTING — SOURCE RECONCILIATION COMPLETE; DEPLOY PENDING**
+Status: **EXECUTING — RELEASE PAUSED; SOURCE RECONCILIATION MUST BE RERUN AFTER SYSTEMIC CORRECTIONS**
 
 Depends on: 128B, 128C, 128D, 128E
 
@@ -278,6 +278,18 @@ Every failure is corrected before release or recorded as a genuine blocker.
 - Execution evidence is appended at the bottom of the relevant PRDs.
 
 ## Execution Record
+
+### Release Gate Reopened (2026-08-20)
+
+The product owner paused deployment after identifying systemic AI-authored
+loading/empty fallbacks and incorrect Save/Republish receipts in the shared
+Builder surfaces. The first correction pass changes Dieter, Bob, Roma, Widget
+contracts, tests, and current manuals. Therefore the 2026-08-13 source
+reconciliation remains historical evidence for its SHA, not proof for the new
+working tree. PRD 128F must not commit, deploy, or claim live completion until
+this pass and any similar owner-directed corrections are complete, the complete
+verification gate is rerun at one exact SHA, and the owner separately authorizes
+release.
 
 ### 128F Source Reconciliation (2026-08-13)
 
