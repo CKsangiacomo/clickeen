@@ -119,10 +119,11 @@ Republish is Roma's separate publication command and uses the existing Button
 with `data-tone="republish"`, independent of its required hierarchy type. Its
 truthful phases are the current publication Icon plus `Republish`; a disabled,
 busy Spinner plus `Republishing…`; and, only after the exact route succeeds, a
-disabled checkmark plus `Live widget updated`. The successful receipt is not
-busy and has no timer. It belongs to the exact saved instance and saved source
-revision; a later Save or a different instance invalidates it. Initial open,
-failure, and dirty state cannot fabricate the receipt.
+disabled checkmark plus `Live widget updated` for exactly one second before the
+control disappears. The successful receipt is not busy and belongs to the exact
+saved instance and saved source revision; a later Save or a different instance
+invalidates it immediately. Initial open, failure, and dirty state cannot
+fabricate the receipt.
 
 ## Feedback Durability
 

@@ -356,12 +356,12 @@ Automated and browser tests must cover:
 The owner paused continued PRD 128 release work before deployment. The Bob/Roma
 transport remains unchanged, but adjacent Builder state presentation was
 corrected: passive waits use Spinner without invented loading prose; successful
-zero collections use the systemic ellipsis Empty State; Save is the persistent
-pink `Save` / `Saving…` / `Saved` control; and Republish is the green
-`Republish` / `Republishing…` / `Live widget updated` control backed by an exact
-successful route receipt. The correction does not resume or broaden the agent
-transport scope. Release remains paused pending this pass and any similar
-owner-directed passes, then a fresh 128F source/deploy verification.
+zero collections use the systemic ellipsis Empty State; Save is the pink
+`Save` / `Saving…` / one-second `Saved` control; and Republish is the green
+`Republish` / `Republishing…` / one-second `Live widget updated` control backed
+by an exact successful route receipt. The correction does not resume or broaden
+the agent transport scope. Release remains paused pending this pass and any
+similar owner-directed passes, then a fresh 128F source/deploy verification.
 
 ### 128D Implementation (2026-08-13)
 

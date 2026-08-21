@@ -494,11 +494,12 @@ Save is the named pink Button while dirty and pending: `Save`, then Spinner +
 `Saving…`. Exact success becomes the system-green checkmark + `Saved` for one
 second before the control disappears. Republish is the named green Button:
 current Icon + `Republish`, Spinner + `Republishing…`, and checkmark + `Live
-widget updated`; its receipt exists only after the exact successful route and
-is invalidated by instance/source change. Minimal English Bob/Roma state
-catalogs were introduced only to stop scattering these exact owner-approved
-strings. This does not begin Stage 3 or Stage 4 localization, does not generate
-translations, and does not resume either PRD program.
+widget updated` for one second before the control disappears; its receipt
+exists only after the exact successful route and is invalidated immediately by
+instance/source change. Minimal English Bob/Roma state catalogs were introduced
+only to stop scattering these exact owner-approved strings. This does not begin
+Stage 3 or Stage 4 localization, does not generate translations, and does not
+resume either PRD program.
 
 This record describes uncommitted local source until a separately authorized
 commit/deploy and owning-surface verification occur.

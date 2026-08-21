@@ -504,9 +504,10 @@ Republish is one special green Button, independent of its required Dieter
 hierarchy type. Ready uses the current publication Icon plus `Republish`;
 pending uses a disabled, busy Spinner plus `Republishing…`; and only the exact
 successful publication route yields the disabled, non-busy checkmark receipt
-`Live widget updated`. The receipt has no timer and is keyed to the exact saved
-instance and source `updatedAt`; changing instance or later saving invalidates
-it. Initial open and failure do not invent success.
+`Live widget updated` for exactly one second before the control disappears. The
+receipt is keyed to the exact saved instance and source `updatedAt`; changing
+instance or later saving invalidates it immediately. Initial open and failure
+do not invent success.
 
 The Builder Save control is the separate special pink Button. Bob owns its
 phase truth; Roma renders `Save`, disabled busy Spinner plus `Saving…`, or the

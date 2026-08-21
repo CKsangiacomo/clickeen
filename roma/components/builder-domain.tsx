@@ -8,7 +8,7 @@ import type { AccountFontLibrary } from '@clickeen/widget-foundation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { resolveBobBaseUrl } from '../lib/env/bob';
 import {
   createHostSaveRequestMessage,
@@ -1426,12 +1426,12 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
                 type="button"
                 disabled
               >
-                <Image
-                  className="diet-icon"
-                  src="/dieter/icons/svg/checkmark.svg"
-                  alt=""
-                  width={20}
-                  height={20}
+                <span
+                  className="diet-icon diet-icon-mask"
+                  aria-hidden="true"
+                  style={{
+                    '--diet-icon-source': 'url("/dieter/icons/svg/checkmark.svg")',
+                  } as CSSProperties}
                 />
                 <span className="diet-button__label">{ROMA_UI_COPY.commands.saved}</span>
               </button>

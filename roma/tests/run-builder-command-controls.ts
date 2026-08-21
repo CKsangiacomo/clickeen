@@ -42,20 +42,29 @@ async function run(): Promise<void> {
   assert.match(saveControl, /ROMA_UI_COPY\.commands\.saving/);
   assert.match(saveControl, /ROMA_UI_COPY\.commands\.saved/);
   assert.match(saveControl, /bobSaveControlPhase === 'saving'[\s\S]*?aria-busy="true"[\s\S]*?disabled/);
-  assert.match(saveControl, /bobSaveControlPhase === 'saved'[\s\S]*?data-state="success"[\s\S]*?checkmark\.svg/);
+  assert.match(
+    saveControl,
+    /bobSaveControlPhase === 'saved'[\s\S]*?data-state="success"[\s\S]*?diet-icon-mask[\s\S]*?checkmark\.svg/,
+  );
   assert.doesNotMatch(
     saveControl.slice(saveControl.indexOf("bobSaveControlPhase === 'saved'")),
-    /aria-busy|diet-spinner/,
+    /aria-busy|diet-spinner|<Image/,
   );
 
   assert.match(publication, /const isRepublish = nextStatus === 'published' && savedChangesNotLive/);
   assert.match(publication, /current\?\.instanceId === instance\.instanceId \? current : null/);
-  assert.match(publication, /publicationReceipt\?\.instanceId === instance\.instanceId[\s\S]*?publicationReceipt\.sourceUpdatedAt === instance\.updatedAt[\s\S]*?&& published/);
+  assert.match(publication, /publicationReceipt\?\.instanceId === instance\.instanceId[\s\S]*?publicationReceipt\.sourceUpdatedAt === instance\.updatedAt[\s\S]*?&& published[\s\S]*?&& !savedChangesNotLive/);
   assertBefore(
     publication,
     /if \(!response\.ok\)/,
     /if \(isRepublish\) \{[\s\S]*?setPublicationReceipt/,
     'Republish may expose its receipt only after the route confirms success',
+  );
+  assertBefore(
+    publication,
+    /onInstanceChange\(refreshed\)/,
+    /if \(isRepublish\) \{[\s\S]*?setPublicationReceipt/,
+    'Republish may expose its receipt only after refreshed instance truth is applied',
   );
   assert.match(publication, /status\.liveWidgetUpdated \? \(/);
   assert.match(publication, /data-tone="republish"/);
@@ -69,7 +78,10 @@ async function run(): Promise<void> {
     ),
     /aria-busy/,
   );
-  assert.doesNotMatch(publication, /setTimeout|receiptElapsed|receipt-elapsed/);
+  assert.match(
+    publication,
+    /if \(!liveWidgetUpdated\) return undefined;[\s\S]*?window\.setTimeout\([\s\S]*?setPublicationReceipt\([\s\S]*?1_000/,
+  );
 
   assert.match(builder, /label: string \| null/);
   assert.match(builder, /const label = builderOpen\.displayName;/);

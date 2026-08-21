@@ -61,7 +61,22 @@ function useWidgetPublicationStatus({
   const publishBlocked = dirty && !published;
   const liveWidgetUpdated = publicationReceipt?.instanceId === instance.instanceId
     && publicationReceipt.sourceUpdatedAt === instance.updatedAt
-    && published;
+    && published
+    && !savedChangesNotLive;
+
+  useEffect(() => {
+    if (!liveWidgetUpdated) return undefined;
+    const timer = window.setTimeout(() => {
+      setPublicationReceipt((current) => {
+        if (
+          current?.instanceId !== instance.instanceId
+          || current.sourceUpdatedAt !== instance.updatedAt
+        ) return current;
+        return null;
+      });
+    }, 1_000);
+    return () => window.clearTimeout(timer);
+  }, [instance.instanceId, instance.updatedAt, liveWidgetUpdated]);
 
   const changeStatus = async (nextStatus: 'published' | 'unpublished') => {
     if (!canMutate || disabled || pendingStatus) return false;
@@ -88,13 +103,6 @@ function useWidgetPublicationStatus({
         throw new Error(failed.error.reasonKey);
       }
 
-      if (isRepublish) {
-        setPublicationReceipt({
-          instanceId: instance.instanceId,
-          sourceUpdatedAt: instance.updatedAt,
-        });
-      }
-
       const transitionedInstance = { ...instance, status: nextStatus };
       upsertRomaWidgetInstanceCache(accountContext.accountPublicId, transitionedInstance);
       onInstanceChange(transitionedInstance);
@@ -109,6 +117,12 @@ function useWidgetPublicationStatus({
         );
         if (!refreshed) throw new Error('coreui.errors.instance.notFound');
         onInstanceChange(refreshed);
+        if (isRepublish) {
+          setPublicationReceipt({
+            instanceId: refreshed.instanceId,
+            sourceUpdatedAt: refreshed.updatedAt,
+          });
+        }
       } catch (refreshError) {
         invalidateRomaWidgetsCache(accountContext.accountPublicId);
         const message = refreshError instanceof Error
