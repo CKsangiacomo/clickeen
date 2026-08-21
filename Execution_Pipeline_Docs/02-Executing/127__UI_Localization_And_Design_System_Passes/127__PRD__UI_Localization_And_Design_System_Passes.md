@@ -490,14 +490,15 @@ cross-surface correction first. Dieter now owns one passive-loading presentation
 empty fallback branches were removed from the affected Bob, Roma, Data Table,
 Dropdown Fill, and Bulk Edit paths. Errors and unavailable truth remain separate.
 
-Save is the named pink Button in all phases: `Save`, Spinner + `Saving…`, and
-Spinner + `Saved`; the saved receipt is not busy and has no timer. Republish is
-the named green Button: current Icon + `Republish`, Spinner + `Republishing…`,
-and checkmark + `Live widget updated`; its receipt exists only after the exact
-successful route and is invalidated by instance/source change. Minimal English
-Bob/Roma state catalogs were introduced only to stop scattering these exact
-owner-approved strings. This does not begin Stage 3 or Stage 4 localization,
-does not generate translations, and does not resume either PRD program.
+Save is the named pink Button while dirty and pending: `Save`, then Spinner +
+`Saving…`. Exact success becomes the system-green checkmark + `Saved` for one
+second before the control disappears. Republish is the named green Button:
+current Icon + `Republish`, Spinner + `Republishing…`, and checkmark + `Live
+widget updated`; its receipt exists only after the exact successful route and
+is invalidated by instance/source change. Minimal English Bob/Roma state
+catalogs were introduced only to stop scattering these exact owner-approved
+strings. This does not begin Stage 3 or Stage 4 localization, does not generate
+translations, and does not resume either PRD program.
 
 This record describes uncommitted local source until a separately authorized
 commit/deploy and owning-surface verification occur.

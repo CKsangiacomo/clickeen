@@ -509,8 +509,9 @@ instance and source `updatedAt`; changing instance or later saving invalidates
 it. Initial open and failure do not invent success.
 
 The Builder Save control is the separate special pink Button. Bob owns its
-phase truth; Roma renders `Save`, disabled busy Spinner plus `Saving…`, or
-disabled non-busy Spinner plus `Saved` without adding a timer or checkmark.
+phase truth; Roma renders `Save`, disabled busy Spinner plus `Saving…`, or the
+system-green checkmark plus `Saved` for exactly one second before the control
+disappears.
 
 Tokyo is the single timestamp writer. Save and Rename each return `updatedAt`
 strictly later than the previous `updatedAt` and any `publishedAt`.

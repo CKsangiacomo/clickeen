@@ -400,13 +400,12 @@ Bob treats the Save response as editable-source persistence truth only.
 Bob derives one local Save presentation phase from its exact draft signature
 and existing Save result: clean is `hidden`, dirty is `save`, in flight is
 `saving`, and a matching successful result is `saved`. Roma renders that phase
-in the borrowed far-right header slot as one special pink control: `Save`;
-disabled Spinner plus `Saving…`; then disabled Spinner plus `Saved`. The saved
-receipt is not busy and persists until an actual draft/open transition; it has
-no arbitrary timer. Failure keeps Bob's existing error and derives Save or
+in the borrowed far-right header slot: `Save`; disabled Spinner plus `Saving…`;
+then the system-green checkmark plus `Saved` for exactly one second before the
+control disappears. Failure keeps Bob's existing error and derives Save or
 hidden from current dirty truth. An accepted edit during Save keeps Saving
 until the submitted result, then returns to Save when the current draft remains
-dirty; an edit during the receipt ends it immediately. First Save keeps
+dirty; an edit during the receipt cancels it immediately. First Save keeps
 its existing in-place ID/base-locale adoption and does not reopen Bob. The
 Spinner and success presentation do not start, retry, complete, persist, or
 reinterpret the Save command.

@@ -42,10 +42,10 @@ async function run(): Promise<void> {
   assert.match(saveControl, /ROMA_UI_COPY\.commands\.saving/);
   assert.match(saveControl, /ROMA_UI_COPY\.commands\.saved/);
   assert.match(saveControl, /bobSaveControlPhase === 'saving'[\s\S]*?aria-busy="true"[\s\S]*?disabled/);
-  assert.match(saveControl, /bobSaveControlPhase === 'saved'[\s\S]*?data-state="success"[\s\S]*?<span className="diet-spinner" aria-hidden="true" \/>/);
+  assert.match(saveControl, /bobSaveControlPhase === 'saved'[\s\S]*?data-state="success"[\s\S]*?checkmark\.svg/);
   assert.doesNotMatch(
     saveControl.slice(saveControl.indexOf("bobSaveControlPhase === 'saved'")),
-    /aria-busy|checkmark\.svg/,
+    /aria-busy|diet-spinner/,
   );
 
   assert.match(publication, /const isRepublish = nextStatus === 'published' && savedChangesNotLive/);

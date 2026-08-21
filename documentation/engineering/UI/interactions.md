@@ -92,16 +92,16 @@ a caller field. Save is an explicit action:
 - dirty state: `Save`;
 - persistence in flight: the same Button is disabled and shows its Spinner with
   `Saving…`;
-- confirmed clean state: the same pink Button is disabled and shows its Spinner
-  plus `Saved`; the Spinner is decorative receipt presentation, not busy state;
+- confirmed clean state: the Button becomes system green and shows the Dieter
+  checkmark plus `Saved` for exactly one second, then disappears;
 - failed persistence: Bob's existing error stays visible and the control is
   `Save` when the current draft remains dirty or absent when it matches saved
   truth;
 - an accepted edit during Save keeps `Saving…` until the submitted result, then
   returns to `Save` when the current draft remains dirty, without showing a
   false `Saved`; and
-- an accepted edit during the saved receipt ends that receipt and restores
-  `Save` immediately. There is no receipt timer.
+- an accepted edit during the one-second receipt cancels that receipt and
+  restores `Save` immediately.
 
 Bob owns those four presentation phases from its exact draft/save truth. Roma
 renders the phase in the far-right slot of its one Builder header and sends one

@@ -1426,7 +1426,13 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
                 type="button"
                 disabled
               >
-                <span className="diet-spinner" aria-hidden="true" />
+                <Image
+                  className="diet-icon"
+                  src="/dieter/icons/svg/checkmark.svg"
+                  alt=""
+                  width={20}
+                  height={20}
+                />
                 <span className="diet-button__label">{ROMA_UI_COPY.commands.saved}</span>
               </button>
             ) : null}

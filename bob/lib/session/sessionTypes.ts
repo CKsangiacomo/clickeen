@@ -30,7 +30,8 @@ export type SaveControlTransition =
   | { type: 'draft-changed'; isDirty: boolean }
   | { type: 'save-started' }
   | { type: 'save-succeeded'; currentDraftMatchesSubmitted: boolean }
-  | { type: 'save-failed'; isDirty: boolean };
+  | { type: 'save-failed'; isDirty: boolean }
+  | { type: 'receipt-elapsed'; isDirty: boolean };
 
 export function resolveSaveControlPhase(
   current: SaveControlPhase,
@@ -47,6 +48,8 @@ export function resolveSaveControlPhase(
       return transition.currentDraftMatchesSubmitted ? 'saved' : 'save';
     case 'save-failed':
       return transition.isDirty ? 'save' : 'hidden';
+    case 'receipt-elapsed':
+      return current === 'saved' ? (transition.isDirty ? 'save' : 'hidden') : current;
   }
 }
 

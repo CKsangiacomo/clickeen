@@ -2,7 +2,7 @@
 
 STATUS: STABLE OVERLAY CONTRACT AND LITERAL REPEATED-IDENTITY PACKAGE DEPLOYED AND LIVE-VERIFIED
 
-Last updated: 2026-08-20
+Last updated: 2026-08-21
 
 ## Product Contract
 
@@ -59,6 +59,12 @@ tokyo/product/widgets/{widgetType}/
 
 Neither is customer Widget content. Neither enters `editable-fields.json`, an
 instance overlay, or the public Widget package.
+
+DevStudio is an English-only internal admin/operator tool, not a customer
+product-UI localization surface. Its operator copy is outside this capability's
+product-UI l10n contract and does not require a localization catalog. A
+read-only DevStudio reveal of Dieter truth does not bring DevStudio wording or
+implementation into a customer-product localization pass.
 
 Every current Widget has both contracts locally, and each compiler artifact
 contains its exact limit/message associations. There is no runtime English

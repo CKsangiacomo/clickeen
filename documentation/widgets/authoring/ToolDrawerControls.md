@@ -383,11 +383,14 @@ selector without changing the field contract.
 JSON path as `null | {assetRef:string,name:string}`; there is no companion
 metadata path. Its caller supplies the field label and placeholder. When a
 Widget declares the component, that Widget also declares the exact
-`editor.labels.components["dropdown-upload"]` keys `upload`, `replace`,
-`remove`, `uploadAssetError`, and `previewAssetError`, and its adjacent English
-ToolDrawer label file owns those five resolved strings. Dieter receives those
-words and uses the existing account-assets client; it does not own a locale,
-file policy, storage path, account-plan reason set, or Widget-specific rule.
+`editor.labels.components["dropdown-upload"]` keys `loading`, `upload`,
+`replace`, `remove`, `uploadAssetError`, and `previewAssetError`, and its
+adjacent English ToolDrawer label file owns those six resolved strings. The
+accessible `loading` string names passive stored-asset resolution; command
+pending feedback remains on the exact Upload or Replace control. Dieter
+receives those words and uses the existing account-assets client; it does not
+own a locale, file policy, storage path, account-plan reason set, or
+Widget-specific rule.
 The caller-owned client consumes the exact result from the owning Roma asset
 service and presents its declared outcome; it does not revalidate the response
 or infer another account-plan reason. None of the five current

@@ -10,6 +10,14 @@ DevStudio is not Roma, not Bob, not a customer account shell, and not a general 
 accountPublicId: CLICKEEN
 ```
 
+DevStudio is an English-only internal admin/operator tool. It is outside
+customer-product UI localization and systemic customer-product copy/one-off
+optimization passes unless the product owner explicitly places DevStudio in a
+separate scope. Its direct operator wording does not require a product l10n
+catalog. DevStudio may reveal Dieter source truth for read-only evidence, but
+that does not make the cockpit an implementation target or acceptance blocker
+for a customer-product pass.
+
 ## Runtime Authority
 
 | Concern                  | Current authority                                         |

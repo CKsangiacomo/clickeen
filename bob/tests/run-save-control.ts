@@ -24,11 +24,8 @@ function testExactSaveSequence(): void {
     currentDraftMatchesSubmitted: true,
   });
   assert.equal(phase, 'saved');
-  assert.equal(
-    phase,
-    'saved',
-    'a matching successful Save receipt persists until actual draft or editor-open truth changes',
-  );
+  phase = transition(phase, { type: 'receipt-elapsed', isDirty: false });
+  assert.equal(phase, 'hidden');
 }
 
 function testFailureAndNewerDraftTruth(): void {
@@ -54,6 +51,7 @@ function testFailureAndNewerDraftTruth(): void {
   assert.equal(transition('saved', { type: 'draft-changed', isDirty: false }), 'hidden');
   assert.equal(transition('saved', { type: 'editor-opened', isDirty: false }), 'hidden');
   assert.equal(transition('saved', { type: 'editor-opened', isDirty: true }), 'save');
+  assert.equal(transition('saved', { type: 'receipt-elapsed', isDirty: true }), 'save');
 }
 
 function testHostSaveAdmission(): void {
@@ -80,18 +78,14 @@ function testHostSaveAdmission(): void {
 
 async function testProductionWiring(): Promise<void> {
   const provider = await readFile(new URL('../lib/session/WidgetDocumentSession.tsx', import.meta.url), 'utf8');
-  const sessionTypes = await readFile(new URL('../lib/session/sessionTypes.ts', import.meta.url), 'utf8');
   const saving = await readFile(new URL('../lib/session/useSessionSaving.ts', import.meta.url), 'utf8');
   const boot = await readFile(new URL('../lib/session/useSessionBoot.ts', import.meta.url), 'utf8');
   const builder = await readFile(new URL('../components/BuilderApp.tsx', import.meta.url), 'utf8');
   const css = await readFile(new URL('../app/bob_app.css', import.meta.url), 'utf8');
-  const retiredElapsedEvent = ['receipt', 'elapsed'].join('-');
 
   assert.equal(createInitialSessionState().saveControlPhase, 'hidden');
   assert.match(provider, /type: 'bob:save-control-state'/);
-  assert.equal(provider.includes(retiredElapsedEvent), false);
-  assert.doesNotMatch(provider, /window\.setTimeout\([\s\S]*1_000/);
-  assert.equal(sessionTypes.includes(retiredElapsedEvent), false);
+  assert.match(provider, /window\.setTimeout\([\s\S]*1_000/);
   assert.match(provider, /acceptsHostSaveRequest\(/);
   assert.match(provider, /void save\(\)/);
   assert.match(saving, /currentDraftMatchesSubmitted: !hasEditsAfterSubmittedSave/);
