@@ -8,6 +8,7 @@ import type {
 import { encodeHtmlEntities, parseTooldrawerAttributes } from '../compiler.shared';
 import { getAt } from '../utils/paths';
 import { validateShowIfExpression } from '../../components/td-menu-content/showIf';
+import toolDrawerCopy from '../../l10n/tool-drawer/en.json';
 
 const TOKEN_SEGMENT = /^__[^.]+__$/;
 
@@ -102,7 +103,7 @@ export function expandTooldrawerClusters(html: string, idNamespace = ''): string
         const labelAttrs: string[] = ['class="overline-small tdmenucontent__cluster-label"'];
 
         const toggleMarkup = [
-          `<button type="button" class="diet-button tdmenucontent__cluster-toggle" data-size="small" data-type="quaternary" aria-label="Toggle section" aria-expanded="${initiallyOpen ? 'true' : 'false'}" aria-controls="${bodyId}">`,
+          `<button type="button" class="diet-button tdmenucontent__cluster-toggle" data-size="small" data-type="quaternary" aria-label="${toolDrawerCopy.section.toggle}" aria-expanded="${initiallyOpen ? 'true' : 'false'}" aria-controls="${bodyId}">`,
           `  <span class="diet-icon tdmenucontent__cluster-toggle-icon" data-icon="chevron.up" aria-hidden="true" data-size="12"></span>`,
           `</button>`,
         ].join('');
@@ -283,7 +284,7 @@ function collectControlsFromMarkup(markup: string, panelId: PanelId, controls: C
         panelId,
         type: 'textfield',
         path: trimmed,
-        label: label?.trim() || undefined,
+        label: label || undefined,
       });
     };
 
@@ -298,10 +299,7 @@ function collectControlsFromMarkup(markup: string, panelId: PanelId, controls: C
         throw new Error(`[BobCompiler] dropdown-fill control "${path}" requires fill-modes`);
       }
       const showIf = attrs['show-if'] || undefined;
-      const explicitGroupLabel =
-        typeof (attrs.groupLabel || attrs['group-label']) === 'string'
-          ? (attrs.groupLabel || attrs['group-label']).trim()
-          : '';
+      const explicitGroupLabel = attrs.groupLabel || attrs['group-label'] || '';
       if (showIf) validateShowIfExpression(showIf);
       controls.push({
         panelId,
@@ -333,12 +331,13 @@ function collectControlsFromMarkup(markup: string, panelId: PanelId, controls: C
               `[BobCompiler] bulk-edit control "${path}" column ${index} must be an object`,
             );
           }
-          const columnPath = String((column as Record<string, unknown>).path || '').trim();
-          const columnLabel = String((column as Record<string, unknown>).label || '').trim();
-          const columnControl = (column as Record<string, unknown>).control;
+          const columnRecord = column as Record<string, unknown>;
+          const columnPath = String(columnRecord.path || '').trim();
+          const columnLabel = columnRecord.label as string;
+          const columnControl = columnRecord.control;
           const derivedType =
             columnControl === 'text' ? 'textfield' : columnControl === 'checkbox' ? 'toggle' : '';
-          if (!columnPath || !columnLabel || !derivedType) {
+          if (!columnPath || !derivedType) {
             throw new Error(
               `[BobCompiler] bulk-edit control "${path}" column ${index} requires path, label, and text|checkbox control`,
             );

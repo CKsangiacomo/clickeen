@@ -3,7 +3,6 @@ import { COMMON_WIDGET_FACTORY_DEFAULTS } from '@clickeen/widget-foundation';
 import type { CompiledPanel, CompiledWidgetCore, WidgetPresets } from './types';
 import {
   encodeHtmlEntities,
-  RawWidget,
   parseTooldrawerAttributes,
   parsePanels,
 } from './compiler.shared';
@@ -17,7 +16,7 @@ import type { ComponentStencilLoader } from './compiler/stencils';
 import { normalizeWidgetNormalizationSpec } from './compiler/modules/normalization';
 import { buildHeaderPresets } from './compiler/modules/header';
 import { validateShowIfExpression } from '../components/td-menu-content/showIf';
-import { resolveWidgetTooldrawerLabels } from './compiler/tooldrawer-labels';
+import type { ResolvedWidgetTooldrawerLabels } from './compiler/tooldrawer-labels';
 
 function extractPrimaryUrl(raw: string): string | null {
   const v = String(raw || '').trim();
@@ -178,18 +177,12 @@ function normalizePresets(raw: unknown): WidgetPresets | undefined {
 }
 
 export async function compileWidgetServer(
-  widgetJson: RawWidget,
+  resolved: ResolvedWidgetTooldrawerLabels,
   sources: {
     loadComponentStencil: ComponentStencilLoader;
     tokyoBaseUrl?: string;
-    tooldrawerLabels: unknown;
   },
 ): Promise<CompiledWidgetCore> {
-  if (!widgetJson || typeof widgetJson !== 'object') {
-    throw new Error('[BobCompiler] Invalid widget JSON payload');
-  }
-
-  const resolved = resolveWidgetTooldrawerLabels(widgetJson, sources.tooldrawerLabels);
   const resolvedWidget = resolved.widget;
 
   const coreDefaults = resolvedWidget.defaults;

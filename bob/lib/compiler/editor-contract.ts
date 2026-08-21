@@ -83,6 +83,11 @@ type EditorContract = {
   panels: EditorPanel[];
 };
 
+type CoreEditorLabels = {
+  singular?: string;
+  sizeCluster: string;
+};
+
 type DropdownBorderEditorLabels = {
   component: {
     color: string;
@@ -355,7 +360,11 @@ function renderTemplateNodes(
     .join('');
 }
 
-function renderSharedNode(node: EditorSharedNode, defaults: JsonObject): string[] {
+function renderSharedNode(
+  node: EditorSharedNode,
+  defaults: JsonObject,
+  coreLabels: CoreEditorLabels | null,
+): string[] {
   const includeCta = defaults.headerCta != null;
   switch (node.id) {
     case 'header-content':
@@ -367,7 +376,8 @@ function renderSharedNode(node: EditorSharedNode, defaults: JsonObject): string[
     case 'header-layout-no-header-cta':
       return buildHeaderLayoutPanelFields({ includeCta: false });
     case 'core-size':
-      return buildCoreSizeLayoutPanelFields(defaults);
+      if (!coreLabels) throw new Error('[BobCompiler] Widget Core labels are missing');
+      return buildCoreSizeLayoutPanelFields(coreLabels.sizeCluster);
     case 'header-appearance':
       return buildHeaderAppearancePanelFields({ includeCta });
     case 'header-appearance-no-header-cta':
@@ -417,6 +427,27 @@ function containsEditorFieldType(value: unknown, type: string): boolean {
   return Object.values(value).some((item) => containsEditorFieldType(item, type));
 }
 
+function containsEditorSharedNode(value: unknown, id: WidgetSharedEditorNodeId): boolean {
+  if (Array.isArray(value)) return value.some((item) => containsEditorSharedNode(item, id));
+  if (!isPlainObject(value)) return false;
+  if (value.kind === 'shared' && value.id === id) return true;
+  return Object.values(value).some((item) => containsEditorSharedNode(item, id));
+}
+
+function readCoreEditorLabels(labelsRaw: unknown, widgetname: string): CoreEditorLabels {
+  if (!isPlainObject(labelsRaw) || !isPlainObject(labelsRaw.components)) {
+    throw new Error(`[BobCompiler] ${widgetname} Widget Core labels are missing`);
+  }
+  const core = labelsRaw.components.core;
+  if (!isPlainObject(core) || !Object.hasOwn(core, 'sizeCluster')) {
+    throw new Error(`[BobCompiler] ${widgetname} Widget Core labels are invalid`);
+  }
+  return {
+    ...(Object.hasOwn(core, 'singular') ? { singular: core.singular as string } : {}),
+    sizeCluster: core.sizeCluster as string,
+  };
+}
+
 function readRecordPath(root: JsonObject, path: string): JsonObject | null {
   const parts = path.split('.').filter(Boolean);
   let cursor: unknown = root;
@@ -430,20 +461,44 @@ function readRecordPath(root: JsonObject, path: string): JsonObject | null {
 function resolveCardWrapperPath(
   defaults: JsonObject,
   widgetname: string,
-): { basePath: string; hasInsideShadow: boolean; itemLabel?: string } | null {
+  itemLabel: string | undefined,
+  existingPaths: ReadonlySet<string>,
+): { basePath: string; hasInsideShadow: boolean; itemLabel: string } | null {
   const candidates = [`${widgetname}.appearance.cardwrapper`];
-  const coreLabel =
-    isPlainObject(defaults.uiLabels) &&
-    isPlainObject(defaults.uiLabels.core) &&
-    typeof defaults.uiLabels.core.singular === 'string'
-      ? defaults.uiLabels.core.singular.trim()
-      : '';
   for (const basePath of candidates) {
     if (readRecordPath(defaults, basePath)) {
+      const hasInsideShadow = Boolean(readRecordPath(defaults, `${basePath}.insideShadow`));
+      const sharedPaths = [
+        'radiusLinked',
+        'radius',
+        'radiusTL',
+        'radiusTR',
+        'radiusBR',
+        'radiusBL',
+        'border',
+        'shadow',
+        ...(hasInsideShadow
+          ? [
+              'insideShadow.linked',
+              'insideShadow.layer',
+              'insideShadow.all',
+              'insideShadow.top',
+              'insideShadow.right',
+              'insideShadow.bottom',
+              'insideShadow.left',
+            ]
+          : []),
+      ];
+      if (sharedPaths.every((path) => existingPaths.has(`${basePath}.${path}`))) {
+        return null;
+      }
+      if (!itemLabel) {
+        throw new Error(`[BobCompiler] ${widgetname} Widget Core singular label is missing`);
+      }
       return {
         basePath,
-        hasInsideShadow: Boolean(readRecordPath(defaults, `${basePath}.insideShadow`)),
-        itemLabel: coreLabel || undefined,
+        hasInsideShadow,
+        itemLabel,
       };
     }
   }
@@ -454,6 +509,7 @@ function renderCluster(
   cluster: EditorCluster,
   defaults: JsonObject,
   dropdownEditLabels: DropdownEditResolvedLabel[] | null,
+  coreLabels: CoreEditorLabels | null,
 ): string[] {
   if (!Array.isArray(cluster.nodes))
     throw new Error('[BobCompiler] editor cluster missing nodes array');
@@ -477,7 +533,9 @@ function renderCluster(
   cluster.nodes.forEach((node) => {
     if (!isPlainObject(node)) throw new Error('[BobCompiler] editor node must be an object');
     if (node.kind === 'shared') {
-      renderSharedNode(node as EditorSharedNode, defaults).forEach((line) => lines.push(line));
+      renderSharedNode(node as EditorSharedNode, defaults, coreLabels).forEach((line) =>
+        lines.push(line),
+      );
       return;
     }
     if (node.kind === 'field') {
@@ -501,6 +559,7 @@ function renderPanel(
   widgetname: string,
   editorFieldPaths: ReadonlySet<string>,
   dropdownEditLabels: DropdownEditResolvedLabel[] | null,
+  coreLabels: CoreEditorLabels | null,
 ): string[] {
   if (typeof panel.id !== 'string' || !isPanelId(panel.id) || panel.id === 'translations') {
     throw new Error(`[BobCompiler] ${widgetname} editor panel has unsupported id`);
@@ -518,15 +577,7 @@ function renderPanel(
       if (!isPlainObject(panel.shared.roleLabels)) {
         throw new Error(`[BobCompiler] ${widgetname} typography roleLabels must be an object`);
       }
-      roleLabels = {};
-      for (const [roleKey, label] of Object.entries(panel.shared.roleLabels)) {
-        if (!roleKey.trim() || typeof label !== 'string' || !label.trim()) {
-          throw new Error(
-            `[BobCompiler] ${widgetname} typography roleLabels must contain non-empty strings`,
-          );
-        }
-        roleLabels[roleKey] = label.trim();
-      }
+      roleLabels = panel.shared.roleLabels as Record<string, string>;
     }
     const rendered = buildTypographyPanel({ roles, roleLabels });
     if (rendered.length === 0)
@@ -543,7 +594,12 @@ function renderPanel(
   let injectedCoreCardWrapper = false;
   let injectedLocaleAppearance = false;
   let injectedLocaleSettings = false;
-  const cardWrapper = resolveCardWrapperPath(defaults, widgetname);
+  const cardWrapper = resolveCardWrapperPath(
+    defaults,
+    widgetname,
+    coreLabels?.singular,
+    editorFieldPaths,
+  );
 
   const lines = panel.clusters.flatMap((item) => {
     if (!isPlainObject(item))
@@ -576,9 +632,9 @@ function renderPanel(
         injected.push(...buildLocaleSwitcherSettingsPanelFields(editorFieldPaths));
         injectedLocaleSettings = true;
       }
-      return [...injected, ...renderSharedNode(sharedNode, defaults)];
+      return [...injected, ...renderSharedNode(sharedNode, defaults, coreLabels)];
     }
-    return renderCluster(item as EditorCluster, defaults, dropdownEditLabels);
+    return renderCluster(item as EditorCluster, defaults, dropdownEditLabels, coreLabels);
   });
 
   return [`<bob-panel id='${encodeHtmlEntities(panel.id)}'>`, ...lines, '</bob-panel>'];
@@ -611,6 +667,11 @@ export function buildEditorHtmlLines(
     );
   }
   const editorFieldPaths = collectEditorFieldPaths(editor);
+  const coreLabels =
+    containsEditorSharedNode(editor, 'core-size') ||
+    Boolean(readRecordPath(defaults, `${widgetname}.appearance.cardwrapper`))
+      ? readCoreEditorLabels(editor.labels, widgetname)
+      : null;
   let dropdownEditLabels = containsEditorFieldType(editor, 'dropdown-edit')
     ? readDropdownEditEditorLabels(editor.labels, widgetname)
     : null;
@@ -622,6 +683,7 @@ export function buildEditorHtmlLines(
       widgetname,
       editorFieldPaths,
       dropdownEditLabels,
+      coreLabels,
     ),
   );
   if (!dropdownEditLabels && lines.some((line) => /\btype='dropdown-edit'/.test(line))) {
@@ -670,22 +732,16 @@ function readObjectManagerEditorLabels(
   ) {
     throw new Error(`[BobCompiler] ${widgetname} Object Manager labels are invalid`);
   }
-  const read = (value: unknown, path: string): string => {
-    if (typeof value !== 'string' || !value.trim() || value !== value.trim()) {
-      throw new Error(`[BobCompiler] ${widgetname} Object Manager label is invalid: ${path}`);
-    }
-    return value;
-  };
   const resolvedComponent = {} as ObjectManagerEditorLabels['component'];
   for (const [key] of OBJECT_MANAGER_COMPONENT_LABEL_ATTRIBUTES) {
-    resolvedComponent[key] = read(component[key], `components.object-manager.${key}`);
+    resolvedComponent[key] = component[key] as string;
   }
   const resolvedFields: Record<string, string> = {};
   for (const [path, value] of Object.entries(fields)) {
     if (!path.trim() || path !== path.trim()) {
       throw new Error(`[BobCompiler] ${widgetname} Object Manager field path is invalid`);
     }
-    resolvedFields[path] = read(value, `fields.object-manager.${path}`);
+    resolvedFields[path] = value as string;
   }
   return { component: resolvedComponent, fields: resolvedFields };
 }
@@ -740,11 +796,7 @@ function readDropdownUploadEditorLabels(
   }
   const labels = {} as DropdownUploadEditorLabels;
   for (const [key] of DROPDOWN_UPLOAD_COMPONENT_LABEL_ATTRIBUTES) {
-    const value = component[key];
-    if (typeof value !== 'string' || !value.trim() || value !== value.trim()) {
-      throw new Error(`[BobCompiler] ${widgetname} Dropdown Upload label is invalid: ${key}`);
-    }
-    labels[key] = value;
+    labels[key] = component[key] as string;
   }
   return labels;
 }
@@ -788,25 +840,19 @@ function readDropdownShadowEditorLabels(
   ) {
     throw new Error(`[BobCompiler] ${widgetname} Dropdown Shadow labels are invalid`);
   }
-  const readLabel = (value: unknown, path: string): string => {
-    if (typeof value !== 'string' || !value.trim() || value !== value.trim()) {
-      throw new Error(`[BobCompiler] ${widgetname} Dropdown Shadow label is invalid: ${path}`);
-    }
-    return value;
-  };
   const resolvedComponent = {} as DropdownShadowEditorLabels['component'];
   for (const [key] of DROPDOWN_SHADOW_COMPONENT_LABEL_ATTRIBUTES) {
-    resolvedComponent[key] = readLabel(component[key], `components.dropdown-shadow.${key}`);
+    resolvedComponent[key] = component[key] as string;
   }
   for (const key of DROPDOWN_SHADOW_COMPOSITION_LABEL_KEYS) {
-    resolvedComponent[key] = readLabel(component[key], `components.dropdown-shadow.${key}`);
+    resolvedComponent[key] = component[key] as string;
   }
   const resolvedFields: Record<string, string> = {};
   for (const [path, value] of Object.entries(fields)) {
     if (!path.trim() || path !== path.trim()) {
       throw new Error(`[BobCompiler] ${widgetname} Dropdown Shadow field path is invalid`);
     }
-    resolvedFields[path] = readLabel(value, `fields.dropdown-shadow.${path}`);
+    resolvedFields[path] = value as string;
   }
   return { component: resolvedComponent, fields: resolvedFields };
 }
@@ -888,22 +934,16 @@ function readDropdownFillEditorLabels(
   ) {
     throw new Error(`[BobCompiler] ${widgetname} Dropdown Fill labels are invalid`);
   }
-  const readLabel = (value: unknown, path: string): string => {
-    if (typeof value !== 'string' || !value.trim() || value !== value.trim()) {
-      throw new Error(`[BobCompiler] ${widgetname} Dropdown Fill label is invalid: ${path}`);
-    }
-    return value;
-  };
   const resolvedComponent = {} as DropdownFillEditorLabels['component'];
   for (const [key] of DROPDOWN_FILL_COMPONENT_LABEL_ATTRIBUTES) {
-    resolvedComponent[key] = readLabel(component[key], `components.dropdown-fill.${key}`);
+    resolvedComponent[key] = component[key] as string;
   }
   const resolvedFields: Record<string, string> = {};
   for (const [path, value] of Object.entries(fields)) {
     if (!path.trim() || path !== path.trim()) {
       throw new Error(`[BobCompiler] ${widgetname} Dropdown Fill field path is invalid`);
     }
-    resolvedFields[path] = readLabel(value, `fields.dropdown-fill.${path}`);
+    resolvedFields[path] = value as string;
   }
   return { component: resolvedComponent, fields: resolvedFields };
 }
@@ -963,11 +1003,7 @@ function readDropdownEditEditorLabels(
     throw new Error(`[BobCompiler] ${widgetname} Dropdown Edit component labels are invalid`);
   }
   return DROPDOWN_EDIT_COMPONENT_LABEL_ATTRIBUTES.map(([key, attribute]) => {
-    const value = labels[key];
-    if (typeof value !== 'string' || !value.trim() || value !== value.trim()) {
-      throw new Error(`[BobCompiler] ${widgetname} Dropdown Edit label is invalid: ${key}`);
-    }
-    return { attribute, value };
+    return { attribute, value: labels[key] as string };
   });
 }
 
@@ -1008,22 +1044,16 @@ function readDropdownBorderEditorLabels(
   ) {
     throw new Error(`[BobCompiler] ${widgetname} Dropdown Border labels are invalid`);
   }
-  const readLabel = (value: unknown, path: string): string => {
-    if (typeof value !== 'string' || !value.trim() || value !== value.trim()) {
-      throw new Error(`[BobCompiler] ${widgetname} Dropdown Border label is invalid: ${path}`);
-    }
-    return value;
-  };
   const resolvedComponent = {} as DropdownBorderEditorLabels['component'];
   for (const key of componentKeys) {
-    resolvedComponent[key] = readLabel(component[key], `components.dropdown-border.${key}`);
+    resolvedComponent[key] = component[key] as string;
   }
   const resolvedFields: Record<string, string> = {};
   for (const [path, value] of Object.entries(fieldLabels)) {
     if (!path.trim() || path !== path.trim()) {
       throw new Error(`[BobCompiler] ${widgetname} Dropdown Border field path is invalid`);
     }
-    resolvedFields[path] = readLabel(value, `fields.${path}`);
+    resolvedFields[path] = value as string;
   }
   return { component: resolvedComponent, fields: resolvedFields };
 }

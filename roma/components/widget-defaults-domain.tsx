@@ -1,11 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import type { CompiledControl, CompiledWidget } from '@clickeen/bob/types';
 import {
   isCommonWidgetControlPath,
   type AccountFontLibrary,
 } from '@clickeen/widget-foundation';
+import widgetDefaultsCopy from '../l10n/widget-defaults/en.json';
 import { useRomaAccountApi } from './account-api';
 import { getWidgetEditorArtifact } from './widget-editor-artifact';
 import { WidgetDefaultsBuilderControls } from './widget-defaults-builder-controls';
@@ -39,20 +40,16 @@ type WidgetDefaultsEntry = {
   payload: CompiledWidget;
 };
 
-const WIDGET_DEFAULTS_LOAD_ERROR_COPY = 'Widget defaults could not be loaded. Please try again.';
-const WIDGET_CONTROLS_LOAD_ERROR_COPY = 'Builder controls could not be loaded. Please try again.';
-const WIDGET_DEFAULTS_SAVE_ERROR_COPY = 'Widget defaults could not be saved. Please try again.';
-
 function stableJson(value: unknown): string {
   return JSON.stringify(value);
 }
 
 function cloneDefaults(value: AccountWidgetDefaultsDocument): AccountWidgetDefaultsDocument {
-  return JSON.parse(JSON.stringify(value)) as AccountWidgetDefaultsDocument;
+  return structuredClone(value);
 }
 
 function cloneValue<T>(value: T): T {
-  return JSON.parse(JSON.stringify(value)) as T;
+  return structuredClone(value);
 }
 
 function setPathValue(
@@ -82,7 +79,7 @@ function WidgetDefaultsCoreSection(args: {
   entry: WidgetDefaultsEntry;
   fontLibrary: AccountFontLibrary;
   onOps: (widgetType: string, ops: Array<{ path: string; value: unknown }>) => void;
-  onContractError: (widgetType: string, message: string) => void;
+  onContractError: (widgetType: string) => void;
   onReadyChange: (widgetType: string, ready: boolean) => void;
 }) {
   const { entry, fontLibrary, onOps, onContractError, onReadyChange } = args;
@@ -91,7 +88,7 @@ function WidgetDefaultsCoreSection(args: {
     [entry.widgetType, onOps],
   );
   const handleContractError = useCallback(
-    (message: string) => onContractError(entry.widgetType, message),
+    () => onContractError(entry.widgetType),
     [entry.widgetType, onContractError],
   );
   const handleReadyChange = useCallback(
@@ -107,7 +104,6 @@ function WidgetDefaultsCoreSection(args: {
         payload={entry.payload}
         fontLibrary={fontLibrary}
         hostId={`widget-defaults-core-${entry.widgetType}`}
-        scopeLabel={`${entry.label} Core`}
         values={entry.core}
         onOps={handleOps}
         onContractError={handleContractError}
@@ -123,17 +119,21 @@ export function WidgetDefaultsDomain() {
   const [draft, setDraft] = useState<AccountWidgetDefaultsDocument | null>(null);
   const [compiledWidgets, setCompiledWidgets] = useState<Record<string, CompiledWidget>>({});
   const [commonControlsReady, setCommonControlsReady] = useState(false);
-  const [commonContractError, setCommonContractError] = useState('');
+  const [commonContractError, setCommonContractError] = useState(false);
   const [coreControlsReady, setCoreControlsReady] = useState<Record<string, boolean>>({});
-  const [coreContractErrors, setCoreContractErrors] = useState<Record<string, string>>({});
+  const [coreContractErrors, setCoreContractErrors] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [reloadPending, setReloadPending] = useState(false);
   const [compiledLoading, setCompiledLoading] = useState(false);
+  const [compiledFailed, setCompiledFailed] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
+  const [saveReceipt, setSaveReceipt] = useState(false);
   const [unsavedDialogOpen, setUnsavedDialogOpen] = useState(false);
   const pendingNavigationRef = useRef<(() => void) | null>(null);
   const allowNavigationRef = useRef(false);
+  const draftRef = useRef<AccountWidgetDefaultsDocument | null>(null);
+  const saveReceiptTimerRef = useRef<number | null>(null);
+  draftRef.current = draft;
 
   const widgetTypes = useMemo(
     () =>
@@ -142,14 +142,14 @@ export function WidgetDefaultsDomain() {
   );
   const widgetTypesKey = widgetTypes.join('\n');
   const dirty = Boolean(baseline && draft && stableJson(baseline) !== stableJson(draft));
-  const coreContractErrorEntries = widgetTypes
-    .map((widgetType) => [widgetType, coreContractErrors[widgetType]] as const)
-    .filter((entry): entry is readonly [string, string] => Boolean(entry[1]));
+  const coreContractErrorEntries = widgetTypes.filter(
+    (widgetType) => coreContractErrors[widgetType] === true,
+  );
   const coreControlsReadyForAll =
     widgetTypes.length > 0 &&
     widgetTypes.every((widgetType) => coreControlsReady[widgetType] === true);
   const saveBlocked =
-    Boolean(commonContractError) ||
+    commonContractError ||
     !commonControlsReady ||
     coreContractErrorEntries.length > 0 ||
     !coreControlsReadyForAll;
@@ -161,7 +161,6 @@ export function WidgetDefaultsDomain() {
     const command = options?.command === true;
     if (!command) {
       setLoading(true);
-      setError('');
     }
     try {
       const payload = await accountApi.fetchJson<WidgetDefaultsPayload>(
@@ -170,9 +169,9 @@ export function WidgetDefaultsDomain() {
       );
       setBaseline(cloneDefaults(payload.widgetDefaults));
       setDraft(cloneDefaults(payload.widgetDefaults));
-      setError('');
     } catch {
-      setError(WIDGET_DEFAULTS_LOAD_ERROR_COPY);
+      setBaseline(null);
+      setDraft(null);
     } finally {
       if (!command) setLoading(false);
     }
@@ -192,11 +191,11 @@ export function WidgetDefaultsDomain() {
   }, [loadDefaults]);
 
   useEffect(() => {
-    const requestedWidgetTypes = widgetTypesKey.split('\n').filter(Boolean);
+    const requestedWidgetTypes = widgetTypesKey ? widgetTypesKey.split('\n') : [];
     if (!requestedWidgetTypes.length) return;
     let cancelled = false;
     setCompiledLoading(true);
-    setError('');
+    setCompiledFailed(false);
     Promise.all(
       requestedWidgetTypes.map(async (widgetType) => {
         const payload = await getWidgetEditorArtifact(widgetType);
@@ -207,7 +206,7 @@ export function WidgetDefaultsDomain() {
         if (cancelled) return;
         setCompiledWidgets(Object.fromEntries(entries));
         setCommonControlsReady(false);
-        setCommonContractError('');
+        setCommonContractError(false);
         setCoreControlsReady(
           Object.fromEntries(entries.map(([widgetType]) => [widgetType, false])),
         );
@@ -215,7 +214,7 @@ export function WidgetDefaultsDomain() {
       })
       .catch(() => {
         if (cancelled) return;
-        setError(WIDGET_CONTROLS_LOAD_ERROR_COPY);
+        setCompiledFailed(true);
       })
       .finally(() => {
         if (!cancelled) setCompiledLoading(false);
@@ -224,6 +223,12 @@ export function WidgetDefaultsDomain() {
       cancelled = true;
     };
   }, [widgetTypesKey]);
+
+  useEffect(() => () => {
+    if (saveReceiptTimerRef.current !== null) {
+      window.clearTimeout(saveReceiptTimerRef.current);
+    }
+  }, []);
 
   useEffect(() => {
     if (!dirty) return;
@@ -306,31 +311,27 @@ export function WidgetDefaultsDomain() {
     );
   }, []);
 
-  const reportCommonContractError = useCallback((message: string) => {
+  const reportCommonContractError = useCallback(() => {
     setCommonControlsReady(false);
-    setCommonContractError(message);
-    setError(message);
+    setCommonContractError(true);
   }, []);
 
   const setCommonReady = useCallback((ready: boolean) => {
     setCommonControlsReady(ready);
     if (ready) {
-      setCommonContractError('');
-      setError('');
+      setCommonContractError(false);
     }
   }, []);
 
-  const reportCoreContractError = useCallback((widgetType: string, message: string) => {
+  const reportCoreContractError = useCallback((widgetType: string) => {
     setCoreControlsReady((current) => ({ ...current, [widgetType]: false }));
-    setCoreContractErrors((current) => ({ ...current, [widgetType]: message }));
-    setError(message);
+    setCoreContractErrors((current) => ({ ...current, [widgetType]: true }));
   }, []);
 
   const setCoreReady = useCallback((widgetType: string, ready: boolean) => {
     setCoreControlsReady((current) => ({ ...current, [widgetType]: ready }));
     if (ready) {
       setCoreContractErrors((current) => removeRecordKey(current, widgetType));
-      setError('');
     }
   }, []);
 
@@ -357,14 +358,14 @@ export function WidgetDefaultsDomain() {
   const discard = useCallback(() => {
     if (!baseline) return;
     setDraft(cloneDefaults(baseline));
-    setError('');
+    setSaveReceipt(false);
   }, [baseline]);
 
   const save = useCallback(async () => {
     if (!draft || saving || saveBlocked) return;
     const snapshot = stableJson(draft);
     setSaving(true);
-    setError('');
+    setSaveReceipt(false);
     try {
       const payload = await accountApi.fetchJson<WidgetDefaultsPayload>(
         '/api/account/widget-defaults',
@@ -376,11 +377,19 @@ export function WidgetDefaultsDomain() {
       );
       const saved = cloneDefaults(payload.widgetDefaults);
       setBaseline(saved);
-      setDraft((current) =>
-        current && stableJson(current) !== snapshot ? current : cloneDefaults(saved),
-      );
+      if (draftRef.current && stableJson(draftRef.current) === snapshot) {
+        setDraft(cloneDefaults(saved));
+        setSaveReceipt(true);
+        if (saveReceiptTimerRef.current !== null) {
+          window.clearTimeout(saveReceiptTimerRef.current);
+        }
+        saveReceiptTimerRef.current = window.setTimeout(() => {
+          setSaveReceipt(false);
+          saveReceiptTimerRef.current = null;
+        }, 1000);
+      }
     } catch {
-      setError(WIDGET_DEFAULTS_SAVE_ERROR_COPY);
+      // The unchanged Save control remains the retry boundary.
     } finally {
       setSaving(false);
     }
@@ -393,7 +402,6 @@ export function WidgetDefaultsDomain() {
   if (!draft) {
     return (
       <section className="rd-canvas-module" role="alert">
-        {error ? <p className="body-m">{error}</p> : null}
         <div className="rd-canvas-module__actions">
           <button
             className="diet-button"
@@ -406,104 +414,81 @@ export function WidgetDefaultsDomain() {
             disabled={reloadPending}
           >
             {reloadPending ? <span className="diet-spinner" aria-hidden="true" /> : null}
-            <span className="diet-button__label">Reload</span>
+            <span className="diet-button__label">{widgetDefaultsCopy.reload}</span>
           </button>
         </div>
       </section>
     );
   }
 
-  if (compiledLoading || !controlsLoaded) {
-    if (error && !compiledLoading) {
-      return (
-        <section className="rd-canvas-module widget-defaults-contract-error" role="alert">
-          <div>
-            <h2 className="heading-4">Widget Defaults Contract Error</h2>
-            <p className="body-s widget-defaults-error">{error}</p>
-          </div>
-          <p className="body-m">
-            Widget defaults require compiled Builder metadata. Fix the common controls or the widget
-            spec before editing defaults.
-          </p>
-        </section>
-      );
-    }
+  if (compiledLoading || (!controlsLoaded && !compiledFailed)) {
     return <RomaLoadingState className="rd-canvas-module" />;
   }
 
-  if (commonContractError) {
-    return (
-      <section className="rd-canvas-module widget-defaults-contract-error" role="alert">
-        <div>
-          <h2 className="heading-4">Widget Defaults Contract Error</h2>
-          <p className="body-s widget-defaults-error">{commonContractError}</p>
-        </div>
-        <p className="body-m">
-          Widget defaults require rendered Builder controls and Dieter hydration. Fix the common
-          controls or the widget spec before editing defaults.
-        </p>
-      </section>
-    );
-  }
-
-  if (coreContractErrorEntries.length > 0) {
-    return (
-      <section className="rd-canvas-module widget-defaults-contract-error" role="alert">
-        <div>
-          <h2 className="heading-4">Widget Defaults Contract Error</h2>
-          <pre className="widget-defaults-contract-error__paths body-s">
-            {coreContractErrorEntries
-              .map(
-                ([widgetType, message]) =>
-                  `${compiledWidgets[widgetType]!.displayName}: ${message}`,
-              )
-              .join('\n')}
-          </pre>
-        </div>
-        <p className="body-m">
-          Widget defaults require rendered Builder controls and Dieter hydration. Fix the widget
-          spec before editing defaults.
-        </p>
-      </section>
-    );
+  if (compiledFailed || commonContractError || coreContractErrorEntries.length > 0) {
+    return null;
   }
 
   return (
     <>
       <section className="widget-defaults">
         <div className="widget-defaults-toolbar">
-          <div>
-            {compiledLoading ? <RomaLoadingState inline /> : null}
-            {error ? (
-              <p className="body-s widget-defaults-error" role="alert">
-                {error}
-              </p>
-            ) : null}
-          </div>
+          <div />
           <div className="widget-defaults-actions">
             <button
               className="diet-button"
               data-size="medium"
               data-type="tertiary"
               type="button"
-              disabled={!dirty || saving}
+              disabled={!dirty || saving || saveReceipt}
               onClick={discard}
             >
-              <span className="diet-button__label">Discard</span>
+              <span className="diet-button__label">{widgetDefaultsCopy.discard}</span>
             </button>
-            <button
-              className="diet-button"
-              data-size="medium"
-              data-type="primary"
-              data-loading={saving || undefined}
-              type="button"
-              aria-busy={saving || undefined}
-              disabled={!dirty || saving || saveBlocked}
-              onClick={() => void save()}
-            >
-              {saving ? <span className="diet-spinner" aria-hidden="true" /> : null}
-              <span className="diet-button__label">{saving ? 'Saving...' : 'Save'}</span>
-            </button>
+            {saving ? (
+              <button
+                className="diet-button"
+                data-size="medium"
+                data-type="primary"
+                data-tone="save"
+                data-loading="true"
+                type="button"
+                aria-busy="true"
+                disabled
+              >
+                <span className="diet-spinner" aria-hidden="true" />
+                <span className="diet-button__label">{widgetDefaultsCopy.saving}</span>
+              </button>
+            ) : saveReceipt ? (
+              <button
+                className="diet-button"
+                data-size="medium"
+                data-type="primary"
+                data-tone="save"
+                data-state="success"
+                type="button"
+                disabled
+              >
+                <span
+                  className="diet-icon diet-icon-mask"
+                  aria-hidden="true"
+                  style={{ '--diet-icon-source': 'url("/dieter/icons/svg/checkmark.svg")' } as CSSProperties}
+                />
+                <span className="diet-button__label">{widgetDefaultsCopy.saved}</span>
+              </button>
+            ) : dirty ? (
+              <button
+                className="diet-button"
+                data-size="medium"
+                data-type="primary"
+                data-tone="save"
+                type="button"
+                disabled={saveBlocked}
+                onClick={() => void save()}
+              >
+                <span className="diet-button__label">{widgetDefaultsCopy.save}</span>
+              </button>
+            ) : null}
           </div>
         </div>
 
@@ -513,7 +498,6 @@ export function WidgetDefaultsDomain() {
             payload={compiledWidgets[widgetTypes[0]!]!}
             fontLibrary={draft.fontLibrary}
             hostId="widget-defaults-common"
-            scopeLabel="All widgets"
             values={draft.common}
             onOps={updateCommonOps}
             onContractError={reportCommonContractError}
@@ -522,7 +506,7 @@ export function WidgetDefaultsDomain() {
         </div>
 
         <div className="widget-defaults-toolbar widget-defaults-toolbar--secondary">
-          <h2 className="heading-4">Widget Defaults</h2>
+          <h2 className="heading-4">{widgetDefaultsCopy.heading}</h2>
         </div>
         <div className="widget-defaults-widgets">
           {widgetEntries.map((entry) => (
@@ -539,7 +523,6 @@ export function WidgetDefaultsDomain() {
       </section>
       <RomaUnsavedChangesDialog
         open={unsavedDialogOpen}
-        message="You have unsaved widget defaults."
         onKeepEditing={keepEditing}
         onDiscard={discardAndContinue}
       />

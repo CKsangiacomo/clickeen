@@ -1,0 +1,15 @@
+{
+  "fields": {
+    "sizing": "Sizing",
+    "chooseSizing": "Choose sizing",
+    "height": "Height (px)",
+    "minimumHeight": "Minimum height (px)",
+    "preferredViewportHeight": "Preferred viewport height (vw)",
+    "maximumHeight": "Maximum height (px)"
+  },
+  "options": {
+    "auto": "Auto",
+    "fixed": "Fixed",
+    "responsive": "Responsive"
+  }
+}

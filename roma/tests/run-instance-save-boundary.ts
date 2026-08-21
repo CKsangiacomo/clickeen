@@ -26,7 +26,7 @@ async function testBobSaveHasNoPartialLocalizationBranch(): Promise<void> {
   assert.doesNotMatch(savingSource, /localeCascade/);
   assert.doesNotMatch(savingSource, /source: 'translation'/);
   assert.match(savingSource, /command: 'save-instance'/);
-  assert.match(savingSource, /\.\.\.\(!instanceId \? \{ widgetType \} : \{\}\)/);
+  assert.match(savingSource, /\.\.\.\(instanceId === null \? \{ widgetType \} : \{\}\)/);
   assert.match(savingSource, /savedInstanceDataSignature: submittedInstanceDataSignature/);
 }
 
@@ -56,7 +56,7 @@ async function testNewDraftPersistsOnlyOnFirstSave(): Promise<void> {
   assert.doesNotMatch(createRoute, /composeInstanceConfigFromAccountDefaults|loadAccountWidgetDefaultsInTokyo/);
 
   assert.match(savingSource, /command: 'save-instance'/);
-  assert.match(savingSource, /\.\.\.\(instanceId \? \{ instanceId \} : \{\}\)/);
+  assert.match(savingSource, /\.\.\.\(instanceId === null \? \{\} : \{ instanceId \}\)/);
   assert.match(savingSource, /instanceId: created\.instanceId/);
   assert.match(savingSource, /baseLocale: created\.baseLocale/);
   assert.match(savingSource, /translationSetup:[\s\S]*baseLocale: created\.baseLocale/);
@@ -99,7 +99,7 @@ async function testExplicitTranslationRouteSurvives(): Promise<void> {
   assert.match(translationRouteSource, /activeLocalesToGenerate/);
   assert.match(translationRouteSource, /generateAccountInstanceTranslations\(\{[\s\S]*onActivity: activity/);
   assert.doesNotMatch(translationRouteSource, /materializeRuntimePackage|localePackages|LocalePackage/);
-  assert.match(panelSource, /bobUiCopy\.commands\.translations\.ready/);
+  assert.match(panelSource, /translationsCopy\.command\.ready/);
   assert.match(panelSource, /generateTranslations/);
   assert.doesNotMatch(panelSource, /localePackages|localized package|public package/i);
   assert.match(translationValuesRouteSource, /export async function PUT/);

@@ -129,14 +129,17 @@ in-app navigation uses the Roma unsaved-changes dialog.
 
 Roma also composes one product-neutral consequential-command confirmation from
 the current Dieter Popup and Buttons. It accepts only open state, exact title,
-body, confirm label, Cancel, and Confirm callbacks. Opening, Cancel, backdrop,
+an optional exact selected-subject value, confirm label, Cancel, and Confirm
+callbacks. It does not invent explanatory, warning, or failure prose. Opening,
+Cancel, backdrop,
 and repeated events after a decision invoke no product command; one explicit
 Confirm invokes the already-owned command once. The current consumers are
 Widget Delete, Asset Delete, Unpublish in both Roma publication surfaces,
 Remove member, and Transfer ownership. Each consumer retains its existing
 route and authorization. The dialog stays mounted while the exact command
 runs; its Confirm Button owns the Spinner and busy state, and a command failure
-remains in that dialog for retry. Exact command success closes it before any
+restores that exact Confirm control as the retry boundary. Exact command
+success closes it before any
 separate passive reconciliation read, whose failure cannot turn the completed
 mutation into a retryable command. The obscured originating control does not
 duplicate the command Spinner. No
@@ -166,12 +169,12 @@ the denied system capability and compiled Widget message identity. Roma owns
 the active Builder artifact, resolves the exact body from that trusted artifact,
 adds system plan truth and actions, and opens this one Popup. There is no Bob
 plan-limit dialog followed by a Roma scaffold. Roma-native account commands use
-the same Popup host; when a denial has no Widget-specific meaning, its contextual
-body remains system-owned.
+the same Popup host. Until the product owner defines contextual wording for one
+of those system commands, Roma renders no invented body in its place.
 
 If no higher configured tier permits the exact denied demand, Roma does not
-invent a target plan. The same Popup states that the account has reached the
-maximum capacity currently available, presents Close only, and omits Upgrade.
+invent a target plan or explanatory sentence. The same Popup presents its
+system-owned limit title and Close control, and omits Upgrade.
 
 The Upgrade control is deliberately scaffolding until billing is implemented.
 It does not navigate to inactive Billing, purchase, mutate a plan, call a
@@ -241,10 +244,24 @@ The Berlin profile also carries `primaryLanguage` and dormant
 does not expose the boolean, choose a product UI locale, fetch UI translations,
 or pass a UI locale into Bob.
 
-The approved loading, empty, Save, and Republish strings are currently resolved
-from the minimal English `roma/l10n/en.json` catalog. This correction creates
-one structured English source for those exact states; it does not begin the
-separate UI-language selection or translation pass.
+Roma resolves included application Chrome directly from feature-owned English
+sources under `roma/l10n/`. Auth, Shell, systemic states, navigation, dialogs,
+account labels, plans, Widgets, Assets, Team, Profile, Billing, Usage, AI,
+Settings, Widget Defaults, Builder, publication, and account notices each own
+their current `en.json`, which callers import directly. There is no
+flat Roma catch-all catalog, runtime locale loader, registry, or fallback.
+Unapproved explanatory and error prose is removed rather than promoted into an
+English source. Widget-declared editor labels and Widget contextual upsell copy
+remain with the Widget and do not enter Roma's application catalogs. This
+source ownership does not change authentication behavior or begin UI-language
+selection or translation.
+
+Roma consumes Berlin's successful Finish session, refresh result, continuation,
+and bootstrap result as exact Clickeen truth. It separates the account capsule
+into the secure cookie required by current-account routes; it does not default,
+normalize, or semantically revalidate successful Berlin fields. HTTP transport,
+authentication, authorization, capsule verification, and role enforcement
+remain at their existing owning boundaries.
 
 The authenticated layout keeps one bootstrap provider mounted across Roma
 route transitions. The shared `main-container`, `left-nav`, and page frame render
@@ -316,6 +333,10 @@ Builder opens either a saved instance or a New draft:
    account public id, optional instance id, and label. Publication status,
    timestamps, receipt, URL, and actions remain in Roma and do not enter Bob.
 6. Receive `bob:open-editor-applied` or `bob:open-editor-failed`.
+
+A New open carries `displayName: null`, and a saved open preserves Tokyo's
+exact nullable display name. Roma renders no replacement heading or
+publication value while that truth is absent or unresolved.
 
 `NEXT_PUBLIC_BOB_URL` is required and must be an `http` or `https` origin with
 no path, query, or hash. Missing or malformed Bob origin config fails Builder
@@ -475,7 +496,8 @@ operation, Serve migration, or compatibility path.
 When the command is invoked through hosted Bob, Translation Agent may stream
 Agent Activity while it operates. Roma forwards that activity to Bob; Roma does
 not author it, summarize it, poll for it, persist it, or convert it into product
-status.
+status. After SSE framing and JSON transport decoding, Roma forwards the exact
+typed Translation Agent event without rechecking or filtering its message.
 
 Account language settings choose which languages are available to widgets. Roma
 writes that account configuration to Supabase. Adding a language does not call
@@ -496,9 +518,10 @@ published receipt from exact `updatedAt`, `publishedAt`, and publication status,
 and builds public URL/code actions from the current account and instance
 coordinate. Bob receives none of those facts or actions.
 Publish and Republish remain immediate explicit commands. An Unpublish intent
-opens the shared confirmation in both the inventory and Builder header; the
-dialog names the exact Widget, says it will go offline while saved source
-remains, and sends the existing Unpublish command only after explicit confirm.
+opens the shared confirmation in both the inventory and Builder header. The
+dialog uses the exact Unpublish control identity and, when available, the exact
+selected instance name; it sends the existing Unpublish command only after
+explicit confirm and invents no warning paragraph.
 
 Republish is one special green Button, independent of its required Dieter
 hierarchy type. Ready uses the current publication Icon plus `Republish`;
@@ -620,9 +643,9 @@ once. The instance-facts failure retains deterministic priority when both fail;
 otherwise the definitions failure is returned. Roma adds no cache, timeout,
 probe, retry, fallback, or alternate read to this cold path. Tokyo-worker
 returns stored `displayName` as string or `null`; Roma preserves that exact
-truth. A saved instance with no display name renders no name. The explicit
-`Untitled widget` label belongs only to a new browser-memory draft before its
-first Save; it is not substituted for a saved instance's missing name.
+truth. A saved instance with no display name renders no name. A New
+browser-memory draft likewise begins with `displayName: null`; Roma does not
+substitute an `Untitled` label.
 
 Local implementation: New and Duplicate do not enforce
 `widgets.instances.max`. New writes nothing; Duplicate writes an immediate
@@ -743,6 +766,15 @@ system result against the command it just sent.
 Berlin owns person identity, account membership, roles, invitations, ownership,
 and account lifecycle records. Roma renders those surfaces and sends mutations
 through same-origin routes backed by Berlin.
+
+The Profile, Team, Team Member, Settings ownership, account-plan, Usage, and AI
+surfaces consume Berlin's successful typed profile, membership, lifecycle, and
+signed entitlement truth directly. Roma retains human form admission, role and
+account authorization, and UI selection/filtering; it does not trim, repair,
+revalidate, or fill Berlin-produced values. Tokyo asset facts, storage usage,
+Widget facts, Save timestamps, publication facts, and Widget Defaults likewise
+remain exact after successful transport. Only an authoritative `null` limit is
+presented as Unlimited.
 
 Roma owns Settings > Widget Defaults. That surface edits only the current
 account defaults document through `/api/account/widget-defaults`; it does not

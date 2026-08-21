@@ -1,0 +1,24 @@
+{
+  "account": "Account",
+  "plan": "Plan",
+  "role": "Your role",
+  "website": "Website",
+  "openWidgets": "Open widgets",
+  "openAssets": "Open assets",
+  "openBilling": "Open billing",
+  "currentPlan": "Current plan",
+  "ownership": "Ownership",
+  "selectNextOwner": "Select next owner",
+  "transferOwnership": "Transfer ownership",
+  "noOwnerCandidates": "No eligible members",
+  "languages": {
+    "title": "Languages",
+    "refresh": "Refresh",
+    "refreshing": "Refreshing…",
+    "base": "Base language",
+    "chooseBase": "Choose base language",
+    "active": "Active languages",
+    "save": "Save languages",
+    "saving": "Saving…"
+  }
+}

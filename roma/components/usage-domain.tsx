@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import usageCopy from '../l10n/usage/en.json';
 import { formatAccountTierLabel, formatBytes } from '../lib/format';
 import { useRomaAccountApi } from './account-api';
 import { useRomaAccountContext } from './roma-account-context';
@@ -12,36 +13,31 @@ type UsageStorageResponse = {
 };
 
 export function UsageDomain() {
-  const { accountContext, activeAccount, data } = useRomaAccountContext();
+  const { activeAccount, accountContext, data } = useRomaAccountContext();
   const accountApi = useRomaAccountApi();
   const accountId = accountContext.accountId;
   const entitlements = data.authz.entitlements;
   const [storageBytesUsed, setStorageBytesUsed] = useState<number | null>(null);
   const [storageLoading, setStorageLoading] = useState(true);
-  const [storageError, setStorageError] = useState(false);
 
-  const storageLimit = entitlements.limits['storage.bytes.max'] ?? null;
-  const storageLimitLabel =
-    typeof storageLimit === 'number' && Number.isFinite(storageLimit) && storageLimit > 0 ? formatBytes(storageLimit) : 'Unlimited';
+  const storageLimit = entitlements.limits['storage.bytes.max'];
+  const storageLimitLabel = storageLimit === null ? usageCopy.unlimited : formatBytes(storageLimit);
   const storageUsedLabel = storageBytesUsed == null ? null : formatBytes(storageBytesUsed);
 
   useEffect(() => {
     let cancelled = false;
     async function loadStorageUsage() {
       setStorageLoading(true);
-      setStorageError(false);
       try {
         const payload = await accountApi.fetchJson<UsageStorageResponse>(`/api/account/usage`, {
           method: 'GET',
         });
         if (!cancelled) {
           setStorageBytesUsed(payload.storageBytesUsed);
-          setStorageError(false);
         }
       } catch {
         if (!cancelled) {
           setStorageBytesUsed(null);
-          setStorageError(true);
         }
       } finally {
         if (!cancelled) setStorageLoading(false);
@@ -56,30 +52,20 @@ export function UsageDomain() {
   return (
     <>
       <section className="rd-canvas-module">
-        <p className="body-m">Account: {accountContext.accountLabel}</p>
-        <p className="body-m">Storage usage is live. Broader usage reporting is not connected in Roma yet.</p>
-        {storageError ? (
-          <p className="body-m" role="alert">
-            Storage usage could not be loaded.
-          </p>
-        ) : null}
-      </section>
-
-      <section className="rd-canvas-module">
         {storageLoading ? <RomaLoadingState /> : null}
         <div className="roma-grid roma-grid--three">
           <article className="roma-card">
-            <h2 className="heading-6">Current plan</h2>
+            <h2 className="heading-6">{usageCopy.currentPlan}</h2>
             <p className="body-s">{formatAccountTierLabel(activeAccount.tier)}</p>
           </article>
           {storageUsedLabel !== null ? (
             <article className="roma-card">
-              <h2 className="heading-6">Storage used</h2>
+              <h2 className="heading-6">{usageCopy.storageUsed}</h2>
               <p className="body-s">{storageUsedLabel}</p>
             </article>
           ) : null}
           <article className="roma-card">
-            <h2 className="heading-6">Storage limit</h2>
+            <h2 className="heading-6">{usageCopy.storageLimit}</h2>
             <p className="body-s">{storageLimitLabel}</p>
           </article>
         </div>

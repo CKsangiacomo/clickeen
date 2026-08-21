@@ -142,8 +142,9 @@ function testSendStopToggle() {
 
   assertPass('Stop button rendered when isLoading', () => {
     assert.ok(
-      SOURCE.includes('{isLoading ? (') && SOURCE.includes('>Stop<'),
-      'Stop button conditional on loading state',
+      SOURCE.includes('{isLoading ? (') &&
+        SOURCE.includes('{copilotCopy.controls.stop}'),
+      'l10n-owned Stop button is conditional on loading state',
     );
   });
 
@@ -217,10 +218,11 @@ function testTierStepLimit() {
     );
   });
 
-  assertPass('refusal message mentions step limit', () => {
+  assertPass('step-limit refusal returns the existing turn to Not applied', () => {
+    const continuationBlock = SOURCE.match(/const sendContinuation[\s\S]{0,2000}/)?.[0] ?? '';
     assert.ok(
-      SOURCE.includes('step limit'),
-      'message mentions step limit',
+      continuationBlock.includes("presentationStatus: 'not-applied'"),
+      'existing passive status reports that the requested edit was not applied',
     );
   });
 
@@ -285,10 +287,9 @@ function testDraftProjectionAndReadiness() {
   });
 
   assertPass('Copilot waits for compiled, policy, and saved-instance coordinates', () => {
-    const readinessBlock = SOURCE.match(/const uiDisabledReason[\s\S]{0,400}/)?.[0] ?? '';
+    const readinessBlock = SOURCE.match(/const uiDisabled[\s\S]{0,300}/)?.[0] ?? '';
     assert.ok(readinessBlock.includes('!compiled || !chrome.policy || !chrome.copilot'), 'temporal boot authorities gate use');
-    assert.ok(readinessBlock.includes('!instanceId'), 'new unsaved widget is gated');
-    assert.ok(readinessBlock.includes('Save this widget before using Copilot.'), 'Save-first boundary is visible');
+    assert.ok(readinessBlock.includes('instanceId === null'), 'new unsaved widget is gated');
   });
 }
 

@@ -19,7 +19,7 @@ export function RomaPageHeader({
     <header className="page__header" data-width={width}>
       <div className="page__heading">
         {navigationTrigger}
-        <h1 className="heading-2">{title}</h1>
+        {title == null ? null : <h1 className="heading-2">{title}</h1>}
         {headingExtras}
       </div>
       <div className="page__actions">{actions}</div>

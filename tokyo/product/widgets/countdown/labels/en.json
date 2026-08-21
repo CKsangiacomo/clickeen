@@ -182,8 +182,6 @@
     "content.field.countdown.timer.time-unit.dropdown-actions.option.weeks.label": "Weeks",
     "content.field.countdown.timer.timezone.textfield.attr.placeholder": "America/Los_Angeles",
     "content.field.countdown.timer.timezone.textfield.label": "Time zone (IANA or browser)",
-    "core.plural": "Timer tiles",
-    "core.singular": "Timer tile",
     "core.size-cluster": "Countdown area",
     "panel.appearance": "Appearance",
     "panel.content": "Content",

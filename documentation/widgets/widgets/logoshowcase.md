@@ -62,7 +62,6 @@ Core defaults live under:
 
 ```text
 logoshowcase
-uiLabels
 ```
 
 Core state families:

@@ -1,23 +1,23 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { createDialogLifecycle, type DialogLifecycle } from '../../dieter/components/shared/dialog-lifecycle';
+import publicationCopy from '../l10n/publication/en.json';
+import ROMA_DIALOGS_UI_COPY from '../l10n/dialogs/en.json';
 import { copyToClipboard } from '../lib/copy-to-clipboard';
 import type { WidgetPublicActions } from '../lib/public-widget-actions';
 
 const COPY_OPTIONS = [
-  { key: 'publicUrl', label: 'Widget URL' },
-  { key: 'iframeSnippet', label: 'Embed code' },
+  { key: 'publicUrl', label: publicationCopy.widgetUrl },
+  { key: 'iframeSnippet', label: publicationCopy.embedCode },
 ] as const;
 
 export function WidgetCopyCodeDialog({
   open,
-  instanceName,
   actions,
   onClose,
 }: {
   open: boolean;
-  instanceName: string | null;
   actions: WidgetPublicActions | null;
   onClose: () => void;
 }) {
@@ -27,7 +27,6 @@ export function WidgetCopyCodeDialog({
   const onCloseRef = useRef(onClose);
   const openRef = useRef(open);
   const copyRequestRef = useRef(0);
-  const [copyStatus, setCopyStatus] = useState<string | null>(null);
 
   useEffect(() => {
     onCloseRef.current = onClose;
@@ -56,40 +55,32 @@ export function WidgetCopyCodeDialog({
     else {
       copyRequestRef.current += 1;
       lifecycle.close();
-      setCopyStatus(null);
     }
   }, [open]);
 
-  const copy = useCallback(async (label: string, value: string) => {
+  const copy = useCallback(async (value: string) => {
     const request = ++copyRequestRef.current;
-    setCopyStatus(null);
-    const copied = await copyToClipboard(value);
+    await copyToClipboard(value);
     if (!openRef.current || request !== copyRequestRef.current) return;
-    setCopyStatus(copied ? `${label} copied` : `${label} could not be copied`);
   }, []);
-
-  const complete = Boolean(actions?.publicUrl && actions.iframeSnippet);
 
   return (
     <dialog ref={dialogRef} className="diet-popup" aria-labelledby="roma-widget-code-title">
       <header className="diet-popup__header">
-        <h2 id="roma-widget-code-title" className="heading-4">Copy code</h2>
+        <h2 id="roma-widget-code-title" className="heading-4">{publicationCopy.copyCode}</h2>
         <button
           className="diet-button diet-popup__dismiss"
           data-size="medium"
           data-type="quaternary"
           type="button"
-          aria-label="Close"
+          aria-label={ROMA_DIALOGS_UI_COPY.close}
           onClick={onClose}
         >
           <span className="diet-icon" data-icon="multiply" aria-hidden="true" />
         </button>
       </header>
       <div className="diet-popup__body">
-        <p className="body-m">
-          {instanceName ? <>Use {instanceName} on your website.</> : 'Use this widget on your website.'}
-        </p>
-        {complete && actions ? (
+        {actions ? (
           <div className="roma-widget-code-list">
             {COPY_OPTIONS.map((option) => (
               <section className="roma-widget-code-item" key={option.key}>
@@ -100,20 +91,17 @@ export function WidgetCopyCodeDialog({
                     data-size="small"
                     data-type="tertiary"
                     type="button"
-                    aria-label={`Copy ${option.label}`}
-                    onClick={() => void copy(option.label, actions[option.key])}
+                    aria-label={publicationCopy.copyAccessible.replace('{label}', option.label)}
+                    onClick={() => void copy(actions[option.key])}
                   >
-                    <span className="diet-button__label">Copy</span>
+                    <span className="diet-button__label">{publicationCopy.copy}</span>
                   </button>
                 </div>
                 <pre className="roma-widget-code-value body-s"><code>{actions[option.key]}</code></pre>
               </section>
             ))}
           </div>
-        ) : (
-          <p className="body-m" role="alert">Public widget code is unavailable.</p>
-        )}
-        {copyStatus ? <p className="body-s" role="status">{copyStatus}</p> : null}
+        ) : null}
       </div>
       <footer className="diet-popup__footer">
         <div className="diet-popup__actions">
@@ -125,7 +113,7 @@ export function WidgetCopyCodeDialog({
             type="button"
             onClick={onClose}
           >
-            <span className="diet-button__label">Close</span>
+            <span className="diet-button__label">{ROMA_DIALOGS_UI_COPY.close}</span>
           </button>
         </div>
       </footer>

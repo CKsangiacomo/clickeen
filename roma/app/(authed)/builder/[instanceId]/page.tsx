@@ -1,6 +1,7 @@
 import { BuilderDomain } from '../../../../components/builder-domain';
 import { RomaDomainErrorBoundary } from '../../../../components/roma-domain-error-boundary';
 import { RomaShell } from '../../../../components/roma-shell';
+import ROMA_NAVIGATION_UI_COPY from '../../../../l10n/navigation/en.json';
 
 type BuilderPageProps = {
   params: Promise<{ instanceId: string }>;
@@ -13,11 +14,11 @@ export default async function BuilderPage({ params }: BuilderPageProps) {
   return (
     <RomaShell
       activeDomain="builder"
-      title="Builder"
+      title={ROMA_NAVIGATION_UI_COPY.domains.builder}
       fullCanvas
     >
       <RomaDomainErrorBoundary
-        domainLabel="Builder"
+        domainLabel={ROMA_NAVIGATION_UI_COPY.domains.builder}
         resetKey={`builder:${initialInstanceId || 'default'}`}
       >
         <BuilderDomain initialInstanceId={initialInstanceId} />

@@ -361,6 +361,11 @@ CORS does not advertise the internal-service header.
 The binding and applicable signed authority proof establish the caller's
 authorization. After that boundary, Tokyo-worker trusts the exact Roma or agent
 command and does not semantically revalidate its Clickeen-produced payload.
+For account-asset Resolve and Delete, Roma's browser-facing routes have already
+admitted the direct single-filename asset-reference list or path coordinate.
+Tokyo-worker decodes the private request transport and uses those exact
+accepted coordinates directly; neither its route handler nor the storage
+lookup/delete helper repeats the syntax or uniqueness decision.
 
 Storage command routes cover:
 

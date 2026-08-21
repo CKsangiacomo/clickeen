@@ -1,9 +1,12 @@
 'use client';
 
 import Link from 'next/link';
+import type { MemberRole } from '@clickeen/ck-policy';
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { formatAccountRoleLabel, isAccountRoleValue } from '../lib/format';
+import teamCopy from '../l10n/team/en.json';
+import ROMA_DIALOGS_UI_COPY from '../l10n/dialogs/en.json';
+import { formatAccountRoleLabel } from '../lib/format';
 import { resolvePersonLabel } from '../lib/person-profile';
 import { useRomaAccountApi } from './account-api';
 import { DieterDropdownActions } from './dieter-dropdown-actions';
@@ -27,7 +30,7 @@ type TeamMemberResponse = {
   role: string;
   member: {
     userId: string;
-    role: string;
+    role: MemberRole;
     createdAt: string | null;
     profile: TeamMemberProfile | null;
   };
@@ -37,44 +40,12 @@ type TeamMemberDomainProps = {
   memberId: string;
 };
 
-const TEAM_MEMBER_REASON_COPY: Record<string, string> = {
-  'coreui.errors.account.memberNotFound': 'That team member could not be found.',
-  'coreui.errors.auth.required': 'You need to sign in again to manage team settings.',
-  'coreui.errors.auth.forbidden': 'You do not have permission to manage this team member.',
-  'coreui.errors.db.readFailed': 'Failed to load this team member. Please try again.',
-  'coreui.errors.db.writeFailed': 'Saving the membership failed. Please try again.',
-  'coreui.errors.payload.invalid': 'The membership update was invalid. Please try again.',
-  'coreui.errors.network.timeout': 'The request timed out. Please try again.',
-};
-
-function resolveTeamMemberErrorCopy(reason: string, fallback: string): string {
-  const normalized = String(reason || '').trim();
-  if (!normalized) return fallback;
-  const mapped = TEAM_MEMBER_REASON_COPY[normalized];
-  if (mapped) return mapped;
-  if (normalized.startsWith('HTTP_') || normalized.startsWith('coreui.')) return fallback;
-  return fallback;
+function resolveMemberDisplayName(profile: TeamMemberProfile | null): string | null {
+  return resolvePersonLabel(profile);
 }
 
-function resolveErrorReason(payload: unknown, fallback: string): string {
-  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return fallback;
-  const error = (payload as { error?: unknown }).error;
-  if (!error || typeof error !== 'object' || Array.isArray(error)) return fallback;
-  return String((error as { reasonKey?: unknown }).reasonKey || fallback);
-}
-
-function resolveMemberDisplayName(profile: TeamMemberProfile | null, memberId: string): string {
-  return resolvePersonLabel(profile, memberId);
-}
-
-function formatNullableValue(value: string | null | undefined): string {
-  const normalized = String(value || '').trim();
-  return normalized;
-}
-
-function formatCountryValue(value: string | null | undefined): string {
-  const country = String(value || '').trim();
-  if (!country) return '';
+function formatCountryValue(country: string | null): string | null {
+  if (country === null) return null;
   try {
     const displayNames = new Intl.DisplayNames(undefined, { type: 'region' });
     return displayNames.of(country) || country;
@@ -92,40 +63,28 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
   const [loading, setLoading] = useState(true);
   const [retryPending, setRetryPending] = useState(false);
   const [member, setMember] = useState<TeamMemberResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [mutationError, setMutationError] = useState<string | null>(null);
+  const [memberFailed, setMemberFailed] = useState(false);
   const [savingRole, setSavingRole] = useState(false);
   const [removingMember, setRemovingMember] = useState(false);
-  const [removeConfirmationName, setRemoveConfirmationName] = useState<string | null>(null);
-  const [roleDraft, setRoleDraft] = useState('viewer');
-
-  const accountId = accountContext.accountId;
+  const [removeConfirmationOpen, setRemoveConfirmationOpen] = useState(false);
+  const [roleDraft, setRoleDraft] = useState<MemberRole>('viewer');
 
   const refreshMember = useCallback(async (options?: { command?: boolean }) => {
     const command = options?.command === true;
     if (!command) {
       setLoading(true);
-      setError(null);
+      setMemberFailed(false);
     }
     try {
-      const response = await accountApi.fetchRaw(`/api/account/team/members/${encodeURIComponent(memberId)}`, {
+      const payload = await accountApi.fetchJson<TeamMemberResponse>(`/api/account/team/members/${encodeURIComponent(memberId)}`, {
         method: 'GET',
       });
-      const payload = (await response.json().catch(() => null)) as TeamMemberResponse | { error?: unknown } | null;
-      if (!response.ok) {
-        throw new Error(resolveErrorReason(payload, `HTTP_${response.status}`));
-      }
-      const parsed = payload as TeamMemberResponse | null;
-      if (!parsed?.member) {
-        throw new Error('coreui.errors.payload.invalid');
-      }
-      setMember(parsed);
-      setRoleDraft(parsed.member.role);
-      setMutationError(null);
-    } catch (nextError) {
-      const reason = nextError instanceof Error ? nextError.message : String(nextError);
+      setMember(payload);
+      setRoleDraft(payload.member.role);
+      setMemberFailed(false);
+    } catch {
       setMember(null);
-      setError(resolveTeamMemberErrorCopy(reason, 'Failed to load this team member. Please try again.'));
+      setMemberFailed(true);
     } finally {
       if (!command) setLoading(false);
     }
@@ -145,76 +104,55 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
   }, [refreshMember]);
 
   const saveRole = useCallback(async () => {
-    if (!accountId || !canManage || !member || member.member.role === 'owner' || !isAccountRoleValue(roleDraft) || roleDraft === 'owner') return;
+    if (!canManage || !member || member.member.role === 'owner' || roleDraft === 'owner') return;
     setSavingRole(true);
-    setMutationError(null);
     try {
-      const response = await accountApi.fetchRaw(`/api/account/team/members/${encodeURIComponent(memberId)}`, {
+      const payload = await accountApi.fetchJson<TeamMemberResponse>(`/api/account/team/members/${encodeURIComponent(memberId)}`, {
         method: 'PATCH',
         headers: accountApi.buildHeaders({ contentType: 'application/json' }),
         body: JSON.stringify({ role: roleDraft }),
       });
-      const payload = (await response.json().catch(() => null)) as TeamMemberResponse | { error?: unknown } | null;
-      if (!response.ok) {
-        throw new Error(resolveErrorReason(payload, `HTTP_${response.status}`));
-      }
-      const parsed = payload as TeamMemberResponse | null;
-      if (!parsed?.member) {
-        throw new Error('coreui.errors.payload.invalid');
-      }
-      setMember(parsed);
-      setRoleDraft(parsed.member.role);
+      setMember(payload);
+      setRoleDraft(payload.member.role);
       await reload();
-    } catch (nextError) {
-      const reason = nextError instanceof Error ? nextError.message : String(nextError);
-      setMutationError(resolveTeamMemberErrorCopy(reason, 'Saving the membership failed. Please try again.'));
+    } catch {
     } finally {
       setSavingRole(false);
     }
-  }, [accountApi, accountId, canManage, member, memberId, reload, roleDraft]);
+  }, [accountApi, canManage, member, memberId, reload, roleDraft]);
 
   const removeMember = useCallback(async () => {
-    if (!accountId || !canManage || !member || member.member.role === 'owner') return false;
+    if (!canManage || !member || member.member.role === 'owner') return false;
     setRemovingMember(true);
-    setMutationError(null);
     try {
-      const response = await accountApi.fetchRaw(`/api/account/team/members/${encodeURIComponent(memberId)}`, {
+      await accountApi.fetchJson(`/api/account/team/members/${encodeURIComponent(memberId)}`, {
         method: 'DELETE',
       });
-      const payload = (await response.json().catch(() => null)) as {
-        error?: unknown;
-      } | null;
-      if (!response.ok) {
-        throw new Error(resolveErrorReason(payload, `HTTP_${response.status}`));
-      }
-      setRemoveConfirmationName(null);
+      setRemoveConfirmationOpen(false);
       router.push('/team');
       void reload();
       return true;
-    } catch (nextError) {
-      const reason = nextError instanceof Error ? nextError.message : String(nextError);
-      setMutationError(resolveTeamMemberErrorCopy(reason, 'Removing the team member failed. Please try again.'));
+    } catch {
       return false;
     } finally {
       setRemovingMember(false);
     }
-  }, [accountApi, accountId, canManage, member, memberId, reload, router]);
+  }, [accountApi, canManage, member, memberId, reload, router]);
 
   return (
     <>
       <section className="rd-canvas-module roma-inline-stack" style={{ justifyContent: 'space-between', gap: '12px' }}>
         <div>
-          <p className="body-m">Account: {accountContext.accountLabel}</p>
-          <p className="body-s">Team manages memberships. Personal details stay with the member in User Settings.</p>
+          <p className="label-s">{teamCopy.account}</p>
+          <p className="body-m">{accountContext.accountLabel}</p>
         </div>
         <Link className="diet-button" data-size="medium" data-type="tertiary" href="/team">
-          <span className="diet-button__label">Back to team</span>
+          <span className="diet-button__label">{teamCopy.back}</span>
         </Link>
       </section>
 
-      {error ? (
+      {memberFailed ? (
         <section className="rd-canvas-module" role="alert">
-          <p className="body-m">{error}</p>
           <button
             className="diet-button"
             data-size="medium"
@@ -226,46 +164,42 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
             disabled={retryPending}
           >
             {retryPending ? <span className="diet-spinner" aria-hidden="true" /> : null}
-            <span className="diet-button__label">Retry</span>
+            <span className="diet-button__label">{ROMA_DIALOGS_UI_COPY.retry}</span>
           </button>
         </section>
       ) : null}
 
-      {loading && !member && !error ? <RomaLoadingState className="rd-canvas-module" /> : null}
+      {loading && !member && !memberFailed ? <RomaLoadingState className="rd-canvas-module" /> : null}
 
       {member ? (
         <>
           <section className="rd-canvas-module">
             <div className="roma-inline-stack" style={{ justifyContent: 'space-between', gap: '12px' }}>
               <div>
-                <h2 className="heading-3">{resolveMemberDisplayName(member.member.profile, member.member.userId)}</h2>
+                {resolveMemberDisplayName(member.member.profile) ? <h2 className="heading-3">{resolveMemberDisplayName(member.member.profile)}</h2> : null}
                 {member.member.profile?.primaryEmail ? <p className="body-s">{member.member.profile.primaryEmail}</p> : null}
               </div>
               <div>
-                <p className="label-s">Role</p>
+                <p className="label-s">{teamCopy.role}</p>
                 <p className="body-m">{formatAccountRoleLabel(member.member.role)}</p>
-                {member.member.createdAt ? <p className="body-s">Joined: {member.member.createdAt}</p> : null}
+                {member.member.createdAt ? <><p className="label-s">{teamCopy.joined}</p><p className="body-s">{member.member.createdAt}</p></> : null}
               </div>
             </div>
           </section>
 
           <section className="rd-canvas-module">
-            <h3 className="heading-4">Membership</h3>
-            {member.member.role === 'owner' ? (
-              <p className="body-s">Owner role is final account-holder authority. Ownership transfer stays on a dedicated flow.</p>
-            ) : null}
+            <h3 className="heading-4">{teamCopy.membership}</h3>
             <div className="roma-inline-stack" style={{ alignItems: 'flex-end', gap: '12px' }}>
               <DieterDropdownActions
                 className="roma-field"
                 size="lg"
-                label="Role"
-                ariaLabel="Choose member role"
+                label={teamCopy.role}
+                ariaLabel={teamCopy.chooseMemberRole}
                 value={roleDraft}
-                onChange={setRoleDraft}
+                onChange={(role) => setRoleDraft(role as MemberRole)}
                 disabled={!canManage || member.member.role === 'owner' || savingRole}
                 options={[
                   ...(roleDraft === 'owner' ? [{ value: 'owner', label: formatAccountRoleLabel('owner'), disabled: true }] : []),
-                  ...(!isAccountRoleValue(roleDraft) ? [{ value: roleDraft, label: formatAccountRoleLabel(roleDraft), disabled: true }] : []),
                   { value: 'viewer', label: formatAccountRoleLabel('viewer') },
                   { value: 'editor', label: formatAccountRoleLabel('editor') },
                   { value: 'admin', label: formatAccountRoleLabel('admin') },
@@ -279,10 +213,10 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
                 type="button"
                 aria-busy={savingRole || undefined}
                 onClick={() => void saveRole()}
-                disabled={!canManage || member.member.role === 'owner' || savingRole || !isAccountRoleValue(roleDraft) || roleDraft === member.member.role}
+                disabled={!canManage || member.member.role === 'owner' || savingRole || roleDraft === member.member.role}
               >
                 {savingRole ? <span className="diet-spinner" aria-hidden="true" /> : null}
-                <span className="diet-button__label">{savingRole ? 'Saving...' : 'Save role'}</span>
+                <span className="diet-button__label">{savingRole ? teamCopy.savingRole : teamCopy.saveRole}</span>
               </button>
               <button
                 className="diet-button"
@@ -290,66 +224,53 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
                 data-type="tertiary"
                 type="button"
                 onClick={() => {
-                  setMutationError(null);
-                  setRemoveConfirmationName(
-                    resolveMemberDisplayName(member.member.profile, member.member.userId),
-                  );
+                  setRemoveConfirmationOpen(true);
                 }}
                 disabled={!canManage || member.member.role === 'owner' || removingMember}
               >
-                <span className="diet-button__label">Remove member</span>
+                <span className="diet-button__label">{teamCopy.removeMember}</span>
               </button>
             </div>
           </section>
 
           <section className="rd-canvas-module">
-            <h3 className="heading-4">Person</h3>
-            <p className="body-s">Personal details are read-only here. The member manages them in User Settings.</p>
+            <h3 className="heading-4">{teamCopy.person}</h3>
             <div className="roma-form-grid">
               <div className="roma-field">
-                <span className="label-s">First name</span>
-                <p className="body-m">{formatNullableValue(member.member.profile?.givenName)}</p>
+                <span className="label-s">{teamCopy.firstName}</span>
+                {member.member.profile?.givenName !== null && member.member.profile?.givenName !== undefined ? <p className="body-m">{member.member.profile.givenName}</p> : null}
               </div>
               <div className="roma-field">
-                <span className="label-s">Last name</span>
-                <p className="body-m">{formatNullableValue(member.member.profile?.familyName)}</p>
+                <span className="label-s">{teamCopy.lastName}</span>
+                {member.member.profile?.familyName !== null && member.member.profile?.familyName !== undefined ? <p className="body-m">{member.member.profile.familyName}</p> : null}
               </div>
               <div className="roma-field">
-                <span className="label-s">Primary email</span>
-                <p className="body-m">{formatNullableValue(member.member.profile?.primaryEmail)}</p>
+                <span className="label-s">{teamCopy.primaryEmail}</span>
+                {member.member.profile?.primaryEmail !== undefined ? <p className="body-m">{member.member.profile.primaryEmail}</p> : null}
               </div>
               <div className="roma-field">
-                <span className="label-s">Primary Language</span>
-                <p className="body-m">{formatNullableValue(member.member.profile?.primaryLanguage)}</p>
+                <span className="label-s">{teamCopy.primaryLanguage}</span>
+                {member.member.profile?.primaryLanguage !== null && member.member.profile?.primaryLanguage !== undefined ? <p className="body-m">{member.member.profile.primaryLanguage}</p> : null}
               </div>
               <div className="roma-field">
-                <span className="label-s">Country</span>
-                <p className="body-m">{formatCountryValue(member.member.profile?.country)}</p>
+                <span className="label-s">{teamCopy.country}</span>
+                {formatCountryValue(member.member.profile?.country ?? null) ? <p className="body-m">{formatCountryValue(member.member.profile?.country ?? null)}</p> : null}
               </div>
               <div className="roma-field">
-                <span className="label-s">Timezone</span>
-                <p className="body-m">{formatNullableValue(member.member.profile?.timezone)}</p>
+                <span className="label-s">{teamCopy.timezone}</span>
+                {member.member.profile?.timezone !== null && member.member.profile?.timezone !== undefined ? <p className="body-m">{member.member.profile.timezone}</p> : null}
               </div>
             </div>
           </section>
-
-          {mutationError && removeConfirmationName === null ? (
-            <section className="rd-canvas-module" role="alert">
-              <p className="body-m">{mutationError}</p>
-            </section>
-          ) : null}
         </>
       ) : null}
       <RomaCommandConfirmationDialog
-        open={removeConfirmationName !== null}
-        title="Remove this team member?"
-        body={removeConfirmationName
-          ? `“${removeConfirmationName}” will lose access to this account.`
-          : ''}
-        confirmLabel="Remove member"
+        open={removeConfirmationOpen}
+        title={teamCopy.removeMember}
+        body={resolveMemberDisplayName(member?.member.profile ?? null)}
+        confirmLabel={teamCopy.removeMember}
         pending={removingMember}
-        error={mutationError}
-        onCancel={() => setRemoveConfirmationName(null)}
+        onCancel={() => setRemoveConfirmationOpen(false)}
         onConfirm={() => {
           void removeMember();
         }}

@@ -176,8 +176,6 @@
     "layout.field.logoshowcase.type.segmented.label": "Layout",
     "layout.field.logoshowcase.type.segmented.option.carousel.label": "Carousel",
     "layout.field.logoshowcase.type.segmented.option.grid.label": "Grid",
-    "core.plural": "Logo tiles",
-    "core.singular": "Logo tile",
     "core.size-cluster": "Logo showcase size",
     "layout.cluster.widget-layout.label": "Logo layout",
     "settings.cluster.logo-order.label": "Logo order",

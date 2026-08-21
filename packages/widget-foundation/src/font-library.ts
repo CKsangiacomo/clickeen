@@ -85,6 +85,11 @@ export type AccountFontFamilyOption = {
   isGroupHeader?: boolean;
 };
 
+export type AccountFontFamilyOptionsCopy = {
+  categories: Record<AccountFontCategory, string>;
+  usage: Record<AccountFontUsage, string>;
+};
+
 export const ACCOUNT_TYPOGRAPHY_SELECTION_INVALID_REASON_KEY =
   'coreui.errors.typography.selection.invalid';
 
@@ -92,14 +97,6 @@ export type AccountTypographyFamilySelection = {
   family: string;
   weight: string;
   fontStyle: AccountFontStyle;
-};
-
-export const ACCOUNT_FONT_CATEGORY_LABELS: Record<AccountFontCategory, string> = {
-  sans: 'Sans',
-  serif: 'Serif',
-  display: 'Display',
-  script: 'Script',
-  handwritten: 'Handwritten',
 };
 
 export const ACCOUNT_FONT_CATEGORY_ORDER: readonly AccountFontCategory[] = [
@@ -708,6 +705,7 @@ export function validateAccountTypographyFontSelections(args: {
 
 export function accountFontLibraryToFamilyOptions(
   fontLibrary: AccountFontLibrary,
+  copy: AccountFontFamilyOptionsCopy,
 ): AccountFontFamilyOption[] {
   const options: AccountFontFamilyOption[] = [];
   ACCOUNT_FONT_CATEGORY_ORDER.forEach((category) => {
@@ -715,7 +713,7 @@ export function accountFontLibraryToFamilyOptions(
       .filter((family) => fontLibrary.fonts[family]?.category === category)
       .sort((left, right) => left.localeCompare(right));
     if (!families.length) return;
-    options.push({ isGroupHeader: true, label: ACCOUNT_FONT_CATEGORY_LABELS[category] });
+    options.push({ isGroupHeader: true, label: copy.categories[category] });
     families.forEach((family) => {
       const record = fontLibrary.fonts[family]!;
       options.push({
@@ -723,7 +721,7 @@ export function accountFontLibraryToFamilyOptions(
         value: family,
         weights: record.weights.join(','),
         styles: record.styles.join(','),
-        badge: record.usage === 'body-safe' ? 'Body-safe' : 'Heading-only',
+        badge: copy.usage[record.usage],
       });
     });
   });

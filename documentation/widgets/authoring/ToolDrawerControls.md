@@ -161,6 +161,14 @@ the exact adjacent file, resolves the tokens, and emits the current English
 widget artifact at `/widget-editors/{widgetType}.json`. No non-English
 ToolDrawer artifact or UI-language selection exists in the current implementation.
 
+Widget-specific Core nouns used only by shared editor controls are declared
+under `editor.labels.components.core`. Every current Widget declares its exact
+Core-size section label there; a Widget declares the exact singular item noun
+only when the shared compiler actually creates Core card-wrapper controls from
+it. These are editor-copy inputs only. They never live under `defaults`, enter
+the instance document, or become account Widget Defaults. Unused singular or
+plural nouns are not carried as speculative copy.
+
 The current boundary covers every visible ToolDrawer label already migrated in
 this staged pass, including widget-declared labels, widget panel names, and the
 static Agent Activity title. The compiler emits that title as
@@ -183,8 +191,19 @@ The compiler derives each column's exact string or boolean item coordinate from
 the declared Bulk Edit `path`, optional `row-path`, and `columns`. Do not add
 hidden child fields to another component merely to make Bulk Edit columns
 editable.
-Copy inside other reusable Dieter stencils and shared compiler modules remains
-with those current sources until its component pass moves it deliberately.
+Bob-authored copy inside reusable ToolDrawer Chrome and shared compiler modules
+resolves from the owning feature source under `bob/l10n/`. Shared Header,
+Core Size, Settings, Typography, and Stage/Pod compiler words are Bob-owned;
+Typography's common role labels, font category headers, and font usage badges
+therefore resolve from Bob's Typography English source while their structured
+role/category/usage identities remain shared contracts.
+Widget nouns, field labels, options, component labels, Agent Activity title,
+and other `$label:` declarations remain in the exact Widget-adjacent
+`labels/en.json`. Dieter owns neither source.
+
+Bob compares resolved section and group labels by their exact compiled values
+when suppressing a duplicate heading. That presentation rule does not
+normalize or reinterpret Widget-owned copy.
 
 `default-item` values remain widget content defaults, not ToolDrawer labels.
 They stay in `spec.json` and follow the widget content/editable-field contract.
@@ -278,9 +297,10 @@ The shared typography panel uses:
 }
 ```
 
-The common widget contract owns labels for `title`, `body`, `button`, and
-`localeSwitcher`. Widgets declare label tokens, in visible order, for every
-widget-specific typography role and may override a common label when its
+The common widget contract owns the structured role identities `title`,
+`body`, `button`, and `localeSwitcher`; Bob's Typography English source owns
+their ToolDrawer labels. Widgets declare label tokens, in visible order, for
+every widget-specific typography role and may override a common label when its
 product meaning is broader. The adjacent English file owns those resolved
 widget-role values. Missing, malformed, unknown, or unused labels fail widget
 compilation; roles are never silently omitted.

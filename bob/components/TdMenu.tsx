@@ -1,15 +1,16 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { BOB_MENU_PANEL_IDS, BOB_PANEL_LABELS, type PanelId } from '../lib/types';
+import { useState } from 'react';
+import type { PanelId } from '../lib/types';
 import { dieterIconStyle } from './dieterIcon';
+import toolDrawerCopy from '../l10n/tool-drawer/en.json';
 
 export type Panel = { id: PanelId; label: string; icon?: string };
 
 type TdMenuProps = {
   active?: PanelId;
   onSelect?: (id: PanelId) => void;
-  panels?: Panel[];
+  panels: Panel[];
 };
 
 const PANEL_ICONS: Record<PanelId, string> = {
@@ -21,16 +22,14 @@ const PANEL_ICONS: Record<PanelId, string> = {
   settings: 'gearshape',
 };
 
-export const DEFAULT_PANELS: Panel[] = BOB_MENU_PANEL_IDS.map((id) => ({
-  id,
-  icon: PANEL_ICONS[id],
-  label: BOB_PANEL_LABELS[id],
-}));
+export function withPanelIcon(panel: Omit<Panel, 'icon'>): Panel {
+  return { ...panel, icon: PANEL_ICONS[panel.id] };
+}
 
 export function TdMenu({ active, onSelect, panels }: TdMenuProps) {
-  const items = useMemo(() => panels ?? DEFAULT_PANELS, [panels]);
+  const items = panels;
   const [internalActive, setInternalActive] = useState<PanelId>(
-    active ?? items[0]?.id ?? 'appearance',
+    active ?? items[0]!.id,
   );
   const current = (active ?? internalActive) as PanelId;
 
@@ -40,7 +39,12 @@ export function TdMenu({ active, onSelect, panels }: TdMenuProps) {
   };
 
   return (
-    <nav className="tdmenu" role="tablist" aria-orientation="vertical" aria-label="Panels">
+    <nav
+      className="tdmenu"
+      role="tablist"
+      aria-orientation="vertical"
+      aria-label={toolDrawerCopy.navigation.accessibleLabel}
+    >
       {items.map((panel) => {
         const isActive = panel.id === current;
         return (

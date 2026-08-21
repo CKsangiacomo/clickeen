@@ -1,3 +1,5 @@
+import ROMA_NAVIGATION_UI_COPY from '../l10n/navigation/en.json';
+
 export type RomaDomainKey =
   | 'home'
   | 'profile'
@@ -16,22 +18,21 @@ export type RomaDomainDefinition = {
   key: RomaDomainKey;
   label: string;
   href: string;
-  description: string;
 };
 
 export const ROMA_DOMAINS: readonly RomaDomainDefinition[] = [
-  { key: 'home', label: 'Home', href: '/home', description: 'Reserved for account insights and messages.' },
-  { key: 'profile', label: 'User Settings', href: '/profile', description: 'Person-scoped settings for the signed-in user.' },
-  { key: 'widgets', label: 'Widgets', href: '/widgets', description: 'Manage account-owned instances.' },
-  { key: 'widgetCatalog', label: 'Widget catalog', href: '/widgets/catalog', description: 'Create instances from available widgets.' },
-  { key: 'builder', label: 'Builder', href: '/builder', description: 'Edit widget instances in Bob.' },
-  { key: 'assets', label: 'Assets', href: '/assets', description: 'Account library and usage mapping.' },
-  { key: 'team', label: 'Team', href: '/team', description: 'Members and roles.' },
-  { key: 'billing', label: 'Billing', href: '/billing', description: 'Current plan; billing provider not connected.' },
-  { key: 'usage', label: 'Usage', href: '/usage', description: 'Storage usage and quota snapshot.' },
-  { key: 'ai', label: 'AI', href: '/ai', description: 'AI entitlement profile and limits.' },
-  { key: 'settings', label: 'Settings', href: '/settings', description: 'Account languages, ownership, and final controls.' },
-  { key: 'widgetDefaults', label: 'Widget Defaults', href: '/settings/widget-defaults', description: 'Account defaults for new widget instances.' },
+  { key: 'home', label: ROMA_NAVIGATION_UI_COPY.domains.home, href: '/home' },
+  { key: 'profile', label: ROMA_NAVIGATION_UI_COPY.domains.profile, href: '/profile' },
+  { key: 'widgets', label: ROMA_NAVIGATION_UI_COPY.domains.widgets, href: '/widgets' },
+  { key: 'widgetCatalog', label: ROMA_NAVIGATION_UI_COPY.domains.widgetCatalog, href: '/widgets/catalog' },
+  { key: 'builder', label: ROMA_NAVIGATION_UI_COPY.domains.builder, href: '/builder' },
+  { key: 'assets', label: ROMA_NAVIGATION_UI_COPY.domains.assets, href: '/assets' },
+  { key: 'team', label: ROMA_NAVIGATION_UI_COPY.domains.team, href: '/team' },
+  { key: 'billing', label: ROMA_NAVIGATION_UI_COPY.domains.billing, href: '/billing' },
+  { key: 'usage', label: ROMA_NAVIGATION_UI_COPY.domains.usage, href: '/usage' },
+  { key: 'ai', label: ROMA_NAVIGATION_UI_COPY.domains.ai, href: '/ai' },
+  { key: 'settings', label: ROMA_NAVIGATION_UI_COPY.domains.settings, href: '/settings' },
+  { key: 'widgetDefaults', label: ROMA_NAVIGATION_UI_COPY.domains.widgetDefaults, href: '/settings/widget-defaults' },
 ] as const;
 
 export const ROMA_MAIN_DOMAIN_KEYS: readonly RomaDomainKey[] = [
@@ -66,13 +67,13 @@ export const ROMA_MAIN_DOMAINS = ROMA_MAIN_DOMAIN_KEYS.map((key) => {
 export const ROMA_SETTINGS_DOMAINS = ROMA_SETTINGS_DOMAIN_KEYS.map((key) => {
   const domain = ROMA_DOMAINS.find((entry) => entry.key === key);
   if (!domain) throw new Error(`missing Roma settings domain: ${key}`);
-  return key === 'settings' ? { ...domain, label: 'Account' } : domain;
+  return key === 'settings' ? { ...domain, label: ROMA_NAVIGATION_UI_COPY.variants.account } : domain;
 });
 
 export const ROMA_WIDGETS_DOMAINS = ROMA_WIDGETS_DOMAIN_KEYS.map((key) => {
   const domain = ROMA_DOMAINS.find((entry) => entry.key === key);
   if (!domain) throw new Error(`missing Roma widgets domain: ${key}`);
-  return key === 'widgets' ? { ...domain, label: 'Your widgets' } : domain;
+  return key === 'widgets' ? { ...domain, label: ROMA_NAVIGATION_UI_COPY.variants.yourWidgets } : domain;
 });
 
 export const DEFAULT_HOME_ROUTE = '/home';

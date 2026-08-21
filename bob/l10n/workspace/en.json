@@ -1,0 +1,10 @@
+{
+  "preview": {
+    "accessibleLabel": "Widget preview"
+  },
+  "device": {
+    "groupLabel": "Device",
+    "desktop": "Desktop",
+    "mobile": "Mobile"
+  }
+}

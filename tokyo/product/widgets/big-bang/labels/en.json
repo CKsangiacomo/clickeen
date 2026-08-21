@@ -86,8 +86,6 @@
     "content.field.big-bang.statement.dropdown-edit.label": "Statement",
     "content.field.big-bang.supporting-copy.dropdown-edit.attr.placeholder": "Add supporting copy",
     "content.field.big-bang.supporting-copy.dropdown-edit.label": "Supporting copy",
-    "core.plural": "Statements",
-    "core.singular": "Statement",
     "core.size-cluster": "Content area",
     "layout.cluster.big-bang-layout.label": "Content layout",
     "layout.field.big-bang.alignment.choice-tiles.label": "Content alignment",

@@ -1,0 +1,53 @@
+{
+  "clusters": {
+    "localeSwitcher": "Locale switcher",
+    "seoGeo": "SEO/GEO",
+    "branding": "Clickeen branding",
+    "socialShare": "Social share"
+  },
+  "fields": {
+    "enableLocaleSwitcher": "Enable locale switcher",
+    "attachTo": "Attach to",
+    "position": "Position",
+    "enableSeoGeo": "Enable SEO/GEO",
+    "showMadeWithClickeen": "Show Made with Clickeen",
+    "enableSocialShare": "Enable social share",
+    "stickTo": "Stick to"
+  },
+  "groups": {
+    "messageShares": "Message shares",
+    "socialNetworks": "Social networks"
+  },
+  "options": {
+    "stage": "Stage",
+    "pod": "Pod",
+    "topLeft": "Top left",
+    "topCenter": "Top center",
+    "topRight": "Top right",
+    "rightMiddle": "Right middle",
+    "bottomRight": "Bottom right",
+    "bottomCenter": "Bottom center",
+    "bottomLeft": "Bottom left",
+    "leftMiddle": "Left middle"
+  },
+  "channels": {
+    "copy": "Copy link",
+    "sms": "SMS",
+    "email": "Email",
+    "whatsapp": "WhatsApp",
+    "telegram": "Telegram",
+    "signal": "Signal",
+    "messenger": "Messenger",
+    "wechat": "WeChat",
+    "line": "LINE",
+    "slack": "Slack",
+    "teams": "Teams",
+    "discord": "Discord",
+    "x": "X",
+    "linkedin": "LinkedIn",
+    "facebook": "Facebook",
+    "reddit": "Reddit",
+    "instagram": "Instagram",
+    "tiktok": "TikTok"
+  }
+}

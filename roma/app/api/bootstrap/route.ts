@@ -9,35 +9,12 @@ import { resolveBerlinBaseUrl } from '../../../lib/env/berlin';
 export const runtime = 'edge';
 
 type BootstrapPayload = {
-  authz?: {
-    accountCapsule?: unknown;
-  } | null;
+  authz: {
+    accountCapsule: string;
+    [key: string]: unknown;
+  };
   [key: string]: unknown;
 };
-
-function sanitizeBootstrapPayload(payload: BootstrapPayload): {
-  payload: BootstrapPayload;
-  accountCapsule: string | null;
-} {
-  const accountCapsule =
-    typeof payload.authz?.accountCapsule === 'string' && payload.authz.accountCapsule.trim()
-      ? payload.authz.accountCapsule.trim()
-      : null;
-  const authz =
-    payload.authz && typeof payload.authz === 'object'
-      ? { ...(payload.authz as Record<string, unknown>) }
-      : null;
-  if (authz) {
-    delete authz.accountCapsule;
-  }
-  return {
-    payload: {
-      ...payload,
-      ...(authz ? { authz } : {}),
-    },
-    accountCapsule,
-  };
-}
 
 export async function GET(request: NextRequest) {
   const session = await resolveSessionBearer(request);
@@ -64,20 +41,16 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const sanitized = sanitizeBootstrapPayload(payload);
+    const { accountCapsule, ...authz } = payload.authz;
     return withSession(
       request,
-      NextResponse.json(sanitized.payload),
+      NextResponse.json({ ...payload, authz }),
       [
         ...(session.setCookies ?? []),
-        ...(sanitized.accountCapsule
-          ? [
-              {
-                name: resolveAccountAuthzCookieName(),
-                value: sanitized.accountCapsule,
-              },
-            ]
-          : []),
+        {
+          name: resolveAccountAuthzCookieName(),
+          value: accountCapsule,
+        },
       ],
     );
   } catch (error) {

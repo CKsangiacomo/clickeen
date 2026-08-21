@@ -3,7 +3,7 @@
 import { getEntitlementsMatrix, type AccountTier, type Policy } from '@clickeen/ck-policy';
 import { useEffect, useRef } from 'react';
 import { createDialogLifecycle, type DialogLifecycle } from '../../dieter/components/shared/dialog-lifecycle';
-import { formatAccountTierLabel } from '../lib/format';
+import ROMA_PLANS_UI_COPY from '../l10n/plans/en.json';
 
 export type PublicationCapacityUpgrade = {
   gate: 'instances.published.max';
@@ -13,7 +13,7 @@ export type PublicationCapacityUpgrade = {
 };
 
 export type UpsellPresentation = {
-  body: string;
+  body?: string;
   upgradeAvailable: boolean;
 };
 
@@ -40,11 +40,9 @@ export function buildPublicationCapacityUpsell(
   const targetPlan = resolveTargetPlan(policy, upgrade.gate, upgrade.current + 1);
   return targetPlan
     ? {
-        body: `Your current plan is ${formatAccountTierLabel(policy.profile)}. Upgrade to ${formatAccountTierLabel(targetPlan)} to publish more widgets.`,
         upgradeAvailable: true,
       }
     : {
-        body: `Your current plan is ${formatAccountTierLabel(policy.profile)}. You have reached the maximum publishing capacity currently available.`,
         upgradeAvailable: false,
       };
 }
@@ -95,14 +93,14 @@ export function RomaUpsellDialog({
     <dialog ref={dialogRef} className="diet-popup" data-size="medium" aria-labelledby="roma-upsell-title">
       <header className="diet-popup__header">
         <h2 id="roma-upsell-title" className="heading-4">
-          {upgradeAvailable ? 'Upgrade Clickeen' : 'Plan limit reached'}
+          {upgradeAvailable ? ROMA_PLANS_UI_COPY.upsell.upgradeTitle : ROMA_PLANS_UI_COPY.upsell.limitTitle}
         </h2>
         <button
           className="diet-button diet-popup__dismiss"
           data-size="medium"
           data-type="quaternary"
           type="button"
-          aria-label="Close"
+          aria-label={ROMA_PLANS_UI_COPY.upsell.close}
           onClick={onClose}
         >
           <span className="diet-icon" data-icon="multiply" aria-hidden="true" />
@@ -122,7 +120,7 @@ export function RomaUpsellDialog({
             type="button"
             onClick={onClose}
           >
-            <span className="diet-button__label">{upgradeAvailable ? 'Upgrade' : 'Close'}</span>
+            <span className="diet-button__label">{upgradeAvailable ? ROMA_PLANS_UI_COPY.upsell.upgrade : ROMA_PLANS_UI_COPY.upsell.close}</span>
           </button>
           {upgradeAvailable ? (
             <button
@@ -132,7 +130,7 @@ export function RomaUpsellDialog({
               type="button"
               onClick={onClose}
             >
-              <span className="diet-button__label">Not now</span>
+              <span className="diet-button__label">{ROMA_PLANS_UI_COPY.upsell.notNow}</span>
             </button>
           ) : null}
         </div>

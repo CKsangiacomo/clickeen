@@ -1,0 +1,30 @@
+{
+  "domains": {
+    "home": "Home",
+    "profile": "User Settings",
+    "widgets": "Widgets",
+    "widgetCatalog": "Widget catalog",
+    "builder": "Builder",
+    "assets": "Assets",
+    "team": "Team",
+    "billing": "Billing",
+    "usage": "Usage",
+    "ai": "AI",
+    "settings": "Settings",
+    "widgetDefaults": "Widget Defaults"
+  },
+  "groups": {
+    "widgets": "Widgets",
+    "settings": "Settings"
+  },
+  "variants": {
+    "account": "Account",
+    "yourWidgets": "Your widgets"
+  },
+  "navigation": {
+    "label": "Clickeen navigation",
+    "home": "Clickeen home",
+    "open": "Open navigation",
+    "close": "Close navigation"
+  }
+}

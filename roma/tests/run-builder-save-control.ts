@@ -618,7 +618,11 @@ async function testProductionRomaBobSaveBridge(): Promise<void> {
       assert.equal(await saved.getAttribute('data-state'), 'success');
       assert.equal(await saved.getAttribute('data-tone'), 'save');
       assert.equal(await saved.getAttribute('aria-busy'), null);
-      assert.equal(await saved.locator('.diet-spinner').count(), 1);
+      assert.equal(await saved.locator('.diet-icon-mask').count(), 1);
+      assert.match(
+        String(await saved.locator('.diet-icon-mask').getAttribute('style')),
+        /checkmark\.svg/,
+      );
       assert.equal(await saved.isDisabled(), true);
       assert.equal(await bobProbeAttribute(bobFrame, 'data-dirty'), 'false');
       assert.equal(await bobProbeAttribute(bobFrame, 'data-saving'), 'false');

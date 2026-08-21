@@ -376,7 +376,7 @@ Apply and Undo remain local editor operations.
 | Product Copilot Worker | upstream status | San Francisco non-OK response is propagated |
 | Product Copilot Worker | `500 PROVIDER_ERROR` | missing San Francisco config or unexpected failure |
 | Product Copilot stream | `agent_turn_error` event | multiple model tool calls, finish/tool-count inconsistency, missing terminal/continuation boundary, malformed SSE JSON transport, or `model_step_error` |
-| Bob | `Not applied` plus assistant error, no apply | request/stream failure, failed undo construction, or failed local apply |
+| Bob | `Not applied`, no apply | request/stream failure, failed undo construction, or failed local apply; an exact `agent_turn_error` message is rendered only when Product Copilot emits it |
 
 Product Copilot trusts Roma's accepted request and San Francisco's typed event
 payloads. Bob remains the first edit-operation acceptance boundary for the

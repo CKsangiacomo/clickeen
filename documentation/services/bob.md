@@ -437,19 +437,19 @@ substitute an empty config when serialization fails.
 Bob owns the Translations panel display for the open editor session. It does not
 choose generation locales or write translation files.
 
-The panel requires a saved instance identity. On New it shows **Save this
-widget before generating translations.** and sends nothing. After first Save, it
-sends one Generate translations command with the adopted `instanceId`.
+The panel requires a saved instance identity. On New its Generate control is
+disabled and sends nothing. After first Save, it sends one Generate
+translations command with the adopted `instanceId`.
 Roma resolves active locales and calls the Translation Agent Worker. While the
 operation is running, Bob disables the button and displays transient Agent
 Activity. Its static title comes from the open widget artifact's exact
 `toolDrawerLabels.components["agent-activity"].title`; its dynamic rows are authored
-by the Translation Agent while overlays are written. When the operation returns,
-the transient Agent Activity UI disappears and Bob shows
-durable command-result feedback from Roma's response: success, no accepted
-work, command failure, or exact per-locale translation failures. Bob refreshes
-previewable translated locales only when
-Roma reports at least one `translatedLocales` result.
+by the Translation Agent while overlays are written. Bob preserves and renders
+the complete ordered activity stream for that operation. When the operation
+returns, the transient Agent Activity UI disappears and the same Generate
+control returns to ready. Bob does not invent a durable result sentence from
+Roma's structured result. It refreshes previewable translated locales only
+when Roma reports at least one exact `translatedLocales` result.
 
 Bob does not create persistent translation jobs, poll operation status, or
 invent locale authority. Bob also does not expose user translation overrides or
@@ -471,12 +471,25 @@ column declarations, so the complete modal Save batch uses the ordinary
 compiled-control boundary without hidden Dropdown Fill fields. Bob also owns
 the account-font capability
 filtering applied to generic Dropdown Actions; Dieter does not inspect
-typography paths or font metadata. Bob Chrome state/command copy is currently
-resolved from the minimal English `bob/l10n/en.json` catalog; this correction
-does not install UI-language selection or translation generation. Bob receives
-no UI locale, selects no alternate UI-language file at runtime, and does not
-change an open editor session's UI language. The person preference stored by
-Berlin/Michael is dormant and is not a current Bob session input.
+typography paths or font metadata. Bob Chrome state/command copy resolves
+directly from feature-owned English sources under `bob/l10n/`: shell,
+ToolDrawer, workspace, Translations, Copilot, system states, and shared editor
+features each own their words. This includes the visible labels for the common
+Typography role identities declared by `@clickeen/widget-foundation`; a shared
+contract owns role keys, not English UI copy. The font-library contract likewise
+owns exact category and usage identities while Bob's Typography source owns
+the rendered category headers and usage badges. Bob has no flat catch-all catalog, runtime
+locale loader, or fallback chain. This correction does not install UI-language
+selection or translation generation. Bob receives no UI locale, selects no
+alternate UI-language file at runtime, and does not change an open editor
+session's UI language. The person preference stored by Berlin/Michael is
+dormant and is not a current Bob session input.
+
+Visible formats remain complete units in the owning source. In particular,
+the Translations base-locale option owns `{locale} (base)` as one pattern, and
+Typography owns the complete `{label} ({value})` weight-option pattern. Bob
+interpolates exact source values; it does not stitch punctuation or fragments
+into product copy in components or compiler code.
 
 Passive loading uses Dieter's systemic Spinner without visible loading prose.
 A successful zero translations result uses Dieter's ellipsis Empty State with
@@ -562,9 +575,9 @@ invents a target plan nor substitutes another Widget message.
 
 ## Editor Artifact Build
 
-The Widget build compiles each canonical `spec.json`, its exact adjacent English
+The Widget build resolves each canonical `spec.json` and its exact adjacent English
 ToolDrawer label file, `limits.json`, and its exact Widget upsell locale file
-into:
+once, then compiles that resolved source into:
 
 - `compiled.panels[]`
 - `compiled.controls[]`
@@ -584,7 +597,10 @@ compile controls.
 The compiler may fail its own build when git-authored source cannot produce the
 declared artifact. That is source-artifact production and repository
 verification, not a runtime validator over a Clickeen-produced editor artifact.
-After the compiler emits the artifact, Bob and Roma trust it directly.
+The generator and compiler share that one resolved Widget-label result; later
+compiler stages preserve the exact strings without trimming, coercing, or
+testing them against an invented readability list. After the compiler emits
+the artifact, Bob and Roma trust it directly.
 
 Every Widget-bound limit reference must resolve to one exact message in the
 selected Widget upsell locale at artifact-production time. There is no generic
@@ -763,7 +779,9 @@ unknown panels, unresolved labels, unused English entries, and unlabeled
 sections. Resolved panel labels travel in the compiled artifact instead of
 being re-created by compiler and UI consumers. Group
 labels remain semantic control metadata, but the UI does not repeat a group
-heading when it is identical to its enclosing section label.
+heading when its exact value is identical to its enclosing section label. It
+does not trim, case-fold, or otherwise reinterpret trusted compiled labels to
+make that presentation decision.
 Technical group ids are never converted into UI or Copilot labels; an absent
 semantic group label remains absent.
 
@@ -805,7 +823,7 @@ boundary.
 ## Builder Copilot
 
 Product Copilot requires a saved instance identity. On New its action is
-disabled with **Save this widget before using Copilot.** and sends nothing.
+disabled and sends nothing.
 After first Save, turns route through Roma with a bounded `currentDraftContext`
 capsule. Bob builds that capsule from the open browser-memory draft:
 `instanceId`, widget identity, active locale, draft signature, visible editable
@@ -860,6 +878,9 @@ Bob's exact `applyOps` call succeeds; request/stream/apply failure becomes
 applied edits and Undo. These words do not enter structured model history,
 `CopilotTurnRequest`, SSE events, Roma, a learning record, or account storage.
 Bob never rewrites or suppresses the streamed assistant text to produce them.
+An `agent_turn_error` message is rendered exactly as Product Copilot produced
+it. Local request or edit-admission failure changes only the Bob-owned passive
+status to `Not applied`; Bob does not author replacement assistant narration.
 
 Product Copilot model picker state is display/input state only. Bob renders the
 model options and default model that Roma sends in the Builder-open payload.
@@ -960,9 +981,10 @@ does not accumulate listeners or observers.
 
 When an in-memory edit introduces an unresolved account media or font
 reference, Bob keeps the last successfully rendered preview visible and
-resolves the dependency through Roma on its existing path. Resolution failure
-is an explicit preview error. A later valid dependency resolution clears that
-dependency error. This editor behavior does not redefine the public package.
+resolves the dependency through Roma on its existing path. While that truth is
+unavailable, Bob serves no invented preview error sentence. A later valid
+dependency resolution updates the preview. This editor behavior does not
+redefine the public package.
 
 Global `source: "tokyo"` fonts are not account dependencies. Preview loads their
 declared `/fonts/special/**` paths through Bob's same-origin Tokyo proxy.

@@ -1,0 +1,21 @@
+{
+  "surface": {
+    "accessibleLabel": "Copilot",
+    "conversationLabel": "Copilot conversation"
+  },
+  "status": {
+    "working": "Working",
+    "applied": "Applied",
+    "notApplied": "Not applied",
+    "stopped": "Stopped"
+  },
+  "controls": {
+    "undo": "Undo",
+    "model": "Copilot model",
+    "message": "Copilot message",
+    "stop": "Stop",
+    "stopAccessibleLabel": "Stop Copilot",
+    "send": "Send",
+    "sendAccessibleLabel": "Send to Copilot"
+  }
+}

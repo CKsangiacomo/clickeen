@@ -4,37 +4,23 @@ import type { LimitsSpec } from '@clickeen/ck-policy';
 import type { WidgetEditableFieldsContract } from '@clickeen/ck-contracts/translated-value-primitives';
 import type { WidgetSoftware } from '@clickeen/widget-foundation';
 
-export const BOB_PANEL_LABELS = {
-  content: 'Content',
-  layout: 'Layout',
-  appearance: 'Appearance',
-  typography: 'Typography',
-  translations: 'Translations',
-  settings: 'Settings',
-} as const;
-
-export type PanelId = keyof typeof BOB_PANEL_LABELS;
-
 export const BOB_WIDGET_PANEL_IDS = [
   'content',
   'layout',
   'appearance',
   'typography',
   'settings',
-] as const satisfies readonly PanelId[];
+] as const;
 
-export const BOB_MENU_PANEL_IDS = [
-  ...BOB_WIDGET_PANEL_IDS.slice(0, -1),
-  'translations',
-  BOB_WIDGET_PANEL_IDS[BOB_WIDGET_PANEL_IDS.length - 1],
-] as const satisfies readonly PanelId[];
+export type WidgetPanelId = (typeof BOB_WIDGET_PANEL_IDS)[number];
+export type PanelId = WidgetPanelId | 'translations';
 
 export function isPanelId(value: string): value is PanelId {
-  return Object.prototype.hasOwnProperty.call(BOB_PANEL_LABELS, value);
+  return value === 'translations' || BOB_WIDGET_PANEL_IDS.includes(value as WidgetPanelId);
 }
 
 export interface CompiledPanel {
-  id: PanelId;
+  id: WidgetPanelId;
   label: string;
   html: string;
 }

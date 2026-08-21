@@ -1,0 +1,17 @@
+{
+  "title": "Translations",
+  "fields": {
+    "baseLocale": "Base locale",
+    "planAvailability": "Translations available in your plan",
+    "previewLocale": "Preview locale"
+  },
+  "values": {
+    "baseLocaleOption": "{locale} (base)",
+    "unlimited": "Unlimited"
+  },
+  "empty": "No translations",
+  "command": {
+    "ready": "Generate translations",
+    "pending": "Generating translations..."
+  }
+}

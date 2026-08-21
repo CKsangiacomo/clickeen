@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { ROMA_UI_COPY } from '../lib/ui-copy';
+import ROMA_SYSTEM_STATE_UI_COPY from '../l10n/system-states/en.json';
 
 export function RomaLoadingState({
   className,
@@ -11,11 +11,11 @@ export function RomaLoadingState({
   const stateClassName = className ? `diet-loading-state ${className}` : 'diet-loading-state';
   const content = <span className="diet-spinner" data-size="medium" aria-hidden="true" />;
   return inline ? (
-    <span className={stateClassName} role="status" aria-label={ROMA_UI_COPY.state.loadingAccessibleLabel}>
+    <span className={stateClassName} role="status" aria-label={ROMA_SYSTEM_STATE_UI_COPY.loadingAccessibleLabel}>
       {content}
     </span>
   ) : (
-    <div className={stateClassName} role="status" aria-label={ROMA_UI_COPY.state.loadingAccessibleLabel}>
+    <div className={stateClassName} role="status" aria-label={ROMA_SYSTEM_STATE_UI_COPY.loadingAccessibleLabel}>
       {content}
     </div>
   );

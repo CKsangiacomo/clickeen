@@ -1,4 +1,3 @@
-import { isRecord } from '@clickeen/ck-contracts';
 import {
   resolveAiRuntimeBudget,
   resolveAiRuntimePolicy,
@@ -124,15 +123,6 @@ function buildTranslationAgentItems(args: {
   });
 }
 
-function safeJsonParse(text: string): unknown {
-  if (!text) return null;
-  try {
-    return JSON.parse(text) as unknown;
-  } catch {
-    return null;
-  }
-}
-
 async function readTranslationAgentResponse(args: {
   response: Response;
   onActivity?: (event: TranslationAgentActivityEvent) => void;
@@ -164,15 +154,11 @@ async function readTranslationAgentResponse(args: {
     if (!dataLines.length) return;
     const data = dataLines.join('\n');
     if (eventName === 'activity') {
-      const parsed = safeJsonParse(data);
-      if (!isRecord(parsed)) return;
-      const message = parsed.message;
-      if (typeof message === 'string') {
-        try {
-          args.onActivity?.({ message });
-        } catch {
-          // Activity transport is not translation truth.
-        }
+      const event = JSON.parse(data) as TranslationAgentActivityEvent;
+      try {
+        args.onActivity?.(event);
+      } catch {
+        // Activity transport is not translation truth.
       }
       return;
     }

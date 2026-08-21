@@ -1,0 +1,15 @@
+{
+  "personalDetails": "Personal details",
+  "firstName": "First name",
+  "lastName": "Last name",
+  "primaryLanguage": "Primary Language",
+  "country": "Country",
+  "chooseCountry": "Choose country",
+  "selectCountry": "Select country",
+  "timezone": "Timezone",
+  "chooseTimezone": "Choose timezone",
+  "save": "Save settings",
+  "saving": "Saving…",
+  "email": "Email",
+  "primaryEmail": "Primary email"
+}

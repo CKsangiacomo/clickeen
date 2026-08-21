@@ -3,11 +3,11 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type CSSProperties } from 'react';
 import type { AccountAssetRecord } from '@clickeen/ck-contracts';
 import { createDialogLifecycle } from '../../dieter/components/shared/dialog-lifecycle';
+import assetsCopy from '../l10n/assets/en.json';
+import ROMA_DIALOGS_UI_COPY from '../l10n/dialogs/en.json';
 import { formatBytes, formatNumber } from '../lib/format';
-import { ROMA_UI_COPY } from '../lib/ui-copy';
 import { useRomaAccountApi, type RomaAccountApi } from './account-api';
 import { DieterDropdownActions } from './dieter-dropdown-actions';
-import { parseApiErrorReason } from './same-origin-json';
 import { useRomaAccountContext } from './roma-account-context';
 import { RomaAccountNoticeModal } from './roma-account-notice-modal';
 import { RomaCommandConfirmationDialog } from './roma-command-confirmation-dialog';
@@ -35,7 +35,6 @@ type BulkUploadItem = {
   sizeBytes: number;
   contentType: string;
   status: BulkItemStatus;
-  error: string | null;
 };
 
 type AssetSortKey = 'filename' | 'assetType' | 'sizeBytes';
@@ -55,86 +54,38 @@ type AssetsHeaderActions = {
 
 const DEFAULT_ASSET_SORT: AssetSort = { key: 'filename', direction: 'ascending' };
 
-const DELETE_REASON_COPY: Record<string, string> = {
-  'coreui.errors.asset.notFound': 'Asset not found. It may already be deleted.',
-  'coreui.errors.auth.required': 'You need to sign in again to manage assets.',
-  'coreui.errors.auth.forbidden': 'You do not have permission to manage this asset.',
-  'coreui.errors.db.writeFailed': 'Asset delete failed on the server. Please try again.',
-  'coreui.errors.assets.integrityUnavailable': 'Delete blocked: asset integrity check is unavailable right now. Try again.',
-  'coreui.errors.assets.payloadInvalid': 'Asset delete failed on the server. Please try again.',
-};
-
-const ASSET_REASON_COPY: Record<string, string> = {
-  'coreui.upsell.reason.limitReached': 'This exceeds your current plan limit.',
-  'coreui.upsell.reason.platform.uploads': 'Uploads are not available for this account plan.',
-  'coreui.errors.assets.uploadFailed': 'Asset upload failed. Please try again.',
-  'coreui.errors.auth.required': 'You need to sign in again to manage assets.',
-  'coreui.errors.auth.forbidden': 'You do not have permission to manage assets in this account.',
-  'coreui.errors.db.readFailed': 'Failed to load assets. Please try again.',
-  'coreui.errors.db.writeFailed': 'Asset update failed on the server. Please try again.',
-  'coreui.errors.network.timeout': 'The request timed out. Please try again.',
-};
-
-function resolveAssetErrorCopy(reason: string, fallback: string): string {
-  const normalized = String(reason || '').trim();
-  if (!normalized) return fallback;
-  const mapped = ASSET_REASON_COPY[normalized];
-  if (mapped) return mapped;
-  return fallback;
-}
-
-function resolveDeleteErrorCopy(reason: string): string {
-  const normalized = String(reason || '').trim();
-  if (!normalized) return 'Asset delete failed. Please try again.';
-  const mapped = DELETE_REASON_COPY[normalized];
-  if (mapped) return mapped;
-  return resolveAssetErrorCopy(normalized, 'Asset delete failed. Please try again.');
-}
-
 function formatBulkItemStatus(status: BulkItemStatus): string {
   switch (status) {
     case 'queued':
-      return 'Queued';
+      return assetsCopy.bulk.queued;
     case 'uploading':
-      return 'Uploading';
+      return assetsCopy.bulk.uploading;
     case 'success':
-      return 'Uploaded';
+      return assetsCopy.bulk.uploaded;
     case 'failed':
-      return 'Failed';
+      return assetsCopy.bulk.failed;
   }
 }
 
 async function requestDeleteAsset(
-  accountApi: Pick<RomaAccountApi, 'fetchRaw'>,
-  accountId: string,
+  accountApi: Pick<RomaAccountApi, 'fetchJson'>,
   assetRef: string,
 ): Promise<DeleteAssetPayload> {
-  const response = await accountApi.fetchRaw(`/api/account/assets/${encodeURIComponent(assetRef)}`, {
+  return accountApi.fetchJson<DeleteAssetPayload>(`/api/account/assets/${encodeURIComponent(assetRef)}`, {
     method: 'DELETE',
   });
-  const payload = (await response.json()) as DeleteAssetPayload | { error?: unknown };
-  if (!response.ok) {
-    const reason = parseApiErrorReason(payload, response.status);
-    throw new Error(reason);
-  }
-  return payload as DeleteAssetPayload;
 }
 
-async function requestUploadAsset(accountApi: Pick<RomaAccountApi, 'fetchRaw'>, file: File, source: string): Promise<AccountAssetRecord> {
-  const response = await accountApi.fetchRaw(`/api/account/assets/upload`, {
+async function requestUploadAsset(accountApi: Pick<RomaAccountApi, 'fetchJson'>, file: File, source: string): Promise<AccountAssetRecord> {
+  return accountApi.fetchJson<AccountAssetRecord>(`/api/account/assets/upload`, {
     method: 'POST',
     headers: {
-      'content-type': file.type || 'application/octet-stream',
-      'x-filename': file.name || 'upload.bin',
+      'content-type': file.type,
+      'x-filename': file.name,
       'x-source': source,
     },
     body: file,
   });
-  const payload = (await response.json()) as AccountAssetRecord | { error?: unknown };
-  if (!response.ok) {
-    throw new Error(parseApiErrorReason(payload, response.status));
-  }
-  return payload as AccountAssetRecord;
 }
 
 export function AssetsPage() {
@@ -145,19 +96,19 @@ export function AssetsPage() {
   return (
     <RomaShell
       activeDomain="assets"
-      title="Assets"
+      title={assetsCopy.title}
       headerControls={(
         <DieterDropdownActions
           className="roma-header-filter"
-          ariaLabel="Filter assets by type"
+          ariaLabel={assetsCopy.filter}
           triggerStyle="button"
           value={assetFilter}
           options={[
-            { value: 'all', label: 'Show all' },
-            { value: 'font', label: 'Fonts' },
-            { value: 'vector', label: 'SVGs' },
-            { value: 'image', label: 'Photo' },
-            { value: 'video', label: 'Video' },
+            { value: 'all', label: assetsCopy.filters.all },
+            { value: 'font', label: assetsCopy.filters.font },
+            { value: 'vector', label: assetsCopy.filters.vector },
+            { value: 'image', label: assetsCopy.filters.image },
+            { value: 'video', label: assetsCopy.filters.video },
           ]}
           onChange={(value) => setAssetFilter(value as AssetFilter)}
         />
@@ -175,7 +126,7 @@ export function AssetsPage() {
             disabled={actionsBusy}
           >
             {headerActions.singleUploadBusy ? <span className="diet-spinner" aria-hidden="true" /> : null}
-            <span className="diet-button__label">{headerActions.singleUploadBusy ? 'Uploading…' : 'Upload asset'}</span>
+            <span className="diet-button__label">{headerActions.singleUploadBusy ? assetsCopy.uploading : assetsCopy.upload}</span>
           </button>
           <button
             className="diet-button"
@@ -188,7 +139,7 @@ export function AssetsPage() {
             disabled={actionsBusy}
           >
             {headerActions.bulkUploadBusy ? <span className="diet-spinner" aria-hidden="true" /> : null}
-            <span className="diet-button__label">{headerActions.bulkUploadBusy ? 'Uploading…' : 'Upload in bulk'}</span>
+            <span className="diet-button__label">{headerActions.bulkUploadBusy ? assetsCopy.uploading : assetsCopy.uploadBulk}</span>
           </button>
           <button
             className="diet-button"
@@ -201,14 +152,14 @@ export function AssetsPage() {
             disabled={headerActions.listLoading || actionsBusy}
           >
             {headerActions.listRefreshPending ? <span className="diet-spinner" aria-hidden="true" /> : null}
-            <span className="diet-button__label">{headerActions.listRefreshPending ? 'Refreshing…' : 'Refresh list'}</span>
+            <span className="diet-button__label">{headerActions.listRefreshPending ? assetsCopy.refreshing : assetsCopy.refresh}</span>
           </button>
         </>
       ) : null}
     >
       <RomaAccountNoticeModal />
       <Suspense fallback={<RomaLoadingState className="rd-canvas-module" />}>
-        <RomaDomainErrorBoundary domainLabel="Assets" resetKey="assets">
+        <RomaDomainErrorBoundary domainLabel={assetsCopy.title} resetKey="assets">
           <AssetsDomain assetFilter={assetFilter} onHeaderActions={setHeaderActions} />
         </RomaDomainErrorBoundary>
       </Suspense>
@@ -231,25 +182,18 @@ export function AssetsDomain({
   const bulkUploadCloseRef = useRef<HTMLButtonElement | null>(null);
   const bulkUploadBusyRef = useRef(false);
 
-  const accountId = accountContext.accountId;
-  const accountPublicId = accountContext.accountPublicId;
-  const entitlements = data.authz?.entitlements ?? null;
-  const uploadSizeLimitBytes = useMemo(() => {
-    const raw = entitlements?.limits?.['uploads.size.max'];
-    return typeof raw === 'number' && Number.isFinite(raw) && raw > 0 ? Math.trunc(raw) : null;
-  }, [entitlements?.limits]);
-  const storageLimit = entitlements?.limits?.['storage.bytes.max'] ?? null;
+  const entitlements = data.authz.entitlements;
+  const uploadSizeLimitBytes = entitlements.limits['uploads.size.max'];
+  const storageLimit = entitlements.limits['storage.bytes.max'];
 
   const [assets, setAssets] = useState<AccountAssetRecord[] | null>(null);
   const [storageBytesUsed, setStorageBytesUsed] = useState<number | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [listFailed, setListFailed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [listRefreshPending, setListRefreshPending] = useState(false);
   const [retryPending, setRetryPending] = useState(false);
   const [deletingAssetRef, setDeletingAssetRef] = useState<string | null>(null);
   const [deleteConfirmationAsset, setDeleteConfirmationAsset] = useState<AccountAssetRecord | null>(null);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [singleUploadError, setSingleUploadError] = useState<string | null>(null);
   const [singleUploadBusy, setSingleUploadBusy] = useState(false);
   const [bulkUploadOpen, setBulkUploadOpen] = useState(false);
   const [bulkUploadBusy, setBulkUploadBusy] = useState(false);
@@ -278,22 +222,16 @@ export function AssetsDomain({
   const refreshAssets = useCallback(async (options?: { passive?: boolean; preserveError?: boolean }) => {
     const passive = options?.passive !== false;
     if (passive) setLoading(true);
-    if (!options?.preserveError) setError(null);
+    if (!options?.preserveError) setListFailed(false);
     try {
-      const assetsResponse = await accountApi.fetchRaw(`/api/account/assets`, {
+      const exact = await accountApi.fetchJson<AccountAssetsListResponse>(`/api/account/assets`, {
         method: 'GET',
       });
-      const assetsPayload = (await assetsResponse.json()) as AccountAssetsListResponse | { error?: unknown };
-      if (!assetsResponse.ok) {
-        throw new Error(parseApiErrorReason(assetsPayload, assetsResponse.status));
-      }
-      const exact = assetsPayload as AccountAssetsListResponse;
       setAssets(exact.assets);
       setStorageBytesUsed(exact.storageBytesUsed);
-      setError(null);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      setError(resolveAssetErrorCopy(message, 'Failed to load assets. Please try again.'));
+      setListFailed(false);
+    } catch {
+      setListFailed(true);
     } finally {
       if (passive) setLoading(false);
     }
@@ -323,58 +261,40 @@ export function AssetsDomain({
 
   const deleteAsset = useCallback(
     async (asset: AccountAssetRecord) => {
-      if (!accountId) return false;
-      if (!asset.assetRef) {
-        setDeleteError('Asset delete failed. Invalid asset reference.');
-        return false;
-      }
       setDeletingAssetRef(asset.assetRef);
-      setDeleteError(null);
       try {
-        await requestDeleteAsset(accountApi, accountPublicId, asset.assetRef);
+        await requestDeleteAsset(accountApi, asset.assetRef);
         setDeleteConfirmationAsset(null);
         void refreshAssets();
         return true;
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        setDeleteError(resolveDeleteErrorCopy(message));
+      } catch {
         return false;
       } finally {
         setDeletingAssetRef(null);
       }
     },
-    [accountApi, accountId, accountPublicId, refreshAssets],
+    [accountApi, refreshAssets],
   );
 
   const handleDeleteAsset = useCallback(
     (asset: AccountAssetRecord) => {
-      if (!accountId) return;
-      setDeleteError(null);
       setDeleteConfirmationAsset(asset);
     },
-    [accountId],
+    [],
   );
 
   const uploadSingle = useCallback(
     async (file: File) => {
-      if (!accountId) return;
-      if (uploadSizeLimitBytes != null && file.size > uploadSizeLimitBytes) {
-        setSingleUploadError(`File exceeds per-file limit (${formatBytes(uploadSizeLimitBytes)}).`);
-        return;
-      }
       setSingleUploadBusy(true);
-      setSingleUploadError(null);
       try {
         await requestUploadAsset(accountApi, file, 'api');
         await refreshAssets();
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        setSingleUploadError(resolveAssetErrorCopy(message, 'Asset upload failed. Please try again.'));
+      } catch {
       } finally {
         setSingleUploadBusy(false);
       }
     },
-    [accountApi, accountId, refreshAssets, uploadSizeLimitBytes],
+    [accountApi, refreshAssets],
   );
 
   const handleSingleFileChange = useCallback(
@@ -393,14 +313,13 @@ export function AssetsDomain({
 
   const runBulkUpload = useCallback(
     async (files: File[]) => {
-      if (!accountId || files.length === 0) return;
+      if (files.length === 0) return;
       const initial: BulkUploadItem[] = files.map((file, index) => ({
         id: `${Date.now()}-${index}-${file.name}`,
-        name: file.name || 'upload.bin',
+        name: file.name,
         sizeBytes: file.size,
-        contentType: file.type || 'application/octet-stream',
+        contentType: file.type,
         status: 'queued',
-        error: null,
       }));
       setBulkItems(initial);
       setBulkUploadOpen(true);
@@ -408,28 +327,16 @@ export function AssetsDomain({
 
       let uploadedAny = false;
       for (let i = 0; i < files.length; i += 1) {
-        const file = files[i];
-        const item = initial[i];
-        if (!item) continue;
-        if (uploadSizeLimitBytes != null && file.size > uploadSizeLimitBytes) {
-          updateBulkItem(item.id, {
-            status: 'failed',
-            error: `File exceeds per-file limit (${formatBytes(uploadSizeLimitBytes)}).`,
-          });
-          continue;
-        }
+        const file = files[i]!;
+        const item = initial[i]!;
 
-        updateBulkItem(item.id, { status: 'uploading', error: null });
+        updateBulkItem(item.id, { status: 'uploading' });
         try {
           await requestUploadAsset(accountApi, file, 'api');
-          updateBulkItem(item.id, { status: 'success', error: null });
+          updateBulkItem(item.id, { status: 'success' });
           uploadedAny = true;
-        } catch (err) {
-          const message = err instanceof Error ? err.message : String(err);
-          updateBulkItem(item.id, {
-            status: 'failed',
-            error: resolveAssetErrorCopy(message, 'Asset upload failed. Please try again.'),
-          });
+        } catch {
+          updateBulkItem(item.id, { status: 'failed' });
         }
       }
 
@@ -438,7 +345,7 @@ export function AssetsDomain({
         await refreshAssets();
       }
     },
-    [accountApi, accountId, refreshAssets, updateBulkItem, uploadSizeLimitBytes],
+    [accountApi, refreshAssets, updateBulkItem],
   );
 
   const handleBulkFileChange = useCallback(
@@ -457,18 +364,6 @@ export function AssetsDomain({
   const totalBulkCount = bulkItems.length;
   const uploadingBulkCount = bulkItems.filter((item) => item.status === 'uploading').length;
   const queuedBulkCount = bulkItems.filter((item) => item.status === 'queued').length;
-  const bulkProgressLabel =
-    totalBulkCount > 0
-      ? `${completedBulkCount} of ${totalBulkCount} files processed`
-      : 'No files selected';
-  const bulkResultLabel =
-    !bulkUploadBusy && totalBulkCount > 0
-      ? failedBulkCount > 0 && successfulBulkCount > 0
-        ? `Partial upload complete: ${successfulBulkCount} uploaded, ${failedBulkCount} failed.`
-        : failedBulkCount > 0
-          ? `Upload failed for ${failedBulkCount} file${failedBulkCount === 1 ? '' : 's'}.`
-          : `${successfulBulkCount} file${successfulBulkCount === 1 ? '' : 's'} uploaded.`
-      : null;
   const changeSort = useCallback((key: AssetSortKey) => {
     setSort((current) => current.key === key
       ? {
@@ -521,11 +416,11 @@ export function AssetsDomain({
   return (
     <>
       <section className="rd-canvas-module">
-        <p className="body-m">Account: {accountContext.accountLabel}</p>
+        <p className="label-s">{assetsCopy.account}</p>
+        <p className="body-m">{accountContext.accountLabel}</p>
 
-        {error ? (
+        {listFailed ? (
           <div className="roma-inline-stack" role="alert">
-            <p className="body-m">{error}</p>
             <button
               className="diet-button"
               data-size="medium"
@@ -537,23 +432,21 @@ export function AssetsDomain({
               disabled={retryPending}
             >
               {retryPending ? <span className="diet-spinner" aria-hidden="true" /> : null}
-              <span className="diet-button__label">Retry</span>
+              <span className="diet-button__label">{ROMA_DIALOGS_UI_COPY.retry}</span>
             </button>
           </div>
         ) : null}
-        {storedAssetsLabel !== null ? <p className="body-m">Stored assets: {storedAssetsLabel}</p> : null}
+        {storedAssetsLabel !== null ? <><p className="label-s">{assetsCopy.stored}</p><p className="body-m">{storedAssetsLabel}</p></> : null}
         {storageUsedLabel !== null ? (
-          <p className="body-m">
-            Storage used: {storageUsedLabel} / {storageLimit == null ? 'unlimited' : formatBytes(storageLimit)}
-          </p>
+          <><p className="label-s">{assetsCopy.storageUsed}</p><p className="body-m">{storageUsedLabel} / {storageLimit === null ? assetsCopy.unlimited : formatBytes(storageLimit)}</p></>
         ) : null}
-        {uploadSizeLimitBytes != null ? <p className="body-m">Per-file upload limit: {formatBytes(uploadSizeLimitBytes)}</p> : null}
+        <p className="label-s">{assetsCopy.uploadLimit}</p>
+        <p className="body-m">
+          {uploadSizeLimitBytes === null ? assetsCopy.unlimited : formatBytes(uploadSizeLimitBytes)}
+        </p>
 
-        <input ref={singleUploadInputRef} type="file" hidden onChange={handleSingleFileChange} aria-label="Upload single asset" />
-        <input ref={bulkUploadInputRef} type="file" multiple hidden onChange={handleBulkFileChange} aria-label="Upload multiple assets" />
-
-        {singleUploadError ? <p className="body-m" role="alert">Upload failed: {singleUploadError}</p> : null}
-        {deleteError && !deleteConfirmationAsset ? <p className="body-m" role="alert">Failed to delete asset: {deleteError}</p> : null}
+        <input ref={singleUploadInputRef} type="file" hidden onChange={handleSingleFileChange} aria-label={assetsCopy.uploadSingleAccessible} />
+        <input ref={bulkUploadInputRef} type="file" multiple hidden onChange={handleBulkFileChange} aria-label={assetsCopy.uploadMultipleAccessible} />
       </section>
 
       <section className="rd-canvas-module">
@@ -562,13 +455,13 @@ export function AssetsDomain({
           <thead>
             <tr>
               <th className="label-s" scope="col" aria-sort={sort.key === 'filename' ? sort.direction : 'none'}>
-                <span>Asset</span>{' '}
+                <span>{assetsCopy.columns.asset}</span>{' '}
                 <button
                   className="diet-button"
                   data-size="small"
                   data-type="quaternary"
                   type="button"
-                  aria-label="Sort by asset name"
+                  aria-label={assetsCopy.sort.asset}
                   onClick={() => changeSort('filename')}
                 >
                   <span
@@ -584,13 +477,13 @@ export function AssetsDomain({
                 </button>
               </th>
               <th className="label-s" scope="col" aria-sort={sort.key === 'assetType' ? sort.direction : 'none'}>
-                <span>Type</span>{' '}
+                <span>{assetsCopy.columns.type}</span>{' '}
                 <button
                   className="diet-button"
                   data-size="small"
                   data-type="quaternary"
                   type="button"
-                  aria-label="Sort by type"
+                  aria-label={assetsCopy.sort.type}
                   onClick={() => changeSort('assetType')}
                 >
                   <span
@@ -605,15 +498,15 @@ export function AssetsDomain({
                   />
                 </button>
               </th>
-              <th className="label-s" scope="col">MIME</th>
+              <th className="label-s" scope="col">{assetsCopy.columns.mime}</th>
               <th className="label-s" scope="col" aria-sort={sort.key === 'sizeBytes' ? sort.direction : 'none'}>
-                <span>Size</span>{' '}
+                <span>{assetsCopy.columns.size}</span>{' '}
                 <button
                   className="diet-button"
                   data-size="small"
                   data-type="quaternary"
                   type="button"
-                  aria-label="Sort by size"
+                  aria-label={assetsCopy.sort.size}
                   onClick={() => changeSort('sizeBytes')}
                 >
                   <span
@@ -628,7 +521,7 @@ export function AssetsDomain({
                   />
                 </button>
               </th>
-              <th className="label-s diet-table__cell--action" scope="col">Actions</th>
+              <th className="label-s diet-table__cell--action" scope="col">{assetsCopy.columns.actions}</th>
             </tr>
           </thead>
           <tbody>
@@ -647,7 +540,7 @@ export function AssetsDomain({
                     onClick={() => handleDeleteAsset(asset)}
                     disabled={deletingAssetRef === asset.assetRef}
                   >
-                    <span className="diet-button__label">Delete</span>
+                    <span className="diet-button__label">{assetsCopy.delete}</span>
                   </button>
                 </td>
               </tr>
@@ -663,8 +556,8 @@ export function AssetsDomain({
                 <td colSpan={5} className="diet-data-table__state-cell">
                   <RomaEmptyState>
                     {assets.length === 0
-                      ? ROMA_UI_COPY.state.empty.assets
-                      : ROMA_UI_COPY.state.empty.filteredAssets}
+                      ? assetsCopy.empty
+                      : assetsCopy.filteredEmpty}
                   </RomaEmptyState>
                 </td>
               </tr>
@@ -679,16 +572,15 @@ export function AssetsDomain({
           <header className="diet-popup__header">
             <div className="roma-inline-stack">
               <h2 id="roma-assets-bulk-title" className="heading-4">
-                Bulk upload
+                {assetsCopy.bulk.title}
               </h2>
-              <p className="body-m">Upload multiple files in one run. Each file is processed independently and failures do not block other files.</p>
             </div>
             <button
               className="diet-button diet-popup__dismiss"
               data-size="medium"
               data-type="quaternary"
               type="button"
-              aria-label="Close"
+              aria-label={ROMA_DIALOGS_UI_COPY.close}
               onClick={() => setBulkUploadOpen(false)}
               disabled={bulkUploadBusy}
             >
@@ -697,20 +589,19 @@ export function AssetsDomain({
           </header>
           <div className="diet-popup__body">
             <div className="roma-inline-stack" role={failedBulkCount > 0 && !bulkUploadBusy ? 'alert' : 'status'} aria-live="polite">
-              <p className="body-s">{bulkProgressLabel}</p>
-              <p className="body-s">Success: {successfulBulkCount}</p>
-              <p className="body-s">Failed: {failedBulkCount}</p>
-              {bulkUploadBusy ? <p className="body-s">Uploading: {uploadingBulkCount}; queued: {queuedBulkCount}</p> : null}
-              {bulkResultLabel ? <p className="body-s">{bulkResultLabel}</p> : null}
+              <p className="label-s">{assetsCopy.bulk.processed}</p><p className="body-s">{completedBulkCount} / {totalBulkCount}</p>
+              <p className="label-s">{assetsCopy.bulk.success}</p><p className="body-s">{successfulBulkCount}</p>
+              <p className="label-s">{assetsCopy.bulk.failed}</p><p className="body-s">{failedBulkCount}</p>
+              {bulkUploadBusy ? <><p className="label-s">{assetsCopy.bulk.uploading}</p><p className="body-s">{uploadingBulkCount}</p><p className="label-s">{assetsCopy.bulk.queued}</p><p className="body-s">{queuedBulkCount}</p></> : null}
             </div>
             <div className="diet-table">
               <table className="diet-table__table">
                 <thead>
                   <tr>
-                    <th className="label-s">File</th>
-                    <th className="label-s">Type</th>
-                    <th className="label-s">Size</th>
-                    <th className="label-s">Status</th>
+                    <th className="label-s">{assetsCopy.columns.file}</th>
+                    <th className="label-s">{assetsCopy.columns.type}</th>
+                    <th className="label-s">{assetsCopy.columns.size}</th>
+                    <th className="label-s">{assetsCopy.columns.status}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -722,7 +613,6 @@ export function AssetsDomain({
                       <td className="body-s">
                         <span role={item.status === 'failed' ? 'alert' : item.status === 'uploading' ? 'status' : undefined}>
                           {formatBulkItemStatus(item.status)}
-                          {item.error ? ` - ${item.error}` : ''}
                         </span>
                       </td>
                     </tr>
@@ -742,7 +632,7 @@ export function AssetsDomain({
                 onClick={() => bulkUploadInputRef.current?.click()}
                 disabled={bulkUploadBusy}
               >
-                <span className="diet-button__label">Add more files</span>
+                <span className="diet-button__label">{assetsCopy.bulk.addMore}</span>
               </button>
               <button
                 className="diet-button"
@@ -752,7 +642,7 @@ export function AssetsDomain({
                 onClick={() => setBulkUploadOpen(false)}
                 disabled={bulkUploadBusy}
               >
-                <span className="diet-button__label">Close</span>
+                <span className="diet-button__label">{ROMA_DIALOGS_UI_COPY.close}</span>
               </button>
             </div>
           </footer>
@@ -760,13 +650,10 @@ export function AssetsDomain({
       ) : null}
       <RomaCommandConfirmationDialog
         open={Boolean(deleteConfirmationAsset)}
-        title="Delete this asset?"
-        body={deleteConfirmationAsset
-          ? `Deleting “${deleteConfirmationAsset.filename}” removes the asset. Widgets that use it may stop displaying it. This cannot be undone.`
-          : ''}
-        confirmLabel="Delete asset"
+        title={assetsCopy.delete}
+        body={deleteConfirmationAsset?.filename}
+        confirmLabel={assetsCopy.delete}
         pending={Boolean(deleteConfirmationAsset && deletingAssetRef === deleteConfirmationAsset.assetRef)}
-        error={deleteError}
         onCancel={() => setDeleteConfirmationAsset(null)}
         onConfirm={() => {
           const asset = deleteConfirmationAsset;

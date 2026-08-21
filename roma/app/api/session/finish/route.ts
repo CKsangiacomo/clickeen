@@ -5,7 +5,6 @@ import { listTokyoWidgetDefinitions } from '../../../../lib/account-instance-dir
 import { resolveBerlinBaseUrl } from '../../../../lib/env/berlin';
 import {
   applySessionCookies,
-  readSessionMaxAge,
   resolveAccountAuthzCookieName,
   resolveRequestOrigin,
   resolveSessionCookieNames,
@@ -22,31 +21,25 @@ const CACHE_HEADERS = {
 type LoginIntent = 'signin' | 'signup_prague';
 
 type BerlinFinishPayload = {
-  accessToken?: unknown;
-  refreshToken?: unknown;
-  accessTokenMaxAge?: unknown;
-  refreshTokenMaxAge?: unknown;
-  createdAccount?: unknown;
-  continuation?: unknown;
-  error?: unknown;
+  accessToken: string;
+  refreshToken: string;
+  accessTokenMaxAge: number;
+  refreshTokenMaxAge: number;
+  createdAccount: boolean;
+  continuation: {
+    intent: LoginIntent;
+    next: string;
+  };
 };
 
 type BootstrapPayload = {
-  activeAccount?: {
-    accountId?: unknown;
+  activeAccount: {
+    accountId: string;
   };
-  authz?: {
-    accountCapsule?: unknown;
+  authz: {
+    accountCapsule: string;
   };
-  error?: unknown;
 };
-
-function resolveNextPath(value: string | null): string {
-  const normalized = String(value || '').trim();
-  if (!normalized.startsWith('/')) return '/home';
-  if (normalized.startsWith('//')) return '/home';
-  return normalized;
-}
 
 function resolveLoginUrl(request: NextRequest, params: Record<string, string>): URL {
   const url = new URL('/login', resolveRequestOrigin(request));
@@ -64,38 +57,14 @@ function extractReasonKey(payload: Record<string, unknown> | null, fallback: str
   return typeof reason === 'string' && reason.trim() ? reason.trim() : fallback;
 }
 
-function normalizeIntent(value: unknown): LoginIntent {
-  const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
-  if (normalized === 'signup_prague') return 'signup_prague';
-  return 'signin';
-}
-
-function extractContinuation(payload: BerlinFinishPayload | null): { intent: LoginIntent; next: string } {
-  if (!payload || !payload.continuation || typeof payload.continuation !== 'object') {
-    return { intent: 'signin', next: '/home' };
-  }
-  const continuation = payload.continuation as Record<string, unknown>;
-  const nextRaw = typeof continuation.next === 'string' ? continuation.next : null;
-  return {
-    intent: normalizeIntent(continuation.intent),
-    next: resolveNextPath(nextRaw),
-  };
-}
-
-function resolveAccountId(value: unknown): string | null {
-  if (typeof value !== 'string') return null;
-  const normalized = value.trim();
-  return normalized || null;
-}
-
 async function fetchBootstrap(
   berlinBase: string,
   accessToken: string,
 ): Promise<
   | {
       ok: true;
-      accountId: string | null;
-      accountCapsule: string | null;
+      accountId: string;
+      accountCapsule: string;
     }
   | { ok: false; reasonKey: string }
 > {
@@ -108,7 +77,7 @@ async function fetchBootstrap(
     cache: 'no-store',
   });
 
-  const payload = (await response.json().catch(() => null)) as BootstrapPayload | null;
+  const payload = (await response.json().catch(() => null)) as BootstrapPayload | Record<string, unknown> | null;
   if (!response.ok) {
     return {
       ok: false,
@@ -118,11 +87,8 @@ async function fetchBootstrap(
 
   return {
     ok: true,
-    accountId: resolveAccountId(payload?.activeAccount?.accountId),
-    accountCapsule:
-      typeof payload?.authz?.accountCapsule === 'string' && payload.authz.accountCapsule.trim()
-        ? payload.authz.accountCapsule.trim()
-        : null,
+    accountId: (payload as BootstrapPayload).activeAccount.accountId,
+    accountCapsule: (payload as BootstrapPayload).authz.accountCapsule,
   };
 }
 
@@ -138,7 +104,6 @@ function applyFinishSessionCookies(args: {
   request: NextRequest;
   accessToken: string;
   refreshToken: string;
-  accountCapsule?: string | null;
   accessMaxAge: number;
   refreshMaxAge: number;
 }): void {
@@ -146,14 +111,6 @@ function applyFinishSessionCookies(args: {
   applySessionCookies(args.response, args.request, [
     { name: cookieNames.access, value: args.accessToken, maxAge: args.accessMaxAge },
     { name: cookieNames.refresh, value: args.refreshToken, maxAge: args.refreshMaxAge },
-    ...(args.accountCapsule
-      ? [
-          {
-            name: resolveAccountAuthzCookieName(),
-            value: args.accountCapsule,
-          },
-        ]
-      : []),
   ]);
 }
 
@@ -192,37 +149,21 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  const accessToken = typeof payload.accessToken === 'string' ? payload.accessToken.trim() : '';
-  const refreshToken = typeof payload.refreshToken === 'string' ? payload.refreshToken.trim() : '';
-  if (!accessToken || !refreshToken) {
-    return NextResponse.redirect(resolveLoginUrl(request, { error: 'coreui.errors.auth.login_failed' }), {
-      headers: CACHE_HEADERS,
-    });
-  }
-
-  const accessMaxAge = readSessionMaxAge(payload.accessTokenMaxAge);
-  const refreshMaxAge = readSessionMaxAge(payload.refreshTokenMaxAge);
-  if (!accessMaxAge || !refreshMaxAge) {
-    return NextResponse.redirect(resolveLoginUrl(request, { error: 'coreui.errors.auth.login_failed' }), {
-      headers: CACHE_HEADERS,
-    });
-  }
-  if (typeof payload.createdAccount !== 'boolean') {
-    return NextResponse.redirect(buildRecoveryUrl(request, 'coreui.errors.auth.contextUnavailable'), {
-      headers: CACHE_HEADERS,
-    });
-  }
-  const createdAccount = payload.createdAccount;
-
-  const continuation = extractContinuation(payload as BerlinFinishPayload);
-  let accountCapsule: string | null = null;
+  const finish = payload as BerlinFinishPayload;
+  const {
+    accessToken,
+    refreshToken,
+    accessTokenMaxAge: accessMaxAge,
+    refreshTokenMaxAge: refreshMaxAge,
+    createdAccount,
+    continuation,
+  } = finish;
   const applySession = (response: NextResponse): NextResponse => {
     applyFinishSessionCookies({
       response,
       request,
       accessToken,
       refreshToken,
-      accountCapsule,
       accessMaxAge,
       refreshMaxAge,
     });
@@ -238,22 +179,17 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  if (!bootstrap.accountId) {
-    return applySession(
-      NextResponse.redirect(buildRecoveryUrl(request, 'coreui.errors.account.createFailed'), {
-        headers: CACHE_HEADERS,
-      }),
-    );
-  }
-
-  if (!bootstrap.accountCapsule) {
-    return applySession(
-      NextResponse.redirect(buildRecoveryUrl(request, 'coreui.errors.auth.contextUnavailable'), {
-        headers: CACHE_HEADERS,
-      }),
-    );
-  }
-  accountCapsule = bootstrap.accountCapsule;
+  const accountCapsule = bootstrap.accountCapsule;
+  const applySessionWithAccount = (response: NextResponse): NextResponse => {
+    applySession(response);
+    applySessionCookies(response, request, [
+      {
+        name: resolveAccountAuthzCookieName(),
+        value: accountCapsule,
+      },
+    ]);
+    return response;
+  };
 
   if (createdAccount) {
     const widgetDefinitions = await listTokyoWidgetDefinitions({
@@ -261,7 +197,7 @@ export async function GET(request: NextRequest) {
       accountCapsule,
     });
     if (!widgetDefinitions.ok) {
-      return applySession(
+      return applySessionWithAccount(
         NextResponse.redirect(buildRecoveryUrl(request, widgetDefinitions.error.reasonKey), {
           headers: CACHE_HEADERS,
         }),
@@ -277,7 +213,7 @@ export async function GET(request: NextRequest) {
       widgetDefaults: widgetDefaults.widgetDefaults,
     });
     if (!initialized.ok) {
-      return applySession(
+      return applySessionWithAccount(
         NextResponse.redirect(buildRecoveryUrl(request, initialized.error.reasonKey), {
           headers: CACHE_HEADERS,
         }),
@@ -287,5 +223,5 @@ export async function GET(request: NextRequest) {
 
   const destination = new URL(continuation.next, resolveRequestOrigin(request));
   const response = NextResponse.redirect(destination, { headers: CACHE_HEADERS });
-  return applySession(response);
+  return applySessionWithAccount(response);
 }

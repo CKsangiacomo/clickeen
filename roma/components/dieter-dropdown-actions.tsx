@@ -23,7 +23,7 @@ export function DieterDropdownActions({
   options: readonly DieterDropdownOption[];
   onChange: (value: string) => void;
   label?: string;
-  ariaLabel?: string;
+  ariaLabel: string;
   disabled?: boolean;
   size?: 'sm' | 'md' | 'lg';
   triggerStyle?: 'field' | 'button';
@@ -34,7 +34,7 @@ export function DieterDropdownActions({
   const triggerRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
   const selectedOption = options.find((option) => option.value === value) ?? null;
-  const accessibleLabel = ariaLabel ?? label ?? 'Choose an option';
+  const accessibleLabel = ariaLabel;
   const labelClass = size === 'sm' ? 'label-xs' : size === 'lg' ? 'label-m' : 'label-s';
   const bodyClass = size === 'sm' ? 'body-xs' : size === 'lg' ? 'body-m' : 'body-s';
   const buttonSize = size === 'sm' ? 'small' : size === 'lg' ? 'large' : 'medium';
@@ -86,7 +86,7 @@ export function DieterDropdownActions({
         aria-expanded={open}
         aria-labelledby={triggerStyle === 'field' && label ? labelId : undefined}
         aria-label={triggerStyle === 'button'
-          ? `${accessibleLabel}: ${selectedOption?.label ?? accessibleLabel}`
+          ? selectedOption ? `${accessibleLabel}: ${selectedOption.label}` : accessibleLabel
           : label ? undefined : accessibleLabel}
         disabled={disabled}
         onClick={() => setOpen((current) => !current)}
@@ -99,7 +99,7 @@ export function DieterDropdownActions({
               style={{ '--diet-icon-source': 'url("/dieter/icons/svg/line.3.horizontal.decrease.circle.svg")' } as CSSProperties}
               aria-hidden="true"
             />
-            <span className="diet-button__label">{selectedOption?.label ?? accessibleLabel}</span>
+            <span className="diet-button__label">{selectedOption?.label ?? null}</span>
           </>
         ) : (
           <>
@@ -109,7 +109,7 @@ export function DieterDropdownActions({
               </span>
             ) : null}
             <span className={`diet-dropdown-header-value ${bodyClass}`} data-muted={selectedOption ? 'false' : 'true'}>
-              {selectedOption?.label ?? accessibleLabel}
+              {selectedOption?.label ?? null}
             </span>
           </>
         )}

@@ -21,7 +21,7 @@ export type BuilderOpenEnvelope = {
 
 export type NewBuilderOpenEnvelope = {
   instanceId: null;
-  displayName: string;
+  displayName: null;
   widgetType: string;
   baseLocale: string;
   config: Record<string, unknown>;
@@ -113,7 +113,7 @@ export async function loadNewBuilderOpenEnvelope(args: {
     ok: true,
     value: {
       instanceId: null,
-      displayName: 'Untitled widget',
+      displayName: null,
       widgetType: definition.widgetType,
       baseLocale: args.baseLocale,
       config: composeNewInstanceConfig({

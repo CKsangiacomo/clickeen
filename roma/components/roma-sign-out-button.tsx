@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import ROMA_SHELL_UI_COPY from '../l10n/shell/en.json';
 
 export function RomaSignOutButton() {
   const [pending, setPending] = useState(false);
@@ -37,7 +38,7 @@ export function RomaSignOutButton() {
     >
       {pending ? <span className="diet-spinner" aria-hidden="true" /> : null}
       <span className="roma-nav__label diet-button__label">
-        {pending ? 'Signing out...' : 'Sign out'}
+        {pending ? ROMA_SHELL_UI_COPY.commands.signingOut : ROMA_SHELL_UI_COPY.commands.signOut}
       </span>
     </button>
   );

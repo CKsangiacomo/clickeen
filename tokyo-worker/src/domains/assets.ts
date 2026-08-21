@@ -149,9 +149,6 @@ export async function loadAccountAssetByRef(
   assetRef: string,
 ): Promise<AccountAssetFile | null> {
   const key = accountAssetKey(accountId, assetRef);
-  if (directAccountAssetRefFromKey(accountId, key) !== assetRef) {
-    throw new AccountAssetKeyError(key);
-  }
   const obj = await env.TOKYO_R2.head(key);
   if (!obj) return null;
   return fileFromObject({
@@ -202,8 +199,5 @@ export async function loadAccountStoredBytesUsage(env: Env, accountId: string): 
 
 export async function deleteAccountAssetByRef(env: Env, accountId: string, assetRef: string): Promise<void> {
   const key = accountAssetKey(accountId, assetRef);
-  if (directAccountAssetRefFromKey(accountId, key) !== assetRef) {
-    throw new AccountAssetKeyError(key);
-  }
   await env.TOKYO_R2.delete(key);
 }

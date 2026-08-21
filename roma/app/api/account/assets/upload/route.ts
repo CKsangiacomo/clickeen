@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { resolvePolicyFromEntitlementsSnapshot } from '@clickeen/ck-policy';
+import type { Policy } from '@clickeen/ck-policy';
 import type { AccountAssetRecord } from '@clickeen/ck-contracts';
 import {
   accountAssetUploadOptionsResponse,
@@ -16,10 +16,6 @@ export const runtime = 'edge';
 
 export function OPTIONS() {
   return accountAssetUploadOptionsResponse();
-}
-
-function resolvePositiveLimit(value: unknown): number | null {
-  return typeof value === 'number' && Number.isFinite(value) && value > 0 ? Math.trunc(value) : null;
 }
 
 function accountLimitResponse(args: {
@@ -75,13 +71,14 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  const policy = resolvePolicyFromEntitlementsSnapshot({
+  const policy: Policy = {
     profile: gateway.value.authzPayload.profile,
     role: gateway.value.authzPayload.role,
-    entitlements: gateway.value.authzPayload.entitlements ?? null,
-  });
-  const uploadSizeLimit = resolvePositiveLimit(policy.limits['uploads.size.max']);
-  const storageLimit = resolvePositiveLimit(policy.limits['storage.bytes.max']);
+    flags: gateway.value.authzPayload.entitlements!.flags!,
+    limits: gateway.value.authzPayload.entitlements!.limits!,
+  };
+  const uploadSizeLimit = policy.limits['uploads.size.max'];
+  const storageLimit = policy.limits['storage.bytes.max'];
   const uploadBytes = contentLength !== null && Number.isFinite(contentLength) ? Math.trunc(contentLength) : null;
 
   if ((uploadSizeLimit !== null || storageLimit !== null) && uploadBytes === null) {

@@ -42,7 +42,7 @@ export function parseTooldrawerAttributes(tag: string): TooldrawerAttrs {
 
 export function parsePanels(
   htmlLines: unknown,
-  panelLabels: Partial<Record<CompiledPanel['id'], string>>,
+  panelLabels: Record<CompiledPanel['id'], string>,
 ): CompiledPanel[] {
   if (!Array.isArray(htmlLines)) {
     throw new Error('[BobCompiler] compiler expected generated editor HTML lines');
@@ -60,9 +60,6 @@ export function parsePanels(
       throw new Error(`[BobCompiler] Unsupported widget editor panel: ${id || '(empty)'}`);
     }
     const label = panelLabels[id];
-    if (typeof label !== 'string' || !label.trim()) {
-      throw new Error(`[BobCompiler] Missing compiled panel label: ${id}`);
-    }
 
     panels.push({
       id,

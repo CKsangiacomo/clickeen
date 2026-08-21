@@ -2,30 +2,18 @@
 
 import { formatAccountTierLabel } from '../lib/format';
 import { useRomaAccountContext } from './roma-account-context';
+import billingCopy from '../l10n/billing/en.json';
 
 export function BillingDomain() {
-  const { accountContext, activeAccount } = useRomaAccountContext();
+  const { activeAccount } = useRomaAccountContext();
 
   return (
     <>
       <section className="rd-canvas-module">
-        <p className="body-m">Account: {accountContext.accountLabel}</p>
-        <p className="body-m">Billing provider integration is not connected in this environment. Roma shows the current plan only.</p>
-      </section>
-
-      <section className="rd-canvas-module">
-        <div className="roma-grid roma-grid--three">
+        <div className="roma-grid">
           <article className="roma-card">
-            <h2 className="heading-6">Current plan</h2>
+            <h2 className="heading-6">{billingCopy.currentPlan}</h2>
             <p className="body-s">{formatAccountTierLabel(activeAccount.tier)}</p>
-          </article>
-          <article className="roma-card">
-            <h2 className="heading-6">Billing operations</h2>
-            <p className="body-s">Not connected</p>
-          </article>
-          <article className="roma-card">
-            <h2 className="heading-6">What to do</h2>
-            <p className="body-s">Use Settings for account ownership and language controls.</p>
           </article>
         </div>
       </section>

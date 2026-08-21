@@ -22,16 +22,12 @@ const TYPOGRAPHY_CONTROL_LEAVES = [
   'trackingCustom',
 ] as const;
 
-export const COMMON_WIDGET_TYPOGRAPHY_ROLE_LABELS = {
-  title: 'Title',
-  body: 'Subtitle',
-  button: 'Button text',
-  localeSwitcher: 'Locale switcher',
-} as const;
-
-const COMMON_WIDGET_TYPOGRAPHY_ROLES = Object.keys(COMMON_WIDGET_TYPOGRAPHY_ROLE_LABELS) as Array<
-  keyof typeof COMMON_WIDGET_TYPOGRAPHY_ROLE_LABELS
->;
+export const COMMON_WIDGET_TYPOGRAPHY_ROLES = [
+  'title',
+  'body',
+  'button',
+  'localeSwitcher',
+] as const;
 
 function control(
   clusterId: CommonWidgetControlCluster,

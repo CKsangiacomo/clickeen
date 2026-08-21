@@ -65,7 +65,6 @@ Core defaults live under:
 ```text
 countdown
 typography
-uiLabels
 ```
 
 Core state families:

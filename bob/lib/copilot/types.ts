@@ -1,3 +1,5 @@
+import copilotCopy from '../../l10n/copilot/en.json';
+
 export type CopilotMessagePresentationStatus =
   | 'working'
   | 'applied'
@@ -24,10 +26,10 @@ export const COPILOT_MESSAGE_PRESENTATION_LABELS: Record<
   CopilotMessagePresentationStatus,
   string
 > = {
-  working: 'Working',
-  applied: 'Applied',
-  'not-applied': 'Not applied',
-  stopped: 'Stopped',
+  working: copilotCopy.status.working,
+  applied: copilotCopy.status.applied,
+  'not-applied': copilotCopy.status.notApplied,
+  stopped: copilotCopy.status.stopped,
 };
 
 export function appendWorkingCopilotAssistantText(args: {

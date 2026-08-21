@@ -1,0 +1,11 @@
+{
+  "commands": {
+    "retry": "Retry",
+    "signOut": "Sign out",
+    "signingOut": "Signing out..."
+  },
+  "actions": {
+    "inviteMembers": "Invite members",
+    "widgets": "Widgets"
+  }
+}

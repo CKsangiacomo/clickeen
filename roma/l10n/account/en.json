@@ -1,0 +1,8 @@
+{
+  "roles": {
+    "viewer": "Viewer",
+    "editor": "Editor",
+    "admin": "Admin",
+    "owner": "Owner"
+  }
+}

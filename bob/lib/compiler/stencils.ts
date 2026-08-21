@@ -122,7 +122,7 @@ export async function buildContext(
   const rowPath = attrs.rowPath || attrs['row-path'] || (merged.rowPath as string) || '';
   const columnsRaw = attrs.columns || '';
   const columns = columnsRaw ? normalizeJsonAttrValue(columnsRaw) : '';
-  const title = attrs.title || label;
+  const title = attrs.title;
   const emptyLabel = attrs.emptyLabel || attrs['empty-label'] || '';
   const closeLabel = attrs.closeLabel || attrs['close-label'] || '';
   const cancelLabel = attrs.cancelLabel || attrs['cancel-label'] || '';
@@ -354,7 +354,7 @@ export async function buildContext(
     const segments = Array.isArray(options)
       ? options.map((opt) => ({
           value: opt?.value == null ? '' : String(opt.value),
-          label: opt?.label == null ? '' : String(opt.label),
+          label: opt.label as string,
           icon: opt?.icon == null ? '' : String(opt.icon),
           disabled: opt?.disabled === true,
           checked: false,
@@ -382,7 +382,6 @@ export async function buildContext(
 
   if (merged.labelClass == null) merged.labelClass = 'label-s';
   if (merged.bodyClass == null) merged.bodyClass = 'body-s';
-  if (merged.popoverLabel == null) merged.popoverLabel = placeholder || label;
 
   return interpolateStencilContext(merged, {
     skipInterpolationKeys: new Set(['template', 'optionsRaw']),

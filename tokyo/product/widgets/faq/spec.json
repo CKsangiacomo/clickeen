@@ -15,13 +15,6 @@
     ]
   },
   "defaults": {
-    "uiLabels": {
-      "core": {
-        "singular": "$label:core.singular",
-        "plural": "$label:core.plural",
-        "sizeCluster": "$label:core.size-cluster"
-      }
-    },
     "typography": {
       "roles": {
         "answer": {
@@ -257,6 +250,10 @@
       "components": {
         "agent-activity": {
           "title": "$label:component.agent-activity.title"
+        },
+        "core": {
+          "singular": "$label:core.singular",
+          "sizeCluster": "$label:core.size-cluster"
         },
         "object-manager": {
           "cancel": "$label:component.object-manager.cancel.label",

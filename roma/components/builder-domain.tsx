@@ -9,6 +9,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import builderCopy from '../l10n/builder/en.json';
 import { resolveBobBaseUrl } from '../lib/env/bob';
 import {
   createHostSaveRequestMessage,
@@ -17,7 +18,8 @@ import {
   type BobSaveControlStateMessage,
 } from '../lib/builder-host-protocol';
 import { formatAccountTierLabel } from '../lib/format';
-import { ROMA_UI_COPY } from '../lib/ui-copy';
+import ROMA_DIALOGS_UI_COPY from '../l10n/dialogs/en.json';
+import ROMA_NAVIGATION_UI_COPY from '../l10n/navigation/en.json';
 import { useRomaAccountApi } from './account-api';
 import { getWidgetEditorArtifact } from './widget-editor-artifact';
 import { useRomaAccountContext } from './roma-account-context';
@@ -118,17 +120,6 @@ type BobSystemUpsellMessage = {
 
 type BobUpsellMessage = BobWidgetUpsellMessage | BobSystemUpsellMessage;
 
-function resolveBobSystemUpsellBody(reasonKey: string): string {
-  switch (reasonKey) {
-    case 'coreui.upsell.reason.limitReached':
-      return 'This exceeds your current plan limit.';
-    case 'coreui.upsell.reason.platform.uploads':
-      return 'Uploads are not available on your current plan.';
-    default:
-      throw new Error(reasonKey);
-  }
-}
-
 function composeWidgetUpsellBody(args: {
   compiled: CompiledWidget;
   policy: Policy;
@@ -145,7 +136,6 @@ function composeWidgetUpsellBody(args: {
         upgradeAvailable: true,
       }
     : {
-        body: `Your current plan is ${formatAccountTierLabel(args.policy.profile)}. You have reached the maximum capacity currently available for this feature.`,
         upgradeAvailable: false,
       };
 }
@@ -226,40 +216,6 @@ type BuilderOpenResponse = BuilderOpenResponseBase & (
     }
 );
 
-const BUILDER_REASON_COPY: Record<string, string> = {
-  'coreui.errors.auth.required': 'You need to sign in again to open Builder.',
-  'coreui.errors.auth.contextUnavailable': 'Builder is unavailable right now. Please try again.',
-  'coreui.errors.auth.forbidden': 'You do not have permission to open this widget in Builder.',
-  'coreui.errors.network.timeout': 'Builder took too long to respond. Please try again.',
-  'coreui.errors.misconfigured': 'Builder is temporarily unavailable. Please try again.',
-  'coreui.errors.payload.invalid': 'Builder received an invalid response. Please try again.',
-  'coreui.errors.instance.notFound': 'This widget could not be found. It may have been deleted.',
-  'coreui.errors.instance.widgetMissing': 'This widget is missing required data and cannot open right now.',
-  'coreui.errors.instance.config.invalid': 'This widget has invalid saved data and cannot open right now.',
-  'coreui.errors.builder.open.stale': 'Builder refreshed while opening this widget. Please retry.',
-  'coreui.errors.builder.open.unsavedChanges': 'Save current edits before opening another widget.',
-  'coreui.errors.builder.open.timeout': 'Builder took too long to respond. Please retry.',
-  'coreui.errors.builder.open.failed': 'Builder could not open this widget. Please try again.',
-};
-
-function resolveBuilderErrorCopy(reason: string, fallback: string): string {
-  const normalized = String(reason || '').trim();
-  if (!normalized) return fallback;
-  const mapped = BUILDER_REASON_COPY[normalized];
-  if (mapped) return mapped;
-  const invalidConfigPrefix = 'coreui.errors.instance.config.invalid:';
-  if (normalized.startsWith(invalidConfigPrefix)) {
-    const path = normalized.slice(invalidConfigPrefix.length).trim();
-    return path
-      ? `This widget has invalid saved data at ${path} and cannot open right now.`
-      : BUILDER_REASON_COPY['coreui.errors.instance.config.invalid'];
-  }
-  if (normalized.startsWith('HTTP_') || normalized.startsWith('coreui.') || normalized.startsWith('roma.')) {
-    return fallback;
-  }
-  return normalized;
-}
-
 function buildRomaBuilderRoute(args: { instanceId: string }): string {
   return `/builder/${encodeURIComponent(args.instanceId)}`;
 }
@@ -269,10 +225,10 @@ function buildRomaNewBuilderRoute(args: { widgetType: string }): string {
 }
 
 function resolveBobAccountCommandRequest(args: {
-  command: BobAccountCommand;
+  command: Exclude<BobAccountCommand, 'cancel-copilot'>;
   instanceId?: string;
   body?: unknown;
-}): { method: 'GET' | 'PUT' | 'POST' | 'DELETE'; path: string } | null {
+}): { method: 'GET' | 'PUT' | 'POST' | 'DELETE'; path: string } {
   const instanceId = args.instanceId ?? '';
 
   switch (args.command) {
@@ -322,11 +278,6 @@ function resolveBobAccountCommandRequest(args: {
         method: 'POST',
         path: `/api/account/instances/${encodeURIComponent(instanceId)}/copilot`,
       };
-    case 'cancel-copilot':
-      // Handled locally via the AbortController registry — does not map to a Roma route.
-      return null;
-    default:
-      return null;
   }
 }
 
@@ -377,15 +328,7 @@ async function readJsonOrStreamedCommandResult(args: {
     if (!dataLines.length) return;
     const data = dataLines.join('\n');
     if (eventName === 'activity') {
-      let parsed: unknown;
-      try {
-        parsed = JSON.parse(data);
-      } catch {
-        return;
-      }
-      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return;
-      const message = (parsed as { message?: unknown }).message;
-      if (typeof message === 'string') args.onActivity({ message });
+      args.onActivity(JSON.parse(data) as AgentActivityEvent);
       return;
     }
     if (eventName === 'result') {
@@ -422,9 +365,8 @@ type CopilotStreamOutcome =
  * look for a terminal `result` frame: the stream is a turn event log whose
  * terminal marker is agent_turn_finished / agent_turn_error / agent_turn_stopped.
  *
- * Transport rejection is terminal and visible: on malformed JSON Roma emits a final
- * synthetic agent_turn_error (so Bob's UI shows the failure) and returns a
- * non-ok outcome that the caller translates into host:account-command-result.
+ * Transport rejection returns a non-ok outcome that the caller translates
+ * into host:account-command-result. Roma does not invent an agent event.
  */
 async function readCopilotStreamedEvents(args: {
   response: Response;
@@ -442,7 +384,6 @@ async function readCopilotStreamedEvents(args: {
   const reader = body.getReader();
   const decoder = new TextDecoder();
   let buffer = '';
-  let lastUserTurnId = '';
 
   const postEvent = (event: ProductCopilotTurnEvent) => {
     const message: HostCopilotEventMessage = {
@@ -454,20 +395,9 @@ async function readCopilotStreamedEvents(args: {
     args.source.postMessage(message, args.bobBaseUrl);
   };
 
-  const reject = (detail: string): CopilotStreamOutcome => {
-    postEvent({
-      version: 1,
-      userTurnId: lastUserTurnId || args.requestId,
-      type: 'agent_turn_error',
-      data: {
-        code: 'STREAM_INVALID',
-        reasonKey: 'coreui.errors.copilot.failed',
-        message: detail,
-        requestId: args.requestId,
-      },
-    });
-    return { ok: false, status: 502, message: 'coreui.errors.copilot.failed' };
-  };
+  const reject = (): CopilotStreamOutcome => (
+    { ok: false, status: 502, message: 'coreui.errors.copilot.failed' }
+  );
 
   const consumeFrame = (raw: string): CopilotStreamOutcome | null => {
     const lines = raw.split('\n');
@@ -484,9 +414,8 @@ async function readCopilotStreamedEvents(args: {
     try {
       parsed = JSON.parse(dataLines.join('\n')) as ProductCopilotTurnEvent;
     } catch {
-      return reject('Malformed JSON in copilot event frame.');
+      return reject();
     }
-    lastUserTurnId = parsed.userTurnId;
     postEvent(parsed);
     return null;
   };
@@ -521,13 +450,13 @@ async function readCopilotStreamedEvents(args: {
       const outcome = consumeFrame(tail);
       if (outcome) return outcome;
     }
-  } catch (error) {
+  } catch {
     // Downstream cancellation: release the reader without surfacing an error.
     // The cancel-copilot handler owns the host:account-command-result reply.
     if (args.signal?.aborted) {
       return { ok: 'cancelled' };
     }
-    return reject(error instanceof Error ? error.message : String(error));
+    return reject();
   }
 
   return { ok: true, status: 200 };
@@ -665,54 +594,13 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
         };
         args.source.postMessage(message, bobBaseUrl);
       };
-      const commandUsesActiveInstance = !isAccountAssetCommand(args.command);
-      const requestedInstanceId = args.instanceId ?? '';
-      const scopedInstanceId = commandUsesActiveInstance
-        ? (bobAppliedInstanceIdRef.current || activeInstanceId)
-        : requestedInstanceId;
-      if (commandUsesActiveInstance && requestedInstanceId && requestedInstanceId !== scopedInstanceId) {
-        reply({
-          requestId: args.requestId,
-          command: args.command,
-          instanceId: scopedInstanceId || requestedInstanceId,
-          ok: false,
-          status: 409,
-          message: 'coreui.errors.builder.instanceScopeMismatch',
-        });
-        return;
-      }
-      if (
-        commandUsesActiveInstance &&
-        args.command !== 'save-instance' &&
-        !scopedInstanceId
-      ) {
-        reply({
-          requestId: args.requestId,
-          command: args.command,
-          ok: false,
-          status: 409,
-          message: 'coreui.errors.builder.saveFirst',
-        });
-        return;
-      }
+      const scopedInstanceId = args.instanceId ?? '';
 
       const route = resolveBobAccountCommandRequest({
-        command: args.command,
+        command: args.command as Exclude<BobAccountCommand, 'cancel-copilot'>,
         instanceId: scopedInstanceId,
         body: args.body,
       });
-
-      if (!route) {
-        reply({
-          requestId: args.requestId,
-          command: args.command,
-          ...(scopedInstanceId ? { instanceId: scopedInstanceId } : {}),
-          ok: false,
-          status: 422,
-          message: 'coreui.errors.builder.command.invalid',
-        });
-        return;
-      }
 
       if (args.command === 'save-instance' && publicationPendingRef.current) {
         await publicationIdlePromiseRef.current;
@@ -865,15 +753,13 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
               buildRomaBuilderRoute({ instanceId: created.instanceId }),
             );
           } else {
-            const savedAt = (payload as { updatedAt?: unknown } | null)?.updatedAt;
-            if (typeof savedAt === 'string') {
-              setPublicationInstance((current) => {
-                if (!current || current.instanceId !== scopedInstanceId) return current;
-                const next = { ...current, updatedAt: savedAt };
-                upsertRomaWidgetInstanceCache(activeAccount.accountPublicId, next);
-                return next;
-              });
-            }
+            const { updatedAt: savedAt } = payload as { updatedAt: string };
+            setPublicationInstance((current) => {
+              if (!current || current.instanceId !== scopedInstanceId) return current;
+              const next = { ...current, updatedAt: savedAt };
+              upsertRomaWidgetInstanceCache(activeAccount.accountPublicId, next);
+              return next;
+            });
           }
         }
 
@@ -909,7 +795,7 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
         });
       }
     },
-    [accountApi, activeAccount.accountPublicId, activeInstanceId, bobBaseUrl],
+    [accountApi, activeAccount.accountPublicId, bobBaseUrl],
   );
 
   const postOpenEditorAndWait = useCallback(
@@ -1032,20 +918,17 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
       if (openSeq !== openDispatchSeqRef.current) return;
       activeCompiledWidgetRef.current = compiled;
       bobAppliedInstanceIdRef.current = resolvedInstanceId ?? '';
-      const newDraftIsDirty = resolvedInstanceId === null;
-      bobIsDirtyRef.current = newDraftIsDirty;
-      setBobIsDirty(newDraftIsDirty);
       setPublicationInstance(
-        resolvedInstanceId && builderOpen.publishStatus
-          ? {
-              instanceId: resolvedInstanceId,
+        builderOpen.instanceId === null
+          ? null
+          : {
+              instanceId: builderOpen.instanceId,
               widgetType,
               displayName: label,
               status: builderOpen.publishStatus,
               publishedAt: builderOpen.publishedAt,
               updatedAt: builderOpen.sourceUpdatedAt,
-            }
-          : null,
+            },
       );
       openedTargetKeyRef.current = targetKey;
       setOpenError(null);
@@ -1139,10 +1022,7 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
               messageId: data.messageId,
               required: data.required,
             })
-          : {
-              body: resolveBobSystemUpsellBody(data.reasonKey),
-              upgradeAvailable: true,
-            };
+          : { upgradeAvailable: true };
         setUpsell(presentation);
         return;
       }
@@ -1300,16 +1180,12 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
     };
   }, [requestGuardedNavigation]);
 
-  const builderOpenErrorCopy = resolveBuilderErrorCopy(openError || '', 'Builder could not open this widget. Please try again.');
-
   if (!activeInstanceId && !activeWidgetType) {
     return (
       <div className="rd-canvas-module">
-        <p className="body-m">No instance selected for Builder.</p>
-        <p className="body-m">Select a concrete instance from Widgets and open Edit.</p>
         <div className="rd-canvas-module__actions">
           <Link className="diet-button" data-size="medium" data-type="primary" href="/widgets">
-            <span className="diet-button__label">Open widgets</span>
+            <span className="diet-button__label">{builderCopy.openWidgets}</span>
           </Link>
         </div>
       </div>
@@ -1320,7 +1196,6 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
     <>
       {openError ? (
         <div className="rd-canvas-module roma-builder-error">
-          <p className="body-m">{builderOpenErrorCopy}</p>
           <div className="rd-canvas-module__actions">
             <button
               className="diet-button"
@@ -1333,14 +1208,14 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
               disabled={openRetryPending}
             >
               {openRetryPending ? <span className="diet-spinner" aria-hidden="true" /> : null}
-              <span className="diet-button__label">Retry</span>
+              <span className="diet-button__label">{ROMA_DIALOGS_UI_COPY.retry}</span>
             </button>
           </div>
         </div>
       ) : null}
       <RomaPageHeader
         width="full"
-        title={publicationInstance?.displayName || (activeInstanceId ? 'Loading widget…' : 'Untitled widget')}
+        title={publicationInstance?.displayName ?? null}
         navigationTrigger={(
           <button
             ref={navigationButtonRef}
@@ -1348,7 +1223,7 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
             data-size="medium"
             data-type="quaternary"
             type="button"
-            aria-label="Open navigation"
+            aria-label={ROMA_NAVIGATION_UI_COPY.navigation.open}
             aria-controls="roma-primary-navigation"
             onClick={() => openNavigation(navigationButtonRef.current)}
           >
@@ -1370,11 +1245,7 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
               setPublicationInstance(next);
             }}
           />
-        ) : (
-          <p className="body-xs">
-            {activeInstanceId ? 'Loading publication status…' : 'Save to create this widget'}
-          </p>
-        )}
+        ) : null}
         actions={publicationInstance || bobSaveControlPhase !== 'hidden' ? (
           <>
             {publicationInstance ? (
@@ -1398,7 +1269,7 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
                 type="button"
                 onClick={requestBobSave}
               >
-                <span className="diet-button__label">{ROMA_UI_COPY.commands.save}</span>
+                <span className="diet-button__label">{builderCopy.save}</span>
               </button>
             ) : null}
             {bobSaveControlPhase === 'saving' ? (
@@ -1413,7 +1284,7 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
                 disabled
               >
                 <span className="diet-spinner" aria-hidden="true" />
-                <span className="diet-button__label">{ROMA_UI_COPY.commands.saving}</span>
+                <span className="diet-button__label">{builderCopy.saving}</span>
               </button>
             ) : null}
             {bobSaveControlPhase === 'saved' ? (
@@ -1433,7 +1304,7 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
                     '--diet-icon-source': 'url("/dieter/icons/svg/checkmark.svg")',
                   } as CSSProperties}
                 />
-                <span className="diet-button__label">{ROMA_UI_COPY.commands.saved}</span>
+                <span className="diet-button__label">{builderCopy.saved}</span>
               </button>
             ) : null}
           </>
@@ -1443,12 +1314,11 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
         ref={iframeRef}
         src={bobSrc}
         className="roma-builder__iframe"
-        title="Bob Builder"
+        title={builderCopy.iframeTitle}
         onLoad={handleBobIframeLoad}
       />
       <RomaUnsavedChangesDialog
         open={unsavedDialogOpen}
-        message="You have unsaved Builder edits."
         onKeepEditing={keepEditing}
         onDiscard={discardAndContinue}
       />

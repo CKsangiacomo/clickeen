@@ -64,7 +64,6 @@ Core defaults live under:
 ```text
 cards
 typography
-uiLabels
 ```
 
 Core state families:

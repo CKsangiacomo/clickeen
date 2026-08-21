@@ -17,17 +17,15 @@ import {
 import { useWidgetSession, useWidgetSessionChrome } from '../lib/session/useWidgetSession';
 import { mapTranslationOverlayValuesToCurrentPaths } from '../lib/translations-preview';
 import { dieterIconStyle } from './dieterIcon';
-import { bobUiCopy } from '../l10n/ui-copy';
-
-const BLOCKED_SWITCHER_COPY =
-  'Translations not available while in editing mode. Preview translations in Translations panel.';
+import systemStatesCopy from '../l10n/system-states/en.json';
+import workspaceCopy from '../l10n/workspace/en.json';
 
 export function shouldBlockSavedTranslationPreview(args: {
   previewMode: 'editing' | 'translations';
   requestedLocale: string;
   baseLocale: string;
   loading: boolean;
-  error: string | null;
+  error: boolean;
 }): boolean {
   return (
     args.previewMode === 'translations' &&
@@ -49,8 +47,8 @@ function collectFontAssetRefs(fontLibrary: AccountFontLibrary | null): string[] 
 function buildPreviewTypographyData(args: {
   fontLibrary: AccountFontLibrary | null;
   resolvedAssets: Map<string, ResolvedAccountAsset>;
-}): { ok: true; data: RuntimeTypographyData } | { ok: false; error: string | null } {
-  if (!args.fontLibrary) return { ok: false, error: 'Missing preview font library' };
+}): { ok: true; data: RuntimeTypographyData } | { ok: false } {
+  if (!args.fontLibrary) return { ok: false };
   const curatedFonts: RuntimeTypographyData['curatedFonts'] = {};
   for (const [family, record] of Object.entries(args.fontLibrary.fonts)) {
     if (record.source === 'google') {
@@ -74,7 +72,7 @@ function buildPreviewTypographyData(args: {
       continue;
     }
     const resolved = args.resolvedAssets.get(record.assetRef);
-    if (!resolved) return { ok: false, error: null };
+    if (!resolved) return { ok: false };
     curatedFonts[family] = {
       source: 'account-asset',
       url: resolved.url,
@@ -179,7 +177,7 @@ export function Workspace({
   previewablePreviewLocales: string[];
   translationValuesByLanguage: Record<string, Record<string, string>>;
   savedTranslationsLoading: boolean;
-  savedTranslationsError: string | null;
+  savedTranslationsError: boolean;
 }) {
   const session = useWidgetSession();
   const chrome = useWidgetSessionChrome();
@@ -200,11 +198,10 @@ export function Workspace({
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [iframeLoaded, setIframeLoaded] = useState(false);
   const [iframeHasState, setIframeHasState] = useState(false);
-  const [iframeLoadError, setIframeLoadError] = useState<string | null>(null);
-  const [assetResolutionError, setAssetResolutionError] = useState<string | null>(null);
+  const [iframeLoadError, setIframeLoadError] = useState(false);
+  const [assetResolutionError, setAssetResolutionError] = useState(false);
   const [measuredHeight, setMeasuredHeight] = useState<number | null>(null);
   const [measuredWidth, setMeasuredWidth] = useState<number | null>(null);
-  const [switcherNotice, setSwitcherNotice] = useState<string | null>(null);
   const [resolvedAssets, setResolvedAssets] = useState<Map<string, ResolvedAccountAsset>>(
     () => new Map(),
   );
@@ -261,8 +258,11 @@ export function Workspace({
     previewTypography.ok &&
     !unresolvedFontAssetRefs.length &&
     !savedTranslationPreviewBlocked;
-  const previewDependencyError = assetResolutionError ?? (!previewTypography.ok ? previewTypography.error : null);
-  const previewError = iframeLoadError ?? previewDependencyError;
+  const previewUnavailable =
+    Boolean(savedTranslationsError) ||
+    iframeLoadError ||
+    assetResolutionError ||
+    !previewTypography.ok;
   const resolvedPreviewInstanceData = useMemo(() => {
     if (!selectedTranslationValues || !compiled) return previewInstanceData;
     return resolveTranslatedValues(
@@ -289,18 +289,18 @@ export function Workspace({
 
   useEffect(() => {
     if (!accountAssetRefs.length) {
-      setAssetResolutionError(null);
+      setAssetResolutionError(false);
       return;
     }
 
     const missingAssetRefs = unresolvedAccountAssetRefs;
     if (!missingAssetRefs.length) {
-      setAssetResolutionError(null);
+      setAssetResolutionError(false);
       return;
     }
 
     let cancelled = false;
-    setAssetResolutionError(null);
+    setAssetResolutionError(false);
     void accountAssets
       .resolveAssets(missingAssetRefs)
       .then(({ assetsByRef }) => {
@@ -316,19 +316,13 @@ export function Workspace({
         });
       })
       .catch(() => {
-        if (!cancelled) setAssetResolutionError('Failed to resolve preview account assets');
+        if (!cancelled) setAssetResolutionError(true);
       });
 
     return () => {
       cancelled = true;
     };
   }, [accountAssets, accountAssetRefs, unresolvedAccountAssetRefs]);
-
-  useEffect(() => {
-    if (!switcherNotice) return undefined;
-    const timer = window.setTimeout(() => setSwitcherNotice(null), 2400);
-    return () => window.clearTimeout(timer);
-  }, [switcherNotice]);
 
   const iframeBackdrop = (() => {
     const raw = (previewInstanceData as any)?.stage?.background;
@@ -365,18 +359,18 @@ export function Workspace({
     if (!iframe) return;
     setIframeLoaded(false);
     setIframeHasState(false);
-    setIframeLoadError(null);
+    setIframeLoadError(false);
     if (!compiled) {
       iframe.srcdoc = '';
       return;
     }
 
     const handleLoad = () => {
-      setIframeLoadError(null);
+      setIframeLoadError(false);
       setIframeLoaded(true);
     };
     const handleError = () => {
-      setIframeLoadError('Failed to load preview runtime');
+      setIframeLoadError(true);
     };
 
     iframe.addEventListener('load', handleLoad);
@@ -423,8 +417,8 @@ export function Workspace({
           typographyData: previewTypographyData!,
         },
       });
-    } catch (error) {
-      setIframeLoadError(error instanceof Error ? error.message : String(error));
+    } catch {
+      setIframeLoadError(true);
       return;
     }
 
@@ -464,18 +458,16 @@ export function Workspace({
       if (!data || typeof data !== 'object') return;
       if (data.type === 'ck:ready') {
         setIframeHasState(true);
-        setIframeLoadError(null);
+        setIframeLoadError(false);
         return;
       }
       if (data.type === 'ck:preview-locale-switch-blocked') {
-        setSwitcherNotice(BLOCKED_SWITCHER_COPY);
         return;
       }
       if (data.type === 'ck:preview-locale-change-request') {
         const requestedLocale = typeof data.locale === 'string' ? data.locale.trim() : '';
         if (!requestedLocale) return;
         if (latestPreviewSelectionRef.current.previewMode !== 'translations') {
-          setSwitcherNotice(BLOCKED_SWITCHER_COPY);
           return;
         }
         if (
@@ -531,19 +523,13 @@ export function Workspace({
       ? `${measuredWidth ?? stageFixedWidth}px`
       : null;
   const shouldRenderCanvasCard = Boolean(shouldResizeCanvas && (canvasHeightPx || canvasWidthPx));
-  const previewStatus = !hasWidget
+  const previewStatus = !hasWidget || previewUnavailable
     ? null
     : savedTranslationPreviewBlocked
-      ? savedTranslationsError
-        ? { kind: 'error' as const, text: savedTranslationsError }
-        : { kind: 'loading' as const }
-      : previewError
-        ? { kind: 'error' as const, text: previewError }
-        : !iframeHasState
-          ? { kind: 'loading' as const }
-          : switcherNotice
-            ? { kind: 'notice' as const, text: switcherNotice }
-            : null;
+      ? { kind: 'loading' as const }
+      : !iframeHasState
+        ? { kind: 'loading' as const }
+        : null;
 
   return (
     <section
@@ -563,7 +549,7 @@ export function Workspace({
     >
       <iframe
         ref={iframeRef}
-        title="Widget preview"
+        title={workspaceCopy.preview.accessibleLabel}
         className="workspace-iframe"
         sandbox="allow-scripts allow-same-origin"
         style={
@@ -575,18 +561,10 @@ export function Workspace({
           <div
             className="diet-loading-state"
             role="status"
-            aria-label={bobUiCopy.states.loading.accessibleLabel}
+            aria-label={systemStatesCopy.loading.accessibleLabel}
           >
             <span className="diet-spinner" data-size="medium" aria-hidden="true" />
           </div>
-        </div>
-      ) : previewStatus ? (
-        <div
-          className={`workspace-status-overlay${previewStatus.kind === 'error' ? ' workspace-status-overlay--error' : ''}`}
-          role={previewStatus.kind === 'error' ? 'alert' : 'status'}
-          aria-live={previewStatus.kind === 'error' ? undefined : 'polite'}
-        >
-          <span className="label-s">{previewStatus.text}</span>
         </div>
       ) : null}
 
@@ -594,7 +572,7 @@ export function Workspace({
         <div
           className="workspace-device-toggle diet-segmented diet-segmented-ic"
           role="radiogroup"
-          aria-label="Device"
+          aria-label={workspaceCopy.device.groupLabel}
           data-size="lg"
         >
           <label className="diet-segment">
@@ -614,7 +592,7 @@ export function Workspace({
                 style={dieterIconStyle('desktopcomputer')}
                 aria-hidden="true"
               />
-              <span className="diet-segment__sr">Desktop</span>
+              <span className="diet-segment__sr">{workspaceCopy.device.desktop}</span>
             </span>
           </label>
           <label className="diet-segment">
@@ -634,7 +612,7 @@ export function Workspace({
                 style={dieterIconStyle('iphone')}
                 aria-hidden="true"
               />
-              <span className="diet-segment__sr">Mobile</span>
+              <span className="diet-segment__sr">{workspaceCopy.device.mobile}</span>
             </span>
           </label>
         </div>

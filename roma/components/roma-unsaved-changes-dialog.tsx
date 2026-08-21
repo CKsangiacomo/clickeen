@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { createDialogLifecycle, type DialogLifecycle } from '../../dieter/components/shared/dialog-lifecycle';
+import ROMA_DIALOGS_UI_COPY from '../l10n/dialogs/en.json';
 
 export function RomaUnsavedChangesDialog({
   open,
@@ -10,7 +11,7 @@ export function RomaUnsavedChangesDialog({
   onDiscard,
 }: {
   open: boolean;
-  message: string;
+  message?: string;
   onKeepEditing: () => void;
   onDiscard: () => void;
 }) {
@@ -51,12 +52,14 @@ export function RomaUnsavedChangesDialog({
     <dialog ref={dialogRef} className="diet-popup" data-size="medium" aria-labelledby="roma-unsaved-title">
       <header className="diet-popup__header">
         <h2 id="roma-unsaved-title" className="heading-4">
-          Unsaved changes
+          {ROMA_DIALOGS_UI_COPY.unsaved.title}
         </h2>
       </header>
-      <div className="diet-popup__body">
-        <p className="body-m">{message}</p>
-      </div>
+      {message ? (
+        <div className="diet-popup__body">
+          <p className="body-m">{message}</p>
+        </div>
+      ) : null}
       <footer className="diet-popup__footer">
         <div className="diet-popup__actions">
           <button
@@ -67,7 +70,7 @@ export function RomaUnsavedChangesDialog({
             type="button"
             onClick={onKeepEditing}
           >
-            <span className="diet-button__label">Keep editing</span>
+            <span className="diet-button__label">{ROMA_DIALOGS_UI_COPY.unsaved.keepEditing}</span>
           </button>
           <button
             className="diet-button"
@@ -76,7 +79,7 @@ export function RomaUnsavedChangesDialog({
             type="button"
             onClick={onDiscard}
           >
-            <span className="diet-button__label">Discard</span>
+            <span className="diet-button__label">{ROMA_DIALOGS_UI_COPY.unsaved.discard}</span>
           </button>
         </div>
       </footer>

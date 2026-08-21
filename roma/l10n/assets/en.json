@@ -1,0 +1,50 @@
+{
+  "title": "Assets",
+  "filter": "Filter assets by type",
+  "filters": {
+    "all": "Show all",
+    "font": "Fonts",
+    "vector": "SVGs",
+    "image": "Photo",
+    "video": "Video"
+  },
+  "upload": "Upload asset",
+  "uploadBulk": "Upload in bulk",
+  "uploading": "Uploading…",
+  "refresh": "Refresh list",
+  "refreshing": "Refreshing…",
+  "account": "Account",
+  "stored": "Stored assets",
+  "storageUsed": "Storage used",
+  "uploadLimit": "Per-file upload limit",
+  "unlimited": "Unlimited",
+  "uploadSingleAccessible": "Upload single asset",
+  "uploadMultipleAccessible": "Upload multiple assets",
+  "columns": {
+    "asset": "Asset",
+    "type": "Type",
+    "mime": "MIME",
+    "size": "Size",
+    "actions": "Actions",
+    "file": "File",
+    "status": "Status"
+  },
+  "sort": {
+    "asset": "Sort by asset name",
+    "type": "Sort by type",
+    "size": "Sort by size"
+  },
+  "delete": "Delete asset",
+  "empty": "No assets",
+  "filteredEmpty": "No matching assets",
+  "bulk": {
+    "title": "Bulk upload",
+    "processed": "Processed",
+    "success": "Success",
+    "failed": "Failed",
+    "uploading": "Uploading",
+    "queued": "Queued",
+    "uploaded": "Uploaded",
+    "addMore": "Add more files"
+  }
+}

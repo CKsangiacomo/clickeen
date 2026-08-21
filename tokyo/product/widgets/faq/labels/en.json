@@ -162,7 +162,6 @@
     "content.field.faq.sections.section.faqs.index.question.dropdown-edit.attr.header-label": "Question",
     "content.field.faq.sections.section.faqs.index.question.dropdown-edit.attr.placeholder": "Type your question",
     "content.field.faq.sections.section.faqs.index.question.dropdown-edit.label": "Question",
-    "core.plural": "Q&A cards",
     "core.singular": "Q&A card",
     "core.size-cluster": "FAQ size",
     "layout.cluster.item-layout.label": "Q&A card layout",

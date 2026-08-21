@@ -70,6 +70,12 @@ account or policy decision. Tokyo-worker owns each exact asset-operation result,
 and Roma and Bob consume that result completely without a second result-shape
 guard, filter, or semantic interpretation.
 
+For Resolve and Delete, Roma's browser-facing route admits the asset-reference
+syntax as the current direct single-filename coordinate and admits the exact
+command once. After private-service authorization and JSON
+transport decoding, Tokyo-worker trusts that accepted command and performs the
+owning storage lookup or deletion without repeating Roma's reference validator.
+
 Upload size/storage denial is a generic account capability, not unique Widget
 meaning. Its contextual message, current/target plan values, and CTA are
 system-owned; it does not use a Widget `upsell/{locale}.json` entry even when
@@ -219,6 +225,8 @@ bytes before applying the new upload size.
 
 Authoring surfaces store account asset references, not invented public URLs.
 Roma resolves those references through Tokyo-worker for the current account.
+Roma admits the exact reference list at browser ingress; Tokyo-worker consumes
+that trusted list without a second syntax or uniqueness check.
 
 Generated widget output uses the saved asset reference. Public delivery reads
 the asset from the same account folder.
@@ -231,6 +239,9 @@ visitor-time package re-resolution path.
 ## Delete Boundary
 
 Delete addresses one exact account asset reference in the current account.
+Roma admits that path coordinate at browser ingress. Tokyo-worker trusts the
+accepted coordinate after private-service authorization and owns only the
+exact storage existence/delete operation.
 Tokyo-worker removes the addressed object from the account asset folder and
 returns:
 

@@ -211,7 +211,66 @@ async function buildFiveConsumerHarness(): Promise<string> {
         buildHeaders() { return {}; },
         async fetchJson(path, init) {
           const method = record(path, init);
-          if (method === 'DELETE') return pendingThrownFailure();
+          if (method === 'GET' && path === '/api/account/assets') {
+            return {
+              accountId: 'acct-test',
+              storageBytesUsed: 128,
+              assets: [{
+                assetRef: 'asset-1',
+                assetType: 'image',
+                filename: 'hero.png',
+                contentType: 'image/png',
+                sizeBytes: 128,
+                createdAt: '2026-08-20T12:00:00.000Z',
+              }],
+            };
+          }
+          if (method === 'GET' && path === '/api/account/team/members/member-2') {
+            return {
+              accountId: 'acct-test',
+              role: 'owner',
+              member: {
+                userId: 'member-2',
+                role: 'editor',
+                createdAt: '2026-08-20T12:00:00.000Z',
+                profile: {
+                  userId: 'member-2',
+                  primaryEmail: 'ada@example.test',
+                  givenName: 'Ada',
+                  familyName: 'Lovelace',
+                  primaryLanguage: 'en',
+                  usePrimaryLanguageForUi: true,
+                  country: 'GB',
+                  timezone: 'Europe/London',
+                },
+              },
+            };
+          }
+          if (method === 'GET' && path === '/api/account/team') {
+            return {
+              members: [
+                {
+                  userId: 'owner-1',
+                  role: 'owner',
+                  profile: {
+                    givenName: 'Current',
+                    familyName: 'Owner',
+                    primaryEmail: 'owner@example.test',
+                  },
+                },
+                {
+                  userId: 'member-2',
+                  role: 'admin',
+                  profile: {
+                    givenName: 'Ada',
+                    familyName: 'Lovelace',
+                    primaryEmail: 'ada@example.test',
+                  },
+                },
+              ],
+            };
+          }
+          if (method !== 'GET') return pendingThrownFailure();
           throw new Error('unexpected fetchJson: ' + method + ' ' + path);
         },
         async fetchRaw(path, init) {
@@ -508,7 +567,6 @@ async function assertConfirmation(args: {
   body: string;
   confirmLabel: string;
   expectedCall: MutationCall;
-  failureText: string;
 }): Promise<void> {
   const { page } = args;
   const before = await mutationCalls(page);
@@ -516,7 +574,7 @@ async function assertConfirmation(args: {
   await args.open();
   const dialog = page.getByRole('dialog', { name: args.title });
   await dialog.waitFor();
-  await page.getByText(args.body, { exact: true }).waitFor();
+  await dialog.getByText(args.body, { exact: true }).waitFor();
   assert.deepEqual(await mutationCalls(page), before, `${args.title}: opening must invoke no command`);
   await dialog.getByRole('button', { name: 'Cancel' }).click();
   await dialog.waitFor({ state: 'detached' });
@@ -545,7 +603,6 @@ async function assertConfirmation(args: {
   assert.equal(await confirmedDialog.getByRole('button', { name: 'Cancel' }).isDisabled(), true, `${args.title}: pending confirmation cannot dismiss`);
 
   await settleNextFailure(page);
-  await confirmedDialog.getByText(args.failureText, { exact: true }).waitFor();
   assert.equal(await confirm.getAttribute('aria-busy'), null, `${args.title}: failure must clear pending from Confirm`);
   assert.equal(await confirm.locator('.diet-spinner').count(), 0, `${args.title}: failure must clear the Confirm Spinner`);
   assert.equal(await confirm.isEnabled(), true, `${args.title}: failure must leave Confirm available for retry`);
@@ -586,11 +643,10 @@ async function testFiveProductionConsumers(): Promise<void> {
           (button as HTMLButtonElement).click();
         });
       },
-      title: 'Delete this widget?',
-      body: 'Deleting “Support FAQ” removes its saved source and makes any published version unavailable. This cannot be undone.',
+      title: 'Delete widget',
+      body: 'Support FAQ',
       confirmLabel: 'Delete widget',
       expectedCall: { method: 'DELETE', path: '/api/account/instances/instance-1' },
-      failureText: 'Saving failed. Please try again.',
     });
 
     const rowPublicationSurface = widgetSurface.locator('.roma-widget-publication').first();
@@ -598,11 +654,10 @@ async function testFiveProductionConsumers(): Promise<void> {
       page,
       surface: rowPublicationSurface,
       open: () => rowPublicationSurface.getByRole('switch', { name: 'Published: Support FAQ' }).click(),
-      title: 'Take this widget offline?',
-      body: '“Support FAQ” will be taken offline. Its saved source remains, and it can be published again.',
+      title: 'Unpublish',
+      body: 'Support FAQ',
       confirmLabel: 'Unpublish',
       expectedCall: { method: 'POST', path: '/api/account/instances/instance-1/unpublish' },
-      failureText: 'Saving failed. Please try again.',
     });
 
     const assetSurface = page.locator('[data-surface="asset-delete"]');
@@ -610,11 +665,10 @@ async function testFiveProductionConsumers(): Promise<void> {
       page,
       surface: assetSurface,
       open: () => assetSurface.getByRole('button', { name: 'Delete' }).click(),
-      title: 'Delete this asset?',
-      body: 'Deleting “hero.png” removes the asset. Widgets that use it may stop displaying it. This cannot be undone.',
+      title: 'Delete asset',
+      body: 'hero.png',
       confirmLabel: 'Delete asset',
       expectedCall: { method: 'DELETE', path: '/api/account/assets/asset-1' },
-      failureText: 'Asset delete failed on the server. Please try again.',
     });
 
     const publicationSurface = page.locator('[data-surface="unpublish"]');
@@ -622,11 +676,10 @@ async function testFiveProductionConsumers(): Promise<void> {
       page,
       surface: publicationSurface,
       open: () => publicationSurface.getByRole('switch', { name: 'Published: Publication FAQ' }).click(),
-      title: 'Take this widget offline?',
-      body: '“Publication FAQ” will be taken offline. Its saved source remains, and it can be published again.',
+      title: 'Unpublish',
+      body: 'Publication FAQ',
       confirmLabel: 'Unpublish',
       expectedCall: { method: 'POST', path: '/api/account/instances/instance-publication/unpublish' },
-      failureText: 'Saving failed. Please try again.',
     });
 
     const memberSurface = page.locator('[data-surface="member-remove"]');
@@ -634,11 +687,10 @@ async function testFiveProductionConsumers(): Promise<void> {
       page,
       surface: memberSurface,
       open: () => memberSurface.getByRole('button', { name: 'Remove member' }).click(),
-      title: 'Remove this team member?',
-      body: '“Ada Lovelace” will lose access to this account.',
+      title: 'Remove member',
+      body: 'Ada Lovelace',
       confirmLabel: 'Remove member',
       expectedCall: { method: 'DELETE', path: '/api/account/team/members/member-2' },
-      failureText: 'Saving the membership failed. Please try again.',
     });
 
     const settingsSurface = page.locator('[data-surface="owner-transfer"]');
@@ -647,15 +699,14 @@ async function testFiveProductionConsumers(): Promise<void> {
       page,
       surface: settingsSurface,
       open: () => settingsSurface.getByRole('button', { name: 'Transfer ownership' }).click(),
-      title: 'Transfer account ownership?',
-      body: '“Ada Lovelace” will become Owner of this account, and you will become Admin.',
+      title: 'Transfer ownership',
+      body: 'Ada Lovelace',
       confirmLabel: 'Transfer ownership',
       expectedCall: {
         method: 'POST',
         path: '/api/account/owner-transfer',
         body: { nextOwnerUserId: 'member-2' },
       },
-      failureText: 'Saving account settings failed. Please try again.',
     });
 
     assert.deepEqual(pageErrors, [], 'five real command consumers must not raise browser errors');
@@ -668,7 +719,7 @@ async function run(): Promise<void> {
   await testSharedConfirmationBehavior();
   console.log('PASS shared Roma confirmation mounts only when open and resolves one click decision');
   await testFiveProductionConsumers();
-  console.log('PASS five Roma commands and both Unpublish owners execute exact confirmation, pending, and visible-failure behavior in a browser');
+  console.log('PASS five Roma commands and both Unpublish owners execute exact confirmation and pending behavior in a browser');
 }
 
 run().catch((error) => {

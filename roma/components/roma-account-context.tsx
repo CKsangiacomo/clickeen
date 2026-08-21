@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react';
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { resolveAccountShellErrorCopy } from '../lib/account-shell-copy';
+import ROMA_SHELL_UI_COPY from '../l10n/shell/en.json';
 import { RomaLoadingState } from './roma-system-state';
 import {
   resolveAccountPolicyFromRomaAuthz,
@@ -93,12 +93,6 @@ export function RomaAccountBoundary({ children }: { children: ReactNode }) {
   if (visibleError || !value) {
     return (
       <section className="rd-canvas-module" role="alert">
-        <p className="body-m">
-          {resolveAccountShellErrorCopy(
-            visibleError ?? 'coreui.errors.auth.contextUnavailable',
-            'This account is unavailable right now. Please try again.',
-          )}
-        </p>
         <div className="rd-canvas-module__actions">
           <button
             className="diet-button"
@@ -111,7 +105,7 @@ export function RomaAccountBoundary({ children }: { children: ReactNode }) {
             disabled={retryPending}
           >
             {retryPending ? <span className="diet-spinner" aria-hidden="true" /> : null}
-            <span className="diet-button__label">Retry</span>
+            <span className="diet-button__label">{ROMA_SHELL_UI_COPY.commands.retry}</span>
           </button>
         </div>
       </section>

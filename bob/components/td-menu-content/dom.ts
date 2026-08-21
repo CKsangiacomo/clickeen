@@ -29,8 +29,7 @@ export type DieterHydratorDeps = {
 
 function hydrateIcons(scope: Element | DocumentFragment): void {
   scope.querySelectorAll<HTMLElement>('[data-icon]').forEach((icon) => {
-    const name = icon.dataset.icon?.trim() ?? '';
-    if (!/^[a-z0-9.-]+$/i.test(name)) return;
+    const name = icon.getAttribute('data-icon')!;
     icon.style.setProperty('--diet-icon-source', `url("/dieter/icons/svg/${name}.svg")`);
   });
 }
@@ -99,9 +98,7 @@ export function applyGroupHeaders(scope: HTMLElement, ownerLabel = '') {
     wrapper.setAttribute('data-bob-group', key);
     const rawLabel = node.getAttribute('data-bob-group-label');
     const label = rawLabel ?? '';
-    const normalizedLabel = label.trim().replace(/\s+/g, ' ').toLocaleLowerCase();
-    const normalizedOwner = ownerLabel.trim().replace(/\s+/g, ' ').toLocaleLowerCase();
-    if (normalizedLabel && normalizedLabel !== normalizedOwner) {
+    if (label && label !== ownerLabel) {
       const header = document.createElement('div');
       header.className = 'overline-small tdmenucontent__group-label';
       header.textContent = label;

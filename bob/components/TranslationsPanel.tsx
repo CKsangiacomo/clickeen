@@ -2,9 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  normalizeCanonicalLocalesFile,
-  normalizeLocaleToken,
-  resolveLocaleLabel as resolveCanonicalLocaleLabel,
+  type CanonicalLocaleEntry,
 } from '@clickeen/l10n';
 import localesJson from '@clickeen/l10n/locales.json';
 import {
@@ -15,9 +13,10 @@ import {
 import type { AgentActivityEvent } from '../lib/session/sessionTypes';
 import type { TranslatedLocalesData, TranslationSetup } from './useTranslationPreviewState';
 import { listPreviewableLocales } from '../lib/translations-preview';
-import { bobUiCopy } from '../l10n/ui-copy';
+import systemStatesCopy from '../l10n/system-states/en.json';
+import translationsCopy from '../l10n/translations/en.json';
 
-const CANONICAL_LOCALES = normalizeCanonicalLocalesFile(localesJson);
+const CANONICAL_LOCALES = localesJson as CanonicalLocaleEntry[];
 const BUILDER_UI_LOCALE = 'en';
 
 type TranslationActivityRow = {
@@ -25,32 +24,9 @@ type TranslationActivityRow = {
   message: string;
 };
 
-export type TranslationGenerationFeedback = {
-  tone: 'success' | 'warning' | 'error';
-  title: string;
-  lines: string[];
-};
-
-type TranslationCommandResponse = {
-  ok: boolean;
-  status: number;
-  json: unknown;
-};
-
 function resolveLocaleLabel(locale: string): string {
-  const normalized = normalizeLocaleToken(locale) ?? '';
-  if (!normalized) return 'Language unavailable';
-  return (
-    resolveCanonicalLocaleLabel({
-      locales: CANONICAL_LOCALES,
-      uiLocale: BUILDER_UI_LOCALE,
-      locale: normalized,
-    }) || 'Language unavailable'
-  );
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value && typeof value === 'object' && !Array.isArray(value));
+  const entry = CANONICAL_LOCALES.find((candidate) => candidate.code === locale)!;
+  return entry.labels![BUILDER_UI_LOCALE]!;
 }
 
 type TranslationOutcome = {
@@ -64,104 +40,6 @@ type TranslationGenerationPayload = {
   ok: boolean;
   translation: TranslationOutcome;
 };
-
-function formatCount(count: number, singular: string, plural = `${singular}s`): string {
-  return `${count} ${count === 1 ? singular : plural}`;
-}
-
-function summarizeLocaleList(locales: string[]): string {
-  const labels = locales.map(resolveLocaleLabel).filter(Boolean);
-  if (!labels.length) return '';
-  if (labels.length <= 3) return labels.join(', ');
-  return `${labels.slice(0, 3).join(', ')} and ${formatCount(labels.length - 3, 'more language')}`;
-}
-
-function resolveTranslationErrorCopy(payload: Record<string, unknown> | null, status: number): string {
-  const error = isRecord(payload?.error) ? payload.error : null;
-  const reasonKey = typeof error?.reasonKey === 'string' ? error.reasonKey.trim() : '';
-  switch (reasonKey) {
-    case 'coreui.upsell.reason.limitReached':
-      return 'Your current plan cannot generate all requested translations.';
-    case 'coreui.errors.auth.required':
-      return 'You need to sign in again before generating translations.';
-    case 'coreui.errors.auth.forbidden':
-      return 'You do not have permission to generate translations for this account.';
-    case 'coreui.errors.payload.invalid':
-      return 'The translation request was invalid. Save the widget and try again.';
-    case 'coreui.errors.translation.failed':
-      return 'Translation generation failed. Please try again.';
-    case 'coreui.errors.translations.baseLocaleMismatch':
-      return 'The saved widget language changed. Refresh Builder and try again.';
-    default:
-      if (status === 401) return 'You need to sign in again before generating translations.';
-      if (status === 403 || status === 402) return 'Your account cannot generate these translations right now.';
-      if (status === 422) return 'The translation request could not be accepted. Save the widget and try again.';
-      return 'Translation generation failed. Please try again.';
-  }
-}
-
-export function shouldRefreshTranslationsAfterGeneration(payload: unknown): boolean {
-  const outcome = (payload as TranslationGenerationPayload).translation;
-  return outcome.accepted && outcome.translatedLocales.length > 0;
-}
-
-export function buildTranslationGenerationFeedback(response: TranslationCommandResponse): TranslationGenerationFeedback {
-  const payload = isRecord(response.json) ? response.json : null;
-  if (!response.ok) {
-    return {
-      tone: 'error',
-      title: 'Translation generation failed',
-      lines: [resolveTranslationErrorCopy(payload, response.status)],
-    };
-  }
-
-  const outcome = (response.json as TranslationGenerationPayload).translation;
-
-  if (!outcome.accepted) {
-    return {
-      tone: 'warning',
-      title: 'No translations generated',
-      lines: ['No translation languages are available for this widget.'],
-    };
-  }
-
-  const translatedLocales = outcome.translatedLocales;
-  const translationFailures = outcome.failedLocales;
-  const failedTranslationLocales = translationFailures.map((failure) => failure.locale);
-  const failedTranslationCopy = summarizeLocaleList(failedTranslationLocales);
-  if (translatedLocales.length === 0) {
-    return {
-      tone: 'error',
-      title: 'Translation generation failed',
-      lines: [
-        failedTranslationCopy
-          ? `Translation failed for ${failedTranslationCopy}.`
-          : 'No requested language was translated.',
-      ],
-    };
-  }
-
-  const generatedCopy = `Generated translations for ${summarizeLocaleList(translatedLocales)}.`;
-
-  if (translationFailures.length > 0) {
-    return {
-      tone: 'warning',
-      title: 'Translations partially generated',
-      lines: [
-        generatedCopy,
-        failedTranslationCopy
-          ? `Translation failed for ${failedTranslationCopy}.`
-          : `${formatCount(translationFailures.length, 'language')} failed.`,
-      ],
-    };
-  }
-
-  return {
-    tone: 'success',
-    title: 'Translations generated',
-    lines: [generatedCopy, 'Preview translations have been refreshed.'],
-  };
-}
 
 function SelectField({
   label,
@@ -200,15 +78,6 @@ function SelectField({
   );
 }
 
-export function buildActivityRows(events: AgentActivityEvent[]): TranslationActivityRow[] {
-  return events
-    .slice(-6)
-    .map((event, index) => ({
-      key: `agent:${index}:${event.message}`,
-      message: event.message,
-    }));
-}
-
 function AgentActivity({
   title,
   rows,
@@ -233,8 +102,6 @@ function AgentActivity({
   );
 }
 
-const TRANSLATION_GENERATION_FAILED_COPY = 'Translation generation failed. Please try again.';
-
 export function TranslationsPanel({
   agentActivityTitle,
   translationPreviewLocale,
@@ -249,10 +116,10 @@ export function TranslationsPanel({
   translationPreviewLocale: string;
   onTranslationPreviewLocaleChange: (locale: string) => void;
   onRequestTranslationsRefresh: () => void;
-  translationSetup: TranslationSetup | null;
+  translationSetup: TranslationSetup;
   translatedLocales: TranslatedLocalesData | null;
   savedTranslationsLoading: boolean;
-  savedTranslationsError: string | null;
+  savedTranslationsError: boolean;
 }) {
   const session = useWidgetSession();
   const chrome = useWidgetSessionChrome();
@@ -260,25 +127,15 @@ export function TranslationsPanel({
   const [isStartingTranslations, setIsStartingTranslations] = useState(false);
   const [isGeneratingTranslations, setIsGeneratingTranslations] = useState(false);
   const [activityEvents, setActivityEvents] = useState<AgentActivityEvent[]>([]);
-  const [generationError, setGenerationError] = useState<string | null>(null);
-  const [generationFeedback, setGenerationFeedback] = useState<TranslationGenerationFeedback | null>(null);
-  const instanceId = chrome.meta?.instanceId ?? '';
-  const baseLocale = translationSetup?.baseLocale ?? '';
+  const instanceId = chrome.meta!.instanceId;
+  const baseLocale = translationSetup.baseLocale;
   const planTranslationsCopy =
-    translationSetup?.planTranslationsMax == null
-      ? 'unlimited'
+    translationSetup.planTranslationsMax === null
+      ? translationsCopy.values.unlimited
       : String(translationSetup.planTranslationsMax);
-  const activeLocales = useMemo(() => translationSetup?.activeLocales ?? [], [translationSetup?.activeLocales]);
+  const activeLocales = translationSetup.activeLocales;
   const hasActiveLocales = activeLocales.length > 0;
-  const hasTranslatableFields = Boolean(session.compiled?.editableFields?.fields?.length);
-  const generateButtonMessage =
-    !instanceId
-      ? 'Save this widget before generating translations.'
-      : session.isDirty || session.isSaving
-      ? 'Save changes before generating translations.'
-      : hasActiveLocales && !hasTranslatableFields
-        ? 'This widget has no translation fields.'
-        : null;
+  const hasTranslatableFields = session.compiled!.editableFields.fields.length > 0;
   const localeValues = useMemo(
     () => listPreviewableLocales(baseLocale, translatedLocales),
     [baseLocale, translatedLocales],
@@ -286,7 +143,9 @@ export function TranslationsPanel({
   const localeOptions = useMemo(() => {
     return localeValues.map((locale) => ({
       value: locale,
-      label: locale === baseLocale ? `${resolveLocaleLabel(locale)} (base)` : resolveLocaleLabel(locale),
+      label: locale === baseLocale
+        ? translationsCopy.values.baseLocaleOption.replace('{locale}', resolveLocaleLabel(locale))
+        : resolveLocaleLabel(locale),
     }));
   }, [baseLocale, localeValues]);
   const localeValue =
@@ -295,7 +154,7 @@ export function TranslationsPanel({
       : baseLocale;
   const selectOptions = localeOptions;
   const savedTranslationsPending = !savedTranslationsError && (
-    Boolean(instanceId && baseLocale && !translatedLocales) || savedTranslationsLoading
+    Boolean(instanceId !== null && !translatedLocales) || savedTranslationsLoading
   );
   const savedTranslationsEmpty = Boolean(
     translatedLocales && translatedLocales.translations.length === 0,
@@ -305,34 +164,35 @@ export function TranslationsPanel({
     disabled:
       isStartingTranslations ||
       isGeneratingTranslations ||
-      !instanceId ||
+      instanceId === null ||
       session.isSaving ||
       session.isDirty ||
       !hasActiveLocales ||
       !hasTranslatableFields,
     label: translationsPending
-      ? bobUiCopy.commands.translations.pending
-      : bobUiCopy.commands.translations.ready,
-    message: generateButtonMessage,
+      ? translationsCopy.command.pending
+      : translationsCopy.command.ready,
   };
-  const activityRows = useMemo(() => buildActivityRows(activityEvents), [activityEvents]);
+  const activityRows = useMemo(() => activityEvents.map((event, index) => ({
+    key: `agent:${index}:${event.message}`,
+    message: event.message,
+  })), [activityEvents]);
   const runGenerateTranslations = async () => {
-    if (generateButton.disabled || !instanceId) return;
+    if (generateButton.disabled || instanceId === null) return;
     setActivityEvents([]);
-    setGenerationError(null);
-    setGenerationFeedback(null);
     setIsStartingTranslations(true);
     setIsGeneratingTranslations(true);
     try {
       const response = await generateTranslations({
         instanceId,
         onActivity: (event) => {
-          setActivityEvents((current) => [...current, event].slice(-12));
+          setActivityEvents((current) => [...current, event]);
         },
       });
-      const feedback = buildTranslationGenerationFeedback(response);
-      setGenerationFeedback(feedback);
-      if (shouldRefreshTranslationsAfterGeneration(response.json)) {
+      if (
+        response.ok &&
+        (response.json as TranslationGenerationPayload).translation.translatedLocales.length > 0
+      ) {
         onRequestTranslationsRefresh();
       }
       setIsGeneratingTranslations(false);
@@ -340,8 +200,6 @@ export function TranslationsPanel({
     } catch {
       setIsGeneratingTranslations(false);
       setActivityEvents([]);
-      setGenerationError(TRANSLATION_GENERATION_FAILED_COPY);
-      setGenerationFeedback(null);
     } finally {
       setIsStartingTranslations(false);
     }
@@ -349,8 +207,6 @@ export function TranslationsPanel({
   useEffect(() => {
     setIsGeneratingTranslations(false);
     setActivityEvents([]);
-    setGenerationError(null);
-    setGenerationFeedback(null);
   }, [instanceId]);
   if (!session.compiled) {
     return null;
@@ -358,14 +214,14 @@ export function TranslationsPanel({
 
   return (
     <div className="tdmenucontent">
-      <div className="heading-3">Translations</div>
+      <div className="heading-3">{translationsCopy.title}</div>
       <div className="tdmenucontent__fields">
         <div className="tdmenucontent__cluster">
-          <div className="label-s label-muted">Base locale</div>
-          <div className="body-s">{baseLocale ? resolveLocaleLabel(baseLocale) : 'Not set'}</div>
+          <div className="label-s label-muted">{translationsCopy.fields.baseLocale}</div>
+          <div className="body-s">{resolveLocaleLabel(baseLocale)}</div>
         </div>
         <div className="tdmenucontent__cluster">
-          <div className="label-s label-muted">Translations available in your plan</div>
+          <div className="label-s label-muted">{translationsCopy.fields.planAvailability}</div>
           <div className="body-s">{planTranslationsCopy}</div>
         </div>
         <div className="tdmenucontent__cluster">
@@ -384,43 +240,17 @@ export function TranslationsPanel({
             ) : null}
             <span className="diet-button__label">{generateButton.label}</span>
           </button>
-          {generateButton.message ? (
-            <div className="label-s label-muted">{generateButton.message}</div>
-          ) : null}
           {isGeneratingTranslations ? (
             <AgentActivity title={agentActivityTitle} rows={activityRows} />
-          ) : null}
-          {generationFeedback ? (
-            <div
-              data-feedback-tone={generationFeedback.tone}
-              role={generationFeedback.tone === 'success' ? 'status' : 'alert'}
-            >
-              <div className="label-s">{generationFeedback.title}</div>
-              {generationFeedback.lines.map((line) => (
-                <div className="body-s" key={line}>
-                  {line}
-                </div>
-              ))}
-            </div>
-          ) : null}
-          {generationError ? (
-            <div className="body-s" role="alert">
-              {generationError}
-            </div>
           ) : null}
         </div>
         {savedTranslationsPending ? (
           <div
             className="diet-loading-state"
             role="status"
-            aria-label={bobUiCopy.states.loading.accessibleLabel}
+            aria-label={systemStatesCopy.loading.accessibleLabel}
           >
             <span className="diet-spinner" data-size="medium" aria-hidden="true" />
-          </div>
-        ) : null}
-        {savedTranslationsError ? (
-          <div className="body-s" role="alert">
-            {savedTranslationsError}
           </div>
         ) : null}
         {!savedTranslationsPending && !savedTranslationsError && savedTranslationsEmpty ? (
@@ -431,13 +261,13 @@ export function TranslationsPanel({
               aria-hidden="true"
             />
             <span className="diet-empty-state__label body-s">
-              {bobUiCopy.states.empty.translations}
+              {translationsCopy.empty}
             </span>
           </div>
         ) : null}
         {!savedTranslationsPending && !savedTranslationsError && !savedTranslationsEmpty ? (
           <SelectField
-            label="Preview locale"
+            label={translationsCopy.fields.previewLocale}
             value={localeValue}
             onChange={onTranslationPreviewLocaleChange}
             options={selectOptions}

@@ -64,7 +64,6 @@ Core defaults live under:
 ```text
 bigBang
 typography
-uiLabels
 ```
 
 Core state families:

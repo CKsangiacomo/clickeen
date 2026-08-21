@@ -1,0 +1,38 @@
+{
+  "title": "Widgets",
+  "filter": "Filter your widgets by publish status",
+  "filters": {
+    "all": "Show all",
+    "published": "Show published",
+    "unpublished": "Show unpublished"
+  },
+  "empty": "No widgets",
+  "filteredEmpty": "No matching widgets",
+  "catalogEmpty": "No widget types",
+  "table": "Your widgets",
+  "columns": {
+    "widget": "Widget",
+    "instanceName": "Instance name",
+    "published": "Published",
+    "instanceId": "Instance ID",
+    "actions": "Actions"
+  },
+  "sort": {
+    "widget": "Sort by widget",
+    "instanceName": "Sort by instance name",
+    "published": "Sort by published status"
+  },
+  "cancel": "Cancel",
+  "rename": "Rename",
+  "renaming": "Renaming…",
+  "edit": "Edit",
+  "moreActions": "More actions",
+  "moreActionsFor": "More actions for {name}",
+  "actionsFor": "Actions for {name}",
+  "widgetActions": "Widget actions",
+  "viewOnly": "View only",
+  "create": "Create instance",
+  "duplicate": "Duplicate",
+  "delete": "Delete",
+  "deleteWidget": "Delete widget"
+}

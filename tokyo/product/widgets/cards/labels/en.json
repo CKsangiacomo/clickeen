@@ -126,7 +126,6 @@
     "content.field.cards.items.repeater.attr.remove-label": "Remove card {index}",
     "content.field.cards.items.repeater.attr.reorder-label": "Manage cards",
     "content.field.cards.items.repeater.label": "Cards",
-    "core.plural": "Cards",
     "core.singular": "Card",
     "core.size-cluster": "Cards size",
     "layout.cluster.cards-layout.label": "Card layout",

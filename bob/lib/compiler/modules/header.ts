@@ -4,39 +4,80 @@
 // Appearance owns: header CTA styling (fill/colors/border/radius + sizing presets)
 
 import { encodeHtmlEntities } from '../../compiler.shared';
+import headerCopy from '../../../l10n/editor/header/en.json';
 
-const encodeOptions = (value: string) => encodeHtmlEntities(value);
+const encodeOptions = (value: Array<{ label: string; value: string }>) =>
+  encodeHtmlEntities(JSON.stringify(value));
 
 const headerPlacementOptions = encodeOptions(
-  '[{\"label\":\"Top\",\"value\":\"top\"},{\"label\":\"Bottom\",\"value\":\"bottom\"},{\"label\":\"Left\",\"value\":\"left\"},{\"label\":\"Right\",\"value\":\"right\"}]',
+  [
+    { label: headerCopy.options.top, value: 'top' },
+    { label: headerCopy.options.bottom, value: 'bottom' },
+    { label: headerCopy.options.left, value: 'left' },
+    { label: headerCopy.options.right, value: 'right' },
+  ],
 );
 
 const headerAlignmentOptions = encodeOptions(
-  '[{\"label\":\"Left\",\"value\":\"left\"},{\"label\":\"Center\",\"value\":\"center\"},{\"label\":\"Right\",\"value\":\"right\"}]',
+  [
+    { label: headerCopy.options.left, value: 'left' },
+    { label: headerCopy.options.center, value: 'center' },
+    { label: headerCopy.options.right, value: 'right' },
+  ],
 );
 
 const headerCtaPlacementOptions = encodeOptions(
-  '[{\"label\":\"Right of title\",\"value\":\"right\"},{\"label\":\"Under title\",\"value\":\"below\"}]',
+  [
+    { label: headerCopy.options.rightOfTitle, value: 'right' },
+    { label: headerCopy.options.underTitle, value: 'below' },
+  ],
 );
 
 const iconPlacementOptions = encodeOptions(
-  '[{\"label\":\"Left\",\"value\":\"left\"},{\"label\":\"Right\",\"value\":\"right\"}]',
+  [
+    { label: headerCopy.options.left, value: 'left' },
+    { label: headerCopy.options.right, value: 'right' },
+  ],
 );
 
 const iconNameOptions = encodeOptions(
-  '[{\"label\":\"Checkmark\",\"value\":\"checkmark\"},{\"label\":\"Arrow right\",\"value\":\"arrow.right\"},{\"label\":\"Chevron right\",\"value\":\"chevron.right\"},{\"label\":\"Arrowshape forward\",\"value\":\"arrowshape.forward\"},{\"label\":\"Arrowshape turn up right\",\"value\":\"arrowshape.turn.up.right\"}]',
+  [
+    { label: headerCopy.options.checkmark, value: 'checkmark' },
+    { label: headerCopy.options.arrowRight, value: 'arrow.right' },
+    { label: headerCopy.options.chevronRight, value: 'chevron.right' },
+    { label: headerCopy.options.arrowshapeForward, value: 'arrowshape.forward' },
+    { label: headerCopy.options.arrowshapeTurnUpRight, value: 'arrowshape.turn.up.right' },
+  ],
 );
 
 const headerCtaOpenModeOptions = encodeOptions(
-  '[{\"label\":\"Same tab\",\"value\":\"same-tab\"},{\"label\":\"New tab\",\"value\":\"new-tab\"},{\"label\":\"New window\",\"value\":\"new-window\"}]',
+  [
+    { label: headerCopy.options.sameTab, value: 'same-tab' },
+    { label: headerCopy.options.newTab, value: 'new-tab' },
+    { label: headerCopy.options.newWindow, value: 'new-window' },
+  ],
 );
 
 const sizePresetOptions = encodeOptions(
-  '[{\"label\":\"X-Small\",\"value\":\"xs\"},{\"label\":\"Small\",\"value\":\"s\"},{\"label\":\"Medium\",\"value\":\"m\"},{\"label\":\"Large\",\"value\":\"l\"},{\"label\":\"X-Large\",\"value\":\"xl\"},{\"label\":\"Custom\",\"value\":\"custom\"}]',
+  [
+    { label: headerCopy.options.xSmall, value: 'xs' },
+    { label: headerCopy.options.small, value: 's' },
+    { label: headerCopy.options.medium, value: 'm' },
+    { label: headerCopy.options.large, value: 'l' },
+    { label: headerCopy.options.xLarge, value: 'xl' },
+    { label: headerCopy.options.custom, value: 'custom' },
+  ],
 );
 
 const radiusOptions = encodeOptions(
-  '[{\"label\":\"None\",\"value\":\"none\"},{\"label\":\"Small\",\"value\":\"sm\"},{\"label\":\"Medium\",\"value\":\"md\"},{\"label\":\"Large\",\"value\":\"lg\"},{\"label\":\"X-Large\",\"value\":\"xl\"},{\"label\":\"2XL\",\"value\":\"2xl\"}]',
+  [
+    { label: headerCopy.options.none, value: 'none' },
+    { label: headerCopy.options.small, value: 'sm' },
+    { label: headerCopy.options.medium, value: 'md' },
+    { label: headerCopy.options.large, value: 'lg' },
+    { label: headerCopy.options.xLarge, value: 'xl' },
+    { label: headerCopy.options.twoXL, value: '2xl' },
+  ],
 );
 
 type HeaderPanelFieldOptions = {
@@ -47,22 +88,22 @@ export function buildHeaderContentPanelFields({
   includeCta = true,
 }: HeaderPanelFieldOptions = {}): string[] {
   const fields = [
-    "  <tooldrawer-cluster label='Header' initially-open='true'>",
-    "    <tooldrawer-field-headercontent group-label='' type='toggle' size='md' path='header.enabled' label='Show header' />",
-    "    <tooldrawer-field-headercontent group-label='' type='dropdown-edit' size='lg' path='header.title' label='Title' placeholder='Add title text' show-if=\"header.enabled == true\" />",
-    "    <tooldrawer-field-headercontent group-label='' type='toggle' size='md' path='header.showSubtitle' label='Show subtitle' show-if=\"header.enabled == true\" />",
-    "    <tooldrawer-field-headercontent group-label='' type='dropdown-edit' size='md' path='header.subtitleHtml' label='Subtitle' placeholder='Add subtitle text' show-if=\"header.enabled == true && header.showSubtitle == true\" />",
+    `  <tooldrawer-cluster label='${headerCopy.clusters.header}' initially-open='true'>`,
+    `    <tooldrawer-field-headercontent group-label='' type='toggle' size='md' path='header.enabled' label='${headerCopy.fields.showHeader}' />`,
+    `    <tooldrawer-field-headercontent group-label='' type='dropdown-edit' size='lg' path='header.title' label='${headerCopy.fields.title}' placeholder='${headerCopy.fields.titlePlaceholder}' show-if="header.enabled == true" />`,
+    `    <tooldrawer-field-headercontent group-label='' type='toggle' size='md' path='header.showSubtitle' label='${headerCopy.fields.showSubtitle}' show-if="header.enabled == true" />`,
+    `    <tooldrawer-field-headercontent group-label='' type='dropdown-edit' size='md' path='header.subtitleHtml' label='${headerCopy.fields.subtitle}' placeholder='${headerCopy.fields.subtitlePlaceholder}' show-if="header.enabled == true && header.showSubtitle == true" />`,
   ];
 
   if (includeCta) {
     fields.push(
-      "    <tooldrawer-field-headercta group-label='' type='toggle' size='md' path='headerCta.enabled' label='Show header CTA' show-if=\"header.enabled == true\" />",
-      "    <tooldrawer-field-headercta group-label='' type='textfield' size='md' path='headerCta.label' label='Header CTA label' show-if=\"header.enabled == true && headerCta.enabled == true\" />",
-      "    <tooldrawer-field-headercta group-label='' type='textfield' size='lg' path='headerCta.href' label='Header CTA link' placeholder='https://example.com' show-if=\"header.enabled == true && headerCta.enabled == true\" />",
-      `    <tooldrawer-field-headercta group-label='' type='dropdown-actions' size='md' path='headerCta.openMode' label='Open link in' placeholder='Choose target' value='{{headerCta.openMode}}' options='${headerCtaOpenModeOptions}' show-if=\"header.enabled == true && headerCta.enabled == true\" />`,
-      "    <tooldrawer-field-headercta group-label='' type='toggle' size='md' path='headerCta.iconEnabled' label='Show icon' show-if=\"header.enabled == true && headerCta.enabled == true\" />",
-      `    <tooldrawer-field-headercta group-label='' type='dropdown-actions' size='md' path='headerCta.iconPlacement' label='Icon position' placeholder='Choose position' value='{{headerCta.iconPlacement}}' options='${iconPlacementOptions}' show-if=\"header.enabled == true && headerCta.enabled == true && headerCta.iconEnabled == true\" />`,
-      `    <tooldrawer-field-headercta group-label='' type='dropdown-actions' size='md' path='headerCta.iconName' label='Icon' placeholder='Choose icon' value='{{headerCta.iconName}}' options='${iconNameOptions}' show-if=\"header.enabled == true && headerCta.enabled == true && headerCta.iconEnabled == true\" />`,
+      `    <tooldrawer-field-headercta group-label='' type='toggle' size='md' path='headerCta.enabled' label='${headerCopy.fields.showHeaderCta}' show-if="header.enabled == true" />`,
+      `    <tooldrawer-field-headercta group-label='' type='textfield' size='md' path='headerCta.label' label='${headerCopy.fields.headerCtaLabel}' show-if="header.enabled == true && headerCta.enabled == true" />`,
+      `    <tooldrawer-field-headercta group-label='' type='textfield' size='lg' path='headerCta.href' label='${headerCopy.fields.headerCtaLink}' placeholder='${headerCopy.fields.headerCtaLinkPlaceholder}' show-if="header.enabled == true && headerCta.enabled == true" />`,
+      `    <tooldrawer-field-headercta group-label='' type='dropdown-actions' size='md' path='headerCta.openMode' label='${headerCopy.fields.openLinkIn}' placeholder='${headerCopy.fields.chooseTarget}' value='{{headerCta.openMode}}' options='${headerCtaOpenModeOptions}' show-if="header.enabled == true && headerCta.enabled == true" />`,
+      `    <tooldrawer-field-headercta group-label='' type='toggle' size='md' path='headerCta.iconEnabled' label='${headerCopy.fields.showIcon}' show-if="header.enabled == true && headerCta.enabled == true" />`,
+      `    <tooldrawer-field-headercta group-label='' type='dropdown-actions' size='md' path='headerCta.iconPlacement' label='${headerCopy.fields.iconPosition}' placeholder='${headerCopy.fields.choosePosition}' value='{{headerCta.iconPlacement}}' options='${iconPlacementOptions}' show-if="header.enabled == true && headerCta.enabled == true && headerCta.iconEnabled == true" />`,
+      `    <tooldrawer-field-headercta group-label='' type='dropdown-actions' size='md' path='headerCta.iconName' label='${headerCopy.fields.icon}' placeholder='${headerCopy.fields.chooseIcon}' value='{{headerCta.iconName}}' options='${iconNameOptions}' show-if="header.enabled == true && headerCta.enabled == true && headerCta.iconEnabled == true" />`,
     );
   }
 
@@ -74,17 +115,17 @@ export function buildHeaderLayoutPanelFields({
   includeCta = true,
 }: HeaderPanelFieldOptions = {}): string[] {
   const fields = [
-    "  <tooldrawer-cluster label='Header'>",
-    `    <tooldrawer-field-headerlayout group-label='' type='dropdown-actions' size='md' path='header.placement' label='Header placement' placeholder='Choose placement' value='{{header.placement}}' options='${headerPlacementOptions}' show-if=\"header.enabled == true\" />`,
-    `    <tooldrawer-field-headerlayout group-label='' type='dropdown-actions' size='md' path='header.alignment' label='Header alignment' placeholder='Choose alignment' value='{{header.alignment}}' options='${headerAlignmentOptions}' show-if=\"header.enabled == true\" />`,
-    `    <tooldrawer-field-headerlayout group-label='' type='valuefield' size='md' path='header.gap' label='Header/content gap (px)' min='0' show-if=\"header.enabled == true\" />`,
-    `    <tooldrawer-field-headerlayout group-label='' type='valuefield' size='md' path='header.textGap' label='Title/subtitle gap (px)' min='0' show-if=\"header.enabled == true && header.showSubtitle == true\" />`,
+    `  <tooldrawer-cluster label='${headerCopy.clusters.header}'>`,
+    `    <tooldrawer-field-headerlayout group-label='' type='dropdown-actions' size='md' path='header.placement' label='${headerCopy.fields.headerPlacement}' placeholder='${headerCopy.fields.choosePlacement}' value='{{header.placement}}' options='${headerPlacementOptions}' show-if="header.enabled == true" />`,
+    `    <tooldrawer-field-headerlayout group-label='' type='dropdown-actions' size='md' path='header.alignment' label='${headerCopy.fields.headerAlignment}' placeholder='${headerCopy.fields.chooseAlignment}' value='{{header.alignment}}' options='${headerAlignmentOptions}' show-if="header.enabled == true" />`,
+    `    <tooldrawer-field-headerlayout group-label='' type='valuefield' size='md' path='header.gap' label='${headerCopy.fields.headerContentGap}' min='0' show-if="header.enabled == true" />`,
+    `    <tooldrawer-field-headerlayout group-label='' type='valuefield' size='md' path='header.textGap' label='${headerCopy.fields.titleSubtitleGap}' min='0' show-if="header.enabled == true && header.showSubtitle == true" />`,
   ];
 
   if (includeCta) {
     fields.push(
-      `    <tooldrawer-field-headerlayout group-label='' type='dropdown-actions' size='md' path='header.ctaPlacement' label='Header CTA position' placeholder='Choose position' value='{{header.ctaPlacement}}' options='${headerCtaPlacementOptions}' show-if=\"header.enabled == true && headerCta.enabled == true\" />`,
-      `    <tooldrawer-field-headerlayout group-label='' type='valuefield' size='md' path='header.innerGap' label='Text/header CTA gap (px)' min='0' show-if=\"header.enabled == true && headerCta.enabled == true\" />`,
+      `    <tooldrawer-field-headerlayout group-label='' type='dropdown-actions' size='md' path='header.ctaPlacement' label='${headerCopy.fields.headerCtaPosition}' placeholder='${headerCopy.fields.choosePosition}' value='{{header.ctaPlacement}}' options='${headerCtaPlacementOptions}' show-if="header.enabled == true && headerCta.enabled == true" />`,
+      `    <tooldrawer-field-headerlayout group-label='' type='valuefield' size='md' path='header.innerGap' label='${headerCopy.fields.textHeaderCtaGap}' min='0' show-if="header.enabled == true && headerCta.enabled == true" />`,
     );
   }
 
@@ -98,18 +139,18 @@ export function buildHeaderAppearancePanelFields({
   if (!includeCta) return [];
 
   return [
-    '  <tooldrawer-cluster label=\'Header CTA\' show-if=\"header.enabled == true && headerCta.enabled == true\">',
-    `    <tooldrawer-field-headerappearance group-label='' type='dropdown-actions' size='md' path='appearance.headerCta.sizePreset' label='Size' placeholder='Choose size' value='{{appearance.headerCta.sizePreset}}' options='${sizePresetOptions}' />`,
-    "    <tooldrawer-field-headerappearance group-label='' type='toggle' size='md' path='appearance.headerCta.paddingLinked' label='Link padding' value='{{appearance.headerCta.paddingLinked}}' default='true' />",
-    "    <tooldrawer-field-headerappearance group-label='' type='valuefield' size='md' path='appearance.headerCta.paddingInline' label='Padding (px)' min='0' show-if=\"appearance.headerCta.paddingLinked == true\" />",
-    "    <tooldrawer-field-headerappearance group-label='' type='valuefield' size='md' path='appearance.headerCta.paddingInline' label='Horizontal padding (px)' min='0' show-if=\"appearance.headerCta.paddingLinked == false\" />",
-    "    <tooldrawer-field-headerappearance group-label='' type='valuefield' size='md' path='appearance.headerCta.paddingBlock' label='Vertical padding (px)' min='0' show-if=\"appearance.headerCta.paddingLinked == false\" />",
+    `  <tooldrawer-cluster label='${headerCopy.clusters.headerCta}' show-if="header.enabled == true && headerCta.enabled == true">`,
+    `    <tooldrawer-field-headerappearance group-label='' type='dropdown-actions' size='md' path='appearance.headerCta.sizePreset' label='${headerCopy.fields.size}' placeholder='${headerCopy.fields.chooseSize}' value='{{appearance.headerCta.sizePreset}}' options='${sizePresetOptions}' />`,
+    `    <tooldrawer-field-headerappearance group-label='' type='toggle' size='md' path='appearance.headerCta.paddingLinked' label='${headerCopy.fields.linkPadding}' value='{{appearance.headerCta.paddingLinked}}' default='true' />`,
+    `    <tooldrawer-field-headerappearance group-label='' type='valuefield' size='md' path='appearance.headerCta.paddingInline' label='${headerCopy.fields.padding}' min='0' show-if="appearance.headerCta.paddingLinked == true" />`,
+    `    <tooldrawer-field-headerappearance group-label='' type='valuefield' size='md' path='appearance.headerCta.paddingInline' label='${headerCopy.fields.horizontalPadding}' min='0' show-if="appearance.headerCta.paddingLinked == false" />`,
+    `    <tooldrawer-field-headerappearance group-label='' type='valuefield' size='md' path='appearance.headerCta.paddingBlock' label='${headerCopy.fields.verticalPadding}' min='0' show-if="appearance.headerCta.paddingLinked == false" />`,
     "    <tooldrawer-field-headerappearance group-label='' type='dropdown-fill' size='md' fill-modes='color' path='appearance.headerCta.background' label='' value='{{appearance.headerCta.background}}' />",
     "    <tooldrawer-field-headerappearance group-label='' type='dropdown-fill' size='md' fill-modes='color' path='appearance.headerCta.textColor' label='' value='{{appearance.headerCta.textColor}}' />",
     "    <tooldrawer-field-headerappearance group-label='' type='dropdown-border' size='md' path='appearance.headerCta.border' label='' value='{{appearance.headerCta.border}}' />",
-    `    <tooldrawer-field-headerappearance group-label='' type='dropdown-actions' size='md' path='appearance.headerCta.radius' label='Corner radius' placeholder='Choose radius' value='{{appearance.headerCta.radius}}' options='${radiusOptions}' />`,
-    `    <tooldrawer-field-headerappearance group-label='' type='dropdown-actions' size='md' path='appearance.headerCta.iconSizePreset' label='Icon size' placeholder='Choose size' value='{{appearance.headerCta.iconSizePreset}}' options='${sizePresetOptions}' show-if=\"headerCta.iconEnabled == true\" />`,
-    "    <tooldrawer-field-headerappearance group-label='' type='valuefield' size='md' path='appearance.headerCta.iconSize' label='Custom icon size (px)' min='0' show-if=\"headerCta.iconEnabled == true && appearance.headerCta.iconSizePreset == 'custom'\" />",
+    `    <tooldrawer-field-headerappearance group-label='' type='dropdown-actions' size='md' path='appearance.headerCta.radius' label='${headerCopy.fields.cornerRadius}' placeholder='${headerCopy.fields.chooseRadius}' value='{{appearance.headerCta.radius}}' options='${radiusOptions}' />`,
+    `    <tooldrawer-field-headerappearance group-label='' type='dropdown-actions' size='md' path='appearance.headerCta.iconSizePreset' label='${headerCopy.fields.iconSize}' placeholder='${headerCopy.fields.chooseSize}' value='{{appearance.headerCta.iconSizePreset}}' options='${sizePresetOptions}' show-if="headerCta.iconEnabled == true" />`,
+    `    <tooldrawer-field-headerappearance group-label='' type='valuefield' size='md' path='appearance.headerCta.iconSize' label='${headerCopy.fields.customIconSize}' min='0' show-if="headerCta.iconEnabled == true && appearance.headerCta.iconSizePreset == 'custom'" />`,
     '  </tooldrawer-cluster>',
   ];
 }

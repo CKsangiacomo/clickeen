@@ -66,7 +66,8 @@ Bob uses hosted Builder commands for translation operations. These commands have
 a `120_000ms` timeout. Translation Agent owns Agent Activity for this operation:
 while it translates and writes overlays, it may emit transient narration such as
 `Writing French` and `French written`. Roma transports this stream to Bob. Bob
-renders it temporarily.
+renders it temporarily. Roma decodes the SSE/JSON transport and forwards each
+exact typed event without a second message-shape guard or filter.
 
 | Bob operation | Hosted command | Roma route |
 | --- | --- | --- |
@@ -75,11 +76,13 @@ renders it temporarily.
 | generate translations | `generate-translations` | `POST /api/account/instances/[instance id]/translations/generate` |
 
 Bob's current Translations panel shows the Generate translations operation and
-transient Translation Agent Activity while the agent operates. After the command
-returns, Bob shows durable result feedback from Roma's response: success, no
-accepted work, command failure, per-locale translation failure, or
-partial per-locale success. Activity rows are not stored status and do not come
-from polling. Bob does not expose user translation overrides.
+the complete ordered transient Translation Agent Activity while the agent
+operates. After the command returns, the activity disappears and the same
+Generate control returns to ready. Bob consumes Roma's exact result to decide
+whether translated-locale truth must be refreshed; it does not invent durable
+success, failure, partial-success, or no-work prose from that structured
+result. Activity rows are not stored status and do not come from polling. Bob
+does not expose user translation overrides.
 
 ## Roma Public Translation API
 
@@ -481,5 +484,6 @@ required. Roma's matching private key remains only in Roma Pages.
 8. If Tokyo write fails, inspect `TOKYO_PRODUCT_CONTROL`, `x-account-id`,
    `x-ck-internal-service`, `x-ck-ai-grant`, and Tokyo-worker
    `ROMA_AI_GRANT_PUBLIC_KEY_PEM`.
-9. If Bob shows only a generic failure, inspect the Roma response body and then
-   the Translation Agent/San Francisco/Tokyo request id chain.
+9. If generation returns to the ready control without refreshed locale truth,
+   inspect the Roma response body and then the Translation
+   Agent/San Francisco/Tokyo request id chain.

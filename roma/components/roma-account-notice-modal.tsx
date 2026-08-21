@@ -2,65 +2,35 @@
 
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
+import type { PolicyProfile } from '@clickeen/ck-policy';
 import { createDialogLifecycle } from '../../dieter/components/shared/dialog-lifecycle';
-import { formatAccountTierLabel } from '../lib/format';
+import accountNoticeCopy from '../l10n/account-notices/en.json';
 import { useRomaAccountApi } from './account-api';
 import { useRomaAccountContext } from './roma-account-context';
 
-type AccountTier = 'free' | 'tier1' | 'tier2' | 'tier3' | 'tier4';
-
-function normalizeTier(value: unknown): AccountTier | null {
-  switch (value) {
-    case 'free':
-    case 'tier1':
-    case 'tier2':
-    case 'tier3':
-    case 'tier4':
-      return value;
-    default:
-      return null;
-  }
-}
-
-function tierRank(tier: AccountTier): number {
-  switch (tier) {
-    case 'tier4':
-      return 5;
-    case 'tier3':
-      return 4;
-    case 'tier2':
-      return 3;
-    case 'tier1':
-      return 2;
-    case 'free':
-      return 1;
-    default:
-      return 0;
-  }
-}
-
-function summarizeTierDrop(fromTier: AccountTier, toTier: AccountTier): { title: string; lines: string[] } {
-  return {
-    title: 'Plan update',
-    lines: [`Your plan changed from ${formatAccountTierLabel(fromTier)} to ${formatAccountTierLabel(toTier)}.`, 'Review your account to see what stays live.'],
-  };
-}
+const TIER_RANK: Record<PolicyProfile, number> = {
+  free: 1,
+  tier1: 2,
+  tier2: 3,
+  tier3: 4,
+  tier4: 5,
+};
 
 export function RomaAccountNoticeModal() {
-  const { accountContext, activeAccount, reload } = useRomaAccountContext();
+  const { activeAccount, reload } = useRomaAccountContext();
   const accountApi = useRomaAccountApi();
-  const accountId = accountContext.accountId;
 
-  const lifecycle = activeAccount.lifecycleNotice ?? null;
+  const lifecycle = activeAccount.lifecycleNotice;
+  const fromTier = lifecycle?.tierChangedFrom ?? null;
+  const toTier = lifecycle?.tierChangedTo ?? null;
+  const noticeOpen = Boolean(
+    lifecycle?.tierChangedAt !== null &&
+    fromTier !== null &&
+    toTier !== null &&
+    TIER_RANK[toTier] < TIER_RANK[fromTier] &&
+    lifecycle?.tierDropDismissedAt === null,
+  );
 
-  const changedAt = typeof lifecycle?.tierChangedAt === 'string' ? lifecycle.tierChangedAt : null;
-  const fromTier = normalizeTier(lifecycle?.tierChangedFrom);
-  const toTier = normalizeTier(lifecycle?.tierChangedTo);
-  const dismissedAt = typeof lifecycle?.tierDropDismissedAt === 'string' ? lifecycle.tierDropDismissedAt : null;
-  const isTierDrop = Boolean(fromTier && toTier && tierRank(toTier) < tierRank(fromTier));
-  const noticeOpen = Boolean(changedAt && isTierDrop && !dismissedAt);
-
-  const [dismissError, setDismissError] = useState<string | null>(null);
   const [dismissLoading, setDismissLoading] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
 
@@ -78,16 +48,15 @@ export function RomaAccountNoticeModal() {
   }, [noticeOpen]);
 
   const dismiss = async () => {
-    if (!accountId || !noticeOpen) return;
+    if (!noticeOpen) return;
     setDismissLoading(true);
-    setDismissError(null);
     try {
       await accountApi.fetchJson(`/api/account/lifecycle/tier-drop/dismiss`, {
         method: 'POST',
       });
       await reload();
     } catch {
-      setDismissError('Could not dismiss this notice. Please try again.');
+      // The unchanged Dismiss control remains the retry boundary.
     } finally {
       setDismissLoading(false);
     }
@@ -95,29 +64,17 @@ export function RomaAccountNoticeModal() {
 
   if (!noticeOpen || !fromTier || !toTier) return null;
 
-  const summary = summarizeTierDrop(fromTier, toTier);
-
   return (
     <dialog ref={dialogRef} className="diet-popup" data-size="medium" aria-labelledby="roma-notice-title">
       <header className="diet-popup__header">
         <h2 className="heading-4" id="roma-notice-title">
-          {summary.title}
+          {accountNoticeCopy.planUpdate}
         </h2>
       </header>
-      <div className="diet-popup__body">
-        <div className="roma-inline-stack">
-          {summary.lines.map((line) => (
-            <p className="body-m" key={line}>
-              {line}
-            </p>
-          ))}
-        </div>
-        {dismissError ? <p className="body-m" role="alert">{dismissError}</p> : null}
-      </div>
       <footer className="diet-popup__footer">
         <div className="diet-popup__actions">
           <Link className="diet-button" data-size="medium" data-type="tertiary" href="/settings">
-            <span className="diet-button__label">Open settings</span>
+            <span className="diet-button__label">{accountNoticeCopy.openSettings}</span>
           </Link>
           <button
             className="diet-button"
@@ -130,7 +87,9 @@ export function RomaAccountNoticeModal() {
             disabled={dismissLoading}
           >
             {dismissLoading ? <span className="diet-spinner" aria-hidden="true" /> : null}
-            <span className="diet-button__label">{dismissLoading ? 'Dismissing...' : 'Dismiss'}</span>
+            <span className="diet-button__label">
+              {dismissLoading ? accountNoticeCopy.dismissing : accountNoticeCopy.dismiss}
+            </span>
           </button>
         </div>
       </footer>

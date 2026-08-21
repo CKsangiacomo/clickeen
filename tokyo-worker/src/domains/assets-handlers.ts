@@ -93,14 +93,6 @@ function resolveTokyoAssetPublicBaseUrl(env: Env, req: Request): string {
   return new URL(req.url).origin.replace(/\/+$/, '');
 }
 
-function isAssetRef(raw: unknown): raw is string {
-  if (typeof raw !== 'string' || !raw || raw.length > 240) return false;
-  if (raw.includes('\\') || /[\u0000-\u001f\u007f]/.test(raw)) return false;
-  const segments = raw.split('/');
-  if (segments.some((segment) => !segment || segment === '.' || segment === '..')) return false;
-  return !segments.some((segment) => !/^[A-Za-z0-9][A-Za-z0-9._-]{0,119}$/.test(segment));
-}
-
 function assertAcceptedUpload(args: {
   filename: string;
   contentType: string;
@@ -418,16 +410,11 @@ export async function handleResolveAccountAssetMetadata(req: Request, env: Env, 
   }
   const authErr = await authorizeAccountAssetAccess({ req, env, accountId, minRole: 'viewer' });
   if (authErr) return authErr;
-  const body = (await req.json().catch(() => null)) as { assetRefs?: unknown } | null;
-  const rawAssetRefs = Array.isArray(body?.assetRefs) ? body.assetRefs : null;
-  if (!rawAssetRefs) {
+  const body = (await req.json().catch(() => null)) as { assetRefs: string[] } | null;
+  if (!body) {
     return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.assets.resolve.invalidPayload' } }, { status: 422 });
   }
-  if (rawAssetRefs.some((assetRef) => !isAssetRef(assetRef))) {
-    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.assets.resolve.invalidAssetRefs' } }, { status: 422 });
-  }
-  if (new Set(rawAssetRefs).size !== rawAssetRefs.length) return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.assets.resolve.invalidAssetRefs' } }, { status: 422 });
-  const assetRefs = rawAssetRefs as string[];
+  const assetRefs = body.assetRefs;
 
   const publicBaseUrl = resolveTokyoAssetPublicBaseUrl(env, req);
   const resolved = await Promise.all(
@@ -453,7 +440,6 @@ export async function handleDeleteAccountAsset(req: Request, env: Env, accountId
   }
   const authErr = await authorizeAccountAssetAccess({ req, env, accountId, minRole: 'editor' });
   if (authErr) return authErr;
-  if (!isAssetRef(assetRefRaw)) return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.assetRef.invalid' } }, { status: 422 });
   const assetRef = assetRefRaw;
   const existing = await loadAccountAssetByRef(env, accountId, assetRef).catch((error) => {
     if (error instanceof AccountAssetMetadataError) return error;

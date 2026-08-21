@@ -10,6 +10,7 @@ import {
 } from '@clickeen/widget-foundation';
 import { compileWidgetServer } from '../lib/compiler.server';
 import type { RawWidget } from '../lib/compiler.shared';
+import { resolveWidgetTooldrawerLabels } from '../lib/compiler/tooldrawer-labels';
 import type {
   ComponentStencil,
   ComponentStencilLoader,
@@ -55,10 +56,9 @@ function compile(spec: RawWidget) {
   const tooldrawerLabels = JSON.parse(
     fs.readFileSync(path.join(widgetRoot, 'labels', 'en.json'), 'utf8'),
   ) as unknown;
-  return compileWidgetServer(spec, {
+  return compileWidgetServer(resolveWidgetTooldrawerLabels(spec, tooldrawerLabels), {
     loadComponentStencil: loadStencil,
     tokyoBaseUrl: '',
-    tooldrawerLabels,
   });
 }
 

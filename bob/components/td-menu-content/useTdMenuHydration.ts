@@ -37,7 +37,7 @@ export function useTdMenuHydration(args: {
     const container = containerRef.current;
     if (!container) return;
 
-    container.innerHTML = panelHtml || '';
+    container.innerHTML = panelHtml;
     applyGroupHeaders(container);
     container.querySelectorAll<HTMLElement>('.tdmenucontent__cluster').forEach((cluster) => {
       applyClusterGroupHeaders(cluster);
@@ -73,8 +73,7 @@ export function useTdMenuHydration(args: {
       setRenderKey((current) => current + 1);
     } catch {
       cleanupDieterControls?.();
-      container.innerHTML =
-        '<div class="settings-panel__error" role="alert">Builder controls failed to load.</div>';
+      container.innerHTML = '';
       showIfEntriesRef.current = [];
       setRenderKey((current) => current + 1);
     }

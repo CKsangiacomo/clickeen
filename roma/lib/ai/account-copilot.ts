@@ -3,7 +3,7 @@ import {
   deriveAiRuntimePolicyUi,
   resolveAiRuntimeBudget,
   resolveAiRuntimePolicy,
-  resolvePolicyFromEntitlementsSnapshot,
+  type Policy,
   type AgentRuntimePolicyUi,
   type RomaAccountAuthzCapsulePayload,
 } from '@clickeen/ck-policy';
@@ -36,11 +36,12 @@ export async function issueAccountCopilotGrant(args: {
   | { ok: true; grant: string; exp: number; agentId: string }
   | { ok: false; status: number; reasonKey: string; detail?: string }
 > {
-  const policy = resolvePolicyFromEntitlementsSnapshot({
+  const policy: Policy = {
     profile: args.authz.profile,
     role: args.authz.role,
-    entitlements: args.authz.entitlements ?? null,
-  });
+    flags: args.authz.entitlements!.flags!,
+    limits: args.authz.entitlements!.limits!,
+  };
 
   const resolvedAgent = resolveAiAgent(ACCOUNT_WIDGET_COPILOT_AGENT_ID);
   if (!resolvedAgent) {

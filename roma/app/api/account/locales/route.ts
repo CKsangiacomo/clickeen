@@ -6,7 +6,7 @@ import {
   validateAccountLocaleList,
   validateAccountLocalePolicy,
 } from '@clickeen/ck-contracts';
-import { resolvePolicy } from '@clickeen/ck-policy';
+import type { Policy } from '@clickeen/ck-policy';
 import { normalizeLocaleToken } from '@clickeen/l10n';
 import { listAccountWidgetInstanceIds } from '@roma/lib/account-instance-direct';
 import { deleteAccountInstanceTranslationValues } from '@roma/lib/account-instance-translations';
@@ -255,10 +255,12 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const policy = resolvePolicy({
+    const policy: Policy = {
       profile: current.value.authzPayload.profile,
       role: current.value.authzPayload.role,
-    });
+      flags: current.value.authzPayload.entitlements!.flags!,
+      limits: current.value.authzPayload.entitlements!.limits!,
+    };
     const entitlementGate = enforceActiveLocaleEntitlement(policy, activeLocales);
     if (entitlementGate) return withSession(request, entitlementGate, current.value.setCookies);
 

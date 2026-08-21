@@ -1,9 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
-import { resolveAccountShellErrorCopy } from '../lib/account-shell-copy';
+import publicationCopy from '../l10n/publication/en.json';
 import { buildWidgetPublicActions } from '../lib/public-widget-actions';
-import { ROMA_UI_COPY } from '../lib/ui-copy';
 import { useRomaAccountApi } from './account-api';
 import { useRomaAccountContext } from './roma-account-context';
 import { RomaCommandConfirmationDialog } from './roma-command-confirmation-dialog';
@@ -16,7 +15,6 @@ import {
 import {
   invalidateRomaWidgetsCache,
   loadRomaWidgetsForAccount,
-  upsertRomaWidgetInstanceCache,
   type WidgetInstance,
 } from './use-roma-widgets';
 import { WidgetCopyCodeDialog } from './widget-copy-code-dialog';
@@ -45,7 +43,6 @@ function useWidgetPublicationStatus({
   const { accountContext, accountPolicy } = useRomaAccountContext();
   const canMutate = accountPolicy.role !== 'viewer';
   const [pendingStatus, setPendingStatus] = useState<'published' | 'unpublished' | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [upsell, setUpsell] = useState<UpsellPresentation | null>(null);
   const [unpublishConfirmationOpen, setUnpublishConfirmationOpen] = useState(false);
   const [publicationReceipt, setPublicationReceipt] = useState<PublicationReceipt | null>(null);
@@ -86,7 +83,6 @@ function useWidgetPublicationStatus({
     setPublicationReceipt(null);
     setPendingStatus(nextStatus);
     onPendingChange?.(true);
-    setError(null);
     setUpsell(null);
     try {
       const response = await accountApi.fetchRaw(
@@ -99,13 +95,10 @@ function useWidgetPublicationStatus({
         return false;
       }
       if (!response.ok) {
-        const failed = await response.json() as { error: { reasonKey: string } };
-        throw new Error(failed.error.reasonKey);
+        return false;
       }
 
-      const transitionedInstance = { ...instance, status: nextStatus };
-      upsertRomaWidgetInstanceCache(accountContext.accountPublicId, transitionedInstance);
-      onInstanceChange(transitionedInstance);
+      if (nextStatus === 'unpublished') setUnpublishConfirmationOpen(false);
       try {
         const widgets = await loadRomaWidgetsForAccount({
           accountId: accountContext.accountPublicId,
@@ -123,23 +116,11 @@ function useWidgetPublicationStatus({
             sourceUpdatedAt: refreshed.updatedAt,
           });
         }
-      } catch (refreshError) {
+      } catch {
         invalidateRomaWidgetsCache(accountContext.accountPublicId);
-        const message = refreshError instanceof Error
-          ? refreshError.message
-          : String(refreshError);
-        setError(resolveAccountShellErrorCopy(
-          message,
-          'The publication state changed, but its latest status could not be refreshed.',
-        ));
       }
       return true;
-    } catch (statusError) {
-      const message = statusError instanceof Error ? statusError.message : String(statusError);
-      setError(resolveAccountShellErrorCopy(
-        message,
-        'Updating widget status failed. Please try again.',
-      ));
+    } catch {
       return false;
     } finally {
       setPendingStatus(null);
@@ -153,7 +134,6 @@ function useWidgetPublicationStatus({
       void changeStatus(nextStatus);
       return;
     }
-    setError(null);
     setUnpublishConfirmationOpen(true);
   };
 
@@ -164,7 +144,6 @@ function useWidgetPublicationStatus({
     liveWidgetUpdated,
     publishBlocked,
     pendingStatus,
-    error,
     upsell,
     setUpsell,
     changeStatus,
@@ -204,19 +183,17 @@ export function WidgetPublicationState({
       <span className="diet-badge label-xs" data-tone="neutral">
         <span className="diet-badge__label">
           {status.published
-            ? (status.savedChangesNotLive ? 'Published · changes not live' : 'Published')
-            : 'Unpublished'}
+            ? (status.savedChangesNotLive ? publicationCopy.publishedChangesNotLive : publicationCopy.published)
+            : publicationCopy.unpublished}
         </span>
       </span>
       <label
         className="diet-toggle roma-widget-status-toggle"
         data-size="md"
         aria-busy={status.pendingStatus === 'published' || undefined}
-        title={status.publishBlocked ? 'Save first' : undefined}
       >
         <span className="diet-toggle__label sr-only">
-          {instance.displayName ? `Published: ${instance.displayName}` : 'Published widget'}
-          {status.pendingStatus === 'published' ? ', updating' : ''}
+          {instance.displayName ? publicationCopy.publishedNamed.replace('{name}', instance.displayName) : publicationCopy.publishedWidget}
         </span>
         <input
           className="diet-toggle__input sr-only"
@@ -231,7 +208,6 @@ export function WidgetPublicationState({
         </span>
         {status.pendingStatus === 'published' ? <span className="diet-spinner" data-size="small" aria-hidden="true" /> : null}
       </label>
-      {status.error && !status.unpublishConfirmationOpen ? <span className="body-xs" role="alert">{status.error}</span> : null}
       <RomaUpsellDialog
         open={Boolean(status.upsell)}
         reason={status.upsell?.body}
@@ -240,13 +216,10 @@ export function WidgetPublicationState({
       />
       <RomaCommandConfirmationDialog
         open={status.unpublishConfirmationOpen}
-        title="Take this widget offline?"
-        body={instance.displayName
-          ? `“${instance.displayName}” will be taken offline. Its saved source remains, and it can be published again.`
-          : 'This widget will be taken offline. Its saved source remains, and it can be published again.'}
-        confirmLabel="Unpublish"
+        title={publicationCopy.unpublish}
+        body={instance.displayName}
+        confirmLabel={publicationCopy.unpublish}
         pending={status.pendingStatus === 'unpublished'}
-        error={status.error}
         onCancel={status.cancelUnpublish}
         onConfirm={status.confirmUnpublish}
       />
@@ -299,11 +272,9 @@ export function WidgetPublicationControls({
           className="diet-toggle roma-widget-status-toggle"
           data-size="sm"
           aria-busy={status.pendingStatus === 'published' || undefined}
-          title={status.publishBlocked ? 'Save first' : undefined}
         >
           <span className="diet-toggle__label sr-only">
-            {instance.displayName ? `Published: ${instance.displayName}` : 'Published widget'}
-            {status.pendingStatus === 'published' ? ', updating' : ''}
+            {instance.displayName ? publicationCopy.publishedNamed.replace('{name}', instance.displayName) : publicationCopy.publishedWidget}
           </span>
           <input
             className="diet-toggle__input sr-only"
@@ -336,7 +307,7 @@ export function WidgetPublicationControls({
                 '--diet-icon-source': 'url("/dieter/icons/svg/checkmark.svg")',
               } as CSSProperties}
             />
-            <span className="diet-button__label">{ROMA_UI_COPY.commands.liveWidgetUpdated}</span>
+            <span className="diet-button__label">{publicationCopy.liveWidgetUpdated}</span>
           </button>
         ) : status.savedChangesNotLive ? (
           <button
@@ -364,8 +335,8 @@ export function WidgetPublicationControls({
             )}
             <span className="diet-button__label">
               {status.pendingStatus === 'published'
-                ? ROMA_UI_COPY.commands.republishing
-                : ROMA_UI_COPY.commands.republish}
+                ? publicationCopy.republishing
+                : publicationCopy.republish}
             </span>
           </button>
         ) : null}
@@ -379,7 +350,7 @@ export function WidgetPublicationControls({
               target="_blank"
               rel="noreferrer"
             >
-              <span className="diet-button__label">Open public widget</span>
+              <span className="diet-button__label">{publicationCopy.openPublicWidget}</span>
             </a>
             <button
               className="diet-button"
@@ -395,12 +366,11 @@ export function WidgetPublicationControls({
                   '--diet-icon-source': 'url("/dieter/icons/svg/square.on.square.svg")',
                 } as CSSProperties}
               />
-              <span className="diet-button__label">Copy code</span>
+              <span className="diet-button__label">{publicationCopy.copyCode}</span>
             </button>
           </>
         ) : null}
       </div>
-      {status.error && !status.unpublishConfirmationOpen ? <span className="body-xs" role="alert">{status.error}</span> : null}
       <RomaUpsellDialog
         open={Boolean(status.upsell)}
         reason={status.upsell?.body}
@@ -409,19 +379,15 @@ export function WidgetPublicationControls({
       />
       <WidgetCopyCodeDialog
         open={copyCodeOpen}
-        instanceName={instance.displayName}
         actions={publicActions}
         onClose={() => setCopyCodeOpen(false)}
       />
       <RomaCommandConfirmationDialog
         open={status.unpublishConfirmationOpen}
-        title="Take this widget offline?"
-        body={instance.displayName
-          ? `“${instance.displayName}” will be taken offline. Its saved source remains, and it can be published again.`
-          : 'This widget will be taken offline. Its saved source remains, and it can be published again.'}
-        confirmLabel="Unpublish"
+        title={publicationCopy.unpublish}
+        body={instance.displayName}
+        confirmLabel={publicationCopy.unpublish}
         pending={status.pendingStatus === 'unpublished'}
-        error={status.error}
         onCancel={status.cancelUnpublish}
         onConfirm={status.confirmUnpublish}
       />

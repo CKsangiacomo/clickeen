@@ -40,6 +40,13 @@ type BerlinRefreshResult =
       status: number;
     };
 
+type BerlinRefreshSuccess = {
+  accessToken: string;
+  refreshToken: string;
+  accessTokenMaxAge: number;
+  refreshTokenMaxAge: number;
+};
+
 const SHARED_ACCESS_COOKIE = 'ck-access-token';
 const SHARED_REFRESH_COOKIE = 'ck-refresh-token';
 const SHARED_AUTHZ_CAPSULE_COOKIE = 'ck-authz-capsule';
@@ -153,10 +160,6 @@ function extractSessionTokens(request: NextRequest): TokenBundle {
   };
 }
 
-export function readSessionMaxAge(value: unknown): number | null {
-  return typeof value === 'number' && Number.isInteger(value) && value > 0 ? value : null;
-}
-
 async function refreshSession(refreshToken: string): Promise<BerlinRefreshResult> {
   let berlinBase = '';
   try {
@@ -175,7 +178,7 @@ async function refreshSession(refreshToken: string): Promise<BerlinRefreshResult
     cache: 'no-store',
   });
 
-  const payload = (await response.json().catch(() => null)) as Record<string, unknown> | null;
+  const payload = (await response.json().catch(() => null)) as BerlinRefreshSuccess | null;
   if (!response.ok || !payload) {
     return {
       ok: false,
@@ -184,32 +187,12 @@ async function refreshSession(refreshToken: string): Promise<BerlinRefreshResult
     };
   }
 
-  const nextAccessToken = typeof payload.accessToken === 'string' ? payload.accessToken.trim() : '';
-  const nextRefreshToken = typeof payload.refreshToken === 'string' ? payload.refreshToken.trim() : '';
-  if (!nextAccessToken || !nextRefreshToken) {
-    return {
-      ok: false,
-      status: 502,
-      reason: 'coreui.errors.auth.required',
-    };
-  }
-
-  const accessTokenMaxAge = readSessionMaxAge(payload.accessTokenMaxAge);
-  const refreshTokenMaxAge = readSessionMaxAge(payload.refreshTokenMaxAge);
-  if (!accessTokenMaxAge || !refreshTokenMaxAge) {
-    return {
-      ok: false,
-      status: 502,
-      reason: 'coreui.errors.auth.required',
-    };
-  }
-
   return {
     ok: true,
-    accessToken: nextAccessToken,
-    refreshToken: nextRefreshToken,
-    accessTokenMaxAge,
-    refreshTokenMaxAge,
+    accessToken: payload.accessToken,
+    refreshToken: payload.refreshToken,
+    accessTokenMaxAge: payload.accessTokenMaxAge,
+    refreshTokenMaxAge: payload.refreshTokenMaxAge,
   };
 }
 

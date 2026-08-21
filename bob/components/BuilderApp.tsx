@@ -6,11 +6,9 @@ import { Workspace } from './Workspace';
 import { dieterIconStyle } from './dieterIcon';
 import { WidgetSessionProvider } from '../lib/session/useWidgetSession';
 import { useWidgetSession, useWidgetSessionChrome } from '../lib/session/useWidgetSession';
-import {
-  resolveSavedTranslationReadState,
-  useTranslationPreviewState,
-} from './useTranslationPreviewState';
+import { useTranslationPreviewState } from './useTranslationPreviewState';
 import { listPreviewableLocales } from '../lib/translations-preview';
+import shellCopy from '../l10n/shell/en.json';
 
 function BuilderShell() {
   const session = useWidgetSession();
@@ -33,8 +31,8 @@ function BuilderShell() {
   const {
     translatedLocales,
     valuesByLocale: translationValuesByLocale,
-    listState: savedTranslationListState,
-    localeState: savedTranslationLocaleState,
+    loading: savedTranslationsLoading,
+    error: savedTranslationsError,
   } = useTranslationPreviewState({
     instanceId,
     baseLocale,
@@ -92,11 +90,6 @@ function BuilderShell() {
         : translationSetup.baseLocale,
     );
   }, [previewMode, previewableTranslationLocales, translationSetup]);
-  const savedTranslationReadState = resolveSavedTranslationReadState({
-    list: savedTranslationListState,
-    locale: savedTranslationLocaleState,
-  });
-
   return (
     <>
       <div className="builder-app">
@@ -107,7 +100,7 @@ function BuilderShell() {
             data-size="large"
             data-type="quaternary"
             type="button"
-            aria-label="Open tools"
+            aria-label={shellCopy.tools.open}
             aria-expanded={toolsOpen}
             aria-controls="builder-tool-drawer"
             onClick={() => setToolsOpen(true)}
@@ -131,14 +124,14 @@ function BuilderShell() {
             onPreviewModeChange={setPreviewMode}
             translationSetup={translationSetup}
             translatedLocales={translatedLocales}
-            savedTranslationsLoading={savedTranslationReadState.loading}
-            savedTranslationsError={savedTranslationReadState.error}
+            savedTranslationsLoading={savedTranslationsLoading}
+            savedTranslationsError={savedTranslationsError}
           />
           {toolsOpen ? (
             <button
               className="tooldrawer-scrim"
               type="button"
-              aria-label="Close tools"
+              aria-label={shellCopy.tools.close}
               onClick={closeTools}
             />
           ) : null}
@@ -149,14 +142,12 @@ function BuilderShell() {
             onTranslationPreviewLocaleChange={setTranslationPreviewLocale}
             previewablePreviewLocales={previewableTranslationLocales}
             translationValuesByLanguage={translationValuesByLocale}
-            savedTranslationsLoading={savedTranslationReadState.loading}
-            savedTranslationsError={savedTranslationReadState.error}
+            savedTranslationsLoading={savedTranslationsLoading}
+            savedTranslationsError={savedTranslationsError}
           />
         </div>
       </div>
-      <div className="builder-unsupported">
-        <p className="heading-3">Rotate your device or use a larger screen</p>
-      </div>
+      <div className="builder-unsupported" />
     </>
   );
 }

@@ -1,0 +1,17 @@
+{
+  "published": "Published",
+  "publishedChangesNotLive": "Published · changes not live",
+  "unpublished": "Unpublished",
+  "publishedWidget": "Published widget",
+  "publishedNamed": "Published: {name}",
+  "unpublish": "Unpublish",
+  "republish": "Republish",
+  "republishing": "Republishing…",
+  "liveWidgetUpdated": "Live widget updated",
+  "openPublicWidget": "Open public widget",
+  "copyCode": "Copy code",
+  "widgetUrl": "Widget URL",
+  "embedCode": "Embed code",
+  "copy": "Copy",
+  "copyAccessible": "Copy {label}"
+}

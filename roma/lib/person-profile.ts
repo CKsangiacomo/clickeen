@@ -6,17 +6,10 @@ export type PersonProfileSummary = {
 
 export function resolvePersonLabel(
   profile: PersonProfileSummary | null | undefined,
-  fallback = 'User',
-): string {
+): string | null {
   const combined = [profile?.givenName, profile?.familyName]
-    .map((value) => String(value || '').trim())
-    .filter(Boolean)
+    .filter((value): value is string => value !== null && value !== undefined)
     .join(' ');
   if (combined) return combined;
-
-  const primaryEmail = String(profile?.primaryEmail || '').trim();
-  if (primaryEmail) return primaryEmail;
-
-  const normalizedFallback = String(fallback || '').trim();
-  return normalizedFallback || 'User';
+  return profile?.primaryEmail ?? null;
 }

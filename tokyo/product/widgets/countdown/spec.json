@@ -3,13 +3,6 @@
   "displayName": "Countdown",
   "description": "",
   "defaults": {
-    "uiLabels": {
-      "core": {
-        "singular": "$label:core.singular",
-        "plural": "$label:core.plural",
-        "sizeCluster": "$label:core.size-cluster"
-      }
-    },
     "typography": {
       "roles": {
         "label": {
@@ -135,6 +128,9 @@
       "components": {
         "agent-activity": {
           "title": "$label:component.agent-activity.title"
+        },
+        "core": {
+          "sizeCluster": "$label:core.size-cluster"
         },
         "dropdown-border": {
           "color": "$label:component.dropdown-border.color.label",

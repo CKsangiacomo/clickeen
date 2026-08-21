@@ -1,8 +1,9 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { normalizeCanonicalLocalesFile, normalizeLocaleToken, resolveLocaleLabel } from '@clickeen/l10n';
+import { normalizeCanonicalLocalesFile, resolveLocaleLabel } from '@clickeen/l10n';
 import localesJson from '@clickeen/l10n/locales.json';
+import settingsCopy from '../l10n/settings/en.json';
 import { useRomaAccountApi } from './account-api';
 import { DieterDropdownActions } from './dieter-dropdown-actions';
 import { RomaLoadingState } from './roma-system-state';
@@ -12,16 +13,6 @@ type AccountLocalesPayload = {
   localePolicy: {
     baseLocale: string;
     ip: { countryToLocale: Record<string, string> };
-  };
-};
-
-type AccountLocalesSaveResponse = {
-  localeCleanup?: {
-    ok?: unknown;
-    error?: {
-      reasonKey?: unknown;
-      detail?: unknown;
-    };
   };
 };
 
@@ -60,21 +51,19 @@ const DEFAULT_COUNTRIES_BY_LOCALE: Record<string, string[]> = {
 };
 
 function resolveLocaleUiLabel(code: string): string {
-  const normalized = normalizeLocaleToken(code) ?? code;
   const label = resolveLocaleLabel({
     locales: CANONICAL_LOCALES,
     uiLocale: 'en',
-    locale: normalized,
+    locale: code,
   });
-  return `${label} (${normalized})`;
+  return `${label} (${code})`;
 }
 
 function buildDefaultCountryToLocale(args: { enabledLocales: string[]; baseLocale: string }): Record<string, string> {
-  const baseLocale = normalizeLocaleToken(args.baseLocale);
-  const enabledSet = new Set(args.enabledLocales.map((entry) => normalizeLocaleToken(entry)).filter((entry): entry is string => Boolean(entry)));
+  const enabledSet = new Set(args.enabledLocales);
   const mapping: Record<string, string> = {};
 
-  const prioritized = CANONICAL_LOCALES.map((entry) => entry.code).filter((code) => enabledSet.has(code) && code !== baseLocale);
+  const prioritized = CANONICAL_LOCALES.map((entry) => entry.code).filter((code) => enabledSet.has(code) && code !== args.baseLocale);
   for (const locale of prioritized) {
     const countries = DEFAULT_COUNTRIES_BY_LOCALE[locale] ?? [];
     for (const country of countries) {
@@ -83,35 +72,6 @@ function buildDefaultCountryToLocale(args: { enabledLocales: string[]; baseLocal
   }
 
   return mapping;
-}
-
-const ACCOUNT_LOCALES_REASON_COPY: Record<string, string> = {
-  'coreui.errors.auth.required': 'You need to sign in again to manage account languages.',
-  'coreui.errors.auth.contextUnavailable': 'Account languages are unavailable right now. Please try again.',
-  'coreui.errors.auth.forbidden': 'You do not have permission to manage account languages.',
-  'coreui.errors.db.readFailed': 'Failed to load account languages. Please try again.',
-  'coreui.errors.db.writeFailed': 'Saving account languages failed. Please try again.',
-  'coreui.errors.payload.invalid': 'The account language request was invalid. Please try again.',
-  'coreui.errors.payload.invalidJson': 'The account language request was invalid. Please try again.',
-  'coreui.errors.network.timeout': 'The request timed out. Please try again.',
-  'coreui.errors.account.locales.invalid': 'Account language settings are invalid. Please review the inputs and try again.',
-  'coreui.errors.account.locales.baseLocaleLocked': 'Base language is locked after your first widget save. Changing it later requires support/migration.',
-  'coreui.upsell.reason.limitReached': 'Your current plan cannot enable more languages.',
-};
-
-function resolveAccountLocalesErrorCopy(reason: unknown, fallback: string): string {
-  const normalized = String(reason || '').trim();
-  if (!normalized) return fallback;
-  const mapped = ACCOUNT_LOCALES_REASON_COPY[normalized];
-  if (mapped) return mapped;
-  if (normalized.startsWith('HTTP_') || normalized.startsWith('coreui.')) return fallback;
-  return fallback;
-}
-
-export function resolveAccountLocalesSuccessCopy(payload: AccountLocalesSaveResponse): string {
-  const localeCleanup = payload.localeCleanup;
-  if (!localeCleanup || localeCleanup.ok === true) return 'Saved languages.';
-  return 'Saved languages. Removed language content could not be fully deleted.';
 }
 
 export function AccountLocaleSettingsCard(args: {
@@ -124,42 +84,29 @@ export function AccountLocaleSettingsCard(args: {
   const [refreshing, setRefreshing] = useState(false);
   const [settingsReady, setSettingsReady] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [baseLocaleLocked, setBaseLocaleLocked] = useState(false);
   const [draftBaseLocale, setDraftBaseLocale] = useState('en');
   const [draftActiveLocales, setDraftActiveLocales] = useState<string[]>([]);
 
   const loadSettings = useCallback(async () => {
-    if (!args.accountId) return;
     setLoading(true);
-    setError(null);
     try {
       const payload = await accountApi.fetchJson<{
         activeLocales: string[];
-        baseLocaleLocked?: unknown;
-        localePolicy?: {
-          baseLocale?: unknown;
-          ip?: { countryToLocale?: unknown };
-        } | null;
+        baseLocaleLocked: boolean;
+        localePolicy: AccountLocalesPayload['localePolicy'];
       }>(`/api/account/locales?_t=${Date.now()}`, { method: 'GET' });
 
-      const baseLocale = normalizeLocaleToken(payload.localePolicy?.baseLocale);
-      if (!baseLocale) throw new Error('coreui.errors.account.locales.invalidBaseLocale');
-      setBaseLocaleLocked(payload.baseLocaleLocked === true);
-      setDraftBaseLocale(baseLocale);
+      setBaseLocaleLocked(payload.baseLocaleLocked);
+      setDraftBaseLocale(payload.localePolicy.baseLocale);
       setDraftActiveLocales(payload.activeLocales);
-      setSuccess(null);
       setSettingsReady(true);
-    } catch (nextError) {
+    } catch {
       setSettingsReady(false);
-      setError(
-        resolveAccountLocalesErrorCopy(nextError instanceof Error ? nextError.message : nextError, 'Failed to load account languages. Please try again.'),
-      );
     } finally {
       setLoading(false);
     }
-  }, [accountApi, args.accountId]);
+  }, [accountApi]);
 
   useEffect(() => {
     void loadSettings();
@@ -174,7 +121,7 @@ export function AccountLocaleSettingsCard(args: {
     }
   }, [loadSettings]);
 
-  const baseLocale = normalizeLocaleToken(draftBaseLocale) ?? '';
+  const baseLocale = draftBaseLocale;
   const localeOptions = useMemo(
     () =>
       CANONICAL_LOCALES.filter((entry) => entry.code !== baseLocale).map((entry) => ({
@@ -185,42 +132,33 @@ export function AccountLocaleSettingsCard(args: {
     [baseLocale, draftActiveLocales],
   );
   const saveSettings = useCallback(async () => {
-    if (!args.accountId) return;
     setSaving(true);
-    setError(null);
-    setSuccess(null);
 
     try {
-      const normalizedBase = normalizeLocaleToken(draftBaseLocale);
-      if (!normalizedBase) throw new Error('coreui.errors.account.locales.invalidBaseLocale');
       const activeLocales = draftActiveLocales;
 
-      const enabledLocales = [normalizedBase, ...activeLocales];
+      const enabledLocales = [draftBaseLocale, ...activeLocales];
       const payload: AccountLocalesPayload = {
         activeLocales,
         localePolicy: {
-                    baseLocale: normalizedBase,
+          baseLocale: draftBaseLocale,
           ip: {
             countryToLocale: buildDefaultCountryToLocale({
               enabledLocales,
-              baseLocale: normalizedBase,
+              baseLocale: draftBaseLocale,
             }),
           },
         },
       };
 
-      const saved = await accountApi.fetchJson<AccountLocalesSaveResponse>('/api/account/locales', {
+      await accountApi.fetchJson('/api/account/locales', {
         method: 'PUT',
         headers: accountApi.buildHeaders({ contentType: 'application/json' }),
         body: JSON.stringify(payload),
       });
       await loadSettings();
       await args.onSaved?.();
-      setSuccess(resolveAccountLocalesSuccessCopy(saved));
-    } catch (nextError) {
-      setError(
-        resolveAccountLocalesErrorCopy(nextError instanceof Error ? nextError.message : nextError, 'Saving account languages failed. Please try again.'),
-      );
+    } catch {
     } finally {
       setSaving(false);
     }
@@ -228,19 +166,11 @@ export function AccountLocaleSettingsCard(args: {
 
   return (
     <section className="rd-canvas-module">
-      <h2 className="heading-6">Languages</h2>
-      <p className="body-m">These account languages decide which translations Bob can generate for widgets in this account.</p>
-      <p className="body-s">
-        Base language is the source language for generated translations. It can be changed only before the first widget save in this account. After authoring
-        starts, changing it becomes a support/migration operation.
-      </p>
-      {!args.canEdit ? <p className="body-s">Read-only mode: language settings are disabled.</p> : null}
-      {error ? <p className="body-m" role="alert">{error}</p> : null}
-      {success ? <p className="body-s" role="status">{success}</p> : null}
+      <h2 className="heading-6">{settingsCopy.languages.title}</h2>
 
       {!settingsReady ? (
         <div className="roma-inline-stack">
-          {!error && !refreshing ? <RomaLoadingState /> : null}
+          {loading && !refreshing ? <RomaLoadingState /> : null}
           <div className="rd-canvas-module__actions">
             <button
               className="diet-button"
@@ -253,7 +183,7 @@ export function AccountLocaleSettingsCard(args: {
               onClick={() => void refreshSettings()}
             >
               {refreshing ? <span className="diet-spinner" aria-hidden="true" /> : null}
-              <span className="diet-button__label">{refreshing ? 'Refreshing…' : 'Refresh'}</span>
+              <span className="diet-button__label">{refreshing ? settingsCopy.languages.refreshing : settingsCopy.languages.refresh}</span>
             </button>
           </div>
         </div>
@@ -263,33 +193,23 @@ export function AccountLocaleSettingsCard(args: {
         <div className="roma-inline-stack">
           <div className="roma-inline-stack">
             <DieterDropdownActions
-              label="Base language"
-              ariaLabel="Choose base language"
+              label={settingsCopy.languages.base}
+              ariaLabel={settingsCopy.languages.chooseBase}
               value={baseLocale}
               disabled={loading || saving || !args.canEdit || baseLocaleLocked}
               onChange={(value) => {
-                const nextBase = normalizeLocaleToken(value);
-                if (!nextBase) return;
-                setDraftBaseLocale(nextBase);
-                setDraftActiveLocales((current) => current.filter((entry) => entry !== nextBase));
+                setDraftBaseLocale(value);
+                setDraftActiveLocales((current) => current.filter((entry) => entry !== value));
               }}
               options={CANONICAL_LOCALES.map((entry) => ({
                 value: entry.code,
                 label: resolveLocaleUiLabel(entry.code),
               }))}
             />
-            <span className="body-s">
-              {baseLocaleLocked
-                ? 'Base language is locked because this account already has saved widgets. Changing it later requires support/migration.'
-                : 'Choose the source language before the first widget save. After authoring starts, this setting locks.'}
-            </span>
           </div>
 
           <div className="roma-inline-stack">
-            <div className="label-s">Active languages</div>
-            <p className="body-s">
-              Base language is always enabled. Choose the other languages available for translation generation.
-            </p>
+            <div className="label-s">{settingsCopy.languages.active}</div>
             <div className="roma-locale-settings__list">
               {localeOptions.map((entry) => (
                 <label key={entry.code} className="roma-locale-settings__option">
@@ -313,14 +233,6 @@ export function AccountLocaleSettingsCard(args: {
             </div>
           </div>
 
-          <div className="roma-inline-stack">
-            <div className="label-s">Widget locale behavior</div>
-            <p className="body-s">
-              Locale switcher visibility and IP-based locale behavior now belong to each widget in Builder. Settings only decide which languages this account
-              has available and keep the country-to-locale support map up to date.
-            </p>
-          </div>
-
           <div className="rd-canvas-module__actions">
             <button
               className="diet-button"
@@ -333,7 +245,7 @@ export function AccountLocaleSettingsCard(args: {
               onClick={() => void refreshSettings()}
             >
               {refreshing ? <span className="diet-spinner" aria-hidden="true" /> : null}
-              <span className="diet-button__label">{refreshing ? 'Refreshing…' : 'Refresh'}</span>
+              <span className="diet-button__label">{refreshing ? settingsCopy.languages.refreshing : settingsCopy.languages.refresh}</span>
             </button>
             <button
               className="diet-button"
@@ -346,7 +258,7 @@ export function AccountLocaleSettingsCard(args: {
               onClick={() => void saveSettings()}
             >
               {saving ? <span className="diet-spinner" aria-hidden="true" /> : null}
-              <span className="diet-button__label">{saving ? 'Saving…' : 'Save languages'}</span>
+              <span className="diet-button__label">{saving ? settingsCopy.languages.saving : settingsCopy.languages.save}</span>
             </button>
           </div>
         </div>

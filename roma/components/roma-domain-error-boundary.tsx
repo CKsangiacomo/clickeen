@@ -1,6 +1,7 @@
 'use client';
 
 import { Component, type ReactNode } from 'react';
+import ROMA_DIALOGS_UI_COPY from '../l10n/dialogs/en.json';
 
 type RomaDomainErrorBoundaryProps = {
   domainLabel: string;
@@ -49,13 +50,8 @@ export class RomaDomainErrorBoundary extends Component<
       return this.props.children;
     }
 
-    const label = this.props.domainLabel || 'This page';
     return (
       <section className="rd-canvas-module" role="alert">
-        <p className="body-m">{label} hit a rendering error.</p>
-        <p className="body-s">
-          Retry the view first. If it fails again, reload the page.
-        </p>
         <div className="rd-canvas-module__actions">
           <button
             className="diet-button"
@@ -64,16 +60,7 @@ export class RomaDomainErrorBoundary extends Component<
             type="button"
             onClick={() => this.setState({ error: null })}
           >
-            <span className="diet-button__label">Retry view</span>
-          </button>
-          <button
-            className="diet-button"
-            data-size="medium"
-            data-type="tertiary"
-            type="button"
-            onClick={() => window.location.reload()}
-          >
-            <span className="diet-button__label">Reload page</span>
+            <span className="diet-button__label">{ROMA_DIALOGS_UI_COPY.retry}</span>
           </button>
         </div>
       </section>

@@ -12,44 +12,18 @@ export type { TranslatedLocalesData, TranslationSetup } from '../lib/translation
 
 export type SavedTranslationReadChannel = {
   loading: boolean;
-  error: string | null;
+  error: boolean;
 };
 
 export type SavedTranslationLocaleReadChannel = SavedTranslationReadChannel & {
   locale: string;
 };
 
-const SAVED_TRANSLATIONS_READ_FAILURE = 'Saved translations could not be read.';
-const EMPTY_READ_CHANNEL: SavedTranslationReadChannel = { loading: false, error: null };
+const EMPTY_READ_CHANNEL: SavedTranslationReadChannel = { loading: false, error: false };
 const EMPTY_LOCALE_READ_CHANNEL: SavedTranslationLocaleReadChannel = {
   locale: '',
   ...EMPTY_READ_CHANNEL,
 };
-
-export function resolveSavedTranslationReadFailure(response: { ok: boolean; status?: number }): string | null {
-  return response.ok ? null : SAVED_TRANSLATIONS_READ_FAILURE;
-}
-
-export function resolveSavedTranslationReadState(args: {
-  list: SavedTranslationReadChannel;
-  locale: SavedTranslationReadChannel;
-}): SavedTranslationReadChannel {
-  const error = args.list.error || args.locale.error;
-  return {
-    loading: !error && (args.list.loading || args.locale.loading),
-    error,
-  };
-}
-
-export function resolveSavedTranslationLocaleReadResult(args: {
-  current: SavedTranslationLocaleReadChannel;
-  requestedLocale: string;
-  error: string | null;
-}): SavedTranslationLocaleReadChannel {
-  return args.current.locale === args.requestedLocale
-    ? { locale: args.requestedLocale, loading: false, error: args.error }
-    : args.current;
-}
 
 export function useTranslationPreviewState(args: {
   instanceId: string;
@@ -84,7 +58,7 @@ export function useTranslationPreviewState(args: {
     }
 
     let cancelled = false;
-    setListState({ loading: true, error: null });
+    setListState({ loading: true, error: false });
 
     listTranslations({
       instanceId: args.instanceId,
@@ -92,8 +66,7 @@ export function useTranslationPreviewState(args: {
     })
       .then((response) => {
         if (cancelled) return;
-        const readFailure = resolveSavedTranslationReadFailure(response);
-        if (readFailure) throw new Error(readFailure);
+        if (!response.ok) throw new Error();
         const payload = response.json as TranslatedLocalesData;
         setValuesByLocale((current) => retainTranslatedLocaleValues(current, payload));
         setTranslatedLocales(payload);
@@ -101,7 +74,7 @@ export function useTranslationPreviewState(args: {
       })
       .catch(() => {
         if (cancelled) return;
-        setListState({ loading: false, error: SAVED_TRANSLATIONS_READ_FAILURE });
+        setListState({ loading: false, error: true });
       });
 
     return () => {
@@ -125,12 +98,10 @@ export function useTranslationPreviewState(args: {
   const selectedLocaleState = selectedTranslationLocale
     ? localeState.locale === selectedTranslationLocale
       ? localeState
-      : { locale: selectedTranslationLocale, loading: true, error: null }
+      : { locale: selectedTranslationLocale, loading: true, error: false }
     : EMPTY_LOCALE_READ_CHANNEL;
-  const combinedState = resolveSavedTranslationReadState({
-    list: listState,
-    locale: selectedLocaleState,
-  });
+  const error = listState.error || selectedLocaleState.error;
+  const loading = !error && (listState.loading || selectedLocaleState.loading);
 
   useEffect(() => {
     if (!args.enabled || !args.instanceId || !selectedTranslationLocale) {
@@ -139,33 +110,28 @@ export function useTranslationPreviewState(args: {
     }
     let cancelled = false;
     const requestedLocale = selectedTranslationLocale;
-    setLocaleState({ locale: requestedLocale, loading: true, error: null });
+    setLocaleState({ locale: requestedLocale, loading: true, error: false });
     readTranslation({
       instanceId: args.instanceId,
       locale: requestedLocale,
     })
       .then((response) => {
         if (cancelled) return;
-        const readFailure = resolveSavedTranslationReadFailure(response);
-        if (readFailure) throw new Error(readFailure);
+        if (!response.ok) throw new Error();
         const payload = response.json as TranslatedLocaleValuesData;
         setValuesByLocale((current) => ({
           ...current,
           [requestedLocale]: payload.values,
         }));
-        setLocaleState((current) => resolveSavedTranslationLocaleReadResult({
-          current,
-          requestedLocale,
-          error: null,
-        }));
+        setLocaleState((current) => current.locale === requestedLocale
+          ? { locale: requestedLocale, loading: false, error: false }
+          : current);
       })
       .catch(() => {
         if (cancelled) return;
-        setLocaleState((current) => resolveSavedTranslationLocaleReadResult({
-          current,
-          requestedLocale,
-          error: SAVED_TRANSLATIONS_READ_FAILURE,
-        }));
+        setLocaleState((current) => current.locale === requestedLocale
+          ? { locale: requestedLocale, loading: false, error: true }
+          : current);
       });
 
     return () => {
@@ -182,9 +148,7 @@ export function useTranslationPreviewState(args: {
   return {
     translatedLocales,
     valuesByLocale,
-    listState,
-    localeState: selectedLocaleState,
-    loading: combinedState.loading,
-    error: combinedState.error,
+    loading,
+    error,
   };
 }

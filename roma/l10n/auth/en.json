@@ -1,0 +1,11 @@
+{
+  "login": {
+    "continueWithGoogle": "Continue with Google"
+  },
+  "invitation": {
+    "goToLogin": "Go to login",
+    "accept": "Accept invitation",
+    "accepting": "Accepting...",
+    "cancel": "Cancel"
+  }
+}

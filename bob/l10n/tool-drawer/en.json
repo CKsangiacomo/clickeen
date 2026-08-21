@@ -1,0 +1,16 @@
+{
+  "mode": {
+    "groupLabel": "Assist mode",
+    "manual": "Manual",
+    "copilot": "Copilot"
+  },
+  "navigation": {
+    "accessibleLabel": "Panels"
+  },
+  "tools": {
+    "close": "Close tools"
+  },
+  "section": {
+    "toggle": "Toggle section"
+  }
+}

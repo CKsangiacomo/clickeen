@@ -1,4 +1,3 @@
-import { looksLikeHtmlErrorPage } from '@clickeen/ck-contracts';
 import type {
   ProductCopilotControl,
   ProductCopilotTurnEvent,
@@ -35,6 +34,7 @@ import { evaluateShowIfExpression } from './td-menu-content/showIf';
 import {
   expandTypographyFamilyOps,
 } from '../lib/edit/typography-family-ops';
+import copilotCopy from '../l10n/copilot/en.json';
 
 type WidgetSessionValue = ReturnType<typeof useWidgetSession>;
 
@@ -62,91 +62,11 @@ type ActiveTurnState = {
 };
 
 // ---------------------------------------------------------------------------
-// Helpers (kept from the old pane where behavior is unchanged)
+// Helpers
 // ---------------------------------------------------------------------------
-
-function titleCase(input: string): string {
-  const s = String(input || '')
-    .replace(/[_-]+/g, ' ')
-    .trim();
-  if (!s) return '';
-  return s
-    .split(' ')
-    .filter(Boolean)
-    .map((w) => w.slice(0, 1).toUpperCase() + w.slice(1))
-    .join(' ');
-}
-
-function normalizeAssistantText(text: string): string {
-  const candidate = (text || '').trim();
-  if (!candidate) return '';
-  if (looksLikeHtmlErrorPage(candidate)) return 'Copilot is temporarily unavailable. Please try again in a moment.';
-  if (candidate === 'Unhandled error') return 'Copilot could not complete the request. Please try again with a smaller change.';
-  if (candidate.toLowerCase().includes('empty model response')) {
-    return 'Copilot did not return an edit. Please try again with a smaller, more specific request.';
-  }
-  if (candidate.toLowerCase().includes('execution timeout')) return 'Copilot timed out. Please try again with a smaller change.';
-  return candidate;
-}
-
-const COPILOT_INVALID_EDIT_MESSAGE = "Copilot couldn't produce a valid edit for this widget. Nothing was changed.";
-const COPILOT_UNEXPECTED_FAILURE_MESSAGE = 'Copilot failed unexpectedly. Please try again.';
-
-export class CopilotUserFacingError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'CopilotUserFacingError';
-  }
-}
-
-export function resolveCopilotCaughtError(caught: unknown): string {
-  return caught instanceof CopilotUserFacingError && caught.message.trim()
-    ? caught.message
-    : COPILOT_UNEXPECTED_FAILURE_MESSAGE;
-}
 
 function copilotModelKey(model: { provider: string; model: string }): string {
   return `${model.provider}:${model.model}`;
-}
-
-function copilotReasonKeyMessage(reasonKey: string): string | null {
-  if (reasonKey === 'coreui.upsell.reason.limitReached') {
-    return "You've used all your Copilot turns for this month. They reset on the 1st.";
-  }
-  if (reasonKey === 'coreui.errors.ai.model.notAllowed') return "Copilot couldn't run this model. Try again, or pick another model.";
-  if (reasonKey === 'coreui.errors.copilot.invalidContext') return 'Copilot context is invalid. I can keep talking, but Builder editing is unavailable until the editor context refreshes.';
-  if (reasonKey === 'coreui.errors.copilot.invalidEdit') return COPILOT_INVALID_EDIT_MESSAGE;
-  if (reasonKey === 'coreui.errors.copilot.invalidRequest') return 'Copilot request context is invalid. Refresh Builder and try again.';
-  if (reasonKey === 'coreui.errors.copilot.failed') return 'Copilot failed unexpectedly. Please try again.';
-  return null;
-}
-
-function formatIssueSummary(issues: unknown): string {
-  if (!Array.isArray(issues)) return '';
-  const lines = issues
-    .filter((issue): issue is { path: string; message: string } => {
-      return Boolean(issue) &&
-        typeof issue === 'object' &&
-        typeof (issue as any).path === 'string' &&
-        typeof (issue as any).message === 'string';
-    })
-    .slice(0, 3)
-    .map((issue) => `${issue.path}: ${issue.message}`);
-  return lines.length ? ` (${lines.join('; ')})` : '';
-}
-
-export function normalizeErrorMessage(args: { resStatus?: number; parsed?: any; bodyText?: string; fallback?: string }): string {
-  const parsed = args.parsed || null;
-  const reasonKey =
-    typeof parsed?.reasonKey === 'string'
-      ? parsed.reasonKey
-      : typeof parsed?.error?.reasonKey === 'string'
-        ? parsed.error.reasonKey
-        : '';
-  const issueSummary = formatIssueSummary(parsed?.issues ?? parsed?.error?.issues);
-  const reasonKeyMessage = reasonKey ? copilotReasonKeyMessage(reasonKey) : null;
-  if (reasonKeyMessage) return `${reasonKeyMessage}${issueSummary}`;
-  return `${args.fallback || COPILOT_UNEXPECTED_FAILURE_MESSAGE}${issueSummary}`;
 }
 
 function newId(): string {
@@ -176,25 +96,8 @@ function buildProductCopilotControls(args: {
     }));
 }
 
-function summarizeAppliedOps(ops: WidgetOp[], controls: Array<{ path: string; label?: string }>): string {
-  const byPath = new Map(controls.map((control) => [control.path, control]));
-  const labels = Array.from(new Set(ops.map((op) => byPath.get(op.path)?.label).filter(Boolean))).slice(0, 3);
-  if (!labels.length) return 'Changed this widget.';
-  return `Changed ${labels.join(', ')}.`;
-}
-
-function initialCopilotMessage(widgetType: string): string {
-  const label = titleCase(widgetType) || 'widget';
-  return `You're editing a ${label} widget in your account. Ask me for a concrete content, layout, styling, or settings change and I'll apply it here. You can undo the last Copilot change before saving.`;
-}
-
-type CopilotSurfaceContract = {
-  initialMessage: (widgetType: string) => string;
-};
-
 type SharedCopilotPaneProps = {
   session: WidgetSessionValue;
-  surfaceContract: CopilotSurfaceContract;
 };
 
 // ---------------------------------------------------------------------------
@@ -203,17 +106,10 @@ type SharedCopilotPaneProps = {
 
 export function AccountCopilotPane() {
   const session = useWidgetSession();
-
-  const surfaceContract = useMemo<CopilotSurfaceContract>(() => {
-    return {
-      initialMessage: (widgetType) => initialCopilotMessage(widgetType),
-    };
-  }, []);
-
-  return <SharedCopilotPane session={session} surfaceContract={surfaceContract} />;
+  return <SharedCopilotPane session={session} />;
 }
 
-function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps) {
+function SharedCopilotPane({ session }: SharedCopilotPaneProps) {
   const chrome = useWidgetSessionChrome();
   const copilot = useWidgetSessionCopilot();
   const setCopilotTurnActive = copilot.setCopilotTurnActive;
@@ -259,9 +155,8 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
   const defaultModel = chrome.copilot?.selectedModel ?? chrome.copilot?.defaultModel ?? null;
   const selectedModel = useMemo(() => {
     if (!allowModelPicker) return null;
-    const key = selectedModelKey || (defaultModel ? copilotModelKey(defaultModel) : '');
-    if (!key) return null;
-    return modelOptions.find((option) => copilotModelKey(option) === key) ?? null;
+    if (!selectedModelKey) return defaultModel;
+    return modelOptions.find((option) => copilotModelKey(option) === selectedModelKey)!;
   }, [allowModelPicker, defaultModel, modelOptions, selectedModelKey]);
 
   useEffect(() => {
@@ -270,11 +165,8 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
       return;
     }
     const defaultKey = copilotModelKey(defaultModel);
-    setSelectedModelKey((current) => {
-      if (current && modelOptions.some((option) => copilotModelKey(option) === current)) return current;
-      return modelOptions.some((option) => copilotModelKey(option) === defaultKey) ? defaultKey : '';
-    });
-  }, [allowModelPicker, defaultModel, modelOptions]);
+    setSelectedModelKey(defaultKey);
+  }, [allowModelPicker, defaultModel]);
 
   useEffect(() => {
     instanceDataRef.current = session.instanceData;
@@ -282,20 +174,13 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
 
   useEffect(() => {
     if (!threadKey || !compiled || !widgetType) return;
-    if (thread && thread.messages.length > 0) return;
+    if (thread) return;
 
     copilot.setCopilotThread(threadKey, {
       sessionId: crypto.randomUUID(),
-      messages: [
-        {
-          id: newId(),
-          role: 'assistant',
-          text: surfaceContract.initialMessage(widgetType),
-          ts: Date.now(),
-        },
-      ],
+      messages: [],
     });
-  }, [threadKey, compiled, widgetType, thread, copilot, surfaceContract]);
+  }, [threadKey, compiled, widgetType, thread, copilot]);
 
   useEffect(() => {
     const el = listRef.current;
@@ -308,10 +193,8 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
     convoKeyRef.current = threadKey;
   }, [threadKey, messages]);
 
-  const uiDisabledReason = useMemo(() => {
-    if (!compiled || !chrome.policy || !chrome.copilot) return 'Load an instance to begin.';
-    if (!instanceId) return 'Save this widget before using Copilot.';
-    return null;
+  const uiDisabled = useMemo(() => {
+    return !compiled || !chrome.policy || !chrome.copilot || instanceId === null;
   }, [chrome.copilot, chrome.policy, compiled, instanceId]);
 
   const controlsForAi = useMemo(() => {
@@ -357,19 +240,27 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
   const pushTurnResultMessage = useCallback((args: {
     turn: ActiveTurnState;
     presentationStatus: Exclude<CopilotMessagePresentationStatus, 'working'>;
-    text: string;
+    text?: string;
   }): void => {
     const resolvedExistingMessage = resolveTurnVisibleMessages(
       args.turn,
       args.presentationStatus,
     );
-    pushMessage({
-      role: 'assistant',
-      text: args.text,
-      ...(resolvedExistingMessage
-        ? {}
-        : { presentationStatus: args.presentationStatus }),
-    });
+    if (args.text !== undefined) {
+      pushMessage({
+        role: 'assistant',
+        text: args.text,
+        ...(resolvedExistingMessage
+          ? {}
+          : { presentationStatus: args.presentationStatus }),
+      });
+    } else if (!resolvedExistingMessage) {
+      pushMessage({
+        role: 'assistant',
+        text: '',
+        presentationStatus: args.presentationStatus,
+      });
+    }
   }, [pushMessage, resolveTurnVisibleMessages]);
 
   const finishTurn = useCallback((turn: ActiveTurnState): void => {
@@ -432,7 +323,6 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
       pushTurnResultMessage({
         turn,
         presentationStatus: 'not-applied',
-        text: 'Editor context is unavailable. The edit was not applied.',
       });
       finishTurn(turn);
       return;
@@ -447,7 +337,6 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
       pushTurnResultMessage({
         turn,
         presentationStatus: 'not-applied',
-        text: COPILOT_INVALID_EDIT_MESSAGE,
       });
       await sendContinuation(turn, toolCallId, modelStepId, toolResult, instanceDataRef.current);
       return;
@@ -463,7 +352,6 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
       pushTurnResultMessage({
         turn,
         presentationStatus: 'not-applied',
-        text: COPILOT_INVALID_EDIT_MESSAGE,
       });
       await sendContinuation(turn, toolCallId, modelStepId, toolResult, instanceDataRef.current);
       return;
@@ -484,7 +372,6 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
       pushTurnResultMessage({
         turn,
         presentationStatus: 'not-applied',
-        text: COPILOT_INVALID_EDIT_MESSAGE,
       });
       await sendContinuation(turn, toolCallId, modelStepId, toolResult, instanceDataRef.current);
       return;
@@ -504,7 +391,6 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
       pushTurnResultMessage({
         turn,
         presentationStatus: 'not-applied',
-        text: COPILOT_INVALID_EDIT_MESSAGE,
       });
       await sendContinuation(turn, toolCallId, modelStepId, toolResult, instanceDataRef.current);
       return;
@@ -524,7 +410,6 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
       pushTurnResultMessage({
         turn,
         presentationStatus: 'not-applied',
-        text: COPILOT_INVALID_EDIT_MESSAGE,
       });
       await sendContinuation(turn, toolCallId, modelStepId, toolResult, instanceDataRef.current);
       return;
@@ -551,21 +436,33 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
       });
     }
 
-    const appliedText = summarizeAppliedOps(expandedOps, controlsForAi);
+    const unresolvedMessageIds = [...turn.unresolvedMessageIds];
     const resolvedExistingMessage = resolveTurnVisibleMessages(turn, 'applied');
-    pushMessage({
-      role: 'assistant',
-      text: appliedText,
-      hasUndoAction: true,
-      undoToken,
-      ...(resolvedExistingMessage ? {} : { presentationStatus: 'applied' }),
-    });
+    if (resolvedExistingMessage && threadKey) {
+      const targetMessageId = unresolvedMessageIds.at(-1)!;
+      copilot.updateCopilotThread(threadKey, (current) => ({
+        ...current!,
+        messages: current!.messages.map((message) =>
+          message.id === targetMessageId
+            ? { ...message, hasUndoAction: true, undoToken }
+            : message,
+        ),
+      }));
+    } else {
+      pushMessage({
+        role: 'assistant',
+        text: '',
+        hasUndoAction: true,
+        undoToken,
+        presentationStatus: 'applied',
+      });
+    }
 
     // Send continuation with the successful result
     await sendContinuation(turn, toolCallId, modelStepId, toolResult, applied.data);
   }, [
     compiled,
-    controlsForAi,
+    copilot,
     finishTurn,
     pushMessage,
     pushTurnResultMessage,
@@ -592,7 +489,6 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
       pushTurnResultMessage({
         turn,
         presentationStatus: 'not-applied',
-        text: 'Editor policy is unavailable. The turn was not continued.',
       });
       finishTurn(turn);
       return;
@@ -603,7 +499,6 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
       pushTurnResultMessage({
         turn,
         presentationStatus: 'not-applied',
-        text: 'Copilot reached the step limit for this turn without completing. Try a smaller change.',
       });
       finishTurn(turn);
       return;
@@ -616,7 +511,6 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
       pushTurnResultMessage({
         turn,
         presentationStatus: 'not-applied',
-        text: 'Editor context is unavailable. The turn was not continued.',
       });
       finishTurn(turn);
       return;
@@ -676,7 +570,6 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
       pushTurnResultMessage({
         turn,
         presentationStatus: 'not-applied',
-        text: 'Editor context is not ready. Try again in a moment.',
       });
       finishTurn(turn);
       return;
@@ -714,7 +607,6 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
           pushTurnResultMessage({
             turn,
             presentationStatus: 'not-applied',
-            text: COPILOT_UNEXPECTED_FAILURE_MESSAGE,
           });
           finishTurn(turn);
         }
@@ -727,7 +619,6 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
           pushTurnResultMessage({
             turn,
             presentationStatus: 'not-applied',
-            text: COPILOT_UNEXPECTED_FAILURE_MESSAGE,
           });
           finishTurn(turn);
         }
@@ -799,7 +690,6 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
             pushTurnResultMessage({
               turn,
               presentationStatus: 'not-applied',
-              text: 'Copilot requested an edit but the request was malformed. Nothing was applied.',
             });
             finishTurn(turn);
           }
@@ -815,11 +705,10 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
         break;
 
       case 'agent_turn_error': {
-        const message = normalizeAssistantText(event.data.message);
         pushTurnResultMessage({
           turn,
           presentationStatus: 'not-applied',
-          text: message || COPILOT_UNEXPECTED_FAILURE_MESSAGE,
+          text: event.data.message,
         });
         finishTurn(turn);
         break;
@@ -830,7 +719,6 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
         pushTurnResultMessage({
           turn,
           presentationStatus: 'stopped',
-          text: 'Stopped. Already-applied changes remain and can be undone.',
         });
         finishTurn(turn);
         break;
@@ -852,31 +740,27 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
   const applyCopilotUndo = useCallback(() => {
     if (status === 'loading' || !threadKey || !undoRecord) return;
     if (serializeInstanceDataSignature(instanceDataRef.current) !== undoRecord.postApplySignature) {
-      pushMessage({ role: 'assistant', text: 'The widget changed after Copilot applied that edit. Undo was not applied.' });
       setCopilotUndo(threadKey, null);
       return;
     }
     const applied = session.applyOps(undoRecord.ops);
     if (!applied.ok) {
-      pushMessage({ role: 'assistant', text: COPILOT_INVALID_EDIT_MESSAGE });
       setCopilotUndo(threadKey, null);
       return;
     }
     setCopilotUndo(threadKey, null);
-    pushMessage({ role: 'assistant', text: 'Undone.' });
-  }, [pushMessage, session, setCopilotUndo, status, threadKey, undoRecord]);
+  }, [session, setCopilotUndo, status, threadKey, undoRecord]);
 
   const handleSend = async (promptOverride?: string) => {
-    if (uiDisabledReason) return;
+    if (uiDisabled) return;
     if (status === 'loading') return;
     const activeCompiled = compiled;
     if (!activeCompiled) return;
     const prompt = (promptOverride ?? draft).trim();
     if (!prompt) return;
 
-    // Undo remains Bob session interaction state and never enters model history.
-    const normalized = prompt.toLowerCase();
-    if (normalized === 'undo' && undoRecord) {
+    // Undo is an existing Bob-local command and never enters model history.
+    if (prompt.toLowerCase() === 'undo' && undoRecord) {
       setDraft('');
       pushMessage({ role: 'user', text: prompt });
       applyCopilotUndo();
@@ -889,37 +773,14 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
       sessionId = crypto.randomUUID();
       copilot.setCopilotThread(threadKey, {
         sessionId,
-        messages: [
-          {
-            id: newId(),
-            role: 'assistant',
-            text: surfaceContract.initialMessage(widgetType),
-            ts: Date.now(),
-          },
-        ],
+        messages: [],
       });
     }
-    if (!sessionId) {
-      pushMessage({ role: 'assistant', text: 'Copilot session not ready. Please try again in a moment.' });
-      return;
-    }
-    if (!chrome.policy) {
-      pushMessage({
-        role: 'assistant',
-        text: 'Editor context is not ready yet. Wait for Builder boot to complete and try again.',
-      });
-      return;
-    }
+    if (!sessionId || !chrome.policy) return;
 
     const activeLocale = chrome.meta?.baseLocale;
     const currentInstanceId = chrome.meta?.instanceId;
-    if (!activeLocale || !currentInstanceId) {
-      pushMessage({
-        role: 'assistant',
-        text: 'Editor context is not ready yet. Wait for Builder boot to complete and try again.',
-      });
-      return;
-    }
+    if (!activeLocale || !currentInstanceId) return;
 
     // Create the active turn state (two-fact: turn starts, no HTTP yet)
     const userTurnId = crypto.randomUUID();
@@ -998,7 +859,6 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
     pushTurnResultMessage({
       turn,
       presentationStatus: 'stopped',
-      text: 'Stopped. Already-applied changes remain and can be undone.',
     });
     finishTurn(turn);
   }, [finishTurn, pushTurnResultMessage]);
@@ -1017,7 +877,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
         flexDirection: 'column',
         minHeight: 0,
       }}
-      aria-label="Copilot"
+      aria-label={copilotCopy.surface.accessibleLabel}
     >
       <div
         ref={listRef}
@@ -1030,7 +890,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
           flexDirection: 'column',
           gap: 'var(--space-2)',
         }}
-        aria-label="Copilot conversation"
+        aria-label={copilotCopy.surface.conversationLabel}
       >
         {messages.map((m) => {
           return (
@@ -1071,7 +931,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
                   disabled={isLoading}
                   onClick={applyCopilotUndo}
                 >
-                  <span className="diet-button__label">Undo</span>
+                  <span className="diet-button__label">{copilotCopy.controls.undo}</span>
                 </button>
               </div>
             ) : null}
@@ -1094,8 +954,8 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
               className="body-s"
               value={selectedModelKey}
               onChange={(event) => setSelectedModelKey(event.target.value)}
-              disabled={isLoading || Boolean(uiDisabledReason)}
-              aria-label="Copilot model"
+              disabled={isLoading || uiDisabled}
+              aria-label={copilotCopy.controls.model}
               style={{
                 width: '100%',
               }}
@@ -1120,14 +980,13 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
             onKeyDown={(event) => {
               if (event.key === 'Enter' && !event.shiftKey) {
                 event.preventDefault();
-                if (!isLoading && !uiDisabledReason) {
+                if (!isLoading && !uiDisabled) {
                   void handleSend();
                 }
               }
             }}
-            disabled={isLoading || Boolean(uiDisabledReason)}
-            placeholder={uiDisabledReason ?? 'Ask Copilot to edit this widget…'}
-            aria-label="Copilot message"
+            disabled={isLoading || uiDisabled}
+            aria-label={copilotCopy.controls.message}
             style={{
               flex: 1,
               minWidth: 0,
@@ -1141,9 +1000,9 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
               data-type="secondary"
               type="button"
               onClick={handleStop}
-              aria-label="Stop Copilot"
+              aria-label={copilotCopy.controls.stopAccessibleLabel}
             >
-              <span className="diet-button__label">Stop</span>
+              <span className="diet-button__label">{copilotCopy.controls.stop}</span>
             </button>
           ) : (
             <button
@@ -1151,11 +1010,11 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
               data-size="medium"
               data-type="primary"
               type="button"
-              disabled={Boolean(uiDisabledReason) || !draft.trim()}
+              disabled={uiDisabled || !draft.trim()}
               onClick={() => { void handleSend(); }}
-              aria-label="Send to Copilot"
+              aria-label={copilotCopy.controls.sendAccessibleLabel}
             >
-              <span className="diet-button__label">Send</span>
+              <span className="diet-button__label">{copilotCopy.controls.send}</span>
             </button>
           )}
         </div>

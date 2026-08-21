@@ -13,6 +13,8 @@ import {
   type ReactNode,
 } from 'react';
 import type { RomaDomainKey } from '../lib/domains';
+import ROMA_NAVIGATION_UI_COPY from '../l10n/navigation/en.json';
+import ROMA_SHELL_UI_COPY from '../l10n/shell/en.json';
 import { RomaAccountBoundary } from './roma-account-context';
 import { RomaNav } from './roma-nav';
 import { RomaPageHeader } from './roma-page-header';
@@ -43,10 +45,10 @@ export function RomaShellDefaultActions() {
   return (
     <>
       <Link className="diet-button" data-size="large" data-type="tertiary" href="/team">
-        <span className="diet-button__label">Invite members</span>
+        <span className="diet-button__label">{ROMA_SHELL_UI_COPY.actions.inviteMembers}</span>
       </Link>
       <Link className="diet-button" data-size="large" data-type="primary" href="/widgets">
-        <span className="diet-button__label">Widgets</span>
+        <span className="diet-button__label">{ROMA_SHELL_UI_COPY.actions.widgets}</span>
       </Link>
     </>
   );
@@ -121,7 +123,7 @@ export function RomaShell({
       data-size="medium"
       data-type="quaternary"
       type="button"
-      aria-label={navigationOpen ? 'Close navigation' : 'Open navigation'}
+      aria-label={navigationOpen ? ROMA_NAVIGATION_UI_COPY.navigation.close : ROMA_NAVIGATION_UI_COPY.navigation.open}
       aria-controls="roma-primary-navigation"
       aria-expanded={navigationOpen}
       onClick={() => {
@@ -159,7 +161,7 @@ export function RomaShell({
             type="button"
             data-navigation-scrim
             tabIndex={-1}
-            aria-label="Close navigation"
+            aria-label={ROMA_NAVIGATION_UI_COPY.navigation.close}
             onClick={() => closeNavigation(true)}
           />
           {!fullCanvas && !pageHeader ? renderNavigationTrigger(true) : null}

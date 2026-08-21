@@ -124,7 +124,9 @@ function hardAuthRequired(): AccountCapsuleAuthzResult {
   };
 }
 
-async function fetchBootstrapAccountCapsule(accessToken: string): Promise<string | null> {
+async function fetchBootstrapAccountCapsule(
+  accessToken: string,
+): Promise<string | null> {
   let berlinBase = '';
   try {
     berlinBase = resolveBerlinBaseUrl().replace(/\/+$/, '');
@@ -141,12 +143,10 @@ async function fetchBootstrapAccountCapsule(accessToken: string): Promise<string
     cache: 'no-store',
   });
   const payload = (await response.json().catch(() => null)) as
-    | { authz?: { accountCapsule?: unknown } }
+    | { authz: { accountCapsule: string } }
     | null;
   if (!response.ok || !payload) return null;
-  const accountCapsule =
-    typeof payload.authz?.accountCapsule === 'string' ? payload.authz.accountCapsule.trim() : '';
-  return accountCapsule || null;
+  return payload.authz.accountCapsule;
 }
 
 export async function resolveServerAccountAuthz(args: {
@@ -188,10 +188,10 @@ export async function resolveServerAccountAuthz(args: {
     };
   }
 
-  const refreshedToken = await fetchBootstrapAccountCapsule(args.accessToken);
-  if (!refreshedToken) return hardAuthRequired();
+  const accountCapsule = await fetchBootstrapAccountCapsule(args.accessToken);
+  if (accountCapsule === null) return hardAuthRequired();
 
-  const refreshed = await verifyAccountCapsuleToken(refreshedToken);
+  const refreshed = await verifyAccountCapsuleToken(accountCapsule);
   if (!refreshed.ok) return hardAuthRequired();
   if (roleRank(refreshed.payload.role) < roleRank(args.minRole)) {
     return {

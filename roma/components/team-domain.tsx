@@ -1,11 +1,12 @@
 'use client';
 
 import Link from 'next/link';
+import type { MemberRole } from '@clickeen/ck-policy';
 import { useCallback, useEffect, useState } from 'react';
+import teamCopy from '../l10n/team/en.json';
 import { formatAccountRoleLabel } from '../lib/format';
 import { resolvePersonLabel } from '../lib/person-profile';
-import { resolveAccountShellErrorCopy, resolveAccountShellReason } from '../lib/account-shell-copy';
-import { ROMA_UI_COPY } from '../lib/ui-copy';
+import ROMA_DIALOGS_UI_COPY from '../l10n/dialogs/en.json';
 import { useRomaAccountApi } from './account-api';
 import { DieterDropdownActions } from './dieter-dropdown-actions';
 import { DieterTextfield } from './dieter-textfield';
@@ -14,10 +15,10 @@ import { RomaEmptyState, RomaLoadingState } from './roma-system-state';
 
 type AccountMembersResponse = {
   accountId: string;
-  role: string;
+  role: MemberRole;
   members: Array<{
     userId: string;
-    role: string;
+    role: MemberRole;
     createdAt: string | null;
     profile: {
       givenName: string | null;
@@ -29,60 +30,50 @@ type AccountMembersResponse = {
 
 type AccountInvitationsResponse = {
   accountId: string;
-  role: string;
+  role: MemberRole;
   invitations: Array<{
     invitationId: string;
     email: string;
-    role: string;
+    role: MemberRole;
     expiresAt: string;
   }>;
 };
 
-function resolveMemberLabel(member: AccountMembersResponse['members'][number]): string {
-  return resolvePersonLabel(member.profile, 'Team member');
+function resolveMemberLabel(member: AccountMembersResponse['members'][number]): string | null {
+  return resolvePersonLabel(member.profile);
 }
 
 export function TeamDomain() {
   const { accountContext, accountPolicy } = useRomaAccountContext();
   const accountApi = useRomaAccountApi();
   const canManage = accountPolicy.role === 'owner' || accountPolicy.role === 'admin';
-  const [error, setError] = useState<string | null>(null);
+  const [membersFailed, setMembersFailed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [retryPending, setRetryPending] = useState(false);
   const [members, setMembers] = useState<AccountMembersResponse | null>(null);
   const [invitations, setInvitations] = useState<AccountInvitationsResponse | null>(null);
   const [inviteEmail, setInviteEmail] = useState('');
-  const [inviteRole, setInviteRole] = useState('viewer');
+  const [inviteRole, setInviteRole] = useState<MemberRole>('viewer');
   const [inviteLoading, setInviteLoading] = useState(false);
   const [revokingInvitationId, setRevokingInvitationId] = useState<string | null>(null);
-  const [inviteError, setInviteError] = useState<string | null>(null);
-  const accountId = accountContext.accountId;
+  const [invitationsFailed, setInvitationsFailed] = useState(false);
   const invitationCommandPending = inviteLoading || revokingInvitationId !== null;
 
   const refreshMembers = useCallback(async (options?: { command?: boolean }) => {
     const command = options?.command === true;
     if (!command) {
       setLoading(true);
-      setError(null);
+      setMembersFailed(false);
     }
     try {
-      const response = await accountApi.fetchRaw(`/api/account/team`, {
+      const payload = await accountApi.fetchJson<AccountMembersResponse>(`/api/account/team`, {
         method: 'GET',
       });
-      const payload = (await response.json().catch(() => null)) as AccountMembersResponse | { error?: unknown } | null;
-      if (!response.ok) {
-        throw new Error(resolveAccountShellReason(payload, `HTTP_${response.status}`));
-      }
-      const parsed = payload as AccountMembersResponse | null;
-      if (!parsed || !Array.isArray(parsed.members)) {
-        throw new Error('coreui.errors.payload.invalid');
-      }
-      setMembers(parsed);
-      setError(null);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
+      setMembers(payload);
+      setMembersFailed(false);
+    } catch {
       setMembers(null);
-      setError(resolveAccountShellErrorCopy(message, 'Failed to load team members. Please try again.'));
+      setMembersFailed(true);
     } finally {
       if (!command) setLoading(false);
     }
@@ -100,28 +91,19 @@ export function TeamDomain() {
   const refreshInvitations = useCallback(async () => {
     if (!canManage) {
       setInvitations(null);
-      setInviteError(null);
+      setInvitationsFailed(false);
       return;
     }
 
     try {
-      const response = await accountApi.fetchRaw(`/api/account/team/invitations`, {
+      const payload = await accountApi.fetchJson<AccountInvitationsResponse>(`/api/account/team/invitations`, {
         method: 'GET',
       });
-      const payload = (await response.json().catch(() => null)) as AccountInvitationsResponse | { error?: unknown } | null;
-      if (!response.ok) {
-        throw new Error(resolveAccountShellReason(payload, `HTTP_${response.status}`));
-      }
-      const parsed = payload as AccountInvitationsResponse | null;
-      if (!parsed || !Array.isArray(parsed.invitations)) {
-        throw new Error('coreui.errors.payload.invalid');
-      }
-      setInvitations(parsed);
-      setInviteError(null);
-    } catch (nextError) {
-      const message = nextError instanceof Error ? nextError.message : String(nextError);
+      setInvitations(payload);
+      setInvitationsFailed(false);
+    } catch {
       setInvitations(null);
-      setInviteError(resolveAccountShellErrorCopy(message, 'Failed to load invitations. Please try again.'));
+      setInvitationsFailed(true);
     }
   }, [accountApi, canManage]);
 
@@ -134,66 +116,48 @@ export function TeamDomain() {
   }, [refreshInvitations]);
 
   const issueInvitation = useCallback(async () => {
-    if (!accountId || !canManage) return;
+    if (!canManage) return;
     setInviteLoading(true);
-    setInviteError(null);
     try {
-      const response = await accountApi.fetchRaw(`/api/account/team/invitations`, {
+      await accountApi.fetchJson(`/api/account/team/invitations`, {
         method: 'POST',
         headers: accountApi.buildHeaders({ contentType: 'application/json' }),
         body: JSON.stringify({ email: inviteEmail, role: inviteRole }),
       });
-      const payload = (await response.json().catch(() => null)) as {
-        error?: unknown;
-      } | null;
-      if (!response.ok) {
-        throw new Error(resolveAccountShellReason(payload, `HTTP_${response.status}`));
-      }
       setInviteEmail('');
       setInviteRole('viewer');
       await refreshInvitations();
-    } catch (nextError) {
-      const reason = nextError instanceof Error ? nextError.message : String(nextError);
-      setInviteError(resolveAccountShellErrorCopy(reason, 'Creating the invitation failed. Please try again.'));
+    } catch {
     } finally {
       setInviteLoading(false);
     }
-  }, [accountApi, accountId, canManage, inviteEmail, inviteRole, refreshInvitations]);
+  }, [accountApi, canManage, inviteEmail, inviteRole, refreshInvitations]);
 
   const revokeInvitation = useCallback(
     async (invitationId: string) => {
-      if (!accountId || !canManage) return;
+      if (!canManage) return;
       setRevokingInvitationId(invitationId);
-      setInviteError(null);
       try {
-        const response = await accountApi.fetchRaw(`/api/account/team/invitations/${encodeURIComponent(invitationId)}`, {
+        await accountApi.fetchJson(`/api/account/team/invitations/${encodeURIComponent(invitationId)}`, {
           method: 'DELETE',
         });
-        const payload = (await response.json().catch(() => null)) as {
-          error?: unknown;
-        } | null;
-        if (!response.ok) {
-          throw new Error(resolveAccountShellReason(payload, `HTTP_${response.status}`));
-        }
         await refreshInvitations();
-      } catch (nextError) {
-        const reason = nextError instanceof Error ? nextError.message : String(nextError);
-        setInviteError(resolveAccountShellErrorCopy(reason, 'Revoking the invitation failed. Please try again.'));
+      } catch {
       } finally {
         setRevokingInvitationId(null);
       }
     },
-    [accountApi, accountId, canManage, refreshInvitations],
+    [accountApi, canManage, refreshInvitations],
   );
 
   return (
     <>
       <section className="rd-canvas-module">
-        <p className="body-m">Account: {accountContext.accountLabel}</p>
+        <p className="label-s">{teamCopy.account}</p>
+        <p className="body-m">{accountContext.accountLabel}</p>
 
-        {error ? (
+        {membersFailed ? (
           <div className="roma-inline-stack" role="alert">
-            <p className="body-m">{error}</p>
             <button
               className="diet-button"
               data-size="medium"
@@ -205,13 +169,13 @@ export function TeamDomain() {
               disabled={retryPending}
             >
               {retryPending ? <span className="diet-spinner" aria-hidden="true" /> : null}
-              <span className="diet-button__label">Retry</span>
+              <span className="diet-button__label">{ROMA_DIALOGS_UI_COPY.retry}</span>
             </button>
           </div>
         ) : null}
       </section>
 
-      {loading && !members && !error ? <RomaLoadingState className="rd-canvas-module" /> : null}
+      {loading && !members && !membersFailed ? <RomaLoadingState className="rd-canvas-module" /> : null}
 
       {members ? (
         <section className="rd-canvas-module">
@@ -219,9 +183,9 @@ export function TeamDomain() {
           <table className="diet-table__table">
             <thead>
               <tr>
-                <th className="label-s">Member</th>
-                <th className="label-s">Role</th>
-                <th className="label-s">Joined</th>
+                <th className="label-s">{teamCopy.member}</th>
+                <th className="label-s">{teamCopy.role}</th>
+                <th className="label-s">{teamCopy.joined}</th>
               </tr>
             </thead>
             <tbody>
@@ -240,7 +204,7 @@ export function TeamDomain() {
               {members.members.length === 0 ? (
                 <tr>
                   <td colSpan={3} className="diet-data-table__state-cell">
-                    <RomaEmptyState>{ROMA_UI_COPY.state.empty.teamMembers}</RomaEmptyState>
+                    <RomaEmptyState>{teamCopy.noMembers}</RomaEmptyState>
                   </td>
                 </tr>
               ) : null}
@@ -253,14 +217,12 @@ export function TeamDomain() {
       {canManage ? (
         <>
           <section className="rd-canvas-module">
-            <h2 className="heading-4">Invite people</h2>
-            <p className="body-s">Pending invitations appear here until they are accepted.</p>
-            {inviteError ? <p className="body-m" role="alert">{inviteError}</p> : null}
+            <h2 className="heading-4">{teamCopy.invitePeople}</h2>
             <div className="roma-form-grid">
               <DieterTextfield
                 className="roma-field"
                 controlSize="lg"
-                label="Email"
+                label={teamCopy.email}
                 type="email"
                 value={inviteEmail}
                 onChange={(event) => setInviteEmail(event.target.value)}
@@ -269,10 +231,10 @@ export function TeamDomain() {
               <DieterDropdownActions
                 className="roma-field"
                 size="lg"
-                label="Role"
-                ariaLabel="Choose invitation role"
+                label={teamCopy.role}
+                ariaLabel={teamCopy.chooseInvitationRole}
                 value={inviteRole}
-                onChange={setInviteRole}
+                onChange={(role) => setInviteRole(role as MemberRole)}
                 disabled={invitationCommandPending}
                 options={[
                   { value: 'viewer', label: formatAccountRoleLabel('viewer') },
@@ -293,22 +255,21 @@ export function TeamDomain() {
                 disabled={invitationCommandPending || !inviteEmail.trim()}
               >
                 {inviteLoading ? <span className="diet-spinner" aria-hidden="true" /> : null}
-                <span className="diet-button__label">{inviteLoading ? 'Saving...' : 'Create invitation'}</span>
+                <span className="diet-button__label">{inviteLoading ? teamCopy.creatingInvitation : teamCopy.createInvitation}</span>
               </button>
             </div>
           </section>
 
           <section className="rd-canvas-module">
-            <h2 className="heading-4">Pending invitations</h2>
-            {inviteError && !invitations ? <p className="body-m" role="alert">{inviteError}</p> : null}
+            <h2 className="heading-4">{teamCopy.pendingInvitations}</h2>
             <div className="diet-table">
             <table className="diet-table__table">
               <thead>
                 <tr>
-                  <th className="label-s">Email</th>
-                  <th className="label-s">Role</th>
-                  <th className="label-s">Expires</th>
-                  <th className="label-s diet-table__cell--action">Action</th>
+                  <th className="label-s">{teamCopy.email}</th>
+                  <th className="label-s">{teamCopy.role}</th>
+                  <th className="label-s">{teamCopy.expires}</th>
+                  <th className="label-s diet-table__cell--action">{teamCopy.action}</th>
                 </tr>
               </thead>
               <tbody>
@@ -330,22 +291,30 @@ export function TeamDomain() {
                       >
                         {revokingInvitationId === invitation.invitationId ? <span className="diet-spinner" aria-hidden="true" /> : null}
                         <span className="diet-button__label">
-                          {revokingInvitationId === invitation.invitationId ? 'Revoking…' : 'Revoke'}
+                          {revokingInvitationId === invitation.invitationId ? teamCopy.revoking : teamCopy.revoke}
                         </span>
                       </button>
                     </td>
                   </tr>
                 ))}
-                {!invitations ? (!inviteError ? (
+                {!invitations ? (!invitationsFailed ? (
                   <tr>
                     <td colSpan={4} className="diet-data-table__state-cell">
                       <RomaLoadingState />
                     </td>
                   </tr>
-                ) : null) : invitations.invitations.length === 0 ? (
+                ) : (
                   <tr>
                     <td colSpan={4} className="diet-data-table__state-cell">
-                      <RomaEmptyState>{ROMA_UI_COPY.state.empty.invitations}</RomaEmptyState>
+                      <button className="diet-button" data-size="medium" data-type="tertiary" type="button" onClick={() => void refreshInvitations()}>
+                        <span className="diet-button__label">{ROMA_DIALOGS_UI_COPY.retry}</span>
+                      </button>
+                    </td>
+                  </tr>
+                )) : invitations.invitations.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="diet-data-table__state-cell">
+                      <RomaEmptyState>{teamCopy.noInvitations}</RomaEmptyState>
                     </td>
                   </tr>
                 ) : null}
@@ -354,11 +323,7 @@ export function TeamDomain() {
             </div>
           </section>
         </>
-      ) : (
-        <section className="rd-canvas-module">
-          <p className="body-m">Pending invitations are managed by account owners/admins.</p>
-        </section>
-      )}
+      ) : null}
     </>
   );
 }

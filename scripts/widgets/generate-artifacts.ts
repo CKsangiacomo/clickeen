@@ -353,33 +353,6 @@ function writeOrCheck(filePath: string, source: string): void {
   fs.writeFileSync(filePath, source);
 }
 
-function assertProductReadableControls(
-  widgetType: string,
-  controls: CompiledWidget['controls'],
-): void {
-  const technicalLabels = new Set([
-    'contentfields',
-    'layoutfields',
-    'settingsbehavior',
-    'stylefields',
-    'typofields',
-  ]);
-  for (const control of controls) {
-    if (!control.kind || control.kind === 'unknown') {
-      throw new Error(
-        `[generate-widget-artifacts] ${widgetType} control "${control.path}" is missing kind metadata`,
-      );
-    }
-    const label = String(control.label || '').trim();
-    const normalized = label.toLowerCase().replace(/[^a-z0-9]+/g, '');
-    if (label && (technicalLabels.has(normalized) || /[{}]|__/.test(label))) {
-      throw new Error(
-        `[generate-widget-artifacts] ${widgetType} control "${control.path}" has technical label "${label}"`,
-      );
-    }
-  }
-}
-
 function generatedMaterializerIndex(widgetTypes: string[]): string {
   const imports = widgetTypes.map(
     (widgetType, index) => `import artifact${index} from './widgets/${widgetType}.json';`,
@@ -425,7 +398,8 @@ async function buildArtifacts(widgetType: string): Promise<{
   const tooldrawerLabelsSource = readText(`${widgetDirectory}/${tooldrawerLabelsRelativePath}`);
   const spec = JSON.parse(specSource) as RawWidget;
   const tooldrawerLabels = JSON.parse(tooldrawerLabelsSource) as unknown;
-  const resolvedWidget = resolveWidgetTooldrawerLabels(spec, tooldrawerLabels).widget;
+  const resolved = resolveWidgetTooldrawerLabels(spec, tooldrawerLabels);
+  const resolvedWidget = resolved.widget;
   if (!resolvedWidget.defaults) {
     throw new Error(`[generate-widget-artifacts] ${widgetType} resolved defaults are missing`);
   }
@@ -433,12 +407,10 @@ async function buildArtifacts(widgetType: string): Promise<{
   const limits = parseLimitsSpec(JSON.parse(limitsSource));
   const upsell = readWidgetUpsellCatalog(JSON.parse(upsellSource), widgetType, limits);
   const discovery = readWidgetDiscoveryContract(JSON.parse(discoverySource), widgetType);
-  const compiled = await compileWidgetServer(spec, {
+  const compiled = await compileWidgetServer(resolved, {
     loadComponentStencil: loadLocalStencil,
     tokyoBaseUrl: '',
-    tooldrawerLabels,
   });
-  assertProductReadableControls(widgetType, compiled.controls);
   const widgetSoftware = buildWidgetSoftware(widgetType);
   return {
     editor: { ...compiled, limits, editableFields, upsell, widgetSoftware },

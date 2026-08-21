@@ -2,14 +2,14 @@
 
 import { useCallback, useEffect, useId, useRef } from 'react';
 import { createDialogLifecycle, type DialogLifecycle } from '../../dieter/components/shared/dialog-lifecycle';
+import ROMA_DIALOGS_UI_COPY from '../l10n/dialogs/en.json';
 
 type RomaCommandConfirmationDialogProps = {
   open: boolean;
   title: string;
-  body: string;
+  body?: string | null;
   confirmLabel: string;
   pending?: boolean;
-  error?: string | null;
   onCancel: () => void;
   onConfirm: () => void;
 };
@@ -19,7 +19,6 @@ function OpenRomaCommandConfirmationDialog({
   body,
   confirmLabel,
   pending = false,
-  error = null,
   onCancel,
   onConfirm,
 }: Omit<RomaCommandConfirmationDialogProps, 'open'>) {
@@ -82,15 +81,16 @@ function OpenRomaCommandConfirmationDialog({
       className="diet-popup"
       data-size="medium"
       aria-labelledby={titleId}
-      aria-describedby={bodyId}
+      aria-describedby={body ? bodyId : undefined}
     >
       <header className="diet-popup__header">
         <h2 id={titleId} className="heading-4">{title}</h2>
       </header>
-      <div className="diet-popup__body">
-        <p id={bodyId} className="body-m">{body}</p>
-        {error ? <p className="body-s" role="alert">{error}</p> : null}
-      </div>
+      {body ? (
+        <div className="diet-popup__body">
+          <p id={bodyId} className="body-m">{body}</p>
+        </div>
+      ) : null}
       <footer className="diet-popup__footer">
         <div className="diet-popup__actions">
           <button
@@ -102,7 +102,7 @@ function OpenRomaCommandConfirmationDialog({
             onClick={handleCancel}
             disabled={pending}
           >
-            <span className="diet-button__label">Cancel</span>
+            <span className="diet-button__label">{ROMA_DIALOGS_UI_COPY.cancel}</span>
           </button>
           <button
             className="diet-button"
@@ -131,7 +131,6 @@ export function RomaCommandConfirmationDialog(props: RomaCommandConfirmationDial
       body={props.body}
       confirmLabel={props.confirmLabel}
       pending={props.pending}
-      error={props.error}
       onCancel={props.onCancel}
       onConfirm={props.onConfirm}
     />

@@ -13,7 +13,7 @@ async function main(): Promise<void> {
 
   const statusGate = "gateway.value.authzPayload.accountStatus !== 'active'";
   const statusGateIndex = romaUpload.indexOf(statusGate);
-  const policyIndex = romaUpload.indexOf('resolvePolicyFromEntitlementsSnapshot({');
+  const policyIndex = romaUpload.indexOf('const policy: Policy = {');
   const tokyoCallIndex = romaUpload.indexOf('fetchTokyoAssetControl({');
 
   assert.ok(statusGateIndex > 0, 'Roma upload applies the account-status policy');

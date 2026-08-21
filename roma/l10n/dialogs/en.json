@@ -1,0 +1,10 @@
+{
+  "cancel": "Cancel",
+  "close": "Close",
+  "retry": "Retry",
+  "unsaved": {
+    "title": "Unsaved changes",
+    "keepEditing": "Keep editing",
+    "discard": "Discard"
+  }
+}

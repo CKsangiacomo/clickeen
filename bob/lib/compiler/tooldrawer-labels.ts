@@ -252,19 +252,6 @@ function assertWidgetCopyUsesLabelTokens(widget: RawWidget, widgetType: string):
     });
   });
 
-  const visitUiLabels = (value: unknown, path: string): void => {
-    if (typeof value === 'string') {
-      assertLabelToken(value, path, widgetType);
-      return;
-    }
-    if (Array.isArray(value)) {
-      value.forEach((entry, index) => visitUiLabels(entry, `${path}[${index}]`));
-      return;
-    }
-    if (!isRecord(value)) return;
-    for (const [key, entry] of Object.entries(value)) visitUiLabels(entry, `${path}.${key}`);
-  };
-  visitUiLabels(widget.defaults?.uiLabels, 'defaults.uiLabels');
 }
 
 function readResolvedToolDrawerLabels(
@@ -281,17 +268,14 @@ function readResolvedToolDrawerLabels(
     Object.keys(labels).length !== 2 ||
     !isRecord(components) ||
     !isRecord(agentActivity) ||
-    Object.keys(agentActivity).length !== 1 ||
-    typeof agentActivity.title !== 'string' ||
-    !agentActivity.title.trim() ||
-    agentActivity.title !== agentActivity.title.trim()
+    Object.keys(agentActivity).length !== 1
   ) {
     throw new Error(`[BobCompiler] ${widgetType} resolved ToolDrawer labels contract is invalid`);
   }
   return {
     components: {
       'agent-activity': {
-        title: agentActivity.title,
+        title: agentActivity.title as string,
       },
     },
   };
@@ -349,15 +333,6 @@ export function resolveWidgetTooldrawerLabels(
   const usedKeys = new Set<string>();
   const widget = cloneJson(widgetJson);
   widget.editor = resolveLabelTokens(widget.editor, labels, usedKeys, 'editor');
-
-  if (widget.defaults && isRecord(widget.defaults.uiLabels)) {
-    widget.defaults.uiLabels = resolveLabelTokens(
-      widget.defaults.uiLabels,
-      labels,
-      usedKeys,
-      'defaults.uiLabels',
-    ) as Record<string, unknown>;
-  }
 
   const panelLabels = {} as Record<(typeof BOB_WIDGET_PANEL_IDS)[number], string>;
   for (const panelId of BOB_WIDGET_PANEL_IDS) {

@@ -51,7 +51,7 @@ export type BerlinBootstrapPayload = {
   user: BerlinUserPayload;
   profile: BerlinUserProfilePayload;
   activeAccount: BerlinAccountContext;
-  authz: null | {
+  authz: {
     accountCapsule: string;
     accountId: string;
     accountPublicId: string;

@@ -154,8 +154,8 @@ silently rewrite it.
    failedLocales
    ```
 
-6. Bob reports that result and refreshes translated preview only when at least
-   one locale succeeded.
+6. Bob consumes that result without inventing result prose and refreshes
+   translated preview only when at least one locale succeeded.
 
 Translation generation never publishes, stores a locale package, or changes
 public files.

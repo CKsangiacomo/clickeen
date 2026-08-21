@@ -9,12 +9,11 @@ import { buildEditorHtmlLines } from '../lib/compiler/editor-contract';
 import { resolveWidgetTooldrawerLabels } from '../lib/compiler/tooldrawer-labels';
 import type { ComponentStencil, ComponentStencilLoader } from '../lib/compiler/stencils';
 import { buildContext } from '../lib/compiler/stencils';
-import { DEFAULT_PANELS } from '../components/TdMenu';
 import { controlHostClusterId } from '../components/td-menu-content/dom';
 import { expandLinkedOps } from '../components/td-menu-content/linkedOps';
 import { validateValueStrict } from '../lib/edit/controls';
 import { applyWidgetOps } from '../lib/edit/ops';
-import { BOB_MENU_PANEL_IDS, BOB_WIDGET_PANEL_IDS } from '../lib/types';
+import { BOB_WIDGET_PANEL_IDS } from '../lib/types';
 import { createAccountAssetsClient } from '../lib/session/sessionTransport';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -715,10 +714,9 @@ async function testEveryWidgetEditorContract(): Promise<void> {
       `${widgetType} opens only its primary Content cluster`,
     );
 
-    const compiled = await compileWidgetServer(spec, {
+    const compiled = await compileWidgetServer(resolved, {
       loadComponentStencil: loadStencil,
       tokyoBaseUrl: '',
-      tooldrawerLabels: labels,
     });
     const combinedHtml = compiled.panels.map((panel) => panel.html).join('\n');
     assert.deepEqual(
@@ -1222,11 +1220,6 @@ async function testAccountAssetsHostAdapter(): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  assert.deepEqual(
-    DEFAULT_PANELS.map((panel) => panel.id),
-    BOB_MENU_PANEL_IDS,
-    'Bob menu uses the canonical shared order',
-  );
   await testEveryWidgetEditorContract();
   console.log('PASS every widget conforms to the authored and compiled editor contract');
   for (const { widgetType } of discoverWidgetSpecs()) {

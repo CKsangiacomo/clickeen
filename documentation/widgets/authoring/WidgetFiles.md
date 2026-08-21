@@ -191,7 +191,9 @@ allowlist for the rest of the instance.
 
 The adjacent `labels/en.json` file owns Widget-authored Bob copy. The build resolves the
 copy into the compiled editor artifact. Bob does not fetch the source file while
-editing.
+editing. Editor-only Widget nouns are declared under the structured editor
+label contract, not under instance `defaults`; they therefore do not enter
+saved source or account Widget Defaults.
 
 ## Limits And Upsell Copy
 

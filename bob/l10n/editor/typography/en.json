@@ -1,0 +1,65 @@
+{
+  "roles": {
+    "title": "Title",
+    "body": "Subtitle",
+    "button": "Button text",
+    "localeSwitcher": "Locale switcher"
+  },
+  "fontCategories": {
+    "sans": "Sans",
+    "serif": "Serif",
+    "display": "Display",
+    "script": "Script",
+    "handwritten": "Handwritten"
+  },
+  "fontUsage": {
+    "body-safe": "Body-safe",
+    "heading-only": "Heading-only"
+  },
+  "formats": {
+    "weightOption": "{label} ({value})"
+  },
+  "fields": {
+    "globalFontFamily": "Global font family",
+    "fontFamily": "Font family",
+    "chooseFont": "Choose font",
+    "size": "Size",
+    "chooseSize": "Choose size",
+    "customSize": "Custom size (px)",
+    "style": "Style",
+    "chooseStyle": "Choose style",
+    "weight": "Weight",
+    "chooseWeight": "Choose weight",
+    "lineSpacing": "Line spacing",
+    "chooseLineSpacing": "Choose line spacing",
+    "customLineSpacing": "Custom line spacing",
+    "letterSpacing": "Letter spacing",
+    "chooseSpacing": "Choose spacing",
+    "customLetterSpacing": "Custom letter spacing (em)"
+  },
+  "options": {
+    "xSmall": "X-Small",
+    "small": "Small",
+    "medium": "Medium",
+    "large": "Large",
+    "xLarge": "X-Large",
+    "custom": "Custom",
+    "normal": "Normal",
+    "italic": "Italic",
+    "thin": "Thin",
+    "extraLight": "Extra light",
+    "light": "Light",
+    "regular": "Regular",
+    "semiBold": "Semi-bold",
+    "bold": "Bold",
+    "extraBold": "Extra bold",
+    "black": "Black",
+    "tighter": "Tighter",
+    "tight": "Tight",
+    "wide": "Wide",
+    "wider": "Wider",
+    "snug": "Snug",
+    "relaxed": "Relaxed",
+    "loose": "Loose"
+  }
+}

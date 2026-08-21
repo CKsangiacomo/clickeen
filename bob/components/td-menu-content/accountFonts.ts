@@ -5,6 +5,7 @@ import {
   type AccountFontFamilyOption,
   type AccountFontLibrary,
 } from '@clickeen/widget-foundation';
+import typographyCopy from '../../l10n/editor/typography/en.json';
 
 function createTextSpan(document: Document, className: string, text: string): HTMLSpanElement {
   const span = document.createElement('span');
@@ -111,7 +112,10 @@ export function applyAccountFontLibraryToTypographyMenus(args: {
   fontLibrary: AccountFontLibrary | null;
 }): void {
   if (!args.fontLibrary) return;
-  const options = accountFontLibraryToFamilyOptions(args.fontLibrary);
+  const options = accountFontLibraryToFamilyOptions(args.fontLibrary, {
+    categories: typographyCopy.fontCategories,
+    usage: typographyCopy.fontUsage,
+  });
   if (!options.length) return;
 
   const inputs = Array.from(

@@ -21,16 +21,8 @@ export function useSessionSaving(args: {
   const save = useCallback(async () => {
     // Save persists the one widget the customer is actively editing.
     const snapshot = stateRef.current;
-    const meta = metaRef.current;
-    const instanceId = meta?.instanceId ?? '';
-    const widgetType = meta?.widgetname ?? '';
-    if (!widgetType) {
-      setState((prev) => ({
-        ...prev,
-        error: { source: 'save', message: 'Missing widget type for save.' },
-      }));
-      return;
-    }
+    const meta = metaRef.current!;
+    const { instanceId, widgetname: widgetType } = meta;
     if (!snapshot.isDirty) {
       return;
     }
@@ -50,11 +42,11 @@ export function useSessionSaving(args: {
       const submittedInstanceDataSignature = serializeInstanceDataSignature(config);
       const saveBody: Record<string, unknown> = {
         config,
-        ...(!instanceId ? { widgetType } : {}),
+        ...(instanceId === null ? { widgetType } : {}),
       };
       const { ok, json } = await executeAccountCommand({
         command: 'save-instance',
-        ...(instanceId ? { instanceId } : {}),
+        ...(instanceId === null ? {} : { instanceId }),
         body: saveBody,
       });
       if (!ok) {
@@ -103,7 +95,7 @@ export function useSessionSaving(args: {
         return;
       }
 
-      if (!instanceId) {
+      if (instanceId === null) {
         const created = json as { instanceId: string; baseLocale: string };
         const currentMeta = metaRef.current!;
         const nextMeta = {

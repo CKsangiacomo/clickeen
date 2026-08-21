@@ -218,10 +218,12 @@ Agent Activity is for real agent operations with meaningful phases or visible
 operational narration. It is not generic loading, polling, job status, or
 spinner theater.
 
-Translation generation currently uses Agent Activity. The activity rows narrate
-the operation while it runs; they are not the durable command result. After the
-operation ends, Bob shows durable feedback for command failure, no accepted
-work, partial per-locale translation failures, or success.
+Translation generation currently uses Agent Activity. The complete ordered
+activity rows narrate the operation while it runs; they are not a durable
+command result. After the operation ends, the activity disappears and the same
+Generate control returns to ready. Bob uses Roma's exact structured result only
+to refresh translated-locale truth when at least one locale succeeded; it does
+not invent durable result prose.
 
 The static Agent Activity title inside the ToolDrawer comes from the open
 widget's compiled ToolDrawer labels. The Translation Agent owns only the live
