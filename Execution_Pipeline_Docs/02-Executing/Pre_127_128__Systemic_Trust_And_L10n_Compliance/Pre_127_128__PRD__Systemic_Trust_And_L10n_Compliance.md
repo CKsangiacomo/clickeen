@@ -1,6 +1,6 @@
 # Pre-127/128 PRD — Authenticated Product Systemic Trust And English UI-Source Compliance
 
-Status: **READY TO RESUME — SCOPE CORRECTED; NO PRODUCT CORRECTION SLICE IS CURRENTLY IN PROGRESS; BLOCKS CONTINUED PRD 127 AND PRD 128 WORK**
+Status: **EXECUTING — SLICE 1 AUTHENTICATION, BOOTSTRAP, AND ROMA ENTRY IN PROGRESS; BLOCKS CONTINUED PRD 127 AND PRD 128 WORK**
 
 Owner: Clickeen product owner/architect
 
@@ -545,7 +545,7 @@ route; never mutate storage directly as a substitute.
 
 | Slice | Product journey | Status | Evidence document |
 | --- | --- | --- | --- |
-| 1 | Authentication, bootstrap, and Roma entry | pending | create when started |
+| 1 | Authentication, bootstrap, and Roma entry | in progress — context reset and product reconstruction | [`01__Authentication_Bootstrap_And_Roma_Entry.md`](01__Authentication_Bootstrap_And_Roma_Entry.md) |
 | 2 | Roma navigation, collections, and account surfaces | pending | create when started |
 | 3 | Builder open, editing, and ToolDrawer | pending | create when started |
 | 4 | Save and publication controls | pending | create when started |
@@ -554,7 +554,8 @@ route; never mutate storage directly as a substitute.
 | 7 | Translation Agent product experience | pending | create when started |
 | 8 | In-scope residual and final reconciliation | pending | create when started |
 
-No product correction slice is currently started.
+Only Slice 1 is active. Later slices remain unopened until Slice 1 satisfies
+the completion gate.
 
 ## 15. Slice Completion Gate
 
