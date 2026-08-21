@@ -31,6 +31,7 @@ import {
 } from './roma-upsell-dialog';
 import { RomaPageHeader } from './roma-page-header';
 import { useRomaShellActions } from './roma-shell';
+import { RomaLoadingState } from './roma-system-state';
 import { WidgetPublicationControls, WidgetPublicationState } from './widget-publication-controls';
 import {
   upsertRomaWidgetInstanceCache,
@@ -1192,6 +1193,10 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
     );
   }
 
+  const builderHeaderLoading = !openError
+    && publicationInstance === null
+    && bobSaveControlPhase === 'hidden';
+
   return (
     <>
       {openError ? (
@@ -1236,7 +1241,9 @@ export function BuilderDomain({ initialInstanceId = '', initialWidgetType = '' }
             />
           </button>
         )}
-        headingExtras={publicationInstance ? (
+        headingExtras={builderHeaderLoading ? (
+          <RomaLoadingState inline className="roma-builder__header-loading" />
+        ) : publicationInstance ? (
           <WidgetPublicationState
             instance={publicationInstance}
             dirty={bobIsDirty}

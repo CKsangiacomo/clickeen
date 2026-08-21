@@ -25,6 +25,7 @@ type RomaSaveFixture = {
   dispatchWrongOriginPhase: () => void;
   dispatchWrongSourcePhase: () => void;
   openCalls: () => number;
+  resolveBuilderOpen: () => void;
   resolveNextSave: () => void;
   saveCalls: () => SaveCall[];
 };
@@ -300,9 +301,25 @@ async function buildRomaHarness(bobOrigin: string): Promise<string> {
       const saveCalls = [];
       const pendingSaves = [];
       let builderOpenCalls = 0;
+      let resolveBuilderOpenRequest;
       let copilotAbortCount = 0;
       let copilotStartCount = 0;
       let resolvedSaveCount = 0;
+      const builderOpenRequest = new Promise((resolve) => {
+        resolveBuilderOpenRequest = resolve;
+      });
+      const builderOpenResult = {
+        displayName: 'Untitled behavior test',
+        widgetType: 'behavior-test',
+        baseLocale: 'en',
+        config: { title: 'Before' },
+        fontLibrary: { version: 1, fonts: {} },
+        copilot: null,
+        instanceId: null,
+        publishStatus: null,
+        publishedAt: null,
+        sourceUpdatedAt: null,
+      };
 
       function jsonResponse(payload, status) {
         return new Response(JSON.stringify(payload), {
@@ -318,18 +335,7 @@ async function buildRomaHarness(bobOrigin: string): Promise<string> {
             throw new Error('unexpected Builder open: ' + path);
           }
           builderOpenCalls += 1;
-          return {
-            displayName: 'Untitled behavior test',
-            widgetType: 'behavior-test',
-            baseLocale: 'en',
-            config: { title: 'Before' },
-            fontLibrary: { version: 1, fonts: {} },
-            copilot: null,
-            instanceId: null,
-            publishStatus: null,
-            publishedAt: null,
-            sourceUpdatedAt: null,
-          };
+          return builderOpenRequest;
         },
         async fetchRaw(path, init) {
           if (path === '/api/account/instances/created-instance-1/copilot') {
@@ -369,6 +375,12 @@ async function buildRomaHarness(bobOrigin: string): Promise<string> {
         copilotStarts: () => copilotStartCount,
         openCalls: () => builderOpenCalls,
         saveCalls: () => structuredClone(saveCalls),
+        resolveBuilderOpen() {
+          const resolve = resolveBuilderOpenRequest;
+          if (!resolve) throw new Error('no pending Builder open response');
+          resolveBuilderOpenRequest = null;
+          resolve(builderOpenResult);
+        },
         resolveNextSave() {
           const resolve = pendingSaves.shift();
           if (!resolve) throw new Error('no pending Save response');
@@ -522,7 +534,17 @@ async function testProductionRomaBobSaveBridge(): Promise<void> {
 
       const bobFrame = page.frameLocator('iframe[title="Bob Builder"]');
       await bobFrame.locator('[data-bob-session-probe]').waitFor({ state: 'attached' });
+      await page.waitForFunction(() => (
+        (window as RomaHarnessWindow).__romaSaveFixture.openCalls() === 1
+      ));
+      const builderHeader = page.locator('.page__header');
+      const headerLoading = builderHeader.getByRole('status', { name: 'Loading' });
+      await headerLoading.waitFor({ state: 'attached' });
+      assert.equal(await builderHeader.locator('h1').count(), 0);
+      assert.equal(await page.getByRole('button', { name: 'Save', exact: true }).count(), 0);
+      await page.evaluate(() => (window as RomaHarnessWindow).__romaSaveFixture.resolveBuilderOpen());
       await assertBorrowedSaveVisible(page);
+      assert.equal(await headerLoading.count(), 0);
       assert.equal(await bobProbeAttribute(bobFrame, 'data-instance-data'), '{"title":"Before"}');
       assert.equal(await bobProbeAttribute(bobFrame, 'data-dirty'), 'true');
       assert.equal(await bobProbeAttribute(bobFrame, 'data-base-locale'), 'en');

@@ -91,6 +91,13 @@ is `save`, `saving`, or `saved`; Roma renders that phase and sends the one
 host-Save intent but does not infer dirty state or persistence success. Compact
 Roma navigation remains in this header, while Bob's compact ToolDrawer opener
 belongs to the editor work area.
+While the Builder-open handoff resolves, the Roma header retains its final
+action-slot height and shows the systemic passive-loading Spinner in its
+heading, with the Roma-owned accessible loading name and no visible loading
+copy. Bob may render concurrently below it without changing vertical position.
+The Spinner ends when the saved publication instance or the New Widget Save
+phase supplies the real header state; a failed open stops passive loading while
+the existing Retry control owns retry feedback.
 The `/builder` landing route remains an ordinary Roma page because no editor is
 open there.
 
