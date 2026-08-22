@@ -97,7 +97,7 @@ Each product boundary has one owner.
 | Shared upsell composition and system CTA | Roma |
 | Public Widget package generation | Roma through the one generic Widget materializer |
 | Account runtime storage and public file serving | Tokyo-worker |
-| Product widget software | Git-authored Tokyo product root |
+| Product Widget software | Git-authored Widget source and its one deploy-built producer |
 | Model execution | San Francisco |
 | Product Copilot reasoning | Product Copilot Worker |
 | Translation generation | Translation Agent Worker |
@@ -218,17 +218,17 @@ commands.
 
 ## Tenet 7: A Widget Is Software That Uses Clickeen
 
-Widget software is authored in git and deployed to Tokyo R2:
+Widget software is authored in git:
 
 ```text
 tokyo/product/widgets/{widgetType}/
 ```
 
-Its deployed R2 home is:
-
-```text
-product/widgets/{widgetType}/
-```
+The one source producer emits compact Tokyo Catalog summaries plus one
+deploy-built Roma editor artifact and one deploy-built Roma materializer
+artifact per Widget. Bob receives the selected editor artifact from Roma;
+Roma server operations read the selected materializer through the same Pages
+deployment's `ASSETS` binding. Tokyo R2 is not a second Widget source.
 
 A Widget is autonomous product software built on Clickeen. It consists of:
 
@@ -342,7 +342,7 @@ hardcoded fallback reason, duplicate Save gate, or downstream Tokyo policy
 check is allowed. Missing authored Widget message copy is corrected at the
 source/build authority; product runtime does not replace it with generic text.
 
-Local implementation: all five current Widgets have exact `limits.json`
+Every current Widget has exact `limits.json`
 message bindings and `upsell/en.json`; Bob applies one generic decision before
 the attempted draft mutation; and Roma composes one Popup from the exact
 `{ capability, messageId, required }` denial, current plan, first qualifying
@@ -366,7 +366,7 @@ public package. It uses deploy-built Widget software plus Bob's one current
 browser-memory draft; it does not load an account instance's stored serving
 files, and public `runtime.js` contains no Bob editor protocol.
 
-Bob compiles widget definitions into editor controls. Roma saves account
+The one producer uses Bob's compiler to emit editor controls. Roma saves account
 instances. Tokyo-worker stores submitted source and serve-state artifacts. None of those systems
 invents, guards, validates, filters, repairs, or reinterprets Widget-specific
 semantics outside the Widget contract.
@@ -397,7 +397,6 @@ Tokyo R2 roots encode ownership and deploy boundaries:
 accounts/
 dieter/
 fonts/
-product/
 prague/
 ```
 
@@ -410,8 +409,8 @@ global Clickeen fonts available to every account; account-uploaded custom fonts
 remain account assets. Account operations must not mutate the deploy roots as
 runtime state.
 
-Root `widgets/`, `public/`, `published/`, and `l10n/` are not product storage
-boundaries.
+Root `widgets/`, `product/`, `public/`, `published/`, and `l10n/` are not
+product storage boundaries.
 
 ## Tenet 10: Translation Overlays Are Exact Files
 

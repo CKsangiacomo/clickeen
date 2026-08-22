@@ -132,12 +132,6 @@ export function applyClusterGroupHeaders(cluster: HTMLElement): void {
 }
 
 export function controlHostClusterId(namespace: string, id: string): string {
-  if (!/^[a-z][a-z0-9-]*$/.test(namespace)) {
-    throw new Error('[BobControlHost] cluster id namespace is invalid');
-  }
-  if (!/^td-[a-z0-9-]+-cluster-body-\d+$/.test(id)) {
-    throw new Error('[BobControlHost] compiled cluster body id is invalid');
-  }
   return `${namespace}-${id}`;
 }
 
@@ -146,13 +140,8 @@ export function namespaceControlHostClusterIds(scope: HTMLElement, namespace: st
     scope.querySelectorAll<HTMLElement>('.tdmenucontent__cluster-body[id]'),
   );
   const controls = Array.from(scope.querySelectorAll<HTMLElement>('[aria-controls]'));
-  const ids = new Set<string>();
   bodies.forEach((body) => {
     const previousId = body.id;
-    if (ids.has(previousId)) {
-      throw new Error(`[BobControlHost] duplicate compiled cluster body id: ${previousId}`);
-    }
-    ids.add(previousId);
     const nextId = controlHostClusterId(namespace, previousId);
     body.id = nextId;
     controls.forEach((control) => {

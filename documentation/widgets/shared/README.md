@@ -22,10 +22,9 @@ denial context outside Core; Bob and Roma consume the compiled exact contract,
 and Roma composes the system Popup. Nothing in this shared public package
 selects tiers, opens upsells, or supplies fallback copy.
 
-This is the canonical shared-service law. Big Bang, Cards, Countdown, FAQ, and
-Logo Showcase implement it locally: initial Core content is materialized in
-HTML and selected-locale content is expressed at the Edge before JavaScript.
-Their retired flat clients have no compatibility path.
+This is the canonical shared-service law. Every Widget implements it locally:
+initial Core content is materialized in HTML and selected-locale content is
+expressed at the Edge before JavaScript.
 
 Files:
 

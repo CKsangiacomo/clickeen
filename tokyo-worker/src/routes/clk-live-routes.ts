@@ -181,7 +181,6 @@ export async function tryHandleClkLiveStaticRoutes(
   const config = await readConfigDocumentByLocation({
     env,
     accountId: parsed.accountId,
-    widgetCode: '',
     instanceId: parsed.instanceId,
   });
   if (!config) return respond(notFound());
@@ -189,7 +188,6 @@ export async function tryHandleClkLiveStaticRoutes(
     env,
     accountId: parsed.accountId,
     instanceId: parsed.instanceId,
-    widgetCode: config.widgetCode,
   });
   if (publication.status !== 'published') return respond(notFound());
   const body = publicPackageFileBody(publication.publicPackage, parsed.file);
@@ -212,7 +210,6 @@ export async function tryHandleClkLiveStaticRoutes(
       const overlayLocales = await listLocaleOverlayCoordinates({
         env,
         accountId: parsed.accountId,
-        widgetCode: config.widgetCode,
         instanceId: parsed.instanceId,
       });
       const languages = [config.baseLocale, ...overlayLocales];
@@ -223,7 +220,6 @@ export async function tryHandleClkLiveStaticRoutes(
       overlay = await readLocaleOverlay({
         env,
         accountId: parsed.accountId,
-        widgetCode: config.widgetCode,
         instanceId: parsed.instanceId,
         locale,
       });
@@ -235,7 +231,6 @@ export async function tryHandleClkLiveStaticRoutes(
     const overlayLocales = await listLocaleOverlayCoordinates({
       env,
       accountId: parsed.accountId,
-      widgetCode: config.widgetCode,
       instanceId: parsed.instanceId,
     });
     const languages = [config.baseLocale, ...overlayLocales];

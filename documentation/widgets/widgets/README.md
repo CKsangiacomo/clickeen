@@ -24,12 +24,9 @@ materialize complete HTML, CSS, and JavaScript. Core JavaScript owns Widget
 behavior and is never the initial-content renderer, materializer, localizer,
 preview host, validator, or serving engine.
 
-All five built Widgets implement this topology in the deployed cloud-dev
-product. The all-Widget generator compiles each through the same Bob and Roma
-artifact path; there is no flat-source compatibility path or Widget
-discriminator. Technical deployment, shared lifecycle/materialization gates,
-and live package verification pass. Owner acceptance is not an architecture
-closure gate.
+Every built Widget implements this topology. The one producer compiles each
+through the same Bob and Roma artifact path; there is no alternate source path
+or Widget discriminator.
 
 Each Widget's internal `discovery.json` declares its system baseline, Widget
 kind, important customer-content parts, and their relationships. Users do not
@@ -38,7 +35,7 @@ SEO/GEO for Publish to express the exact declared customer-content meaning in
 the generated files. Save persists that setting but does not generate public
 files.
 
-## Entitlement Message Transition
+## Entitlement Message Contract
 
 Every Widget's canonical source includes `upsell/en.json`. Every
 customer-facing binding in `limits.json` references one exact message identity
@@ -47,24 +44,6 @@ system account policy supplies current/target plan facts and Roma supplies the
 system CTA and shared Popup composition. Core and public runtime never consume
 this UI contract.
 
-All five built Widgets include the exact message identities and matching
-English templates. Their compiled contracts are consumed by the same Bob edit
-decision and Roma Popup composition. There is no generic-copy runtime fallback.
-
-Current built widgets:
-
-```text
-big-bang
-cards
-countdown
-faq
-logoshowcase
-```
-
-| Widget | Current source status |
-| --- | --- |
-| Big Bang | Canonical Core deployed; shared architecture gates pass |
-| Cards | Canonical Core deployed; shared architecture gates pass |
-| Countdown | Canonical Core deployed; shared architecture gates pass |
-| FAQ | Canonical Core and repeated-identity localization deployed and live-verified |
-| Logo Showcase | Canonical Core deployed; shared architecture gates pass |
+Every built Widget includes the exact message identities and matching English
+templates. Its compiled contract is consumed by the same Bob edit decision and
+Roma Popup composition. There is no generic-copy runtime fallback.

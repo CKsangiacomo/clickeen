@@ -3,7 +3,6 @@ import { chromium } from '@playwright/test';
 
 const DEFAULT_ROMA_URL = 'https://roma.dev.clickeen.com';
 const DEFAULT_AUTH_STATE = 'e2e/.auth/roma-dev.json';
-const DEFAULT_INSTANCE_ID = 'QD1G068MX7';
 
 async function loadAuthState(path) {
   const raw = await fs.readFile(path, 'utf8');
@@ -97,18 +96,14 @@ async function fetchRomaJson(romaBase, cookies, path, init = {}) {
   return { response, payload };
 }
 
-async function loadInstance(romaBase, cookies) {
+async function loadInstance(romaBase, cookies, instanceId) {
   const { response, payload } = await fetchRomaJson(romaBase, cookies, '/api/account/widgets');
   if (!response.ok || !Array.isArray(payload?.instances)) {
     throw new Error(`Could not load Roma widgets: HTTP ${response.status}`);
   }
-  const configured = process.env.E2E_TRANSLATION_INSTANCE_ID || DEFAULT_INSTANCE_ID;
-  const instance =
-    payload.instances.find((entry) => entry?.instanceId === configured) ??
-    payload.instances.find((entry) => entry?.widgetType === 'big-bang') ??
-    payload.instances[0];
-  if (!instance?.instanceId) {
-    throw new Error('Roma widgets response did not include an instance id');
+  const instance = payload.instances.find((entry) => entry?.instanceId === instanceId);
+  if (!instance) {
+    throw new Error(`Roma account does not contain instance ${instanceId}`);
   }
   return instance;
 }
@@ -123,7 +118,8 @@ async function loadActiveLocaleState(romaBase, cookies) {
     typeof payload?.localePolicy?.baseLocale === 'string' && payload.localePolicy.baseLocale.trim()
       ? payload.localePolicy.baseLocale.trim()
       : null;
-  if (!baseLocale) throw new Error('Roma active locale state did not include localePolicy.baseLocale');
+  if (!baseLocale)
+    throw new Error('Roma active locale state did not include localePolicy.baseLocale');
   const translationLocales = activeLocales.filter((locale) => locale !== baseLocale);
   if (translationLocales.length === 0) {
     throw new Error('Roma active locale state has no active locale beyond base locale');
@@ -133,9 +129,17 @@ async function loadActiveLocaleState(romaBase, cookies) {
 
 function assertGenerationPayload(status, payload, expected) {
   const translation = payload?.translation;
-  const requestedLocales = assertStringArray(translation?.requestedLocales, 'translation.requestedLocales');
-  const translatedLocales = assertStringArray(translation?.translatedLocales, 'translation.translatedLocales');
-  const failedLocales = Array.isArray(translation?.failedLocales) ? translation.failedLocales : null;
+  const requestedLocales = assertStringArray(
+    translation?.requestedLocales,
+    'translation.requestedLocales',
+  );
+  const translatedLocales = assertStringArray(
+    translation?.translatedLocales,
+    'translation.translatedLocales',
+  );
+  const failedLocales = Array.isArray(translation?.failedLocales)
+    ? translation.failedLocales
+    : null;
   if (
     status < 200 ||
     status >= 300 ||
@@ -163,7 +167,9 @@ async function readTranslationInventory(romaBase, cookies, instanceId, expected)
     throw new Error(`Translation inventory read failed: HTTP ${response.status}`);
   }
   const translatedLocales = assertStringArray(
-    Array.isArray(payload?.translations) ? payload.translations.map((entry) => entry?.locale) : null,
+    Array.isArray(payload?.translations)
+      ? payload.translations.map((entry) => entry?.locale)
+      : null,
     'translations.locale',
   );
   if (!sameStringSet(translatedLocales, expected.translationLocales)) {
@@ -186,7 +192,9 @@ async function readLocaleOverlay(romaBase, cookies, instanceId, locale) {
     typeof values !== 'object' ||
     Array.isArray(values) ||
     Object.keys(values).length === 0 ||
-    Object.entries(values).some(([path, value]) => !path || typeof value !== 'string' || !value.trim())
+    Object.entries(values).some(
+      ([path, value]) => !path || typeof value !== 'string' || !value.trim(),
+    )
   ) {
     throw new Error(`Translation overlay values are invalid for ${locale}`);
   }
@@ -212,13 +220,22 @@ async function runBobGenerationSmoke(romaBase, authStatePath, instanceId, expect
     const responsePromise = page.waitForResponse(
       (response) =>
         response.request().method() === 'POST' &&
-        response.url().includes(`/api/account/instances/${encodeURIComponent(instanceId)}/translations/generate`),
+        response
+          .url()
+          .includes(
+            `/api/account/instances/${encodeURIComponent(instanceId)}/translations/generate`,
+          ),
       { timeout: 180_000 },
     );
     await generateButton.click();
-    await frame.getByRole('button', { name: 'Generating translations...' }).waitFor({ timeout: 10_000 });
+    await frame
+      .getByRole('button', { name: 'Generating translations...' })
+      .waitFor({ timeout: 10_000 });
     await frame.getByText('Translation Agent').waitFor({ timeout: 30_000 });
-    await frame.getByText(/Writing (translations|[A-Z][A-Za-z ]+)/).first().waitFor({ timeout: 30_000 });
+    await frame
+      .getByText(/Writing (translations|[A-Z][A-Za-z ]+)/)
+      .first()
+      .waitFor({ timeout: 30_000 });
     const response = await responsePromise;
     const result = await readGenerationResponse(response);
     const generatedLocales = assertGenerationPayload(result.status, result.payload, expected);
@@ -266,16 +283,37 @@ async function runBobOverlaySmoke(romaBase, authStatePath, instanceId, locale, v
 }
 
 async function main() {
-  const romaBase = (process.env.E2E_ROMA_URL || process.env.E2E_BASE_URL || DEFAULT_ROMA_URL).replace(/\/+$/, '');
+  const instanceId = process.env.E2E_TRANSLATION_INSTANCE_ID;
+  if (!instanceId || instanceId.trim() !== instanceId) {
+    throw new Error('E2E_TRANSLATION_INSTANCE_ID must be one exact instance id');
+  }
+  const romaBase = (
+    process.env.E2E_ROMA_URL ||
+    process.env.E2E_BASE_URL ||
+    DEFAULT_ROMA_URL
+  ).replace(/\/+$/, '');
   const authStatePath = process.env.E2E_AUTH_STATE || DEFAULT_AUTH_STATE;
   const state = await loadAuthState(authStatePath);
   const cookies = cookieHeader(state);
-  const instance = await loadInstance(romaBase, cookies);
+  const instance = await loadInstance(romaBase, cookies, instanceId);
   const localeState = await loadActiveLocaleState(romaBase, cookies);
-  const generation = await runBobGenerationSmoke(romaBase, authStatePath, instance.instanceId, localeState);
-  const inventoryLocales = await readTranslationInventory(romaBase, cookies, instance.instanceId, localeState);
-  const sampledLocale =
-    inventoryLocales.includes('ja') ? 'ja' : inventoryLocales.includes('fr') ? 'fr' : inventoryLocales[0];
+  const generation = await runBobGenerationSmoke(
+    romaBase,
+    authStatePath,
+    instance.instanceId,
+    localeState,
+  );
+  const inventoryLocales = await readTranslationInventory(
+    romaBase,
+    cookies,
+    instance.instanceId,
+    localeState,
+  );
+  const sampledLocale = inventoryLocales.includes('ja')
+    ? 'ja'
+    : inventoryLocales.includes('fr')
+      ? 'fr'
+      : inventoryLocales[0];
   const values = await readLocaleOverlay(romaBase, cookies, instance.instanceId, sampledLocale);
   const bob = await runBobOverlaySmoke(
     romaBase,
@@ -285,27 +323,33 @@ async function main() {
     values,
   );
 
-  console.log(JSON.stringify({
-    ok: true,
-    account: 'CLICKEEN',
-    instance: {
-      instanceId: instance.instanceId,
-      widgetType: instance.widgetType,
-      displayName: instance.displayName,
-    },
-    baseLocale: localeState.baseLocale,
-    activeLocaleCount: localeState.activeLocales.length,
-    generatedLocaleCount: generation.generatedLocales.length,
-    generatedLocales: generation.generatedLocales,
-    sampledLocale,
-    sampledOverlayValueCount: Object.keys(values).length,
-    bob: {
-      generation: {
-        builderUrl: generation.builderUrl,
+  console.log(
+    JSON.stringify(
+      {
+        ok: true,
+        account: 'CLICKEEN',
+        instance: {
+          instanceId: instance.instanceId,
+          widgetType: instance.widgetType,
+          displayName: instance.displayName,
+        },
+        baseLocale: localeState.baseLocale,
+        activeLocaleCount: localeState.activeLocales.length,
+        generatedLocaleCount: generation.generatedLocales.length,
+        generatedLocales: generation.generatedLocales,
+        sampledLocale,
+        sampledOverlayValueCount: Object.keys(values).length,
+        bob: {
+          generation: {
+            builderUrl: generation.builderUrl,
+          },
+          overlay: bob,
+        },
       },
-      overlay: bob,
-    },
-  }, null, 2));
+      null,
+      2,
+    ),
+  );
 }
 
 main().catch((error) => {

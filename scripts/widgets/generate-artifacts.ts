@@ -6,7 +6,14 @@ import {
   type WidgetEditableFieldsContract,
 } from '../../packages/ck-contracts/src/translated-value-primitives';
 import { parseLimitsSpec, type LimitsSpec } from '../../packages/ck-policy/src';
-import { compileWidgetSoftware, type WidgetSoftware } from '../../packages/widget-foundation/src';
+import {
+  COMMON_WIDGET_TYPOGRAPHY_BEHAVIOR_ROLES,
+  WIDGET_TYPOGRAPHY_SCRIPTS,
+  compileWidgetSoftware,
+  type WidgetSoftware,
+  type WidgetTypographyBehavior,
+  type WidgetTypographyRoleBehavior,
+} from '../../packages/widget-foundation/src';
 import {
   extractBody,
   extractStylesheetSources,
@@ -28,7 +35,11 @@ const widgetsRoot = path.join(repoRoot, 'tokyo/product/widgets');
 const dieterRoot = path.join(repoRoot, 'dieter');
 const dieterComponentsRoot = path.join(dieterRoot, 'components');
 const editorOutputRoot = path.join(repoRoot, 'roma/public/widget-editors');
-const materializerOutputRoot = path.join(repoRoot, 'roma/generated/widgets');
+const materializerOutputRoot = path.join(repoRoot, 'roma/public/widget-materializers');
+const definitionOutputPath = path.join(
+  repoRoot,
+  'tokyo-worker/src/generated/widget-definition-sources.ts',
+);
 const checkOnly = process.argv.includes('--check');
 const requestedWidgetType = (() => {
   const index = process.argv.indexOf('--widget');
@@ -45,6 +56,12 @@ type MaterializerArtifact = {
   editableFields: WidgetEditableFieldsContract;
   coreDefaults: Record<string, unknown>;
   widgetSoftware: WidgetSoftware;
+};
+
+type CompactWidgetDefinition = {
+  widgetType: string;
+  displayName: string;
+  description: string;
 };
 
 function discoverWidgetTypes(): string[] {
@@ -194,11 +211,7 @@ function readHtmlAttribute(openingTag: string, attrName: string): string {
   return String(match?.[1] ?? match?.[2] ?? match?.[3] ?? '').trim();
 }
 
-function assertWidgetShellContract(
-  widgetType: string,
-  widgetHtml: string,
-  coreCss: string,
-): void {
+function assertWidgetShellContract(widgetType: string, widgetHtml: string, coreCss: string): void {
   const shellTags = [...widgetHtml.matchAll(/<[a-z][\w:-]*(?:\s[^<>]*)?>/gi)]
     .map((match) => match[0])
     .filter((tag) => readHtmlAttribute(tag, 'data-ck-widget') === widgetType)
@@ -300,6 +313,90 @@ function readCssEntry(relativePath: string): string {
   );
 }
 
+function requireExactSourceKeys(
+  source: Record<string, unknown>,
+  expected: readonly string[],
+  context: string,
+): void {
+  const actual = Object.keys(source).sort();
+  const exact = [...expected].sort();
+  if (actual.length !== exact.length || actual.some((key, index) => key !== exact[index])) {
+    throw new Error(
+      `[generate-widget-artifacts] ${context} keys must be exactly ${exact.join(', ')}`,
+    );
+  }
+}
+
+function readWidgetTypographyBehavior(args: {
+  widgetType: string;
+  source: unknown;
+  compiledDefaults: Record<string, unknown>;
+}): WidgetTypographyBehavior {
+  const sourceRoles = (() => {
+    if (args.source === undefined) return {};
+    const source = readSourceRecord(args.source, `${args.widgetType} typographyBehavior`);
+    requireExactSourceKeys(source, ['roles'], `${args.widgetType} typographyBehavior`);
+    return readSourceRecord(source.roles, `${args.widgetType} typographyBehavior.roles`);
+  })();
+  const commonRoleKeys = new Set(Object.keys(COMMON_WIDGET_TYPOGRAPHY_BEHAVIOR_ROLES));
+  const typography = readSourceRecord(
+    args.compiledDefaults.typography,
+    `${args.widgetType} composed defaults.typography`,
+  );
+  const composedRoles = readSourceRecord(
+    typography.roles,
+    `${args.widgetType} composed defaults.typography.roles`,
+  );
+  const expectedUniqueRoleKeys = Object.keys(composedRoles)
+    .filter((roleKey) => !commonRoleKeys.has(roleKey))
+    .sort();
+  requireExactSourceKeys(
+    sourceRoles,
+    expectedUniqueRoleKeys,
+    `${args.widgetType} typographyBehavior.roles`,
+  );
+
+  const uniqueRoles = Object.fromEntries(
+    Object.entries(sourceRoles).map(([roleKey, value]) => {
+      const context = `${args.widgetType} typographyBehavior.roles.${roleKey}`;
+      const role = readSourceRecord(value, context);
+      requireExactSourceKeys(role, ['fluidSize', 'normalLineHeight'], context);
+      const fluidSize = role.fluidSize;
+      if (fluidSize !== 'min-plus-growth' && fluidSize !== 'proportional') {
+        throw new Error(
+          `[generate-widget-artifacts] ${context}.fluidSize must be min-plus-growth or proportional`,
+        );
+      }
+      const normalLineHeight = readSourceRecord(
+        role.normalLineHeight,
+        `${context}.normalLineHeight`,
+      );
+      requireExactSourceKeys(
+        normalLineHeight,
+        WIDGET_TYPOGRAPHY_SCRIPTS,
+        `${context}.normalLineHeight`,
+      );
+      const completeLineHeight = Object.fromEntries(
+        WIDGET_TYPOGRAPHY_SCRIPTS.map((script) => [
+          script,
+          readSourceString(normalLineHeight[script], `${context}.normalLineHeight.${script}`),
+        ]),
+      ) as WidgetTypographyRoleBehavior['normalLineHeight'];
+      return [roleKey, { fluidSize, normalLineHeight: completeLineHeight }];
+    }),
+  ) as WidgetTypographyBehavior['roles'];
+  const roles: WidgetTypographyBehavior['roles'] = {
+    ...COMMON_WIDGET_TYPOGRAPHY_BEHAVIOR_ROLES,
+    ...uniqueRoles,
+  };
+  requireExactSourceKeys(
+    roles,
+    Object.keys(composedRoles),
+    `${args.widgetType} emitted typographyBehavior.roles`,
+  );
+  return { roles };
+}
+
 const loadLocalStencil: ComponentStencilLoader = async (type): Promise<ComponentStencil> => {
   const component = type.trim();
   const componentRoot = path.join(dieterComponentsRoot, component);
@@ -314,7 +411,10 @@ const loadLocalStencil: ComponentStencilLoader = async (type): Promise<Component
   };
 };
 
-function buildWidgetSoftware(widgetType: string): WidgetSoftware {
+function buildWidgetSoftware(
+  widgetType: string,
+  typographyBehavior: WidgetTypographyBehavior,
+): WidgetSoftware {
   const widgetDirectory = `tokyo/product/widgets/${widgetType}`;
   const widgetHtml = readText(`${widgetDirectory}/widget.html`);
   const coreHtml = readText(`${widgetDirectory}/core/core.html`);
@@ -336,34 +436,30 @@ function buildWidgetSoftware(widgetType: string): WidgetSoftware {
     const source = readText(`tokyo/${key}`);
     scripts.push({ path: src, source });
   }
-  return compileWidgetSoftware({ widgetHtml, coreHtml, coreCss, coreJs, styles, scripts });
+  return compileWidgetSoftware({ widgetHtml, coreHtml, typographyBehavior, styles, scripts });
 }
 
-function writeOrCheck(filePath: string, source: string): void {
-  const current = fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : '';
-  if (checkOnly) {
-    if (current !== source) {
-      throw new Error(
-        `[generate-widget-artifacts] ${path.relative(repoRoot, filePath)} is out of date`,
-      );
-    }
-    return;
-  }
+function writeGenerated(filePath: string, source: string): void {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, source);
 }
 
+function assertTrackedGeneratedSource(filePath: string, source: string): void {
+  const current = fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : '';
+  if (current !== source) {
+    throw new Error(
+      `[generate-widget-artifacts] ${path.relative(repoRoot, filePath)} is out of date`,
+    );
+  }
+}
+
 function generatedMaterializerIndex(widgetTypes: string[]): string {
-  const imports = widgetTypes.map(
-    (widgetType, index) => `import artifact${index} from './widgets/${widgetType}.json';`,
-  );
   const entries = widgetTypes
-    .map((widgetType, index) => `  '${widgetType}': artifact${index},`)
+    .map((widgetType) => `  ['${widgetType}', '/widget-materializers/${widgetType}.json'],`)
     .join('\n');
   return `// Generated by scripts/widgets/generate-artifacts.ts. Do not edit manually.
 import type { CompiledWidget, WidgetDiscoveryContract } from '../../bob/lib/types';
-
-${imports.join('\n')}
+import { getCloudflareRequestContext } from '../lib/cloudflare-request-context';
 
 export type WidgetMaterializerArtifact = {
   widgetname: string;
@@ -374,29 +470,71 @@ export type WidgetMaterializerArtifact = {
   widgetSoftware: CompiledWidget['widgetSoftware'];
 };
 
-const WIDGET_MATERIALIZER_ARTIFACTS = {
-${entries}
-} as unknown as Record<string, WidgetMaterializerArtifact>;
+type RomaStaticAssetsBinding = {
+  fetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response>;
+};
 
-export function readWidgetMaterializerArtifact(widgetType: string): WidgetMaterializerArtifact | null {
-  return WIDGET_MATERIALIZER_ARTIFACTS[widgetType] ?? null;
+const WIDGET_MATERIALIZER_ARTIFACT_PATHS = new Map<string, string>([
+${entries}
+]);
+
+export async function readWidgetMaterializerArtifact(widgetType: string): Promise<WidgetMaterializerArtifact | null> {
+  const path = WIDGET_MATERIALIZER_ARTIFACT_PATHS.get(widgetType);
+  if (!path) return null;
+  const context = getCloudflareRequestContext<{ env: { ASSETS: RomaStaticAssetsBinding } }>();
+  const response = await context.env.ASSETS.fetch(new URL(path, 'https://roma-static.internal'));
+  if (!response.ok) {
+    throw new Error(\`roma.widgetMaterializer.assetUnavailable:\${path}:\${response.status}\`);
+  }
+  return response.json() as Promise<WidgetMaterializerArtifact>;
 }
 `;
 }
 
-async function buildArtifacts(widgetType: string): Promise<{
+function generatedWidgetDefinitions(definitions: CompactWidgetDefinition[]): string {
+  return `// Generated by scripts/widgets/generate-artifacts.ts. Do not edit manually.
+// This compact source is build-packaged Tokyo Widget catalog truth; it is not product state.
+
+export type WidgetDefinition = {
+  widgetType: string;
+  displayName: string;
+  description: string;
+};
+
+export const WIDGET_DEFINITIONS = ${JSON.stringify(definitions, null, 2)} as const satisfies readonly WidgetDefinition[];
+`;
+}
+
+function readCompactWidgetDefinition(widgetType: string, spec: RawWidget): CompactWidgetDefinition {
+  if (
+    typeof spec.displayName !== 'string' ||
+    typeof (spec as { description?: unknown }).description !== 'string'
+  ) {
+    throw new Error(
+      `[generate-widget-artifacts] ${widgetType} spec.json must declare string displayName and description`,
+    );
+  }
+  return {
+    widgetType,
+    displayName: spec.displayName,
+    description: (spec as { description: string }).description,
+  };
+}
+
+async function buildArtifacts(
+  widgetType: string,
+  spec: RawWidget,
+): Promise<{
   editor: CompiledWidget;
   materializer: MaterializerArtifact;
 }> {
   const widgetDirectory = `tokyo/product/widgets/${widgetType}`;
-  const specSource = readText(`${widgetDirectory}/spec.json`);
   const discoverySource = readText(`${widgetDirectory}/discovery.json`);
   const editableFieldsSource = readText(`${widgetDirectory}/editable-fields.json`);
   const limitsSource = readText(`${widgetDirectory}/limits.json`);
   const upsellSource = readText(`${widgetDirectory}/upsell/en.json`);
   const tooldrawerLabelsRelativePath = 'labels/en.json';
   const tooldrawerLabelsSource = readText(`${widgetDirectory}/${tooldrawerLabelsRelativePath}`);
-  const spec = JSON.parse(specSource) as RawWidget;
   const tooldrawerLabels = JSON.parse(tooldrawerLabelsSource) as unknown;
   const resolved = resolveWidgetTooldrawerLabels(spec, tooldrawerLabels);
   const resolvedWidget = resolved.widget;
@@ -411,9 +549,23 @@ async function buildArtifacts(widgetType: string): Promise<{
     loadComponentStencil: loadLocalStencil,
     tokyoBaseUrl: '',
   });
-  const widgetSoftware = buildWidgetSoftware(widgetType);
+  const widgetSoftware = buildWidgetSoftware(
+    widgetType,
+    readWidgetTypographyBehavior({
+      widgetType,
+      source: spec.typographyBehavior,
+      compiledDefaults: compiled.defaults,
+    }),
+  );
   return {
-    editor: { ...compiled, limits, editableFields, upsell, widgetSoftware },
+    editor: {
+      ...compiled,
+      coreDefaults: resolvedWidget.defaults,
+      limits,
+      editableFields,
+      upsell,
+      widgetSoftware,
+    },
     materializer: {
       widgetname: compiled.widgetname,
       displayName: compiled.displayName,
@@ -431,25 +583,39 @@ async function main(): Promise<void> {
     throw new Error(`[generate-widget-artifacts] unknown Widget type ${requestedWidgetType}`);
   }
   const widgetTypes = requestedWidgetType ? [requestedWidgetType] : allWidgetTypes;
+  const specs = new Map(
+    allWidgetTypes.map((widgetType) => [
+      widgetType,
+      JSON.parse(readText(`tokyo/product/widgets/${widgetType}/spec.json`)) as RawWidget,
+    ]),
+  );
+  const definitions = allWidgetTypes.map((widgetType) =>
+    readCompactWidgetDefinition(widgetType, specs.get(widgetType)!),
+  );
   if (!checkOnly && !requestedWidgetType) {
     fs.rmSync(editorOutputRoot, { recursive: true, force: true });
     fs.rmSync(materializerOutputRoot, { recursive: true, force: true });
   }
   for (const widgetType of widgetTypes) {
-    const artifacts = await buildArtifacts(widgetType);
-    writeOrCheck(
-      path.join(editorOutputRoot, `${widgetType}.json`),
-      `${JSON.stringify(artifacts.editor)}\n`,
-    );
-    writeOrCheck(
-      path.join(materializerOutputRoot, `${widgetType}.json`),
-      `${JSON.stringify(artifacts.materializer)}\n`,
-    );
+    const artifacts = await buildArtifacts(widgetType, specs.get(widgetType)!);
+    const editorSource = `${JSON.stringify(artifacts.editor)}\n`;
+    const materializerSource = `${JSON.stringify(artifacts.materializer)}\n`;
+    if (!checkOnly) {
+      writeGenerated(path.join(editorOutputRoot, `${widgetType}.json`), editorSource);
+      writeGenerated(path.join(materializerOutputRoot, `${widgetType}.json`), materializerSource);
+    }
   }
-  writeOrCheck(
-    path.join(repoRoot, 'roma/generated/widget-materializer-artifacts.ts'),
-    generatedMaterializerIndex(allWidgetTypes),
-  );
+  const materializerIndexSource = generatedMaterializerIndex(allWidgetTypes);
+  const definitionSource = generatedWidgetDefinitions(definitions);
+  if (checkOnly) {
+    assertTrackedGeneratedSource(definitionOutputPath, definitionSource);
+  } else {
+    writeGenerated(
+      path.join(repoRoot, 'roma/generated/widget-materializer-artifacts.ts'),
+      materializerIndexSource,
+    );
+    writeGenerated(definitionOutputPath, definitionSource);
+  }
   console.log(
     `[generate-widget-artifacts] ${checkOnly ? 'verified' : 'wrote'} ${widgetTypes.length} widget artifact pairs`,
   );

@@ -5,6 +5,7 @@ import {
   saveAccountWidgetDefaultsInTokyo,
   type AccountWidgetDefaultsDocument,
 } from '@roma/lib/account-widget-defaults-direct';
+import { listTokyoWidgetDefinitions } from '@roma/lib/account-instance-direct';
 import { validateAccountWidgetDefaultsTypography } from '@roma/lib/account-widget-defaults-contract';
 import { readJsonPayloadOrValidation } from '@roma/lib/route-helpers';
 import {
@@ -37,11 +38,18 @@ export async function GET(request: NextRequest) {
   if (!current.ok) return current.response;
 
   const accountId = current.value.authzPayload.accountPublicId;
-  const result = await loadAccountWidgetDefaultsInTokyo({
-    accountId,
-    accountCapsule: current.value.authzToken,
-    requestId: current.value.requestId,
-  });
+  const [result, widgetDefinitions] = await Promise.all([
+    loadAccountWidgetDefaultsInTokyo({
+      accountId,
+      accountCapsule: current.value.authzToken,
+      requestId: current.value.requestId,
+    }),
+    listTokyoWidgetDefinitions({
+      accountId,
+      accountCapsule: current.value.authzToken,
+      requestId: current.value.requestId,
+    }),
+  ]);
   if (!result.ok) {
     return withSession(
       request,
@@ -58,8 +66,31 @@ export async function GET(request: NextRequest) {
       current.value.setCookies,
     );
   }
+  if (!widgetDefinitions.ok) {
+    return withSession(
+      request,
+      NextResponse.json(
+        {
+          error: {
+            kind: routeKind(widgetDefinitions.status),
+            reasonKey: widgetDefinitions.error.reasonKey,
+            detail: widgetDefinitions.error.detail,
+          },
+        },
+        { status: widgetDefinitions.status },
+      ),
+      current.value.setCookies,
+    );
+  }
 
-  return withSession(request, NextResponse.json(result.value), current.value.setCookies);
+  return withSession(
+    request,
+    NextResponse.json({
+      ...result.value,
+      widgetDefinitions: widgetDefinitions.value.widgetDefinitions,
+    }),
+    current.value.setCookies,
+  );
 }
 
 export async function PUT(request: NextRequest) {

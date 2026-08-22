@@ -1,6 +1,6 @@
 # FAQ Widget
 
-STATUS: CANONICAL CORE AND REPEATED-IDENTITY LOCALIZATION DEPLOYED AND LIVE-VERIFIED
+STATUS: CURRENT SYSTEM OPERATOR SPEC
 
 ## Purpose
 
@@ -28,8 +28,7 @@ tokyo/product/widgets/faq/
     core.js
 ```
 
-The deleted `widget.css` and `widget.client.js` have no alias or compatibility
-wrapper.
+No flat `widget.css`/`widget.client.js` source or compatibility wrapper exists.
 
 ## File Ownership
 
@@ -70,9 +69,10 @@ faq.layout
 faq.sections
 ```
 
-Each section and question carries its stable saved `id`. The Widget compiler
-owns default identity production. Bob, Roma, materialization, and Tokyo-worker
-trust the resulting instance truth rather than repairing or revalidating it.
+Each section and question carries its stable saved `id`. Object Manager and
+Repeater assign a new id only when the user adds a declared item. Bob, Roma,
+materialization, and Tokyo-worker trust the resulting instance truth rather
+than repairing or revalidating it.
 
 ## Authored HTML Contract
 
@@ -120,6 +120,10 @@ FAQ retains the canonical ToolDrawer sequence:
 4. Typography — Section title, Question, and Answer roles after shared roles.
 5. Settings — FAQ accordion/deep-link behavior plus shared locale, branding,
    social share, and **Enable SEO/GEO** controls.
+
+FAQ declares the exact generic fluid-size and normal-line-height behavior for
+Section title, Question, and Answer in `typographyBehavior`. The shared renderer
+consumes that emitted behavior without an FAQ or role-name branch.
 
 Only shared Header and the primary FAQ Content section start open.
 
@@ -195,18 +199,16 @@ an accordion toggle.
 ## Verification
 
 ```bash
+# Intentional derived-output write:
 node scripts/widgets/generate-artifacts.mjs --widget faq
+# Non-writing verification:
 node scripts/widgets/generate-artifacts.mjs --widget faq --check
 git diff --check -- tokyo/product/widgets/faq documentation/widgets/widgets/faq.md
 ```
 
 Inspect the focused generated editor/materializer artifacts and materialized
-FAQ HTML/CSS/JavaScript. The canonical Core and Builder-open path are deployed.
-The generic literal-identity producer correction is deployed from `72e75000`.
-Roma Republished `VUWUJ7OQ0Y` without changing saved source or any of its 28
-overlays; unique base and French public responses now prove literal repeated
-coordinates plus translated scalar title, repeated question, and repeated
-answer before JavaScript.
+FAQ HTML/CSS/JavaScript. Repeated content uses the producer's literal stable
+identity coordinates; no decoder, alias, or compatibility path exists.
 
 ## Hard Stops
 

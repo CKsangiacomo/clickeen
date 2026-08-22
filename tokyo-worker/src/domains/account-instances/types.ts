@@ -1,7 +1,6 @@
 export type AccountInstanceDocument = {
   id: string;
   accountId: string;
-  widgetCode: string;
   widgetType: string;
   displayName: string | null;
   config: Record<string, unknown>;
@@ -15,7 +14,6 @@ export type AccountInstanceDocument = {
 export type AccountInstanceConfigDocument = {
   id: string;
   accountId: string;
-  widgetCode: string;
   widgetType: string;
   displayName: string | null;
   config: Record<string, unknown>;
@@ -31,7 +29,6 @@ export type AccountInstanceSourceStorageDocument = AccountInstanceConfigDocument
 export type AccountInstanceSummary = {
   accountId: string;
   instanceId: string;
-  widgetCode: string;
   widgetType: string;
   displayName: string;
   publishStatus: InstanceServeState;
@@ -47,7 +44,6 @@ export type LocaleOverlayDocument = {
 export type AccountInstanceContentDocument = {
   id: string;
   accountId: string;
-  widgetType: string;
   fields: Record<
     string,
     {
@@ -63,7 +59,6 @@ export type AccountInstanceContentDocument = {
 export type AccountInstanceSourcePointer = {
   id: string;
   accountId: string;
-  widgetCode: string;
   widgetType: string;
   displayName: string | null;
   baseLocale: string;

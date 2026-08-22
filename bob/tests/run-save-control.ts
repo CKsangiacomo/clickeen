@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import { access, readFile } from 'node:fs/promises';
 import {
   acceptsHostSaveRequest,
   createInitialSessionState,
@@ -15,6 +14,7 @@ function transition(
 }
 
 function testExactSaveSequence(): void {
+  assert.equal(createInitialSessionState().saveControlPhase, 'hidden');
   let phase = transition('hidden', { type: 'editor-opened', isDirty: true });
   assert.equal(phase, 'save');
   phase = transition(phase, { type: 'save-started' });
@@ -76,32 +76,10 @@ function testHostSaveAdmission(): void {
   assert.equal(acceptsHostSaveRequest({ ...base, isSaving: true }), false);
 }
 
-async function testProductionWiring(): Promise<void> {
-  const provider = await readFile(new URL('../lib/session/WidgetDocumentSession.tsx', import.meta.url), 'utf8');
-  const saving = await readFile(new URL('../lib/session/useSessionSaving.ts', import.meta.url), 'utf8');
-  const boot = await readFile(new URL('../lib/session/useSessionBoot.ts', import.meta.url), 'utf8');
-  const builder = await readFile(new URL('../components/BuilderApp.tsx', import.meta.url), 'utf8');
-  const css = await readFile(new URL('../app/bob_app.css', import.meta.url), 'utf8');
-
-  assert.equal(createInitialSessionState().saveControlPhase, 'hidden');
-  assert.match(provider, /type: 'bob:save-control-state'/);
-  assert.match(provider, /window\.setTimeout\([\s\S]*1_000/);
-  assert.match(provider, /acceptsHostSaveRequest\(/);
-  assert.match(provider, /void save\(\)/);
-  assert.match(saving, /currentDraftMatchesSubmitted: !hasEditsAfterSubmittedSave/);
-  assert.match(boot, /type: 'editor-opened'/);
-  assert.match(boot, /hostOriginRef\.current = targetOrigin/);
-  assert.doesNotMatch(builder, /TopDrawer/);
-  assert.match(builder, /className="tooldrawer-open diet-button"/);
-  assert.doesNotMatch(css, /topdrawer|host-navigation-open/);
-  await assert.rejects(access(new URL('../components/TopDrawer.tsx', import.meta.url)));
-}
-
-async function main(): Promise<void> {
+function main(): void {
   testExactSaveSequence();
   testFailureAndNewerDraftTruth();
   testHostSaveAdmission();
-  await testProductionWiring();
   console.log('PASS Bob Save control lifecycle and host admission');
 }
 

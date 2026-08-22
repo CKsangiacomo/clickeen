@@ -2,6 +2,42 @@
   "widgetname": "countdown",
   "displayName": "Countdown",
   "description": "",
+  "typographyBehavior": {
+    "roles": {
+      "label": {
+        "fluidSize": "proportional",
+        "normalLineHeight": {
+          "latin": "var(--lh-tight)",
+          "japanese": "var(--lh-tight)",
+          "korean": "var(--lh-tight)",
+          "zhHans": "var(--lh-tight)",
+          "zhHant": "var(--lh-tight)",
+          "arabic": "var(--lh-tight)",
+          "hebrew": "var(--lh-tight)",
+          "thai": "var(--lh-tight)",
+          "devanagari": "var(--lh-tight)",
+          "bengali": "var(--lh-tight)",
+          "cyrillic": "var(--lh-tight)"
+        }
+      },
+      "timer": {
+        "fluidSize": "min-plus-growth",
+        "normalLineHeight": {
+          "latin": "1",
+          "japanese": "1",
+          "korean": "1",
+          "zhHans": "1",
+          "zhHant": "1",
+          "arabic": "1",
+          "hebrew": "1",
+          "thai": "1",
+          "devanagari": "1",
+          "bengali": "1",
+          "cyrillic": "1"
+        }
+      }
+    }
+  },
   "defaults": {
     "typography": {
       "roles": {

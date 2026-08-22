@@ -13,7 +13,6 @@ import {
 import { buildEditorHtmlLines } from './compiler/editor-contract';
 import { buildContext, renderComponentStencil } from './compiler/stencils';
 import type { ComponentStencilLoader } from './compiler/stencils';
-import { normalizeWidgetNormalizationSpec } from './compiler/modules/normalization';
 import { buildHeaderPresets } from './compiler/modules/header';
 import { validateShowIfExpression } from '../components/td-menu-content/showIf';
 import type { ResolvedWidgetTooldrawerLabels } from './compiler/tooldrawer-labels';
@@ -202,8 +201,6 @@ export async function compileWidgetServer(
   if (!displayName) {
     throw new Error(`[BobCompiler] ${widgetname} widget JSON missing displayName`);
   }
-  const normalization = normalizeWidgetNormalizationSpec(resolvedWidget.normalization);
-
   const defaults = composeWidgetFactoryDefaults(coreDefaults as Record<string, unknown>);
 
   const tokyoBase = sources.tokyoBaseUrl ?? '';
@@ -309,6 +306,5 @@ export async function compileWidgetServer(
     panels: renderedPanels,
     controls,
     ...(presets ? { presets } : {}),
-    ...(normalization ? { normalization } : {}),
   };
 }

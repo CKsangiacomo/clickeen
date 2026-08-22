@@ -1,6 +1,6 @@
 # Logo Showcase Widget
 
-STATUS: CANONICAL CORE DEPLOYED — SHARED ARCHITECTURE GATES PASS
+STATUS: CURRENT SYSTEM OPERATOR SPEC
 
 ## Purpose
 
@@ -20,10 +20,6 @@ software. The materializer writes every saved strip and logo in its current
 order before JavaScript runs. Core JavaScript does not reconstruct saved state,
 localize content, invoke shared utilities, or receive Bob state updates. There
 is no flat-source compatibility path or Widget-specific shared-service branch.
-
-The source, generated artifacts, and cloud-dev deploy proof are complete. The
-agent-executed shared lifecycle, materialization, and serving gates pass. A
-fresh per-Widget Republish is not a separate architecture-closure requirement.
 
 ## Source
 
@@ -85,10 +81,9 @@ logoshowcase.appearance -> logo look, opacity, item background, cardwrapper
 logoshowcase.behavior.randomOrder -> deterministic shuffle
 ```
 
-`spec.json` declares stable strip/logo identity coordinates through the
-currently named `normalization.idRules` compiler field. This is structural
-source metadata for the authoring boundary; it does not authorize downstream
-repair or revalidation of accepted Widget state.
+Object Manager and Repeater assign stable strip/logo ids only when the user
+adds a declared item. Bob, Roma, materialization, and Tokyo-worker then trust
+those exact ids without a second normalization or repair path.
 
 ## Editable Fields And Stable Items
 
@@ -187,7 +182,7 @@ body. On the next initialization it cancels any prior pager animation frame,
 autoplay interval, and ResizeObservers before binding the replacement body.
 Removed-root event listeners require no separate lifecycle machinery.
 
-Current behavior boundaries preserved by the migration:
+Current behavior boundaries:
 
 - a final partial Paged Carousel page follows the existing page-index/step
   calculation;
@@ -204,7 +199,10 @@ generic shared services. Core neither invokes nor revalidates them.
 ## Verification
 
 ```bash
-pnpm validate:widgets
+# Intentional derived-output write:
+node scripts/widgets/generate-artifacts.mjs --widget logoshowcase
+# Non-writing verification:
+node scripts/widgets/generate-artifacts.mjs --widget logoshowcase --check
 pnpm --filter @clickeen/widget-foundation typecheck
 pnpm --filter @clickeen/bob test:editor-contract
 node --check tokyo/product/widgets/logoshowcase/core/core.js

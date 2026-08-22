@@ -54,7 +54,6 @@ function toAccountInstanceSourcePointer(args: {
   return {
     id: configDoc.id,
     accountId: configDoc.accountId,
-    widgetCode: configDoc.widgetCode,
     widgetType: configDoc.widgetType,
     displayName: configDoc.displayName,
     baseLocale: configDoc.baseLocale,
@@ -68,18 +67,16 @@ function toAccountInstanceSourcePointer(args: {
 export async function readConfigDocumentByLocation(args: {
   env: Env;
   accountId: string;
-  widgetCode: string;
   instanceId: string;
 }): Promise<AccountInstanceConfigDocument | null> {
   const source = await loadJson<AccountInstanceSourceStorageDocument>(
     args.env,
-    accountInstanceSourceKey(args.accountId, args.widgetCode, args.instanceId),
+    accountInstanceSourceKey(args.accountId, args.instanceId),
   );
   if (!source) return null;
   return {
     id: source.id,
     accountId: source.accountId,
-    widgetCode: source.widgetCode,
     widgetType: source.widgetType,
     displayName: source.displayName,
     config: source.config,
@@ -92,12 +89,11 @@ export async function readConfigDocumentByLocation(args: {
 async function readSourceStorageDocument(args: {
   env: Env;
   accountId: string;
-  widgetCode: string;
   instanceId: string;
 }): Promise<AccountInstanceSourceStorageDocument | null> {
   return loadJson<AccountInstanceSourceStorageDocument>(
     args.env,
-    accountInstanceSourceKey(args.accountId, args.widgetCode, args.instanceId),
+    accountInstanceSourceKey(args.accountId, args.instanceId),
   );
 }
 
@@ -105,7 +101,6 @@ export async function writeAccountInstanceSource(args: {
   env: Env;
   instanceId: string;
   accountId: string;
-  widgetCode: string;
   widgetType: string;
   config: Record<string, unknown>;
   content: AccountInstanceContentDocument;
@@ -117,7 +112,7 @@ export async function writeAccountInstanceSource(args: {
     serveState: InstanceServeStateSummary;
   };
 }): Promise<{ pointer: AccountInstanceSourcePointer }> {
-  const { instanceId, accountId, widgetCode, widgetType } = args;
+  const { instanceId, accountId, widgetType } = args;
 
   const now = args.existing
     ? nextAccountInstanceTimestamp(
@@ -128,7 +123,6 @@ export async function writeAccountInstanceSource(args: {
   const sourceDoc: AccountInstanceSourceStorageDocument = {
     id: instanceId,
     accountId,
-    widgetCode,
     widgetType,
     displayName: args.displayName,
     config: args.config,
@@ -142,13 +136,12 @@ export async function writeAccountInstanceSource(args: {
       env: args.env,
       accountId,
       instanceId,
-      widgetCode,
       now,
     });
   }
   await putJson(
     args.env,
-    accountInstanceSourceKey(accountId, widgetCode, instanceId),
+    accountInstanceSourceKey(accountId, instanceId),
     sourceDoc,
   );
   return {
@@ -168,7 +161,6 @@ export async function readAccountInstanceSourcePointer(args: {
   const sourceDoc = await readSourceStorageDocument({
     env: args.env,
     accountId: args.accountId,
-    widgetCode: '',
     instanceId: args.instanceId,
   });
   if (!sourceDoc) {
@@ -178,7 +170,6 @@ export async function readAccountInstanceSourcePointer(args: {
     env: args.env,
     accountId: args.accountId,
     instanceId: args.instanceId,
-    widgetCode: sourceDoc.widgetCode,
   });
   return {
     ok: true,
@@ -198,7 +189,6 @@ export async function readAccountInstanceDocument(args: {
   const sourceDoc = await readSourceStorageDocument({
     env: args.env,
     accountId: args.accountId,
-    widgetCode: '',
     instanceId: args.instanceId,
   });
   if (!sourceDoc) {
@@ -208,14 +198,12 @@ export async function readAccountInstanceDocument(args: {
     env: args.env,
     accountId: args.accountId,
     instanceId: args.instanceId,
-    widgetCode: sourceDoc.widgetCode,
   });
   return {
     ok: true,
     value: {
       id: sourceDoc.id,
       accountId: sourceDoc.accountId,
-      widgetCode: sourceDoc.widgetCode,
       widgetType: sourceDoc.widgetType,
       displayName: sourceDoc.displayName,
       config: sourceDoc.config,
@@ -238,7 +226,6 @@ export async function readAccountInstanceContentDocument(args: {
   const sourceDoc = await readSourceStorageDocument({
     env: args.env,
     accountId: args.accountId,
-    widgetCode: '',
     instanceId: args.instanceId,
   });
   if (!sourceDoc) {
@@ -273,6 +260,34 @@ export async function listAccountInstanceIds(args: {
   return [...instanceIds].sort();
 }
 
+export async function readAccountInstanceSourcePointers(args: {
+  env: Env;
+  accountId: string;
+  instanceIds: readonly string[];
+}): Promise<
+  { ok: true; value: AccountInstanceSourcePointer[] } | AccountInstanceSourceReadFailure
+> {
+  const results = await Promise.all(
+    args.instanceIds.map((instanceId) =>
+      readAccountInstanceSourcePointer({
+        env: args.env,
+        accountId: args.accountId,
+        instanceId,
+      }),
+    ),
+  );
+  const pointers: AccountInstanceSourcePointer[] = [];
+  for (const result of results) {
+    if (!result.ok) return result;
+    pointers.push(result.value);
+  }
+  pointers.sort((left, right) => {
+    const updatedAtOrder = right.updatedAt.localeCompare(left.updatedAt);
+    return updatedAtOrder || left.id.localeCompare(right.id);
+  });
+  return { ok: true, value: pointers };
+}
+
 export async function renameAccountInstanceDisplay(args: {
   env: Env;
   accountId: string;
@@ -282,24 +297,33 @@ export async function renameAccountInstanceDisplay(args: {
   const sourceDoc = await readSourceStorageDocument({
     env: args.env,
     accountId: args.accountId,
-    widgetCode: '',
     instanceId: args.instanceId,
   });
   if (!sourceDoc) throw new Error('coreui.errors.instance.notFound');
   const serveState = await readInstanceServeStateRecord({
     env: args.env,
     accountId: args.accountId,
-    widgetCode: sourceDoc.widgetCode,
     instanceId: args.instanceId,
   });
   const updatedAt = nextAccountInstanceTimestamp(sourceDoc.updatedAt, serveState.publishedAt);
   await putJson(
     args.env,
-    accountInstanceSourceKey(args.accountId, sourceDoc.widgetCode, args.instanceId),
+    accountInstanceSourceKey(args.accountId, args.instanceId),
     {
-      ...sourceDoc,
+      id: sourceDoc.id,
+      accountId: sourceDoc.accountId,
+      widgetType: sourceDoc.widgetType,
       displayName: args.displayName,
+      config: sourceDoc.config,
+      baseLocale: sourceDoc.baseLocale,
+      createdAt: sourceDoc.createdAt,
       updatedAt,
+      content: {
+        id: sourceDoc.content.id,
+        accountId: sourceDoc.content.accountId,
+        fields: sourceDoc.content.fields,
+        updatedAt: sourceDoc.content.updatedAt,
+      },
     } satisfies AccountInstanceSourceStorageDocument,
   );
   return { instanceId: args.instanceId, displayName: args.displayName, updatedAt };
@@ -313,7 +337,6 @@ export async function readAccountInstanceSource(args: {
   const sourceDoc = await readSourceStorageDocument({
     env: args.env,
     accountId: args.accountId,
-    widgetCode: '',
     instanceId: args.instanceId,
   });
   if (!sourceDoc) {
@@ -323,7 +346,6 @@ export async function readAccountInstanceSource(args: {
     env: args.env,
     accountId: args.accountId,
     instanceId: args.instanceId,
-    widgetCode: sourceDoc.widgetCode,
   });
   const pointer = toAccountInstanceSourcePointer({
     configDoc: sourceDoc,

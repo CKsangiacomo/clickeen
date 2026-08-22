@@ -4,26 +4,23 @@ on:
   push:
     branches: [main]
     paths:
-      - "berlin/**"
-      - "agents/product-copilot/**"
-      - "agents/translation-agent/**"
-      - "sanfrancisco/**"
-      - "tokyo-worker/**"
-      - "tokyo/product/widgets/**"
-      - "tokyo/product/fonts/**"
-      - "tokyo/prague/**"
-      - "dieter/**"
-      - "packages/ck-contracts/**"
-      - "packages/ck-policy/**"
-      - "packages/l10n/**"
-      - "packages/widget-foundation/**"
-      - "scripts/verify/**"
-      - "scripts/widgets/**"
-      - "scripts/tokyo-r2-deploy-sync.mjs"
-      - "package.json"
-      - "pnpm-workspace.yaml"
-      - "pnpm-lock.yaml"
-      - ".github/workflows/cloud-dev-workers.yml"
+      - 'berlin/**'
+      - 'agents/product-copilot/**'
+      - 'agents/translation-agent/**'
+      - 'sanfrancisco/**'
+      - 'tokyo-worker/**'
+      - 'tokyo/product/fonts/**'
+      - 'tokyo/prague/**'
+      - 'dieter/icons/svg/**'
+      - 'packages/ck-contracts/**'
+      - 'packages/ck-policy/**'
+      - 'packages/l10n/**'
+      - 'packages/widget-foundation/**'
+      - 'scripts/tokyo-r2-deploy-sync.mjs'
+      - 'pnpm-workspace.yaml'
+      - 'pnpm-lock.yaml'
+      - 'tsconfig.app-base.json'
+      - '.github/workflows/cloud-dev-workers.yml'
   workflow_dispatch: {}
 
 concurrency:
@@ -75,7 +72,7 @@ jobs:
         run: pnpm --filter @clickeen/tokyo-worker test:auth-config
 
       - name: Roma Tokyo-boundary contracts
-        run: pnpm --filter @clickeen/roma test:instance-save-boundary && pnpm --filter @clickeen/roma test:ui-copy
+        run: pnpm --filter @clickeen/roma test:tokyo-client-failures
 
       - name: Detect changed worker surfaces
         id: changes
@@ -89,6 +86,7 @@ jobs:
               echo "sanfrancisco=true"
               echo "tokyo=true"
               echo "tokyo_assets=true"
+              echo "tokyo_assets_mode=full"
             } >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -99,7 +97,7 @@ jobs:
             before="$(git rev-list --max-parents=0 "$after")"
           fi
 
-          changed="$(git diff --name-only "$before" "$after")"
+          changed="$(git diff --name-only --no-renames "$before" "$after")"
           path_changed() {
             printf '%s\n' "$changed" | grep -Eq "$1"
           }
@@ -110,34 +108,44 @@ jobs:
           sanfrancisco=false
           tokyo=false
           tokyo_assets=false
+          tokyo_assets_mode=none
 
           workflow_changed=false
           if path_changed '^\.github/workflows/cloud-dev-workers\.yml$'; then
             workflow_changed=true
           fi
 
-          if [ "$workflow_changed" = "true" ] || path_changed '^(berlin/|packages/(ck-policy|ck-contracts)/)'; then
+          dependency_graph_changed=false
+          if path_changed '^(pnpm-workspace\.yaml|pnpm-lock\.yaml|tsconfig\.app-base\.json)$'; then
+            dependency_graph_changed=true
+          fi
+
+          if [ "$workflow_changed" = "true" ] || [ "$dependency_graph_changed" = "true" ] || path_changed '^(berlin/|packages/(ck-policy|ck-contracts|l10n)/)'; then
             berlin=true
           fi
 
-          if [ "$workflow_changed" = "true" ] || path_changed '^(agents/product-copilot/|packages/(ck-contracts|ck-policy)/)'; then
+          if [ "$workflow_changed" = "true" ] || [ "$dependency_graph_changed" = "true" ] || path_changed '^(agents/product-copilot/|packages/ck-contracts/)'; then
             product_copilot=true
           fi
 
-          if [ "$workflow_changed" = "true" ] || path_changed '^(agents/translation-agent/|packages/(ck-contracts|ck-policy|l10n)/)'; then
+          if [ "$workflow_changed" = "true" ] || [ "$dependency_graph_changed" = "true" ] || path_changed '^(agents/translation-agent/|packages/(ck-contracts|ck-policy|l10n)/)'; then
             translation_agent=true
           fi
 
-          if [ "$workflow_changed" = "true" ] || path_changed '^(sanfrancisco/|packages/(ck-contracts|ck-policy|l10n)/)'; then
+          if [ "$workflow_changed" = "true" ] || [ "$dependency_graph_changed" = "true" ] || path_changed '^(sanfrancisco/|packages/(ck-contracts|ck-policy|l10n)/)'; then
             sanfrancisco=true
           fi
 
-          if [ "$workflow_changed" = "true" ] || path_changed '^(tokyo-worker/|packages/(ck-contracts|ck-policy|l10n|widget-foundation)/)'; then
+          if [ "$workflow_changed" = "true" ] || [ "$dependency_graph_changed" = "true" ] || path_changed '^(tokyo-worker/|packages/(ck-contracts|ck-policy|l10n|widget-foundation)/)'; then
             tokyo=true
           fi
 
-          if [ "$workflow_changed" = "true" ] || path_changed '^(dieter/|tokyo/product/(widgets|fonts)/|tokyo/prague/|scripts/widgets/|scripts/tokyo-r2-deploy-sync\.mjs$)'; then
+          if [ "$workflow_changed" = "true" ] || path_changed '^(tokyo/prague/|scripts/tokyo-r2-deploy-sync\.mjs$)'; then
             tokyo_assets=true
+            tokyo_assets_mode=full
+          elif path_changed '^(dieter/icons/svg/|tokyo/product/fonts/)'; then
+            tokyo_assets=true
+            tokyo_assets_mode=delta
           fi
 
           {
@@ -147,6 +155,9 @@ jobs:
             echo "sanfrancisco=$sanfrancisco"
             echo "tokyo=$tokyo"
             echo "tokyo_assets=$tokyo_assets"
+            echo "tokyo_assets_mode=$tokyo_assets_mode"
+            echo "before=$before"
+            echo "after=$after"
           } >> "$GITHUB_OUTPUT"
 
       - name: Deploy berlin-dev
@@ -206,4 +217,9 @@ jobs:
 
       - name: Sync Tokyo deploy roots to R2 (cloud-dev)
         if: steps.changes.outputs.tokyo_assets == 'true'
-        run: node scripts/tokyo-r2-deploy-sync.mjs --remote
+        run: |
+          if [ "${{ steps.changes.outputs.tokyo_assets_mode }}" = "delta" ]; then
+            node scripts/tokyo-r2-deploy-sync.mjs --remote --before "${{ steps.changes.outputs.before }}" --after "${{ steps.changes.outputs.after }}"
+          else
+            node scripts/tokyo-r2-deploy-sync.mjs --remote
+          fi

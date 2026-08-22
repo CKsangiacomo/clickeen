@@ -2,17 +2,57 @@
   "widgetname": "faq",
   "displayName": "FAQ",
   "description": "",
-  "normalization": {
-    "idRules": [
-      {
-        "arrayPath": "faq.sections",
-        "idKey": "id"
+  "typographyBehavior": {
+    "roles": {
+      "section": {
+        "fluidSize": "proportional",
+        "normalLineHeight": {
+          "latin": "var(--lh-tight)",
+          "japanese": "1.3",
+          "korean": "1.3",
+          "zhHans": "1.28",
+          "zhHant": "1.28",
+          "arabic": "var(--lh-tight)",
+          "hebrew": "var(--lh-tight)",
+          "thai": "var(--lh-tight)",
+          "devanagari": "var(--lh-tight)",
+          "bengali": "var(--lh-tight)",
+          "cyrillic": "var(--lh-tight)"
+        }
       },
-      {
-        "arrayPath": "faq.sections[].faqs",
-        "idKey": "id"
+      "question": {
+        "fluidSize": "proportional",
+        "normalLineHeight": {
+          "latin": "var(--lh-tight)",
+          "japanese": "1.38",
+          "korean": "1.36",
+          "zhHans": "1.34",
+          "zhHant": "1.34",
+          "arabic": "var(--lh-tight)",
+          "hebrew": "var(--lh-tight)",
+          "thai": "var(--lh-tight)",
+          "devanagari": "var(--lh-tight)",
+          "bengali": "var(--lh-tight)",
+          "cyrillic": "var(--lh-tight)"
+        }
+      },
+      "answer": {
+        "fluidSize": "proportional",
+        "normalLineHeight": {
+          "latin": "var(--lh-body)",
+          "japanese": "1.62",
+          "korean": "1.58",
+          "zhHans": "1.56",
+          "zhHant": "1.56",
+          "arabic": "var(--lh-body)",
+          "hebrew": "var(--lh-body)",
+          "thai": "var(--lh-body)",
+          "devanagari": "var(--lh-body)",
+          "bengali": "var(--lh-body)",
+          "cyrillic": "var(--lh-body)"
+        }
       }
-    ]
+    }
   },
   "defaults": {
     "typography": {

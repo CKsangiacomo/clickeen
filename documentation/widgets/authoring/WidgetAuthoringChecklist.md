@@ -1,6 +1,6 @@
 # Widget Authoring Checklist
 
-STATUS: CURRENT ARCHITECTURE AND TRANSITION OPERATOR SPEC
+STATUS: CURRENT SYSTEM OPERATOR SPEC
 
 Use this checklist for Widget source, shared Widget capability, or Widget
 documentation changes.
@@ -64,8 +64,8 @@ For an authorized Widget, confirm:
    localize, validate, or host the instance, restate CSS, or orchestrate all
    shared services.
 
-All five current Widgets satisfy this canonical source shape locally. Their
-retired flat files have no alternate source or compatibility path.
+Every current Widget satisfies this canonical source shape locally. There is
+no alternate source or compatibility path.
 
 ## Structured Contract
 
@@ -188,16 +188,22 @@ validator, Widget-specific branch, generic-copy fallback, or message repair.
 
 ## Verification
 
-For the current canonical all-Widget repository:
+When the task intentionally changes generated artifacts, write them once:
 
 ```bash
-node scripts/widgets/generate-artifacts.mjs
-node scripts/widgets/generate-artifacts.mjs --check
+pnpm generate:widgets
+```
+
+Then run the genuinely non-writing aggregate verification:
+
+```bash
+pnpm validate:widgets
 git diff --check -- tokyo/product/widgets documentation/widgets
 ```
 
-Focused `--widget {widgetType}` generation and normal all-Widget generation use
-the same universal compiler. The selector is build tooling, not runtime
+For one-Widget work, use the corresponding `--widget {widgetType}` write and
+`--widget {widgetType} --check` forms instead. Focused and all-Widget modes use
+the same universal producer; the selector is build tooling, not runtime
 compatibility.
 
 Inspect raw materialized HTML and run the current browser behavior matrix. For

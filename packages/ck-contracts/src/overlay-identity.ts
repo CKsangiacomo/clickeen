@@ -3,7 +3,6 @@ export const PLATFORM_ID_ALPHABET = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const UPPER_BASE36_RE = /^[0-9A-Z]+$/;
 
 export const COMPACT_ACCOUNT_ID_LENGTH = 8;
-export const WIDGET_CODE_LENGTH = 3;
 export const COMPACT_INSTANCE_ID_LENGTH = 10;
 
 type RandomBytesSource = (length: number) => Uint8Array;
@@ -52,8 +51,4 @@ export function isCompactAccountPublicId(value: unknown): value is string {
 
 export function isCompactInstanceId(value: unknown): value is string {
   return typeof value === 'string' && isUpperBase36(value, COMPACT_INSTANCE_ID_LENGTH);
-}
-
-export function isWidgetOverlayCode(value: unknown): value is string {
-  return typeof value === 'string' && isUpperBase36(value, WIDGET_CODE_LENGTH);
 }

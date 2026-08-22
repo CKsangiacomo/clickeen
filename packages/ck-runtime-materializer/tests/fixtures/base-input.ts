@@ -85,10 +85,9 @@ export const baseCompiledWidget = {
 <script src="./core/core.js" defer></script>
 </body>`,
     coreHtml: '',
-    coreCss: `.contract-widget { color: var(--ck-color-text); }
-`,
-    coreJs: `window.__contractWidgetLoaded = true;
-`,
+    typographyBehavior: {
+      roles: {},
+    },
     styles: [
       {
         path: '/dieter/tokens/tokens.css',

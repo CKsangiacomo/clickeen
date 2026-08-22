@@ -1,6 +1,6 @@
 # Big Bang Widget
 
-STATUS: CANONICAL CORE DEPLOYED — SHARED ARCHITECTURE GATES PASS
+STATUS: CURRENT SYSTEM OPERATOR SPEC
 
 ## Purpose
 
@@ -21,10 +21,6 @@ software. Publish materializes the complete saved statement and supporting
 copy into semantic HTML; public JavaScript does not render or localize the
 initial content. There is no flat-source compatibility path or Widget-specific
 branch in Bob, Roma, the materializer, or Tokyo-worker.
-
-The source, generated artifacts, and cloud-dev deploy proof are complete. The
-agent-executed shared lifecycle, materialization, and serving gates pass. A
-fresh per-Widget Republish is not a separate architecture-closure requirement.
 
 ## Source
 
@@ -91,7 +87,10 @@ bigBang.gap
 Alignment and text width apply to the complete statement/supporting-copy
 column. Gap is the vertical space between the two values. Core CSS consumes
 those exact saved values and owns the Big Bang typography role; shared
-composition continues to own only shared/common typography roles.
+composition continues to own only shared/common typography roles. The Widget's
+`typographyBehavior` declaration supplies the Big Bang role's exact generic
+fluid-size and normal-line-height behavior; shared rendering contains no Big
+Bang role branch.
 
 ## Editable Fields
 
@@ -158,7 +157,10 @@ trusted output.
 ## Verification
 
 ```bash
-pnpm validate:widgets
+# Intentional derived-output write:
+node scripts/widgets/generate-artifacts.mjs --widget big-bang
+# Non-writing verification:
+node scripts/widgets/generate-artifacts.mjs --widget big-bang --check
 pnpm --filter @clickeen/widget-foundation typecheck
 node --check tokyo/product/widgets/big-bang/core/core.js
 ```

@@ -9,7 +9,12 @@ import {
 } from '@clickeen/widget-foundation';
 import { validateAccountWidgetDefaultsTypography } from '../lib/account-widget-defaults-contract';
 import type { AccountWidgetDefaultsDocument } from '../lib/account-widget-defaults-direct';
+import { materializeInitialAccountWidgetDefaults } from '../lib/account-widget-defaults-materialization';
 import { readValuefieldInput } from '../components/widget-defaults-builder-controls';
+import {
+  applyWidgetCoreOps,
+  resolveEffectiveWidgetCore,
+} from '../components/widget-defaults-domain';
 
 function fontLibraryWithAccountFont(): AccountFontLibrary {
   const library = createDefaultAccountFontLibrary();
@@ -98,6 +103,62 @@ async function main(): Promise<void> {
   if (!malformedResult.ok) {
     assert.deepEqual(malformedResult.error.paths, ['common:typography.roles.title']);
   }
+
+  const initial = await materializeInitialAccountWidgetDefaults({
+    accountId: 'CLICKEEN',
+    now: '2026-01-01T00:00:00.000Z',
+  });
+  assert.deepEqual(initial.widgetDefaults.widgets, {});
+  assert.deepEqual(validateAccountWidgetDefaultsTypography(initial.widgetDefaults), { ok: true });
+
+  const sparse = structuredClone(initial.widgetDefaults);
+  const deployedCore = {
+    content: { title: 'Deployed', description: 'Complete baseline' },
+    typography: { roles: { statement: { family: 'Inter' } } },
+  };
+  assert.deepEqual(
+    resolveEffectiveWidgetCore({
+      widgetDefaults: sparse,
+      widgetType: 'later-widget',
+      deployedCoreDefaults: deployedCore,
+    }),
+    deployedCore,
+  );
+  assert.deepEqual(sparse.widgets, {}, 'selection alone must not create an override');
+
+  const firstEdit = applyWidgetCoreOps({
+    widgetDefaults: sparse,
+    widgetType: 'later-widget',
+    deployedCoreDefaults: deployedCore,
+    ops: [{ path: 'content.title', value: 'Account title' }],
+  });
+  assert.deepEqual(firstEdit.widgets['later-widget'], {
+    core: {
+      content: { title: 'Account title', description: 'Complete baseline' },
+      typography: { roles: { statement: { family: 'Inter' } } },
+    },
+  });
+  assert.deepEqual(sparse.widgets, {}, 'a Core edit must not mutate the prior draft');
+  assert.equal(
+    (deployedCore.content as { title: string }).title,
+    'Deployed',
+    'a Core edit must not mutate the deployed baseline',
+  );
+
+  const exactStoredCore = { content: { title: 'Stored complete override' } };
+  const stored = {
+    ...sparse,
+    widgets: { 'later-widget': { core: exactStoredCore } },
+  };
+  assert.deepEqual(
+    resolveEffectiveWidgetCore({
+      widgetDefaults: stored,
+      widgetType: 'later-widget',
+      deployedCoreDefaults: deployedCore,
+    }),
+    exactStoredCore,
+    'a present complete override must replace rather than merge with the deployed baseline',
+  );
   console.log('PASS Widget Defaults typography ingress contract');
 }
 

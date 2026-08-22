@@ -158,6 +158,17 @@ function testGlobalTokyoFontDefaults(): void {
 async function testEveryWidgetRoleIsEditable(): Promise<void> {
   for (const widgetType of widgetTypes) {
     const compiled = await compile(readSpec(widgetType));
+    const editorArtifact = JSON.parse(
+      fs.readFileSync(
+        path.join(repoRoot, 'roma/public/widget-editors', `${widgetType}.json`),
+        'utf8',
+      ),
+    ) as CompiledWidget;
+    assert.deepEqual(
+      editorArtifact.coreDefaults,
+      readSpec(widgetType).defaults,
+      `${widgetType} editor artifact carries its exact Widget-owned Core baseline`,
+    );
     const roles = Object.keys(
       ((compiled.defaults.typography as Record<string, unknown>).roles ??
         {}) as Record<string, unknown>,
@@ -175,7 +186,39 @@ async function testEveryWidgetRoleIsEditable(): Promise<void> {
       assert.equal(control.kind, 'string');
       assert.equal(control.options, undefined);
     });
+    for (const [role, label] of Object.entries({
+      title: 'Title',
+      body: 'Subtitle',
+      button: 'Button text',
+      localeSwitcher: 'Locale switcher',
+    })) {
+      assert.equal(
+        compiled.controls.find(
+          (control) => control.path === `typography.roles.${role}.family`,
+        )?.groupLabel,
+        label,
+        `${widgetType} uses Bob's exact common ${role} label`,
+      );
+    }
   }
+}
+
+async function testWidgetCannotOverrideCommonRoleLabel(): Promise<void> {
+  const spec = structuredClone(readSpec('big-bang')) as RawWidget & {
+    editor: {
+      panels: Array<{
+        id: string;
+        shared?: { roleLabels?: Record<string, string> };
+      }>;
+    };
+  };
+  const typography = spec.editor.panels.find((panel) => panel.id === 'typography');
+  assert.ok(typography?.shared?.roleLabels);
+  typography.shared.roleLabels.body = typography.shared.roleLabels.bigBang!;
+  await assert.rejects(
+    compile(spec),
+    /typography role label "body" belongs to Bob's common typography contract/,
+  );
 }
 
 async function testAccountFontBindingAndChange(): Promise<void> {
@@ -226,6 +269,8 @@ async function main(): Promise<void> {
   console.log('PASS global Tokyo fonts are in every default library');
   await testEveryWidgetRoleIsEditable();
   console.log('PASS every widget typography role is editable and labeled');
+  await testWidgetCannotOverrideCommonRoleLabel();
+  console.log('PASS Widget declarations cannot override Bob-owned common typography labels');
   await testAccountFontBindingAndChange();
   console.log('PASS account font binding and family change');
 }

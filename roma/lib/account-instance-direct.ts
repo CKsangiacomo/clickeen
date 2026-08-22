@@ -1,4 +1,3 @@
-import type { WidgetEditableFieldsContract } from '@clickeen/ck-contracts/translated-value-primitives';
 import { callTokyo, type TokyoCallContext } from './tokyo-client';
 import {
   composeConfigWithInstanceContent,
@@ -68,10 +67,8 @@ export type AccountWidgetInstanceIds = {
 
 export type TokyoWidgetDefinition = {
   widgetType: string;
-  widgetCode: string;
   displayName: string;
   description: string;
-  editableFields: WidgetEditableFieldsContract;
 };
 
 function tokyoCallContext(args: {
@@ -92,7 +89,6 @@ type TokyoAccountInstancePayload = {
   ok: true;
   accountId: string;
   instanceId: string;
-  widgetCode: string;
   widgetType: string;
   displayName: string | null;
   publishStatus: AccountInstanceLiveStatus;
@@ -413,45 +409,26 @@ export async function loadAccountWidgetInstanceFacts(args: {
   | { ok: true; value: { accountId: string; instances: AccountWidgetInstanceListFact[] } }
   | RouteFailure
 > {
-  const ids = await listAccountWidgetInstanceIds(args);
-  if (!ids.ok) return ids;
-
-  const instanceIds = ids.value.instanceIds;
-  const concurrency = 8;
-  const facts: AccountWidgetInstanceListFact[] = [];
-  let nextIndex = 0;
-  let failure: RouteFailure | null = null;
-
-  async function worker(): Promise<void> {
-    while (!failure) {
-      const index = nextIndex;
-      nextIndex += 1;
-      if (index >= instanceIds.length) return;
-      const instanceId = instanceIds[index];
-      const fact = await loadAccountWidgetInstanceListFact({
-        accountId: args.accountId,
-        instanceId,
-        accountCapsule: args.accountCapsule,
-        internalServiceName: args.internalServiceName,
-        requestId: args.requestId,
-      });
-      if (!fact.ok) {
-        failure = fact;
-        return;
-      }
-      facts.push(fact.value);
-    }
-  }
-
-  const workerCount = Math.min(concurrency, instanceIds.length);
-  await Promise.all(Array.from({ length: workerCount }, () => worker()));
-  if (failure) return failure;
-
-  facts.sort((left, right) => {
-    const updatedAtOrder = right.updatedAt.localeCompare(left.updatedAt);
-    return updatedAtOrder || left.instanceId.localeCompare(right.instanceId);
+  const result = await callTokyo(tokyoCallContext(args), {
+    path: `/__internal/accounts/${encodeURIComponent(args.accountId)}/instances/list-facts`,
+    method: 'GET',
+    decode: (payload) =>
+      payload as {
+        ok: true;
+        accountId: string;
+        instances: AccountWidgetInstanceListFact[];
+      },
+    errorDetail: 'tokyo_account_instance_facts_list_http_error',
+    errorKey: 'coreui.errors.db.readFailed',
   });
-  return { ok: true, value: { accountId: ids.value.accountId, instances: facts } };
+  if (!result.ok) return result;
+  return {
+    ok: true,
+    value: {
+      accountId: result.value.accountId,
+      instances: result.value.instances,
+    },
+  };
 }
 
 export async function listTokyoWidgetDefinitions(args: {

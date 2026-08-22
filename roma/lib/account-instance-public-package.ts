@@ -58,10 +58,10 @@ export type PreparedAccountInstancePublicPackage = {
   typographyData: RuntimeTypographyData;
 };
 
-export function readWidgetForInstancePackage(
+export async function readWidgetForInstancePackage(
   widgetType: string,
-): CompiledWidgetForPublicPackage {
-  return readWidgetMaterializerArtifact(widgetType)!;
+): Promise<CompiledWidgetForPublicPackage> {
+  return (await readWidgetMaterializerArtifact(widgetType))!;
 }
 
 function collectTypographyFamilies(state: Record<string, unknown>): string[] {

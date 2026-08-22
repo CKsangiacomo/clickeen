@@ -74,15 +74,6 @@ export type WidgetPresetSpec = {
 
 export type WidgetPresets = Record<string, WidgetPresetSpec>;
 
-export interface WidgetNormalizationIdRule {
-  arrayPath: string;
-  idKey: string;
-}
-
-export interface WidgetNormalizationSpec {
-  idRules?: WidgetNormalizationIdRule[];
-}
-
 export type WidgetUpsellCatalog = {
   widgetType: string;
   locale: 'en';
@@ -122,11 +113,11 @@ export interface CompiledWidgetCore {
   panels: CompiledPanel[];
   controls: CompiledControl[];
   presets?: WidgetPresets;
-  normalization?: WidgetNormalizationSpec;
   editableFields?: WidgetEditableFieldsContract;
 }
 
 export interface CompiledWidget extends CompiledWidgetCore {
+  coreDefaults: Record<string, unknown>;
   limits: LimitsSpec;
   upsell: WidgetUpsellCatalog;
   editableFields: WidgetEditableFieldsContract;

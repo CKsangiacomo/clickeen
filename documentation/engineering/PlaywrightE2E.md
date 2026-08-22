@@ -38,7 +38,7 @@ If you need the Translation Agent runtime smoke:
 
 ```bash
 pnpm e2e:auth:roma-dev
-pnpm e2e:smoke:translation-agent-runtime
+E2E_TRANSLATION_INSTANCE_ID={exactInstanceId} pnpm e2e:smoke:translation-agent-runtime
 ```
 
 If `pnpm e2e:auth:roma-dev` fails, fix the auth-state boundary:
@@ -231,7 +231,7 @@ pnpm e2e:headed
 pnpm e2e:ui
 pnpm e2e:auth:roma-dev
 pnpm e2e:smoke:copilot-runtime
-pnpm e2e:smoke:translation-agent-runtime
+E2E_TRANSLATION_INSTANCE_ID={exactInstanceId} pnpm e2e:smoke:translation-agent-runtime
 ```
 
 Required env for authenticated Roma tests:
@@ -246,6 +246,12 @@ Accepted alternate env names:
 ```text
 BERLIN_DEV_ADMIN_EMAIL=[cloud-dev admin email]
 BERLIN_DEV_ADMIN_PASSWORD=[cloud-dev admin password]
+```
+
+Required additional coordinate for the Translation Agent runtime smoke:
+
+```text
+E2E_TRANSLATION_INSTANCE_ID=[exact current-account instance id]
 ```
 
 Optional target overrides:
@@ -326,11 +332,17 @@ replace this with a direct Worker call and call the product path verified.
 After refreshing auth state, run:
 
 ```bash
-pnpm e2e:smoke:translation-agent-runtime
+E2E_TRANSLATION_INSTANCE_ID={exactInstanceId} pnpm e2e:smoke:translation-agent-runtime
 ```
 
 The smoke uses the authenticated Roma storage state and the `CLICKEEN` account.
-Set `E2E_TRANSLATION_INSTANCE_ID` when proving a specific saved instance.
+`E2E_TRANSLATION_INSTANCE_ID` is required and must contain one exact instance
+ID with no surrounding whitespace. Missing or whitespace-modified input fails
+before auth-state or network work. After authentication, the smoke requires
+that exact ID to exist in the current account inventory; it never selects a
+hardcoded, Widget-type, or first-instance substitute.
+This smoke rewrites translation-overlay product data. Run it only with separate
+authorization for that exact disposable or restorable instance coordinate.
 It verifies the real product path:
 
 ```text
@@ -388,6 +400,8 @@ Agent call and call the product path verified.
 | Deployed app route fails                           | Playwright spec fails against owning deployed surface             |
 | Copilot unmanaged model accepted                   | Copilot smoke fails; no-substitution law violated                 |
 | Translation generation partial/failed              | Translation smoke fails                                           |
+| Translation instance id missing or whitespace-modified | Translation smoke fails before auth/network                    |
+| Translation instance absent from current account    | Translation smoke fails before generation                          |
 
 ## Verification Evidence
 
@@ -397,7 +411,7 @@ Agent call and call the product path verified.
 | Authenticated Roma session   | non-empty `e2e/.auth/roma-dev.json` created by `pnpm e2e:auth:roma-dev`              |
 | Builder open product path    | `e2e/widgets/builder-open.spec.ts` passes against deployed Roma/Bob                  |
 | Product Copilot path         | `pnpm e2e:smoke:copilot-runtime` JSON output                                         |
-| Translation Agent path       | `pnpm e2e:smoke:translation-agent-runtime` JSON output                               |
+| Translation Agent path       | `E2E_TRANSLATION_INSTANCE_ID={exactInstanceId} pnpm e2e:smoke:translation-agent-runtime` JSON output |
 
 `pnpm e2e` is authenticated evidence only when the authenticated specs run and
 pass. A run where authenticated specs skip because `e2e/.auth/roma-dev.json`

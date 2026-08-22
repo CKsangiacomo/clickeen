@@ -170,8 +170,8 @@ system current/target plan truth
 
 Bob and Roma consume the exact compiled Widget message contract. They do not
 invent a fallback message, hardcode Widget-specific copy, or re-check the same
-allowed edit at Save. All five current Widgets carry exact limit/message
-bindings, use one Bob edit decision, and open one Roma Popup for a denial.
+allowed edit at Save. Every current Widget carries exact limit/message
+bindings, uses one Bob edit decision, and opens one Roma Popup for a denial.
 There is no fallback message or second denial flow.
 
 Clickeen is a closed, internally trusted system. A named authority owns the
@@ -226,36 +226,29 @@ Widget and shared software source
 -> Tokyo Edge delivery
 ```
 
-All five current Widgets now use canonical Core HTML/CSS/JavaScript,
-source-based Bob preview, Publish-only materialization, and Edge locale
-expression. Their retired flat sources have no compatibility path. The prior
-PRD 129 package/locale baseline is deployed at product commit `e2ac3589`. The
-corrected non-persisting New, first-Save creation, Roma-only publication,
-atomic source/publication storage, and product-inert background cache eviction
-are deployed from commit `a6678966`. Worker health, Roma and Bob reachability,
-authenticated saved-instance Builder open, non-persisting New-open inventory
-truth, the live Copilot stream, and public `dev.clk.live` package serving passed
-technical cloud-dev verification on 2026-08-19. Agent-executed closure on
-2026-08-20 additionally proved the complete disposable New/Save/Publish/
-Republish/Unpublish/Delete lifecycle with exact baseline restoration, deployed
-Product Copilot completion/Stop behavior, and exact Roma/Builder header
-geometry. Owner acceptance is not a completion gate.
-
-The pre-GA storage cutover is complete for the four legacy saved cloud-dev
-instances under account `CLICKEEN`: each now has atomic
-`instance.source.json`; the two instances that were public were Republished
-through Roma and now have atomic `serve-state.json` package truth. The retained
-legacy split objects are ignored by runtime and no legacy read fallback or
-migration-on-read exists.
+Every current Widget uses canonical Core HTML/CSS/JavaScript, source-based Bob
+preview, Publish-only materialization, and Edge locale expression. No flat
+source compatibility path exists. Current instance reads use
+only atomic `instance.source.json` and `serve-state.json`; there is no legacy
+read fallback or migration-on-read.
 
 ## Baseline Repository Commands
 
 ```bash
 pnpm install
+pnpm generate:widgets
+pnpm validate:widgets
+node scripts/widgets/generate-artifacts.mjs --widget <widgetType> --check
 pnpm build
 pnpm lint
 pnpm typecheck
 ```
+
+`generate:widgets` is the one intentional artifact writer. `validate:widgets`
+builds and serializes current Widget truth in memory, compares only the tracked
+compact Tokyo definition source, and writes or deletes nothing. Roma's
+`pretypecheck` and `prebuild` generate the ignored artifacts required by a
+clean checkout exactly once for those lifecycles.
 
 Use the owning service, capability, or widget manual for additional focused
 checks. Cloud-dev runtime evidence is defined in
@@ -269,7 +262,6 @@ Tokyo R2 is an ownership model, not a URL map. The only canonical roots are:
 accounts/
 dieter/
 fonts/
-product/
 prague/
 ```
 
@@ -302,14 +294,19 @@ The other roots are git-authored deploy artifacts synced to R2:
 
 - `dieter/` for shared design-system media
 - `fonts/` for global Clickeen font files available to every account
-- `product/` for logged-in product media and widget software
 - `prague/` for marketing/site/GTM content; Prague page translations stay beside each page JSON as `{page}.translations/{locale}.json`
 
-Do not introduce root `widgets/`, `public/`, `published/`, or `l10n/` storage. Friendly URLs such as `/widgets/{widgetType}/...` may exist, but they must resolve to the canonical storage home, for example `product/widgets/{widgetType}/...`.
+Do not introduce root `widgets/`, `product/`, `public/`, `published/`, or
+`l10n/` storage. Widget authoring source remains in git and deploy-built editor
+and materializer artifacts ship with Roma; Tokyo R2 is not a second Widget
+software authority. Cloud-dev still contains legacy `product/widgets/**`
+objects until the separately authorized exact-key deletion runs after
+the new Worker code is deployed and the obsolete `/widgets/**` request returns
+404. The existing zone binding may remain; that deletion does not mutate it.
 
 ---
 
-## End-to-End Journey (widget folder -> Roma, Bob, Prague)
+## End-to-End Widget Journey
 
 Runtime profile:
 
@@ -319,25 +316,26 @@ Runtime profile:
 ### A) Widget definition path
 
 Source of truth: `tokyo/product/widgets/{widget}/` (structured contract,
-adjacent ToolDrawer labels, and unique Core software) plus the shared Widget
-document and capabilities under `tokyo/product/widgets/shared/`. Deployed R2 storage home:
-`product/widgets/{widget}/`.
+adjacent ToolDrawer labels, and unique Core software) plus shared Widget
+capabilities under `tokyo/product/widgets/shared/`.
 
-1. **Tokyo R2/Tokyo-worker** serves the widget deploy roots:
-   - canonical widget software path is `product/widgets/{widget}/`
-   - canonical Dieter path is `dieter/`
-   - Cloud-dev host is `https://tokyo.dev.clickeen.com`
-2. **Bob runtime** reads widget definitions/assets from Tokyo:
-   - `bob/lib/env/tokyo.ts` resolves `NEXT_PUBLIC_TOKYO_URL` -> `https://tokyo.dev.clickeen.com` by default.
-3. **DevStudio** is the one human's cockpit for governing the AI-operated company:
-   - canonical host is `https://devstudio.clickeen.com`
-   - it no longer hosts the local widget-authoring workspace
-   - it does not provide widget-authoring routes
-4. **Cloud-dev Roma** is the supported product/account host surface:
-   - `roma/app/api/bootstrap/route.ts` proxies to Berlin `GET /session/bootstrap`
-   - `roma/components/builder-domain.tsx` sends `ck:open-editor` to Bob after `bob:session-ready`
-   - code changes only appear there after deploy
-Result: Roma remains the customer account shell; DevStudio remains the Berlin-authenticated cockpit for governing the AI-operated company on Cloudflare Pages.
+1. The one Widget producer discovers those folders and emits the compact Tokyo
+   Catalog summaries plus one editor artifact and one materializer artifact per
+   Widget.
+2. Tokyo-worker serves the exact compact Catalog collection. It does not serve
+   Widget authoring source to Bob.
+3. Roma fetches one same-origin `/widget-editors/{widgetType}.json` for Builder
+   and passes that exact artifact to Bob after `bob:session-ready`.
+4. Roma server operations read one exact deploy-built
+   `/widget-materializers/{widgetType}.json` through the Pages `ASSETS` binding
+   for the selected Widget. Local development uses the identical same-origin
+   public asset.
+5. Bob edits and previews only the one compiled Widget contract received from
+   Roma; Publish materialization uses the corresponding selected materializer.
+
+Result: Widget source stays git-authored, Bob remains selected-Widget-sized,
+Roma owns product operations and deploy-built artifacts, and Tokyo-worker owns
+compact Catalog truth plus account storage/public serving.
 
 ### A.1) Auth issuer alignment (critical)
 
@@ -367,10 +365,7 @@ Instances are account-owned data, not code. Tokyo/R2 stores them under `accounts
      one atomic published `serve-state.json`;
      it does not reinterpret Widget semantics or reconstruct a schema from Bob
      controls.
-2. **DevStudio does not host widget authoring**.
-   - Internal verification remains a toolbench concern only.
-   - Widget editing belongs to Roma-hosted Builder, not hidden DevStudio routes.
-3. **Assets** referenced in configs point at canonical Tokyo for the active environment.
+2. **Assets** referenced in configs point at canonical Tokyo for the active environment.
 
 ### C) Cloud-dev propagation (explicit)
 
@@ -378,7 +373,23 @@ Local changes do not auto-appear in cloud-dev. You must deploy.
 
 1. **Bob/Roma and Cloudflare services**:
    - Code changes require Cloudflare deploys (Pages/Workers).
-   - Cloud Bob/Roma read `https://tokyo.dev.clickeen.com`, not your local filesystem.
+   - The Git-connected `tokyo-dev` Pages project publishes the canonical
+     Git-authored `tokyo/` source tree, including Widget source under
+     `/product/widgets/**`.
+   - Bob/Roma receive deploy-built Widget artifacts from their Pages build;
+     they do not use the raw source surface. Tokyo-worker/R2 remains the origin
+     for retained Dieter/font resources and account storage/public serving.
+   - The retired `/widgets/**` path is the duplicate Tokyo-worker/R2 mirror,
+     not Tokyo Pages' canonical `/product/widgets/**` source projection.
+
+Translation Agent runtime verification is an explicitly mutating product-data
+operation and requires one exact coordinate:
+
+```bash
+E2E_TRANSLATION_INSTANCE_ID={exactInstanceId} pnpm e2e:smoke:translation-agent-runtime
+```
+
+There is no hardcoded, Widget-type, or first-instance fallback.
 
 Invariant: **Local propagation is automatic; cloud-dev propagation is explicit.** Treat any assumption otherwise as a bug.
 
@@ -416,7 +427,8 @@ If you change runtime behavior, update docs in the same PR/commit:
   - Update `documentation/capabilities/localization.md` + `documentation/services/tokyo-worker.md` (and `documentation/capabilities/seo-geo.md` when schema/excerpt behavior changes)
 - **Tokyo R2 root/storage changes**
   - Update `documentation/architecture/Overview.md`, `documentation/architecture/Tenets.md`, and the owning system docs
-  - Re-check that only `accounts/` is runtime-managed and that `dieter/`, `fonts/`, `product/`, and `prague/` remain deploy-managed roots
+  - Re-check that only `accounts/` is runtime-managed and that `dieter/`,
+    `fonts/`, and `prague/` remain deploy-managed roots
 
 ---
 

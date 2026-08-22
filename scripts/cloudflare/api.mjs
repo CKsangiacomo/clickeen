@@ -19,6 +19,37 @@ const DEVSTUDIO_PROJECT_CONFIG = {
     root_dir: 'admin',
   },
 };
+const BOB_ROMA_BUILD_WATCH = new Map([
+  [
+    'bob-dev',
+    [
+      'bob/**',
+      'dieter/**',
+      'packages/**',
+      'scripts/build-bob-cf.mjs',
+      'package.json',
+      'pnpm-lock.yaml',
+      'pnpm-workspace.yaml',
+      'tsconfig.app-base.json',
+    ],
+  ],
+  [
+    'roma-dev',
+    [
+      'roma/**',
+      'bob/**',
+      'dieter/**',
+      'packages/**',
+      'tokyo/product/widgets/**',
+      'scripts/widgets/**',
+      'scripts/build-roma-cf.mjs',
+      'package.json',
+      'pnpm-lock.yaml',
+      'pnpm-workspace.yaml',
+      'tsconfig.app-base.json',
+    ],
+  ],
+]);
 
 function loadLocalEnv() {
   if (!fs.existsSync(envPath)) return;
@@ -30,7 +61,10 @@ function loadLocalEnv() {
     if (eq <= 0) continue;
     const key = trimmed.slice(0, eq).trim();
     let value = trimmed.slice(eq + 1).trim();
-    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
       value = value.slice(1, -1);
     }
     if (!process.env[key]) process.env[key] = value;
@@ -39,7 +73,10 @@ function loadLocalEnv() {
 
 function requireEnv(name) {
   const value = process.env[name]?.trim();
-  if (!value) throw new Error(`Missing ${name}. Add it to .env.local or export it before running this command.`);
+  if (!value)
+    throw new Error(
+      `Missing ${name}. Add it to .env.local or export it before running this command.`,
+    );
   return value;
 }
 
@@ -88,7 +125,10 @@ function printJson(value) {
 
 function parseSimpleTomlValue(value) {
   const trimmed = value.trim();
-  if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
     return trimmed.slice(1, -1);
   }
   return trimmed;
@@ -129,20 +169,30 @@ async function listPagesProjects(config) {
 }
 
 async function getPagesProject(config, projectName) {
-  const body = await cf(config, `/accounts/${config.accountId}/pages/projects/${encodeURIComponent(projectName)}`);
+  const body = await cf(
+    config,
+    `/accounts/${config.accountId}/pages/projects/${encodeURIComponent(projectName)}`,
+  );
   return body.result ?? {};
 }
 
 async function patchPagesProject(config, projectName, payload) {
-  const body = await cf(config, `/accounts/${config.accountId}/pages/projects/${encodeURIComponent(projectName)}`, {
-    method: 'PATCH',
-    body: JSON.stringify(payload),
-  });
+  const body = await cf(
+    config,
+    `/accounts/${config.accountId}/pages/projects/${encodeURIComponent(projectName)}`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    },
+  );
   return body.result ?? {};
 }
 
 async function listPagesDomains(config, projectName) {
-  const body = await cf(config, `/accounts/${config.accountId}/pages/projects/${encodeURIComponent(projectName)}/domains`);
+  const body = await cf(
+    config,
+    `/accounts/${config.accountId}/pages/projects/${encodeURIComponent(projectName)}/domains`,
+  );
   return Array.isArray(body.result) ? body.result : [];
 }
 
@@ -306,7 +356,8 @@ function summarizeProjectConfigDiff(project) {
     matches:
       current.production_branch === DEVSTUDIO_PROJECT_CONFIG.production_branch &&
       current.build_config.build_command === DEVSTUDIO_PROJECT_CONFIG.build_config.build_command &&
-      current.build_config.destination_dir === DEVSTUDIO_PROJECT_CONFIG.build_config.destination_dir &&
+      current.build_config.destination_dir ===
+        DEVSTUDIO_PROJECT_CONFIG.build_config.destination_dir &&
       current.build_config.root_dir === DEVSTUDIO_PROJECT_CONFIG.build_config.root_dir,
   };
 }
@@ -348,8 +399,7 @@ function summarizeDevstudioEnv(project) {
     matches:
       Object.values(desiredPlainSummary).every((entry) => entry.matches) &&
       Object.values(requiredSecrets).every((entry) => entry.matches),
-    note:
-      'Non-secret vars are deployed from admin/wrangler.toml once the Pages project root is admin. Required secrets remain live-only Cloudflare Pages secrets.',
+    note: 'Non-secret vars are deployed from admin/wrangler.toml once the Pages project root is admin. Required secrets remain live-only Cloudflare Pages secrets.',
   };
 }
 
@@ -428,6 +478,119 @@ function devstudioProjectPatchPayload(project) {
       ...omitNullish(project.build_config || {}),
       ...DEVSTUDIO_PROJECT_CONFIG.build_config,
     },
+  };
+}
+
+function exactStringArrayMatches(actual, expected) {
+  return (
+    Array.isArray(actual) &&
+    actual.length === expected.length &&
+    actual.every((value, index) => value === expected[index])
+  );
+}
+
+function pagesBuildWatchSummary(project, expected) {
+  const current = project.source?.config?.path_includes ?? [];
+  return {
+    current,
+    desired: expected,
+    matches: exactStringArrayMatches(current, expected),
+  };
+}
+
+function pagesBuildWatchPatchPayload(project, expected) {
+  if (project.source?.type !== 'github' || !project.source?.config) {
+    throw new Error(`Pages project is not connected to GitHub: ${project.name}`);
+  }
+  return {
+    source: {
+      type: project.source.type,
+      config: {
+        ...project.source.config,
+        path_includes: expected,
+      },
+    },
+  };
+}
+
+function stableJson(value) {
+  if (Array.isArray(value)) return `[${value.map(stableJson).join(',')}]`;
+  if (value && typeof value === 'object') {
+    return `{${Object.keys(value)
+      .sort()
+      .map((key) => `${JSON.stringify(key)}:${stableJson(value[key])}`)
+      .join(',')}}`;
+  }
+  return JSON.stringify(value);
+}
+
+function pagesPreservedProjectState(project) {
+  const { path_includes: _pathIncludes, ...sourceConfig } = project.source?.config ?? {};
+  return {
+    name: project.name,
+    production_branch: project.production_branch,
+    build_config: project.build_config,
+    source_type: project.source?.type,
+    source_config: sourceConfig,
+    deployment_configs: project.deployment_configs,
+    domains: project.domains,
+  };
+}
+
+async function syncBobRomaBuildWatch(config, args) {
+  const unsupportedArgs = args.filter((arg) => arg !== '--apply');
+  if (unsupportedArgs.length) {
+    throw new Error(`Unsupported Bob/Roma build-watch argument: ${unsupportedArgs.join(', ')}`);
+  }
+  const apply = args.includes('--apply');
+  const results = [];
+
+  for (const [projectName, expected] of BOB_ROMA_BUILD_WATCH) {
+    const before = await getPagesProject(config, projectName);
+    if (before.name !== projectName) {
+      throw new Error(`Unexpected Pages project identity: ${before.name || '(missing)'}`);
+    }
+    const beforeSummary = pagesBuildWatchSummary(before, expected);
+    const payload = pagesBuildWatchPatchPayload(before, expected);
+    if (!apply) {
+      results.push({
+        apply: false,
+        project: projectName,
+        ...beforeSummary,
+        payload,
+      });
+      continue;
+    }
+
+    if (!beforeSummary.matches) {
+      await patchPagesProject(config, projectName, payload);
+    }
+    const after = await getPagesProject(config, projectName);
+    const afterSummary = pagesBuildWatchSummary(after, expected);
+    if (!afterSummary.matches) {
+      throw new Error(`Pages build-watch read-back mismatch: ${projectName}`);
+    }
+    if (
+      stableJson(pagesPreservedProjectState(after)) !==
+      stableJson(pagesPreservedProjectState(before))
+    ) {
+      throw new Error(`Pages project changed outside path_includes: ${projectName}`);
+    }
+    results.push({
+      apply: true,
+      project: projectName,
+      before: beforeSummary.current,
+      after: afterSummary.current,
+      matches: true,
+    });
+  }
+
+  return {
+    apply,
+    projects: results,
+    note: apply
+      ? 'Cloudflare Pages read-back matches the exact Bob and Roma build-watch sets.'
+      : 'Dry run only. Re-run with --apply to patch only Bob and Roma path_includes.',
   };
 }
 
@@ -552,20 +715,27 @@ async function deletePagesVariable(config, args) {
 
   const environments = envName === 'both' ? ['production', 'preview'] : [envName];
   const before = await getPagesProject(config, projectName);
-  const presence = Object.fromEntries(environments.map((name) => [
-    name,
-    Boolean(before.deployment_configs?.[name]?.env_vars?.[variableName]),
-  ]));
+  const presence = Object.fromEntries(
+    environments.map((name) => [
+      name,
+      Boolean(before.deployment_configs?.[name]?.env_vars?.[variableName]),
+    ]),
+  );
   const payload = {
-    deployment_configs: Object.fromEntries(environments.map((name) => {
-      const deploymentConfig = before.deployment_configs?.[name] ?? {};
-      return [name, {
-        env_vars: { [variableName]: null },
-        ...(deploymentConfig.wrangler_config_hash
-          ? { wrangler_config_hash: deploymentConfig.wrangler_config_hash }
-          : {}),
-      }];
-    })),
+    deployment_configs: Object.fromEntries(
+      environments.map((name) => {
+        const deploymentConfig = before.deployment_configs?.[name] ?? {};
+        return [
+          name,
+          {
+            env_vars: { [variableName]: null },
+            ...(deploymentConfig.wrangler_config_hash
+              ? { wrangler_config_hash: deploymentConfig.wrangler_config_hash }
+              : {}),
+          },
+        ];
+      }),
+    ),
   };
 
   if (!apply) {
@@ -583,12 +753,16 @@ async function deletePagesVariable(config, args) {
     await patchPagesProject(config, projectName, payload);
   }
   const after = await getPagesProject(config, projectName);
-  const remaining = Object.fromEntries(environments.map((name) => [
-    name,
-    Boolean(after.deployment_configs?.[name]?.env_vars?.[variableName]),
-  ]));
+  const remaining = Object.fromEntries(
+    environments.map((name) => [
+      name,
+      Boolean(after.deployment_configs?.[name]?.env_vars?.[variableName]),
+    ]),
+  );
   if (Object.values(remaining).some(Boolean)) {
-    throw new Error(`Cloudflare Pages variable still exists after delete: ${projectName}/${variableName}`);
+    throw new Error(
+      `Cloudflare Pages variable still exists after delete: ${projectName}/${variableName}`,
+    );
   }
   return {
     apply: true,
@@ -623,7 +797,9 @@ async function preflight(config) {
   const zone = await findZone(config, 'clickeen.com');
   if (zone) {
     result.clickeenZone = { id: zone.id, name: zone.name, status: zone.status };
-    result.devstudioDns = (await listDnsRecords(config, zone.id, 'devstudio.clickeen.com')).map(summarizeRecord);
+    result.devstudioDns = (await listDnsRecords(config, zone.id, 'devstudio.clickeen.com')).map(
+      summarizeRecord,
+    );
   }
   return result;
 }
@@ -636,6 +812,7 @@ function usage() {
   pnpm cf:pages:devstudio-env
   pnpm cf:pages:sync-devstudio-env [--apply]
   pnpm cf:pages:sync-devstudio-project [--apply]
+  pnpm cf:pages:sync-bob-roma-build-watch [--apply]
   pnpm cf:pages:put-secret <project-name> <secret-name> [--env production|preview] [--apply]
   pnpm cf:pages:delete-var <project-name> <variable-name> [--env production|preview|both] [--apply]
   pnpm cf:pages:domains <project-name>
@@ -689,6 +866,11 @@ async function main() {
     return;
   }
 
+  if (command === 'pages:sync-bob-roma-build-watch') {
+    printJson(await syncBobRomaBuildWatch(config, args));
+    return;
+  }
+
   if (command === 'pages:put-secret') {
     printJson(await putPagesSecret(config, args));
     return;
@@ -717,7 +899,8 @@ async function main() {
 
   if (command === 'dns:upsert-cname') {
     const [zoneName, recordName, target] = args;
-    if (!zoneName || !recordName || !target) throw new Error('Missing zone name, record name, or target.');
+    if (!zoneName || !recordName || !target)
+      throw new Error('Missing zone name, record name, or target.');
     const zone = await findZone(config, zoneName);
     if (!zone) throw new Error(`Cloudflare zone not found: ${zoneName}`);
     const result = await upsertCname(config, zone.id, recordName, target);

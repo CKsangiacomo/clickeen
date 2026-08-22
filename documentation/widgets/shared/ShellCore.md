@@ -55,6 +55,8 @@ product layer.
 | Header typography roles | Header |
 | Widget-specific typography roles | Core |
 | `typography.globalFamily` | Widget-wide presentation |
+| Common typography role behavior | Widget Foundation |
+| Widget-specific typography role behavior | Widget `spec.json` |
 | Locale switcher state and appearance | Locale delivery chrome |
 | Backlink state | Branding chrome and product policy |
 | Social-share state | Share chrome |
@@ -79,11 +81,20 @@ Pod, Header, shared Core geometry, typography, and chrome defaults because one
 account value seeds every widget type. Code must not infer Shell ownership from
 that storage scope.
 
-New instances merge the exact common defaults with the selected widget's Core
-defaults. The source/build authority owns their disjoint contract; Roma
-consumes those exact system artifacts rather than running a second conflict
-validator. The saved instance remains one exact logical state and Tokyo stores
-its metadata, config, and content together in one atomic source artifact.
+Widget Defaults renders one Bob-owned/system common-control section and one
+selected Widget's Core controls from one selected editor artifact. The account
+document stores exact `common` values and sparse complete Core overrides. For a
+selected Widget, a present `widgets.{widgetType}.core` is the complete effective
+Core; when absent, the exact deploy-built Widget baseline is effective. Roma
+does not merge the two, backfill the account, or mutate it on read. New combines
+the exact common values with that effective Core and writes nothing. The saved
+instance remains one exact logical state and Tokyo stores its metadata, config,
+and content together in one atomic source artifact.
+
+Typography behavior is deploy-built software, not account state. The producer
+combines Foundation-owned common behavior with the selected Widget's unique
+role behavior and emits one complete role/script map. Bob preview and Roma
+Publish use that same map without role-name branches or runtime defaults.
 
 ## Instance State And Persistence
 

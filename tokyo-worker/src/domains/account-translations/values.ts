@@ -19,7 +19,6 @@ async function resolveStoredTranslationSource(args: {
   return readConfigDocumentByLocation({
     env: args.env,
     accountId: args.accountId,
-    widgetCode: '',
     instanceId: args.instanceId,
   });
 }
@@ -43,7 +42,6 @@ export async function readAccountInstanceTranslatedLocaleValues(args: {
   const overlay = await readLocaleOverlay({
     env: args.env,
     accountId: stored.accountId,
-    widgetCode: stored.widgetCode,
     instanceId: stored.id,
     locale: args.locale,
   });
@@ -72,7 +70,6 @@ export async function writeAccountInstanceTranslatedLocaleValues(args: {
   await writeLocaleOverlay({
     env: args.env,
     accountId: stored.accountId,
-    widgetCode: stored.widgetCode,
     instanceId: stored.id,
     locale: args.locale,
     overlay: {
@@ -97,7 +94,6 @@ export async function deleteAccountInstanceTranslatedLocaleValues(args: {
   await deleteLocaleOverlay({
     env: args.env,
     accountId: stored.accountId,
-    widgetCode: stored.widgetCode,
     instanceId: stored.id,
     locale: args.locale,
   });
@@ -129,7 +125,6 @@ export async function listAccountInstanceTranslatedLocaleValues(args: {
   const locales = await listLocaleOverlayCoordinates({
     env: args.env,
     accountId: stored.accountId,
-    widgetCode: stored.widgetCode,
     instanceId: stored.id,
   });
   return {

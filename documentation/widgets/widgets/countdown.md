@@ -1,6 +1,6 @@
 # Countdown Widget
 
-STATUS: CANONICAL CORE DEPLOYED — SHARED ARCHITECTURE GATES PASS
+STATUS: CURRENT SYSTEM OPERATOR SPEC
 
 ## Purpose
 
@@ -22,10 +22,6 @@ into semantic HTML and data attributes. Core JavaScript does not reconstruct
 the saved state, localize content, invoke shared utilities, or receive Bob
 state updates. There is no flat-source compatibility path or Widget-specific
 shared-service branch.
-
-The source, generated artifacts, and cloud-dev deploy proof are complete. The
-agent-executed shared lifecycle, materialization, and serving gates pass. A
-fresh per-Widget Republish is not a separate architecture-closure requirement.
 
 ## Source
 
@@ -102,6 +98,10 @@ is available for Number and for separated Date/Personal tiles. Visible value
 and label colors are owned by the exact Timer and Unit label typography roles,
 not duplicate Appearance controls. Settings uses shared SEO/GEO, branding, and
 social-share behavior.
+
+Countdown declares the exact generic fluid-size and normal-line-height behavior
+for Timer and Unit label in `typographyBehavior`. The shared renderer consumes
+that emitted behavior without a Countdown or role-name branch.
 
 ## Editable Fields
 
@@ -192,7 +192,10 @@ generic shared services. Core neither invokes nor revalidates them.
 ## Verification
 
 ```bash
-pnpm validate:widgets
+# Intentional derived-output write:
+node scripts/widgets/generate-artifacts.mjs --widget countdown
+# Non-writing verification:
+node scripts/widgets/generate-artifacts.mjs --widget countdown --check
 pnpm --filter @clickeen/widget-foundation typecheck
 node --check tokyo/product/widgets/countdown/core/core.js
 ```

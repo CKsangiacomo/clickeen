@@ -301,12 +301,21 @@ writes nothing. First Save creates editable source; later Save updates it.
 Bob returns one complete logical instance document containing its customized
 shared Header/Stage/Pod/capability state and its Widget Core state. Roma
 prepares the complete source payload that Tokyo stores atomically as
-`instance.source.json`. First Save's HTTP 201 returns the minted instance ID and
+`instance.source.json`. The required top-level `widgetType` is its sole Widget
+software identity; the nested content document carries exact fields without a
+duplicate Widget type. First Save's HTTP 201 returns the minted instance ID and
 the exact current account `baseLocale` persisted with that source; Bob adopts
 both through the existing result into its current `meta`/`translationSetup`
-without a reopen or new message. This does not serialize First Save against a
-simultaneous account-locale PATCH across authorities. Only explicit allowed
-Publish invokes the one generic Widget materializer. That
+without a reopen or new message.
+
+Account Widget Defaults store exact account font/common truth and only explicit
+complete per-Widget Core overrides. For New and the Widget Defaults UI, a
+present Core entry replaces the selected deploy-built Widget baseline; absence
+explicitly means that baseline. This lets later deployed Widgets work for
+existing accounts without backfill, healing, or a read-time storage write.
+This does not serialize First Save against a simultaneous account-locale PATCH
+across authorities. Only explicit allowed Publish invokes the one generic
+Widget materializer. That
 materializer—not Bob and not Tokyo-worker—generates the served complete
 `index.html`, complete `styles.css`, and mandatory `runtime.js`.
 
@@ -400,12 +409,12 @@ the capability/message identity to Roma. Bob does not resolve tiers, select a
 target plan, author upsell copy, own a second Popup, or send the already-gated
 draft through the same entitlement decision again at Save.
 
-Current deployed implementation: Bob applies each Widget's compiled bindings at
-one common operation boundary and sends Roma
+Bob applies each Widget's compiled bindings at one common operation boundary
+and sends Roma
 `{ capability, messageId, required }` on denial. The draft remains unchanged,
 Roma chooses the first qualifying higher tier and opens one shared Popup, and
 Save does not repeat the decision. Every current Widget has its canonical
-`upsell/{locale}.json` source in the deployed artifact set.
+`upsell/{locale}.json` source in the produced artifact set.
 
 ### Berlin
 
@@ -423,7 +432,8 @@ Berlin must not preserve old `user_profiles`, `account_members`, `active_account
 
 ### Tokyo
 
-Tokyo owns widget definitions, exact account instance storage operations,
+Tokyo-worker exposes the producer-owned compact Catalog collection and owns
+exact account instance storage operations,
 translated locale overlay storage, and submitted public widget package
 storage/readiness. Tokyo consumes the accepted Roma account/user authority and
 the exact submitted package; it does not re-prove account policy, decide billing
@@ -462,17 +472,10 @@ fingerprints or validate the overlay against saved source in the public
 request. The route coordinate, locale syntax, and publication gate remain real
 external/product boundaries.
 
-The all-Widget changes are deployed and verified in cloud-dev through
-all-Widget artifact gates plus agent-executed shared lifecycle, materializer,
-and public-serving proof. Owner acceptance is not an architecture-closure
-gate. Authenticated translation list/read/write operations also trust the exact
-stored overlay coordinates and values; they do not project or compare them
-against saved source.
-
-The newer pre-GA atomic source/published-serve-state cutover is complete for
-all four legacy saved cloud-dev instances under `CLICKEEN`; the two public
-instances were Republished through Roma. There is no compatibility reader or
-migration-on-read, and retained split legacy objects are unreachable.
+Authenticated translation list/read/write operations trust the exact stored
+overlay coordinates and values; they do not project or compare them against
+saved source. Current instance reads use only atomic source and serve-state
+truth. There is no compatibility reader or migration-on-read.
 
 ## Verification
 

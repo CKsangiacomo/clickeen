@@ -1,7 +1,4 @@
-import {
-  normalizeInstanceId,
-  toAccountAssetPublicPath,
-} from '@clickeen/ck-contracts';
+import { normalizeInstanceId, toAccountAssetPublicPath } from '@clickeen/ck-contracts';
 import { sha256Hex as computeSha256Hex } from '@clickeen/ck-contracts/security';
 import { normalizeLocaleToken } from '@clickeen/l10n';
 import { accountFontContentTypeExtension } from '@clickeen/widget-foundation';
@@ -23,14 +20,29 @@ function extFromMime(mime: string): string | null {
 }
 
 function normalizeMimeType(raw: string): string {
-  return String(raw || '').split(';')[0].trim().toLowerCase();
+  return String(raw || '')
+    .split(';')[0]
+    .trim()
+    .toLowerCase();
 }
 
-export type AccountAssetType = 'image' | 'vector' | 'video' | 'audio' | 'document' | 'font' | 'other';
+export type AccountAssetType =
+  | 'image'
+  | 'vector'
+  | 'video'
+  | 'audio'
+  | 'document'
+  | 'font'
+  | 'other';
 
-export function classifyAccountAssetType(contentType: string | null, ext: string | null): AccountAssetType {
+export function classifyAccountAssetType(
+  contentType: string | null,
+  ext: string | null,
+): AccountAssetType {
   const mime = normalizeMimeType(String(contentType || '').trim());
-  const normalizedExt = String(ext || '').trim().toLowerCase();
+  const normalizedExt = String(ext || '')
+    .trim()
+    .toLowerCase();
 
   if (mime === 'image/svg+xml' || normalizedExt === 'svg') return 'vector';
   if (mime.startsWith('image/')) return 'image';
@@ -53,9 +65,11 @@ export function pickExtension(filename: string | null, contentType: string | nul
 export function validateUploadFilename(
   filename: string | null,
 ): { ok: true; filename: string } | { ok: false; detail: string } {
-  if (typeof filename !== 'string' || !filename || filename.trim() !== filename) return { ok: false, detail: 'filename required' };
+  if (typeof filename !== 'string' || !filename || filename.trim() !== filename)
+    return { ok: false, detail: 'filename required' };
   if (filename === '.' || filename === '..') return { ok: false, detail: 'filename reserved' };
-  if (filename.includes('/') || filename.includes('\\')) return { ok: false, detail: 'path separators are not allowed' };
+  if (filename.includes('/') || filename.includes('\\'))
+    return { ok: false, detail: 'path separators are not allowed' };
   if (filename.length > 180 || !/^[A-Za-z0-9][A-Za-z0-9._-]*[A-Za-z0-9]$/.test(filename)) {
     return { ok: false, detail: 'filename invalid' };
   }
@@ -64,10 +78,7 @@ export function validateUploadFilename(
 
 const ACCOUNT_ASSET_CANONICAL_PREFIX = 'accounts/';
 
-export function buildAccountAssetKey(
-  accountId: string,
-  assetRef: string,
-): string {
+export function buildAccountAssetKey(accountId: string, assetRef: string): string {
   return `${ACCOUNT_ASSET_CANONICAL_PREFIX}${accountId}/assets/${assetRef}`;
 }
 
@@ -78,7 +89,6 @@ export function buildAccountAssetPublicPath(assetKey: string): string {
 }
 
 const TOKYO_DEPLOY_ASSET_ROUTES: ReadonlyArray<{ prefix: string; keyPrefix: string }> = [
-  { prefix: '/widgets/', keyPrefix: 'product/widgets/' },
   { prefix: '/dieter/icons/svg/', keyPrefix: 'dieter/icons/svg/' },
   { prefix: '/fonts/', keyPrefix: 'fonts/' },
   { prefix: '/prague/l10n/', keyPrefix: 'prague/l10n/' },
@@ -102,7 +112,9 @@ function normalizeTokyoDeployAssetKey(pathname: string): string | null {
   const normalizedPathname = String(pathname || '').trim();
   for (const route of TOKYO_DEPLOY_ASSET_ROUTES) {
     if (!normalizedPathname.startsWith(route.prefix)) continue;
-    const relativePath = normalizeDeployAssetRelativePath(normalizedPathname.slice(route.prefix.length));
+    const relativePath = normalizeDeployAssetRelativePath(
+      normalizedPathname.slice(route.prefix.length),
+    );
     if (!relativePath) return null;
     return `${route.keyPrefix}${relativePath}`;
   }
@@ -117,7 +129,10 @@ function cacheControlForDeployAssetKey(key: string): string {
   return 'public, max-age=0, must-revalidate';
 }
 
-export async function handleGetTokyoDeployAsset(env: Env, pathname: string): Promise<Response | null> {
+export async function handleGetTokyoDeployAsset(
+  env: Env,
+  pathname: string,
+): Promise<Response | null> {
   const key = normalizeTokyoDeployAssetKey(pathname);
   if (!key) return null;
   const obj = await env.TOKYO_R2.get(key);
@@ -137,7 +152,9 @@ export async function handleGetTokyoDeployAsset(env: Env, pathname: string): Pro
 export const normalizeStorageId = normalizeInstanceId;
 
 export function normalizeWidgetType(raw: string): string | null {
-  const value = String(raw || '').trim().toLowerCase();
+  const value = String(raw || '')
+    .trim()
+    .toLowerCase();
   if (!value) return null;
   if (!/^[a-z0-9][a-z0-9_-]*$/.test(value)) return null;
   return value;
@@ -151,7 +168,9 @@ export function normalizeLocale(raw: unknown): string | null {
 }
 
 export function normalizeSha256Hex(raw: unknown): string | null {
-  const value = String(raw || '').trim().toLowerCase();
+  const value = String(raw || '')
+    .trim()
+    .toLowerCase();
   if (!/^[a-f0-9]{64}$/.test(value)) return null;
   return value;
 }

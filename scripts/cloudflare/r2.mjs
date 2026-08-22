@@ -21,7 +21,10 @@ function loadLocalEnv() {
     if (eq <= 0) continue;
     const key = trimmed.slice(0, eq).trim();
     let value = trimmed.slice(eq + 1).trim();
-    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
       value = value.slice(1, -1);
     }
     if (!process.env[key]) process.env[key] = value;
@@ -30,7 +33,10 @@ function loadLocalEnv() {
 
 function requireEnv(name) {
   const value = process.env[name]?.trim();
-  if (!value) throw new Error(`Missing ${name}. Add it to .env.local or export it before running this command.`);
+  if (!value)
+    throw new Error(
+      `Missing ${name}. Add it to .env.local or export it before running this command.`,
+    );
   return value;
 }
 
@@ -40,7 +46,10 @@ function optionalEnv(name) {
 }
 
 function encodeKeyPath(key) {
-  return key.split('/').map((part) => encodeURIComponent(part)).join('/');
+  return key
+    .split('/')
+    .map((part) => encodeURIComponent(part))
+    .join('/');
 }
 
 function optionValue(args, name) {
@@ -60,7 +69,8 @@ function positionalArgs(args) {
 function getConfig(args = []) {
   loadLocalEnv();
   const accountId = requireEnv('CLOUDFLARE_ACCOUNT_ID');
-  const endpoint = optionalEnv('CLOUDFLARE_R2_ENDPOINT') || `https://${accountId}.r2.cloudflarestorage.com`;
+  const endpoint =
+    optionalEnv('CLOUDFLARE_R2_ENDPOINT') || `https://${accountId}.r2.cloudflarestorage.com`;
   const accessKeyId = optionalEnv('CLOUDFLARE_R2_ACCESS_KEY_ID');
   const secretAccessKey = optionalEnv('CLOUDFLARE_R2_SECRET_ACCESS_KEY');
   const token = optionalEnv('CLOUDFLARE_R2_REST_API_TOKEN');
@@ -91,7 +101,9 @@ async function cfJson(config, url) {
   }
   if (!response.ok || body.success === false) {
     const errors = Array.isArray(body.errors) ? body.errors : [];
-    const detail = errors.map((entry) => entry.message || JSON.stringify(entry)).join('; ') || response.statusText;
+    const detail =
+      errors.map((entry) => entry.message || JSON.stringify(entry)).join('; ') ||
+      response.statusText;
     throw new Error(`Cloudflare API failed ${response.status}: ${detail}`);
   }
   return body;
@@ -157,14 +169,25 @@ function parseListObjectsXml(xml) {
   };
 }
 
-async function r2SignedRequest(config, method, key, searchParams = new URLSearchParams(), body = '', contentType = '') {
+async function r2SignedRequest(
+  config,
+  method,
+  key,
+  searchParams = new URLSearchParams(),
+  body = '',
+  contentType = '',
+) {
   if (!config.accessKeyId || !config.secretAccessKey) {
-    throw new Error('Missing CLOUDFLARE_R2_ACCESS_KEY_ID or CLOUDFLARE_R2_SECRET_ACCESS_KEY for R2 signed access.');
+    throw new Error(
+      'Missing CLOUDFLARE_R2_ACCESS_KEY_ID or CLOUDFLARE_R2_SECRET_ACCESS_KEY for R2 signed access.',
+    );
   }
 
   const endpoint = new URL(config.endpoint);
   const pathname = `/${encodeURIComponent(config.bucket)}${key ? `/${encodeKeyPath(key)}` : ''}`;
-  const canonicalQuery = new URLSearchParams([...searchParams.entries()].sort(([left], [right]) => left.localeCompare(right))).toString();
+  const canonicalQuery = new URLSearchParams(
+    [...searchParams.entries()].sort(([left], [right]) => left.localeCompare(right)),
+  ).toString();
   const url = `${endpoint.origin}${pathname}${canonicalQuery ? `?${canonicalQuery}` : ''}`;
   const now = new Date();
   const signingDate = formatR2SigningDate(now);
@@ -174,9 +197,21 @@ async function r2SignedRequest(config, method, key, searchParams = new URLSearch
   const contentTypeHeader = contentType ? `content-type:${contentType}\n` : '';
   const canonicalHeaders = `${contentTypeHeader}host:${endpoint.host}\nx-amz-content-sha256:${payloadHash}\nx-amz-date:${signingDate}\n`;
   const signedHeaders = `${contentType ? 'content-type;' : ''}host;x-amz-content-sha256;x-amz-date`;
-  const canonicalRequest = [method, pathname, canonicalQuery, canonicalHeaders, signedHeaders, payloadHash].join('\n');
+  const canonicalRequest = [
+    method,
+    pathname,
+    canonicalQuery,
+    canonicalHeaders,
+    signedHeaders,
+    payloadHash,
+  ].join('\n');
   const credentialScope = `${dateStamp}/auto/s3/aws4_request`;
-  const stringToSign = ['AWS4-HMAC-SHA256', signingDate, credentialScope, hashHex(canonicalRequest)].join('\n');
+  const stringToSign = [
+    'AWS4-HMAC-SHA256',
+    signingDate,
+    credentialScope,
+    hashHex(canonicalRequest),
+  ].join('\n');
   const signingKey = getSigningKey(config.secretAccessKey, dateStamp);
   const signature = hmac(signingKey, stringToSign, 'hex');
 
@@ -192,7 +227,9 @@ async function r2SignedRequest(config, method, key, searchParams = new URLSearch
   });
   const text = await response.text();
   if (!response.ok) {
-    throw new Error(`Cloudflare R2 signed request failed ${response.status}: ${text || response.statusText}`);
+    throw new Error(
+      `Cloudflare R2 signed request failed ${response.status}: ${text || response.statusText}`,
+    );
   }
   return text;
 }
@@ -233,15 +270,26 @@ async function listObjectsRest(config, prefix, limit) {
   const objects = [];
   let cursor = '';
   do {
-    const url = new URL(`https://api.cloudflare.com/client/v4/accounts/${config.accountId}/r2/buckets/${config.bucket}/objects`);
+    const url = new URL(
+      `https://api.cloudflare.com/client/v4/accounts/${config.accountId}/r2/buckets/${config.bucket}/objects`,
+    );
     if (prefix) url.searchParams.set('prefix', prefix);
     url.searchParams.set('per_page', String(Math.min(Math.max(limit || 1000, 1), 1000)));
     if (cursor) url.searchParams.set('cursor', cursor);
     const body = await cfJson(config, url.toString());
     const result = body.result;
-    const pageObjects = Array.isArray(result) ? result : Array.isArray(result?.objects) ? result.objects : [];
+    const pageObjects = Array.isArray(result)
+      ? result
+      : Array.isArray(result?.objects)
+        ? result.objects
+        : [];
     objects.push(...pageObjects);
-    cursor = typeof result?.cursor === 'string' ? result.cursor : typeof body.result_info?.cursor === 'string' ? body.result_info.cursor : '';
+    cursor =
+      typeof result?.cursor === 'string'
+        ? result.cursor
+        : typeof body.result_info?.cursor === 'string'
+          ? body.result_info.cursor
+          : '';
   } while (cursor && objects.length < limit);
   return objects.slice(0, limit);
 }
@@ -264,11 +312,15 @@ async function getObjectRest(config, key) {
 }
 
 async function putObjectRest() {
-  throw new Error('R2 REST put is not supported by this helper. Add CLOUDFLARE_R2_ACCESS_KEY_ID and CLOUDFLARE_R2_SECRET_ACCESS_KEY.');
+  throw new Error(
+    'R2 REST put is not supported by this helper. Add CLOUDFLARE_R2_ACCESS_KEY_ID and CLOUDFLARE_R2_SECRET_ACCESS_KEY.',
+  );
 }
 
 async function deleteObjectRest() {
-  throw new Error('R2 REST delete is not supported by this helper. Add CLOUDFLARE_R2_ACCESS_KEY_ID and CLOUDFLARE_R2_SECRET_ACCESS_KEY.');
+  throw new Error(
+    'R2 REST delete is not supported by this helper. Add CLOUDFLARE_R2_ACCESS_KEY_ID and CLOUDFLARE_R2_SECRET_ACCESS_KEY.',
+  );
 }
 
 function putObjectWrangler(config, key, body, contentType) {
@@ -319,12 +371,16 @@ function deleteObjectWrangler(config, key) {
 
 function isR2SignedWriteDenied(error) {
   const message = error instanceof Error ? error.message : String(error);
-  return message.includes('AccessDenied') || message.includes('Cloudflare R2 signed request failed 403');
+  return (
+    message.includes('AccessDenied') || message.includes('Cloudflare R2 signed request failed 403')
+  );
 }
 
 function isR2SignedDeleteDenied(error) {
   const message = error instanceof Error ? error.message : String(error);
-  return message.includes('AccessDenied') || message.includes('Cloudflare R2 signed request failed 403');
+  return (
+    message.includes('AccessDenied') || message.includes('Cloudflare R2 signed request failed 403')
+  );
 }
 
 function hasR2SignedCredentials(config) {
@@ -332,7 +388,9 @@ function hasR2SignedCredentials(config) {
 }
 
 async function listObjects(config, prefix, limit) {
-  return hasR2SignedCredentials(config) ? listObjectsSigned(config, prefix, limit) : listObjectsRest(config, prefix, limit);
+  return hasR2SignedCredentials(config)
+    ? listObjectsSigned(config, prefix, limit)
+    : listObjectsRest(config, prefix, limit);
 }
 
 async function getObject(config, key) {
@@ -365,7 +423,9 @@ async function deleteObject(config, key) {
       return;
     } catch (error) {
       if (!isR2SignedDeleteDenied(error)) throw error;
-      console.error('[cf:r2] R2 signed delete denied; falling back to remote Wrangler R2 object delete.');
+      console.error(
+        '[cf:r2] R2 signed delete denied; falling back to remote Wrangler R2 object delete.',
+      );
       deleteObjectWrangler(config, key);
       return;
     }
@@ -426,7 +486,9 @@ async function main() {
     console.log(`[cf:preflight] account=${config.accountId}`);
     console.log(`[cf:preflight] bucket=${config.bucket}`);
     if (hasR2SignedCredentials(config)) {
-      console.log(`[cf:preflight] r2 signed credentials=present accessKeyLength=${config.accessKeyId.length}`);
+      console.log(
+        `[cf:preflight] r2 signed credentials=present accessKeyLength=${config.accessKeyId.length}`,
+      );
     } else {
       console.log(`[cf:preflight] rest token=present length=${config.token.length}`);
       await verifyToken(config);
@@ -435,13 +497,14 @@ async function main() {
     if (args.includes('--bucket')) {
       const prefix = optionValue(args, '--prefix');
       const listed = await listObjects(config, prefix, 1);
-      console.log(`[cf:preflight] list ${prefix || '(root)'} ok (${listed.length} object${listed.length === 1 ? '' : 's'} sampled)`);
+      console.log(
+        `[cf:preflight] list ${prefix || '(root)'} ok (${listed.length} object${listed.length === 1 ? '' : 's'} sampled)`,
+      );
     } else {
       const listed = await listObjects(config, 'accounts/', 1);
-      console.log(`[cf:preflight] list accounts/ ok (${listed.length} object${listed.length === 1 ? '' : 's'} sampled)`);
-      const faqSpec = await getObject(config, 'product/widgets/faq/spec.json');
-      JSON.parse(faqSpec);
-      console.log('[cf:preflight] get product/widgets/faq/spec.json ok');
+      console.log(
+        `[cf:preflight] list accounts/ ok (${listed.length} object${listed.length === 1 ? '' : 's'} sampled)`,
+      );
     }
     return;
   }

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import type { RomaAccountAuthzCapsulePayload } from '@clickeen/ck-policy';
 import { generateAccountInstanceTranslations } from '../lib/account-instance-translations';
 
@@ -33,8 +34,18 @@ async function run(): Promise<void> {
     ],
   });
   let agentTranslation: Record<string, unknown> = validAgentTranslation();
+  const faqMaterializer = JSON.parse(
+    await readFile(new URL('../public/widget-materializers/faq.json', import.meta.url), 'utf8'),
+  ) as Record<string, unknown>;
   globalRecord[CLOUDFLARE_REQUEST_CONTEXT_SYMBOL] = {
     env: {
+      ASSETS: {
+        async fetch(input: RequestInfo | URL) {
+          const url = new URL(input instanceof Request ? input.url : input.toString());
+          assert.equal(url.pathname, '/widget-materializers/faq.json');
+          return Response.json(faqMaterializer);
+        },
+      },
       ROMA_AI_GRANT_PRIVATE_KEY_PEM: privateKeyPem,
       TOKYO_PRODUCT_CONTROL: {
         async fetch() {

@@ -42,7 +42,9 @@ There is no instance-level locale artifact subtree.
 
 The `content` member of atomic `instance.source.json` owns the current saved
 text-field set. Its map keys remain concrete paths. Each field also carries its
-`fieldPattern` and stable `identityKey`.
+`fieldPattern` and stable `identityKey`. The source record's required top-level
+`widgetType` supplies the Widget software coordinate; content does not store a
+second Widget type.
 
 Overlay `values` use that `identityKey` as the content coordinate:
 

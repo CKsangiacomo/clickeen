@@ -9,13 +9,11 @@ import type { LocaleOverlayDocument } from '../account-instances/types';
 export async function readLocaleOverlay(args: {
   env: Env;
   accountId: string;
-  widgetCode: string;
   instanceId: string;
   locale: string;
 }): Promise<LocaleOverlayDocument | null> {
   const key = accountInstanceLocaleOverlayKey(
     args.accountId,
-    args.widgetCode,
     args.instanceId,
     args.locale,
   );
@@ -25,7 +23,6 @@ export async function readLocaleOverlay(args: {
 export async function writeLocaleOverlay(args: {
   env: Env;
   accountId: string;
-  widgetCode: string;
   instanceId: string;
   locale: string;
   overlay: LocaleOverlayDocument;
@@ -34,7 +31,6 @@ export async function writeLocaleOverlay(args: {
     args.env,
     accountInstanceLocaleOverlayKey(
       args.accountId,
-      args.widgetCode,
       args.instanceId,
       args.locale,
     ),
@@ -46,7 +42,6 @@ export async function writeLocaleOverlay(args: {
 export async function deleteLocaleOverlay(args: {
   env: Env;
   accountId: string;
-  widgetCode: string;
   instanceId: string;
   locale: string;
 }): Promise<{ locale: string }> {
@@ -54,7 +49,6 @@ export async function deleteLocaleOverlay(args: {
     args.env,
     accountInstanceLocaleOverlayKey(
       args.accountId,
-      args.widgetCode,
       args.instanceId,
       args.locale,
     ),
@@ -65,12 +59,10 @@ export async function deleteLocaleOverlay(args: {
 export async function listLocaleOverlayCoordinates(args: {
   env: Env;
   accountId: string;
-  widgetCode: string;
   instanceId: string;
 }): Promise<string[]> {
   const prefix = accountInstanceLocaleOverlaysPrefix(
     args.accountId,
-    args.widgetCode,
     args.instanceId,
   );
   const locales: string[] = [];

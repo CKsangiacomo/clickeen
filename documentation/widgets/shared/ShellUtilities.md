@@ -16,10 +16,10 @@ Exact state and artifacts produced by another named Clickeen authority are
 trusted. Shared capabilities apply them unchanged without validation,
 filtering, normalization, repair, or fallback.
 
-All five built Widgets implement the canonical model locally: the generic
-renderer expresses shared markup and presentation for Bob preview and Publish,
-and public JavaScript does not create initial content. Shared visitor modules
-bind only behavior already represented in the materialized document.
+Every built Widget implements the canonical model locally: the generic renderer
+expresses shared markup and presentation for Bob preview and Publish, and
+public JavaScript does not create initial content. Shared visitor modules bind
+only behavior already represented in the materialized document.
 
 ## Typography Roles
 
@@ -32,9 +32,10 @@ button
 localeSwitcher
 ```
 
-The widget foundation owns their default product labels. A widget declares labels
-and visible order for its additional roles in its structured typography panel.
-Bob composes those declared roles into the editor. The shared authored
+Widget Foundation owns those common role identities and behavior. Bob's
+Typography English source owns their visible common labels. A Widget declares
+labels and visible order only for its additional roles in its structured
+typography panel. Bob composes those declared roles into the editor. The shared authored
 composition requests only the common roles; each Core stylesheet requests its
 own additional roles. The same generic style renderer expresses those exact
 variables for Bob preview and Publish without a public typography engine.
@@ -176,8 +177,8 @@ The switcher is runtime UI only. Translation generation belongs to the
 Translation Agent; account active-locale changes belong to Roma settings and
 Tokyo-worker overlay storage.
 
-Current deployed all-Widget truth: Bob preview supplies the exact delivered locale
-choices through its preview document. Public index responses contain
+Bob preview supplies the exact delivered locale choices through its preview
+document. Public index responses contain
 Edge-authored `<option>` elements for the exact base locale and stored overlay
 coordinates. The shared switcher reads those elements and does not require a
 public locale-policy global.
@@ -212,21 +213,6 @@ socialShare.css
 socialShare.js
 stagePod.css
 stagePod.js
-```
-
-The following historical pre-migration browser modules remain in the source
-tree but are not referenced by any built Widget and are not selected into its
-public package:
-
-```text
-appearance.js
-branding.js
-coreSize.js
-fill.js
-previewL10n.js
-surface.js
-typography-data.js
-typography.js
 ```
 
 Shared source files are broad package dependencies. When explicit allowed

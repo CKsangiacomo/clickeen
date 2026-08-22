@@ -7,7 +7,6 @@ import type { InstanceServeState } from './types';
 type InstanceCoordinate = {
   accountId: string;
   instanceId: string;
-  widgetCode: string;
 };
 
 function serveStatePayload(
@@ -43,7 +42,7 @@ async function readStoredServeStateRecord(
   coordinate: InstanceCoordinate,
 ): Promise<InstanceServeStateRecord> {
   const obj = await env.TOKYO_R2.get(
-    accountInstanceServeStateKey(coordinate.accountId, coordinate.widgetCode, coordinate.instanceId),
+    accountInstanceServeStateKey(coordinate.accountId, coordinate.instanceId),
   );
   if (!obj) throw new Error('coreui.errors.instance.serveStateMissing');
   try {
@@ -72,7 +71,6 @@ export async function readInstanceServeStateRecord(args: {
   env: Env;
   accountId: string;
   instanceId: string;
-  widgetCode: string;
 }): Promise<InstanceServeStateRecord> {
   return readStoredServeStateRecord(args.env, args);
 }
@@ -81,7 +79,6 @@ export async function readInstanceServeState(args: {
   env: Env;
   accountId: string;
   instanceId: string;
-  widgetCode: string;
 }): Promise<InstanceServeState> {
   return (await readStoredServeStateRecord(args.env, args)).status;
 }
@@ -90,12 +87,11 @@ export async function createInstanceServeState(args: {
   env: Env;
   accountId: string;
   instanceId: string;
-  widgetCode: string;
   now?: string;
 }): Promise<InstanceServeState> {
   await putJson(
     args.env,
-    accountInstanceServeStateKey(args.accountId, args.widgetCode, args.instanceId),
+    accountInstanceServeStateKey(args.accountId, args.instanceId),
     serveStatePayload(args, 'unpublished', null, args.now),
   );
   return 'unpublished';
@@ -105,7 +101,6 @@ export async function writeInstanceServeState(args: {
   env: Env;
   accountId: string;
   instanceId: string;
-  widgetCode: string;
   now?: string;
 } & (
   | { status: 'published'; publicPackage: SubmittedInstancePublicPackage }
@@ -113,7 +108,7 @@ export async function writeInstanceServeState(args: {
 )): Promise<void> {
   await putJson(
     args.env,
-    accountInstanceServeStateKey(args.accountId, args.widgetCode, args.instanceId),
+    accountInstanceServeStateKey(args.accountId, args.instanceId),
     serveStatePayload(
       args,
       args.status,

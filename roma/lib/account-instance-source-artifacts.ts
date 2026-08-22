@@ -6,7 +6,6 @@ import type {
 export type AccountInstanceContentDocument = {
   id: string;
   accountId: string;
-  widgetType: string;
   fields: Record<
     string,
     {
@@ -215,7 +214,6 @@ export function prepareAccountInstanceSourceArtifacts(args: {
     content: {
       id: args.instanceId,
       accountId: args.accountId,
-      widgetType: args.widgetType,
       fields,
       updatedAt,
     },

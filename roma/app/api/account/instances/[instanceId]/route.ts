@@ -85,7 +85,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
   }
   const widgetType = savedInstance.value.widgetType;
 
-  const compiled = readWidgetMaterializerArtifact(widgetType);
+  const compiled = await readWidgetMaterializerArtifact(widgetType);
   if (!compiled) {
     return withSession(
       request,

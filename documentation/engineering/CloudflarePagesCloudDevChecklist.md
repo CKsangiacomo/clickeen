@@ -8,14 +8,18 @@ contracts, custom domains, required env vars, service bindings, and live-only
 secrets.
 
 Rules:
-- Cloudflare Pages Git build is the deploy plane for Bob, Roma, and Prague.
-- Tokyo/R2 git-authored deploy roots are `dieter/`, `fonts/`, `product/`, and
-  `prague/`; only `accounts/` is runtime-managed account storage.
-- Tokyo-worker/R2 is the source/deploy and friendly-serving boundary for
-  Tokyo-owned static product roots. It must not become a second authority for
+- Cloudflare Pages Git build is the deploy plane for Bob, Roma, the Tokyo
+  source tree, Prague, and DevStudio.
+- Tokyo/R2 git-authored deploy roots are `dieter/`, `fonts/`, and `prague/`;
+  only `accounts/` is runtime-managed account storage.
+- Git is the source authority; Tokyo-worker/R2 is the deploy-storage and
+  friendly-serving boundary for retained static roots. It must not become a second authority for
   product widget software, Dieter media, product media, or Prague
   content.
-- Widget software is served from canonical R2 `product/widgets/**`. Friendly `/widgets/**` routes must resolve there.
+- Widget software stays in git and ships as deploy-built per-Widget Roma editor
+  and materializer assets. Canonical source remains under
+  `tokyo/product/widgets/**` and the Git-connected `tokyo-dev` Pages project
+  publishes that exact source tree; Tokyo R2 is not a Widget software mirror.
 - Prague page translations deploy beside page JSON under `prague/pages/{widget}/{page}.translations/{locale}.json`.
 - GitHub Actions must not create Pages projects or sync Pages secrets.
 - Each app builds from its own root and writes only to its own output directory.
@@ -38,6 +42,7 @@ Start every Pages/config task with read-only evidence:
 pnpm cf:api:preflight
 pnpm cf:pages:project bob-dev
 pnpm cf:pages:project roma-dev
+pnpm cf:pages:project tokyo-dev
 pnpm cf:pages:project prague-dev
 pnpm cf:pages:project devstudio
 ```
@@ -47,6 +52,7 @@ For custom domains:
 ```bash
 pnpm cf:pages:domains bob-dev
 pnpm cf:pages:domains roma-dev
+pnpm cf:pages:domains tokyo-dev
 pnpm cf:pages:domains prague-dev
 pnpm cf:pages:domains devstudio
 ```
@@ -61,6 +67,18 @@ pnpm cf:pages:sync-devstudio-project
 
 Only add `--apply` after the dry-run output is the intended mutation.
 
+For the exact Bob/Roma Git build-watch includes:
+
+```bash
+pnpm cf:pages:sync-bob-roma-build-watch
+```
+
+The command is dry-run by default and is hard-limited to `bob-dev` and
+`roma-dev`. Its separately approved `--apply` form preserves and read-checks
+all non-watch project state. Cloud-dev currently still uses the broad
+`path_includes: ["*"]` setting; do not report the dependency-wide includes as
+deployed until apply and read-back succeed.
+
 If `pnpm cf:api:preflight` fails, stop. Do not use dashboard screenshots,
 guessed Pages state, direct artifact deploys, or a public auth bypass as
 replacement evidence.
@@ -71,6 +89,7 @@ replacement evidence.
 | --- | --- | --- |
 | Bob Pages project config | Cloudflare Pages project `bob-dev` | `pnpm cf:pages:project bob-dev` |
 | Roma Pages project config | Cloudflare Pages project `roma-dev` | `pnpm cf:pages:project roma-dev` |
+| Tokyo source project config | Cloudflare Pages project `tokyo-dev` | `pnpm cf:pages:project tokyo-dev` |
 | Prague Pages project config | Cloudflare Pages project `prague-dev` | `pnpm cf:pages:project prague-dev` |
 | DevStudio Pages project config | Cloudflare Pages project `devstudio` | `pnpm cf:pages:project devstudio` |
 | Bob/Roma host/base URL vars | app-local `wrangler.toml` | repo diff plus Pages project build/runtime evidence |
@@ -80,7 +99,8 @@ replacement evidence.
 | DevStudio env/project sync | repo Cloudflare API helper | dry-run, `--apply`, read-back |
 | Custom domains | Cloudflare Pages domains + DNS | `pnpm cf:pages:domains`, `pnpm cf:dns:records` |
 | Public embed route | Tokyo-worker zone route | `https://dev.clk.live/{accountPublicId}/{instanceId}` plus route-boundary checks |
-| Git-authored R2 product roots | Tokyo/R2 product-root sync | `pnpm tokyo:r2:sync:*` plus exact R2 key evidence |
+| Git-authored R2 retained roots | Tokyo/R2 retained-root sync | local `pnpm tokyo:r2:sync:check`; remote sync through GitHub Actions plus exact R2 key evidence |
+| Bob/Roma build-watch includes | Repo Cloudflare API helper | dry-run, separately approved `--apply`, exact two-project read-back |
 
 ## Bob
 
@@ -94,6 +114,10 @@ Git settings:
 - Build command: `pnpm build:cf`
 - Output directory: `.cloudflare/output/static`
 - Deploy trigger: Git-connected Cloudflare Pages build only
+- Intended build-watch includes: `bob/**`, `dieter/**`, `packages/**`,
+  `scripts/build-bob-cf.mjs`, `package.json`, `pnpm-lock.yaml`,
+  `pnpm-workspace.yaml`, and `tsconfig.app-base.json`. Live cloud-dev remains
+  `*` until the separately authorized operator apply succeeds.
 - Build note: `pnpm build:cf` keeps the final Pages artifact app-local, but temporarily writes repo-root `.vercel/project.json` with `rootDirectory: 'bob'` because Vercel's monorepo Next.js builder still requires that metadata.
 
 Public host:
@@ -140,6 +164,11 @@ Git settings:
 - Build command: `pnpm build:cf`
 - Output directory: `.vercel/output/static`
 - Deploy trigger: Git-connected Cloudflare Pages build only
+- Intended build-watch includes: `roma/**`, `bob/**`, `dieter/**`,
+  `packages/**`, `tokyo/product/widgets/**`, `scripts/widgets/**`,
+  `scripts/build-roma-cf.mjs`, `package.json`, `pnpm-lock.yaml`,
+  `pnpm-workspace.yaml`, and `tsconfig.app-base.json`. Live cloud-dev remains
+  `*` until the separately authorized operator apply succeeds.
 - Build note: `pnpm build:cf` keeps the final Pages artifact app-local, but temporarily writes repo-root `.vercel/project.json` with `rootDirectory: 'roma'` because Vercel's monorepo Next.js builder still requires that metadata.
 
 Public host:
@@ -201,9 +230,57 @@ Pass criteria:
   `TRANSLATION_AGENT`;
 - KV bindings include `USAGE_KV`.
 
+## Tokyo Source
+
+Project:
+- `tokyo-dev`
+
+Git settings:
+- Repo: `CKsangiacomo/clickeen`
+- Production branch: `main`
+- Root directory: `tokyo`
+- Build command: none
+- Output directory: `.`
+- Build watch include paths: `*`
+- Build watch exclude paths: none
+- Deploy trigger: Git-connected Cloudflare Pages build only
+
+Public hosts:
+- Canonical host: `https://tokyo.dev.clickeen.com`
+- Pages host: `https://tokyo-dev.pages.dev`
+
+Purpose:
+- publish the exact Git-authored Tokyo source/static tree, including canonical
+  Widget source under `/product/widgets/**`;
+- preserve Git as Widget source authority while Bob and Roma consume only the
+  producer-built selected editor/materializer artifacts; and
+- remain distinct from Tokyo-worker/R2 account storage, retained-root serving,
+  and the removed redundant R2 `product/widgets/**` mirror and `/widgets/**`
+  friendly route.
+
+Operator checks:
+
+```bash
+pnpm cf:api:preflight
+pnpm cf:pages:project tokyo-dev
+pnpm cf:pages:domains tokyo-dev
+```
+
+Pass criteria:
+
+- project root directory is `tokyo`;
+- production branch is `main`;
+- build command is empty and output directory is `.`;
+- source watch includes are exactly `*` with no excludes;
+- custom domain includes `tokyo.dev.clickeen.com`; and
+- an exact source path such as
+  `https://tokyo.dev.clickeen.com/product/widgets/faq/spec.json` responds.
+
 ## Public Embeds
 
-Public widget serving is not a Pages project. Cloud-dev routes public embeds through `dev.clk.live` static serving backed by the cloud-dev Tokyo-worker and cloud-dev Tokyo/R2 generated instance files.
+Public Widget serving is not a Pages project. Cloud-dev routes public embeds
+through `dev.clk.live`, backed by Tokyo-worker and the exact Roma-generated
+package bytes Tokyo stores in account serve state.
 
 Rules:
 - `dev.clk.live` is the cloud-dev public-serving host.
@@ -339,15 +416,27 @@ These roots are deployed from git-authored repo sources into R2. They are not mu
 | Repo input | Canonical R2 root | Notes |
 | --- | --- | --- |
 | `dieter/icons/svg/**` | `dieter/icons/svg/**` | Approved shared SVG icon bytes only. |
-| `tokyo/product/widgets/**` | `product/widgets/**` | Widget software. Friendly `/widgets/**` routes must serve these objects. |
-| `tokyo/product/fonts/special/**` | `fonts/special/**` | Global Clickeen fonts available to every account. Friendly `/fonts/special/**` routes serve these objects. |
+| `tokyo/product/fonts/**` | `fonts/**` | Global Clickeen fonts available to every account. Friendly `/fonts/**` routes serve these objects. |
 | `tokyo/prague/**` | `prague/**` | Prague page/content/GTM media, including page-local translation sidecars. |
 
 Do not add deploy targets outside the current source-to-R2 roots above unless a
 new product law explicitly creates that root and its owning operation path.
 
+The repository no longer maps raw Widget authoring source into R2 or serves it
+through Tokyo-worker's redundant `/widgets/**` route. The Git-connected
+`tokyo-dev` Pages project continues to publish canonical source directly from
+`tokyo/product/widgets/**` at `/product/widgets/**`; that source surface is not
+an R2 mirror and is not the Bob/Roma runtime artifact contract. Cloud-dev still
+contains legacy R2 `product/widgets/**` objects until the Worker code returns
+404 on the old route and the separately authorized exact-key R5 deletion
+verifies the redundant R2 prefix empty. Worker deploys use
+`wrangler deploy --routes ""`, so the existing zone binding may remain while
+routing to a handler that returns 404; R5 does not mutate that binding. That
+pending cleanup never targets `accounts/**`, Dieter, fonts, Prague, or the
+canonical Tokyo source.
+
 `tokyo/prague/**` changes trigger the GitHub Actions `cloud-dev workers deploy`
-product-root sync. `cloud-dev prague content release` still owns Prague content
+retained-root full sync. `cloud-dev prague content release` still owns Prague content
 validation/build; it is not a second R2 deployment path.
 
 ## Live-Only Secrets And External State
@@ -395,10 +484,12 @@ Run verification from the owning surface:
 pnpm cf:api:preflight
 pnpm cf:pages:project bob-dev
 pnpm cf:pages:project roma-dev
+pnpm cf:pages:project tokyo-dev
 pnpm cf:pages:project prague-dev
 pnpm cf:pages:project devstudio
 pnpm cf:pages:domains bob-dev
 pnpm cf:pages:domains roma-dev
+pnpm cf:pages:domains tokyo-dev
 pnpm cf:pages:domains prague-dev
 pnpm cf:pages:domains devstudio
 pnpm cf:pages:devstudio-env
@@ -410,6 +501,7 @@ Runtime URLs:
 ```text
 https://bob.dev.clickeen.com/bob
 https://roma.dev.clickeen.com/home
+https://tokyo.dev.clickeen.com/product/widgets/faq/spec.json
 https://dev.clk.live/{accountPublicId}/{instanceId}
 https://prague.dev.clickeen.com/us/en/
 https://devstudio.clickeen.com
@@ -417,8 +509,9 @@ https://devstudio.clickeen.com
 
 Pass criteria:
 
-- Bob, Roma, Prague, and DevStudio are Git-connected Pages projects.
-- Git build is the active deploy behavior for Bob, Roma, Prague, and DevStudio.
+- Bob, Roma, Tokyo source, Prague, and DevStudio are Git-connected Pages
+  projects.
+- Git build is the active deploy behavior for all five Pages projects.
 - Bob and Roma non-secret vars are present in app-local `wrangler.toml`.
 - Roma Supabase env/secrets are live-only Cloudflare Pages config.
 - Prague runtime vars are live-only Cloudflare Pages config.

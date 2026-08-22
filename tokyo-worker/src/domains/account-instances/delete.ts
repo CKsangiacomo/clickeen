@@ -6,9 +6,8 @@ export async function deleteAccountInstanceSourceAnchor(
   env: Env,
   instanceId: string,
   accountId: string,
-  widgetCode: string,
 ): Promise<void> {
-  await env.TOKYO_R2.delete(accountInstanceSourceKey(accountId, widgetCode, instanceId));
+  await env.TOKYO_R2.delete(accountInstanceSourceKey(accountId, instanceId));
 }
 
 export function scheduleAccountInstanceResidualCleanup(args: {
@@ -19,7 +18,7 @@ export function scheduleAccountInstanceResidualCleanup(args: {
 }): void {
   const cleanup = deletePrefix(
     args.env,
-    `${accountInstanceRoot(args.accountId, '', args.instanceId)}/`,
+    `${accountInstanceRoot(args.accountId, args.instanceId)}/`,
   ).then(
     () => undefined,
     () => undefined,

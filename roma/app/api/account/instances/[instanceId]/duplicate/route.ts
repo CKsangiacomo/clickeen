@@ -61,10 +61,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
   const instanceId = createCompactInstanceId();
   const content = {
-    ...source.value.source.content,
     id: instanceId,
     accountId,
-    widgetType,
     fields: Object.fromEntries(
       Object.entries(source.value.source.content.fields).map(([path, field]) => [
         path,

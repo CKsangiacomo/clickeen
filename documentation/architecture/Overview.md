@@ -130,8 +130,16 @@ invent Widget copy or generic fallback reasons, and Widgets do not provide
 plan names, pricing, CTAs, Popup behavior, or billing destinations.
 
 New creates no instance and writes no source. First Save creates editable
-source and later Save updates it. Only explicit allowed Publish performs the
-expensive package-generation work once:
+source and later Save updates it. New composes the current account's exact
+common defaults with one selected
+Widget's effective Core. A present account Core entry is a complete override;
+otherwise the selected deploy-built Widget baseline is the exact intended
+truth. Account defaults do not snapshot every deployed Widget, so a newly
+deployed Widget works for existing accounts without backfill or read-time
+mutation.
+
+Only explicit allowed Publish performs the expensive package-generation work
+once:
 
 ```text
 exact saved logical instance state + explicit allowed Publish
@@ -158,26 +166,19 @@ product software; Bob owns the complete unsaved instance document;
 Roma's Widget-neutral materializer is the sole generator of the served package
 contents; Tokyo-worker only stores and serves those bytes. The physical source
 is one atomic `instance.source.json` containing metadata, config, and content;
-Bob and materialization operate on that same complete logical instance.
+its top-level `widgetType` is the sole stored Widget software identity, while
+content owns fields rather than a duplicate Widget identity. Bob and
+materialization operate on that same complete logical instance.
 
-Local implementation state: all five current Widgets implement the four PRD
-129 phases. New composes a non-persisted browser draft; first Save creates
+Every current Widget implements the four lifecycle phases. New composes a
+non-persisted browser draft; first Save creates
 source; later Save updates source; Duplicate creates an immediate saved
 unpublished copy; explicit Publish alone generates the package; and
 Tokyo-worker applies requested locale overlays to semantic HTML at the Edge.
 Roma owns publication controls in Widgets and its shared Builder header; Bob
 owns editing and Save only. The Builder header uses the same Dieter/Roma
 grammar and vertical rhythm as every other Roma domain, selecting only the
-full-width geometry required by Bob's canvas. The corrected lifecycle and
-background cache-eviction flow is deployed from commit `a6678966`. Cloud-dev
-Worker health, Roma and Bob
-reachability, authenticated saved-instance Builder open, non-persisting
-New-open inventory truth, live Copilot streaming, and public `dev.clk.live`
-package serving passed technical verification on 2026-08-19. Agent-executed
-closure on 2026-08-20 additionally proved the complete disposable lifecycle
-with exact account baseline restoration, the deployed Product Copilot
-continuation/Stop path, and Roma/Builder header geometry. Owner acceptance is
-not a completion gate.
+full-width geometry required by Bob's canvas.
 
 The active cloud-dev admin account coordinate is:
 
@@ -194,7 +195,7 @@ CLICKEEN
 | Builder editing state | Bob | `bob/` browser-memory session |
 | Public package generation | Roma generic Widget materializer | `@clickeen/ck-runtime-materializer` invoked only on explicit allowed Publish |
 | Account runtime storage | Tokyo-worker | `tokyo-worker/` over Tokyo R2 |
-| Product widget software | Git-authored Tokyo product root | `tokyo/product/widgets/`, including Core, structured contracts, ToolDrawer labels, and Widget-owned upsell messages, deployed to `product/widgets/` |
+| Product Widget software | Git-authored Widget source | `tokyo/product/widgets/`, packaged by the one producer into compact Tokyo summaries and selected Roma editor/materializer assets |
 | Public widget serving | Tokyo-worker public serving | logical package members from the instance's atomic published `serve-state.json` |
 | Relational account/support data | Michael/Supabase | `supabase/migrations/` and service-owned routes |
 | Model execution | San Francisco | `sanfrancisco/` |
@@ -219,9 +220,10 @@ of system-produced artifacts.
 | --- | --- | --- |
 | Roma | Cloudflare Pages / Next.js | Account app, Builder host, account routes |
 | Bob | Cloudflare Pages / Next.js | Builder editor for one opened account instance |
+| Tokyo source | Cloudflare Pages | Exact Git-authored `tokyo/` source/static projection; not Bob/Roma runtime artifact authority |
 | Berlin | Cloudflare Worker | Auth/session/account bootstrap |
 | Tokyo-worker | Cloudflare Worker + R2 | Account storage boundary and public file serving |
-| Tokyo R2 | Cloudflare R2 | Product roots and account runtime storage |
+| Tokyo R2 | Cloudflare R2 | Retained Dieter/font/Prague deploy roots and account runtime storage |
 | San Francisco | Cloudflare Worker + KV/R2 | Governed model execution and Prague l10n logs |
 | Product Copilot | Cloudflare Worker | Builder Product Copilot agent home |
 | Translation Agent | Cloudflare Worker | Translation Agent home |
@@ -241,7 +243,6 @@ Tokyo R2 has these current roots:
 accounts/
 dieter/
 fonts/
-product/
 prague/
 ```
 
@@ -269,14 +270,14 @@ one PUT. A published `serve-state.json` atomically contains `status`,
 the public `index.html`, `styles.css`, and `runtime.js` paths. They are not
 separate R2 objects, so publication cannot split package bytes from status.
 
-The non-account roots are git-authored deploy artifacts:
+The non-account R2 roots are git-authored deploy artifacts:
 
-- `product/widgets/**` for widget software;
 - `dieter/**` for design-system artifacts;
 - `fonts/special/**` for global Clickeen font files available to every account;
 - `prague/**` for Prague content/media.
 
-Root `widgets/`, `public/`, `published/`, and `l10n/` are not storage
+Widget software stays in git and ships as deploy-built Roma assets. Root
+`widgets/`, `product/`, `public/`, `published/`, and `l10n/` are not storage
 authorities.
 
 ## Product Flows
@@ -410,11 +411,8 @@ Production public serving uses:
 https://clk.live/{accountPublicId}/{instanceId}
 ```
 
-The pre-GA storage cutover is complete for all four legacy saved cloud-dev
-instances under `CLICKEEN`. Their source records were cut over and the two
-intended-public instances were Republished through Roma. There is no legacy
-read fallback or migration-on-read; retained split legacy objects are
-unreachable.
+Current reads use only atomic source and serve-state truth. There is no
+compatibility reader or migration-on-read.
 
 ### Account Assets
 
@@ -505,16 +503,17 @@ https://product-copilot-dev.clickeen.workers.dev/healthz
 ```
 
 Translation Agent has no public human runtime URL. Verify it through GitHub
-Actions `cloud-dev workers deploy` evidence plus the Roma translation smoke path.
+Actions `cloud-dev workers deploy` evidence plus
+`E2E_TRANSLATION_INSTANCE_ID={exactInstanceId} pnpm
+e2e:smoke:translation-agent-runtime`. The smoke has no instance fallback.
 
 Use the owning deployment path:
 
 | Surface | Deploy/evidence path |
 | --- | --- |
-| Bob/Roma/Prague Pages | Cloudflare Pages Git-connected build from `main` |
-| DevStudio Pages | Cloudflare Pages project plus repo Cloudflare API checks |
+| Bob/Roma/Tokyo source/Prague/DevStudio Pages | Cloudflare Pages Git-connected build from `main` |
 | Berlin/San Francisco/Tokyo-worker/Product Copilot/Translation Agent | GitHub Actions `cloud-dev workers deploy` |
-| Tokyo product roots in R2 | `cloud-dev workers deploy` R2 sync step |
+| Tokyo retained roots in R2 | `cloud-dev workers deploy` full or Dieter/font delta sync step |
 | Supabase schema | reviewed SQL migration plus migration deploy workflow |
 | R2 object reads/writes | repo R2 commands after `pnpm cf:preflight` |
 | Pages/DNS/config reads/writes | repo Cloudflare API commands after `pnpm cf:api:preflight` |

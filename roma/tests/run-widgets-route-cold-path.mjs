@@ -3,7 +3,9 @@ import { fileURLToPath } from 'node:url';
 import { build } from 'esbuild';
 
 const stateKey = '__clickeenWidgetsRouteTestState';
+const directStateKey = '__clickeenWidgetsDirectTestState';
 const routePath = fileURLToPath(new URL('../app/api/account/widgets/route.ts', import.meta.url));
+const directPath = fileURLToPath(new URL('../lib/account-instance-direct.ts', import.meta.url));
 
 const bundle = await build({
   entryPoints: [routePath],
@@ -234,5 +236,79 @@ assert.deepEqual(await secondErrorResponse.json(), {
   },
 });
 
+const directBundle = await build({
+  entryPoints: [directPath],
+  bundle: true,
+  format: 'esm',
+  platform: 'node',
+  target: 'node20',
+  write: false,
+  plugins: [
+    {
+      name: 'tokyo-client-stub',
+      setup(buildApi) {
+        buildApi.onResolve(
+          { filter: /tokyo-client$/ },
+          () => ({ path: 'tokyo-client', namespace: 'widgets-direct-test' }),
+        );
+        buildApi.onLoad(
+          { filter: /^tokyo-client$/, namespace: 'widgets-direct-test' },
+          () => ({
+            loader: 'js',
+            contents: `
+              export function callTokyo(context, args) {
+                return globalThis.${directStateKey}.callTokyo(context, args);
+              }
+            `,
+          }),
+        );
+      },
+    },
+  ],
+});
+const directModule = await import(
+  `data:text/javascript;base64,${Buffer.from(directBundle.outputFiles[0].text).toString('base64')}`
+);
+const directCalls = [];
+globalThis[directStateKey] = {
+  callTokyo: async (context, args) => {
+    directCalls.push({ context, args });
+    return {
+      ok: true,
+      status: 200,
+      value: args.decode({
+        ok: true,
+        accountId: 'ACCOUNT',
+        instances: instancesSuccess.value.instances,
+      }),
+    };
+  },
+};
+const directResult = await directModule.loadAccountWidgetInstanceFacts({
+  accountId: 'ACCOUNT',
+  accountCapsule: 'account-capsule',
+  requestId: 'request-1',
+});
+assert.deepEqual(directResult, {
+  ok: true,
+  value: {
+    accountId: 'ACCOUNT',
+    instances: instancesSuccess.value.instances,
+  },
+});
+assert.equal(directCalls.length, 1, 'account facts must require one Tokyo request');
+assert.deepEqual(directCalls[0].context, {
+  accountId: 'ACCOUNT',
+  accountCapsule: 'account-capsule',
+  internalServiceName: undefined,
+  requestId: 'request-1',
+});
+assert.equal(
+  directCalls[0].args.path,
+  '/__internal/accounts/ACCOUNT/instances/list-facts',
+);
+assert.equal(directCalls[0].args.method, 'GET');
+
 delete globalThis[stateKey];
+delete globalThis[directStateKey];
 console.log('Widgets route cold-path behavior passed.');

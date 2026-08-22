@@ -88,8 +88,9 @@ session.
 
 The `content` member of atomic `instance.source.json` owns the current saved
 translatable field set. Its keys are concrete paths. Each field also carries
-its field pattern and stable `identityKey`. The overlay uses `identityKey`, not
-the physical map key:
+its field pattern and stable `identityKey`. The source record's required
+top-level `widgetType` supplies the Widget software coordinate; content does
+not duplicate it. The overlay uses `identityKey`, not the physical map key:
 
 ```text
 scalar:

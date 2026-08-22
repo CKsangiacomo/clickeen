@@ -1,4 +1,4 @@
-# Tokyo - R2 Storage And Static Deploy Contract
+# Tokyo — Git Source, R2 Storage, And Static Deploy Contract
 
 STATUS: CURRENT SYSTEM OPERATOR SPEC
 
@@ -13,9 +13,18 @@ normalization, filtering, or repair.
 
 Tokyo has two forms:
 
-- `tokyo/`: git-authored product/static artifacts;
+- `tokyo/`: git-authored product/static artifacts, deployed by the
+  Git-connected `tokyo-dev` Pages project;
 - `tokyo-worker/`: Cloudflare Worker controlling account R2 operations and
   public reads.
+
+Canonical Widget source remains under `tokyo/product/widgets/{widgetType}/`.
+The `tokyo-dev` Pages project publishes the exact Git-authored `tokyo/` tree,
+including `/product/widgets/**`. That source surface is not a Bob/Roma runtime
+artifact contract: the one producer reads the repository source and emits the
+selected Roma editor/materializer artifacts plus compact Tokyo Catalog truth.
+It is also not the removed R2 `product/widgets/**` mirror or Tokyo-worker
+`/widgets/**` friendly route.
 
 ## R2 Root Contract
 
@@ -23,7 +32,6 @@ Tokyo has two forms:
 accounts/   runtime-managed account storage
 dieter/     git-authored shared SVG icon media
 fonts/      git-authored global Clickeen fonts
-product/    git-authored product software and media
 prague/     git-authored marketing/site/GTM content
 ```
 
@@ -43,7 +51,8 @@ accounts/{accountPublicId}/
 Rules:
 
 - `accountPublicId` and `instanceId` are stable compact coordinates.
-- Widget codes and display names are metadata, not folders.
+- Top-level `widgetType` is the sole stored Widget software identity. There is
+  no Widget-code field or Widget-code folder. Display names remain metadata.
 - `instance.source.json` atomically contains source metadata, exact config, and
   exact base-locale content for one complete logical instance. Bob and Roma
   operate on that complete state.
@@ -112,25 +121,19 @@ awaited, inspected, or exposed as product state. Every cacheable response
 for the exact account/instance carries that tag, covering every package path
 and locale/query variant.
 
-Current cloud-dev implementation: public serving trusts every current Widget's Roma
-package and exact overlay, then uses Cloudflare `HTMLRewriter` over materialized
+Public serving trusts every current Widget's Roma package and exact overlay,
+then uses Cloudflare `HTMLRewriter` over materialized
 stable-identity `data-ck-content-path` slots and sets `<html lang>` before
 JavaScript. An authored `data-ck-content-attribute` names the exact HTML
 attribute target; otherwise Tokyo replaces inner content. It does not compare
 a package/source fingerprint, inject browser locale context, or revalidate
-overlay meaning. Deployment and agent-executed base/package/selected-locale
-cloud-dev serving checks pass.
-
-The pre-GA atomic source/published-serve-state cutover is complete for all four
-legacy saved cloud-dev instances under `CLICKEEN`; the two public instances
-were Republished through Roma. No compatibility reader or migration-on-read
-exists, and retained split legacy objects are unreachable.
+overlay meaning. Current reads use only atomic source and serve-state truth;
+there is no compatibility reader or migration-on-read.
 
 ## Static Read Paths
 
 | Friendly path | Canonical R2 root |
 | --- | --- |
-| `/widgets/**` | `product/widgets/**` |
 | `/dieter/icons/svg/**` | `dieter/icons/svg/**` |
 | `/fonts/special/**` | `fonts/special/**` |
 | `/assets/account/**` | account asset reads allowed by Tokyo-worker |
@@ -144,9 +147,14 @@ Friendly paths are routes, not storage roots.
 ```bash
 pnpm tokyo:r2:sync:check
 pnpm cf:preflight
+pnpm cf:api:preflight
+pnpm cf:pages:project tokyo-dev
 ```
 
-Product-root deployment runs through GitHub Actions `cloud-dev workers deploy`.
+Retained static-root deployment runs through GitHub Actions
+`cloud-dev workers deploy`.
+Git-authored Tokyo source deployment runs through the Git-connected
+`tokyo-dev` Pages project on `main`.
 Remote R2 operations must use the repo paths documented in
 `documentation/engineering/CloudflareOperations.md`.
 
@@ -155,7 +163,7 @@ Remote R2 operations must use the repo paths documented in
 Stop if a change would:
 
 - write git-authored product artifacts into `accounts/`;
-- write account runtime artifacts into `dieter/`, `fonts/`, `product/`, or `prague/`;
+- write account runtime artifacts into `dieter/`, `fonts/`, or `prague/`;
 - introduce a second artifact root for one instance;
 - use UUID account folders;
 - treat Prague translations as account instance overlays;

@@ -1,6 +1,11 @@
 import Mustache from 'mustache';
 import type { RuntimeTypographyData } from './font-library';
-import { annotateWidgetRenderCoordinates, type WidgetSoftware } from './widget-software';
+import {
+  annotateWidgetRenderCoordinates,
+  type TypographyScript,
+  type WidgetSoftware,
+  type WidgetTypographyBehavior,
+} from './widget-software';
 
 export type WidgetStyleRenderContext = {
   locale: string;
@@ -28,56 +33,8 @@ const LINE_HEIGHT_PRESETS: Record<string, string> = {
   loose: '1.6',
 };
 
-const DEFAULT_ROLE_LINE_HEIGHT: Record<string, string> = {
-  title: 'var(--lh-tight)',
-  body: 'var(--lh-body)',
-  section: 'var(--lh-tight)',
-  question: 'var(--lh-tight)',
-  answer: 'var(--lh-body)',
-  heading: 'var(--lh-tight)',
-  timer: '1',
-  label: 'var(--lh-tight)',
-  button: 'var(--lh-tight)',
-  localeSwitcher: 'var(--lh-tight)',
-};
-
-const SCRIPT_NORMAL_LINE_HEIGHT: Record<string, Record<string, string>> = {
-  japanese: {
-    title: '1.28',
-    section: '1.3',
-    question: '1.38',
-    body: '1.58',
-    answer: '1.62',
-    button: '1.24',
-  },
-  korean: {
-    title: '1.26',
-    section: '1.3',
-    question: '1.36',
-    body: '1.54',
-    answer: '1.58',
-    button: '1.22',
-  },
-  zhHans: {
-    title: '1.24',
-    section: '1.28',
-    question: '1.34',
-    body: '1.52',
-    answer: '1.56',
-    button: '1.2',
-  },
-  zhHant: {
-    title: '1.24',
-    section: '1.28',
-    question: '1.34',
-    body: '1.52',
-    answer: '1.56',
-    button: '1.2',
-  },
-};
-
 const SCRIPT_FONTS: Record<
-  string,
+  TypographyScript,
   Record<'sans' | 'serif', { fonts: string[]; specs: Record<string, string> }>
 > = {
   latin: {
@@ -183,7 +140,10 @@ const SCRIPT_FONTS: Record<
   },
 };
 
-const RESPONSIVE_SCRIPT_SELECTORS: Array<{ script: string; selectors: string[] }> = [
+const RESPONSIVE_SCRIPT_SELECTORS: Array<{
+  script: TypographyScript;
+  selectors: string[];
+}> = [
   { script: 'latin', selectors: ['html[lang]'] },
   { script: 'japanese', selectors: ['html:lang(ja)'] },
   { script: 'korean', selectors: ['html:lang(ko)'] },
@@ -299,7 +259,7 @@ function paddingSide(box: ValueRecord, side: string): number {
   return box.linked ? box.all : box[side];
 }
 
-function scriptForLocale(locale: string): string {
+function scriptForLocale(locale: string): TypographyScript {
   const parts = locale.toLowerCase().replace(/_/g, '-').split('-');
   if (parts.includes('hans')) return 'zhHans';
   if (parts.includes('hant')) return 'zhHant';
@@ -332,7 +292,7 @@ function fontToken(family: string): string {
 
 function familyCss(args: {
   family: string;
-  script: string;
+  script: TypographyScript;
   typographyData: RuntimeTypographyData;
 }): string {
   const familyClass = args.typographyData.curatedFonts[args.family].familyClass;
@@ -351,11 +311,15 @@ function pxLength(value: unknown): number | null {
   return match ? Number(match[1]) : null;
 }
 
-function fluidSize(roleKey: string, value: string, scale: ValueRecord): string {
+function fluidSize(
+  behavior: 'min-plus-growth' | 'proportional',
+  value: string,
+  scale: ValueRecord,
+): string {
   const max = pxLength(value);
   const min = pxLength(scale.xs);
   if (max === null || min === null || max <= 0 || min <= 0 || min >= max) return value;
-  if (['title', 'bigBang', 'timer', 'cardTitle'].includes(roleKey)) {
+  if (behavior === 'min-plus-growth') {
     const growth = Math.round((((max - min) * 100) / 960) * 10000) / 10000;
     return `clamp(${min}px, calc(${min}px + ${growth}cqi), ${max}px)`;
   }
@@ -368,11 +332,13 @@ function typographyRoleCss(args: {
   source: string;
   locale: string;
   typographyData: RuntimeTypographyData;
+  typographyBehavior: WidgetTypographyBehavior;
 }): string {
   const [roleKey, variableKey = roleKey] = args.source.split(/\s+/);
   const typography = args.state.typography;
   const role = typography.roles[roleKey];
   const scale = typography.roleScales[roleKey];
+  const behavior = args.typographyBehavior.roles[roleKey];
   const rawSize = role.sizePreset === 'custom' ? role.sizeCustom : scale[role.sizePreset];
   const size =
     typeof rawSize === 'number' || /^-?\d+(?:\.\d+)?$/.test(String(rawSize))
@@ -387,13 +353,11 @@ function typographyRoleCss(args: {
     role.lineHeightPreset === 'custom'
       ? String(role.lineHeightCustom)
       : role.lineHeightPreset === 'normal'
-        ? (SCRIPT_NORMAL_LINE_HEIGHT[script]?.[roleKey] ??
-          DEFAULT_ROLE_LINE_HEIGHT[roleKey] ??
-          'normal')
+        ? behavior.normalLineHeight[script]
         : LINE_HEIGHT_PRESETS[role.lineHeightPreset];
   return [
     `--typo-${variableKey}-family: ${familyCss({ family: role.family, script, typographyData: args.typographyData })};`,
-    `--typo-${variableKey}-size: ${fluidSize(roleKey, size, scale)};`,
+    `--typo-${variableKey}-size: ${fluidSize(behavior.fluidSize, size, scale)};`,
     `--typo-${variableKey}-weight: ${role.weight};`,
     `--typo-${variableKey}-style: ${role.fontStyle};`,
     `--typo-${variableKey}-color: ${fillColor(role.color)};`,
@@ -485,6 +449,7 @@ function typographyVariableKey(roleKey: string): string {
 function responsiveTypographyCss(args: {
   state: ValueRecord;
   typographyData: RuntimeTypographyData;
+  typographyBehavior: WidgetTypographyBehavior;
 }): string {
   const roles = args.state.typography.roles as Record<string, ValueRecord>;
   return RESPONSIVE_SCRIPT_SELECTORS.map(({ script, selectors }) => {
@@ -499,11 +464,7 @@ function responsiveTypographyCss(args: {
       ];
       if (role.lineHeightPreset === 'normal') {
         values.push(
-          `--typo-${variableKey}-line-height: ${
-            SCRIPT_NORMAL_LINE_HEIGHT[script]?.[roleKey] ??
-            DEFAULT_ROLE_LINE_HEIGHT[roleKey] ??
-            'normal'
-          };`,
+          `--typo-${variableKey}-line-height: ${args.typographyBehavior.roles[roleKey].normalLineHeight[script]};`,
         );
       }
       return values;
@@ -515,6 +476,7 @@ function responsiveTypographyCss(args: {
 function buildCssView(args: {
   state: ValueRecord;
   context: WidgetStyleRenderContext;
+  typographyBehavior: WidgetTypographyBehavior;
 }): Record<string, CssSection> {
   const { state, context } = args;
   return {
@@ -544,6 +506,7 @@ function buildCssView(args: {
         source,
         locale: context.locale,
         typographyData: context.typographyData,
+        typographyBehavior: args.typographyBehavior,
       }),
     ),
   };
@@ -564,9 +527,13 @@ export function renderWidgetStyles(args: {
   const view = {
     ...state,
     ck: {
-      css: buildCssView({ state, context: args.context }),
+      css: buildCssView({
+        state,
+        context: args.context,
+        typographyBehavior: args.software.typographyBehavior,
+      }),
     },
   };
   const renderedSources = args.software.styles.map((asset) => Mustache.render(asset.source, view));
-  return `${fontSources({ state: args.state, locale: args.context.locale, typographyData: args.context.typographyData })}\n\n${renderedSources.join('\n\n')}\n\n${responsiveTypographyCss({ state: args.state, typographyData: args.context.typographyData })}\n`;
+  return `${fontSources({ state: args.state, locale: args.context.locale, typographyData: args.context.typographyData })}\n\n${renderedSources.join('\n\n')}\n\n${responsiveTypographyCss({ state: args.state, typographyData: args.context.typographyData, typographyBehavior: args.software.typographyBehavior })}\n`;
 }

@@ -12,12 +12,17 @@ import {
 } from '../domains/account-instances/publication-coordinator';
 import { scheduleAccountInstanceResidualCleanup } from '../domains/account-instances/delete';
 import type { SubmittedInstancePublicPackage } from '../domains/account-instances/package-files';
-import type { AccountInstanceContentDocument } from '../domains/account-instances/types';
+import type {
+  AccountInstanceContentDocument,
+  AccountInstanceSourcePointer,
+  AccountInstanceSourceReadFailure,
+} from '../domains/account-instances/types';
 import {
   AccountInstanceCoordinateError,
   listAccountInstanceIds,
   readAccountInstanceSource,
   readAccountInstanceSourcePointer,
+  readAccountInstanceSourcePointers,
 } from '../domains/account-instances/source';
 import { json } from '../http';
 import {
@@ -33,6 +38,35 @@ import {
   readInternalProductJsonBody,
   transitionErrorResponse,
 } from './internal-product-route-utils';
+
+function accountInstanceListFact(pointer: AccountInstanceSourcePointer) {
+  return {
+    accountId: pointer.accountId,
+    instanceId: pointer.id,
+    widgetType: pointer.widgetType,
+    displayName: pointer.displayName,
+    updatedAt: pointer.updatedAt,
+    publishStatus: pointer.publishStatus,
+    publishedAt: pointer.publishedAt,
+  };
+}
+
+function accountInstanceReadFailureResponse(
+  respond: TokyoRouteArgs['respond'],
+  failure: AccountInstanceSourceReadFailure,
+): Response {
+  return respond(
+    json(
+      {
+        error: {
+          kind: failure.kind,
+          reasonKey: failure.reasonKey,
+        },
+      },
+      { status: failure.kind === 'NOT_FOUND' ? 404 : 422 },
+    ),
+  );
+}
 
 export async function tryHandleInternalInstanceRoutes(
   args: TokyoRouteArgs,
@@ -95,6 +129,70 @@ export async function tryHandleInternalInstanceRoutes(
     }
   }
 
+  const internalAccountInstanceFactsMatch = pathname.match(
+    /^\/__internal\/accounts\/([^/]+)\/instances\/list-facts$/,
+  );
+  if (internalAccountInstanceFactsMatch) {
+    const pathAccountId = normalizeAccountPublicId(
+      decodeURIComponent(internalAccountInstanceFactsMatch[1] || ''),
+    );
+    const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
+    if (!accountId || !pathAccountId || pathAccountId !== accountId) {
+      return respondValidation(
+        respond,
+        'coreui.errors.instance.invalidPayload',
+        accountId ? 403 : 422,
+      );
+    }
+    if (req.method !== 'GET') return respondMethodNotAllowed(respond);
+    const authErr = await authorizeAccountInstanceControlRequest({
+      req,
+      env,
+      accountId,
+      minRole: 'viewer',
+    });
+    if (authErr) return respond(authErr);
+
+    let instanceIds: string[];
+    try {
+      instanceIds = await listAccountInstanceIds({ env, accountId });
+    } catch (error) {
+      if (error instanceof AccountInstanceCoordinateError) {
+        return respond(
+          json(
+            {
+              error: {
+                kind: 'VALIDATION',
+                reasonKey: 'tokyo.errors.instance.malformedCoordinate',
+                detail: error.detail,
+                phase: 'account-instance-coordinate-enumeration',
+              },
+            },
+            { status: 422 },
+          ),
+        );
+      }
+      const detail = error instanceof Error ? error.message : String(error);
+      return respond(
+        json({ error: { kind: 'VALIDATION', reasonKey: detail, detail } }, { status: 422 }),
+      );
+    }
+
+    const pointers = await readAccountInstanceSourcePointers({
+      env,
+      accountId,
+      instanceIds,
+    });
+    if (!pointers.ok) return accountInstanceReadFailureResponse(respond, pointers);
+    return respond(
+      json({
+        ok: true,
+        accountId,
+        instances: pointers.value.map(accountInstanceListFact),
+      }),
+    );
+  }
+
   const internalInstanceListFactsMatch = pathname.match(/^\/__internal\/instances\/([^/]+)\/list-facts$/);
   if (internalInstanceListFactsMatch) {
     const instanceId = normalizeStorageId(
@@ -122,30 +220,12 @@ export async function tryHandleInternalInstanceRoutes(
       accountId,
       instanceId,
     });
-    if (!pointer.ok) {
-      return respond(
-        json(
-          {
-            error: {
-              kind: pointer.kind,
-              reasonKey: pointer.reasonKey,
-            },
-          },
-          { status: pointer.kind === 'NOT_FOUND' ? 404 : 422 },
-        ),
-      );
-    }
+    if (!pointer.ok) return accountInstanceReadFailureResponse(respond, pointer);
 
     return respond(
       json({
         ok: true,
-        accountId: pointer.value.accountId,
-        instanceId: pointer.value.id,
-        widgetType: pointer.value.widgetType,
-        displayName: pointer.value.displayName,
-        updatedAt: pointer.value.updatedAt,
-        publishStatus: pointer.value.publishStatus,
-        publishedAt: pointer.value.publishedAt,
+        ...accountInstanceListFact(pointer.value),
       }),
     );
   }
@@ -186,7 +266,6 @@ export async function tryHandleInternalInstanceRoutes(
             ok: true,
             accountId,
             instanceId: created.pointer.id,
-            widgetCode: created.pointer.widgetCode,
             widgetType: created.pointer.widgetType,
             displayName: created.pointer.displayName,
             publishStatus: created.pointer.publishStatus,
@@ -319,7 +398,6 @@ export async function tryHandleInternalInstanceRoutes(
           ok: true,
           accountId,
           instanceId: pointer.id,
-          widgetCode: pointer.widgetCode,
           widgetType: pointer.widgetType,
           displayName: pointer.displayName,
           publishStatus: pointer.publishStatus,

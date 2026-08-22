@@ -1,6 +1,6 @@
 # Cards Widget
 
-STATUS: CANONICAL CORE DEPLOYED — SHARED ARCHITECTURE GATES PASS
+STATUS: CURRENT SYSTEM OPERATOR SPEC
 
 ## Purpose
 
@@ -21,10 +21,6 @@ software. The materializer writes every saved card and the exact current order
 into initial semantic HTML. Core JavaScript does not reconstruct card state,
 localize content, invoke shared utilities, or receive Bob state updates. There
 is no flat-source compatibility path or Widget-specific shared-service branch.
-
-The source, generated artifacts, and cloud-dev deploy proof are complete. The
-agent-executed shared lifecycle, materialization, and serving gates pass. A
-fresh per-Widget Republish is not a separate architecture-closure requirement.
 
 ## Source
 
@@ -135,6 +131,10 @@ Cards follows the canonical ToolDrawer sequence:
 4. **Typography** — Card title and Card copy after the shared roles.
 5. **Settings** — shared SEO/GEO, branding, and social-share behavior.
 
+Cards declares the exact generic fluid-size and normal-line-height behavior for
+Card title and Card copy in `typographyBehavior`. The shared renderer consumes
+that emitted behavior without a Cards or role-name branch.
+
 Only shared Header and the primary Cards Content section start open. Every
 Layout, Appearance, Typography, and Settings section starts collapsed.
 
@@ -179,7 +179,7 @@ inside title or copy remain independent anchors, so the document never nests
 one anchor inside another. Removed preview roots carry no persistent
 asynchronous work.
 
-Current product behavior preserved by the Core migration:
+Current product behavior:
 
 - per-card Fill `type: "none"` means exact transparent fill, not inheritance;
 - current `textTone` choices do not replace the exact Card title/Card copy
@@ -196,7 +196,10 @@ generic shared services. Core neither invokes nor revalidates them.
 ## Verification
 
 ```bash
-pnpm validate:widgets
+# Intentional derived-output write:
+node scripts/widgets/generate-artifacts.mjs --widget cards
+# Non-writing verification:
+node scripts/widgets/generate-artifacts.mjs --widget cards --check
 pnpm --filter @clickeen/widget-foundation typecheck
 pnpm --filter @clickeen/bob test:editor-contract
 node --check tokyo/product/widgets/cards/core/core.js

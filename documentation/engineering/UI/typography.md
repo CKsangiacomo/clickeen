@@ -92,8 +92,13 @@ renderWidgetStyles(exact state + exact account font data)
 
 The generated CSS emits `--typo-*` variables for the Widget scope. Widget typography may
 include account-authored content colors, role scales, custom sizes, weights,
-styles, tracking presets, line-height presets, and locale/script-aware fallback
-behavior. That is widget content authority, not Dieter chrome authority.
+styles, tracking presets, and line-height presets. Deploy-built
+`widgetSoftware.typographyBehavior` carries one complete fluid-size and normal-
+line-height value for every composed role and supported script. Widget
+Foundation owns common-role behavior; each Widget declares only its unique
+role behavior. The renderer consumes that exact map without role-name branches,
+guessed values, or a runtime fallback. This is Widget software and content
+presentation authority, not Dieter chrome authority.
 
 Saved `typography.roleScales` is the only role-scale authority. The
 source/editor contract produces every common and Widget-declared role, scale,
@@ -230,7 +235,8 @@ Published-package behavior:
   rules and the required script font dependencies. Tokyo changes only
   `<html lang>` while applying an overlay, so Japanese, Korean, Chinese,
   Arabic, Hebrew, Thai, Devanagari, Bengali, Cyrillic, and Latin text select
-  the correct authored fallback/line-height rules without locale packages.
+  the correct authored font stack and exact emitted line-height behavior without
+  locale packages.
 - Bob preview uses the same rendered CSS and exact Google stylesheet links.
 
 Big Bang, Cards, Countdown, FAQ, and Logo Showcase all use the canonical static

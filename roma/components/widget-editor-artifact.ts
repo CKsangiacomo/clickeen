@@ -8,11 +8,3 @@ export async function getWidgetEditorArtifact(widgetType: string): Promise<Compi
     `/widget-editors/${encodeURIComponent(widgetType)}.json`,
   );
 }
-
-export async function prefetchWidgetEditorArtifact(widgetType: string): Promise<void> {
-  try {
-    await getWidgetEditorArtifact(widgetType);
-  } catch {
-    // Opening the widget reports the authoritative error.
-  }
-}

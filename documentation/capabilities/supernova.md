@@ -95,7 +95,8 @@ Future Supernova work must obey current architecture:
 
 - agents operate structured artifacts;
 - account data lives under `accounts/{accountPublicId}/...`;
-- widget software lives under `product/widgets/{widgetType}/`;
+- widget software is authored under `tokyo/product/widgets/{widgetType}/` and
+  ships through the one deploy-built Roma artifact producer;
 - public runtime serves stored/generated artifacts and does not call models;
 - no fallbacks or silent substitution;
 - no unowned provider calls;

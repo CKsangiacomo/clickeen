@@ -2,18 +2,6 @@
   "widgetname": "logoshowcase",
   "displayName": "Logo Showcase",
   "description": "",
-  "normalization": {
-    "idRules": [
-      {
-        "arrayPath": "logoshowcase.strips",
-        "idKey": "id"
-      },
-      {
-        "arrayPath": "logoshowcase.strips[].logos",
-        "idKey": "id"
-      }
-    ]
-  },
   "defaults": {
     "logoshowcase": {
       "type": "grid",

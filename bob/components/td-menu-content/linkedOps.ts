@@ -44,7 +44,6 @@ function isLinkedTogglePath(path: string): boolean {
     new RegExp(`^((?:pod|(?:[a-zA-Z0-9_-]+\\.)?appearance\\.cardwrapper))\\.radiusLinked$`).test(path) ||
     /^(stage|pod|(?:[a-zA-Z0-9_-]+\.)?appearance\.cardwrapper)\.insideShadow\.linked$/.test(path) ||
     /^(pod|stage)\.padding\.(desktop|mobile)\.linked$/.test(path) ||
-    path === 'layout.itemPaddingLinked' ||
     path === 'appearance.headerCta.paddingLinked'
   );
 }
@@ -186,27 +185,6 @@ export function expandLinkedOps(args: {
         continue;
       }
 
-      if (op.path === 'layout.itemPaddingLinked') {
-        const nextLinked = op.value;
-        const linkedValue = getAt<unknown>(args.instanceData, 'layout.itemPadding');
-        const topValue = getAt<unknown>(args.instanceData, 'layout.itemPaddingTop');
-        const source = nextLinked ? topValue : linkedValue;
-        const numberValue = finiteNumber(source);
-        if (numberValue == null) {
-          throw new Error(`[BobLinkedOps] "${op.path}" cannot link item padding from malformed source value`);
-        }
-
-        expanded.push(
-          setOp(op.path, nextLinked),
-          ...(nextLinked ? [setOp('layout.itemPadding', numberValue)] : []),
-          setOp('layout.itemPaddingTop', numberValue),
-          setOp('layout.itemPaddingRight', numberValue),
-          setOp('layout.itemPaddingBottom', numberValue),
-          setOp('layout.itemPaddingLeft', numberValue),
-        );
-        continue;
-      }
-
       if (op.path === 'appearance.headerCta.paddingLinked') {
         const nextLinked = op.value;
         if (nextLinked === true) {
@@ -259,25 +237,6 @@ export function expandLinkedOps(args: {
           setOp(`${base}.radiusTR`, op.value),
           setOp(`${base}.radiusBR`, op.value),
           setOp(`${base}.radiusBL`, op.value),
-        );
-        continue;
-      }
-    }
-
-    if (op.path === 'layout.itemPadding') {
-      const linkedValue = getAt<unknown>(args.instanceData, 'layout.itemPaddingLinked');
-      const linked = requireBoolean(linkedValue, 'layout.itemPaddingLinked');
-      const numberValue = finiteNumber(op.value);
-      if (linked && numberValue == null) {
-        throw new Error(`[BobLinkedOps] "${op.path}" cannot update linked item padding from malformed value`);
-      }
-      if (linked && numberValue != null) {
-        expanded.push(
-          setOp(op.path, numberValue),
-          setOp('layout.itemPaddingTop', numberValue),
-          setOp('layout.itemPaddingRight', numberValue),
-          setOp('layout.itemPaddingBottom', numberValue),
-          setOp('layout.itemPaddingLeft', numberValue),
         );
         continue;
       }

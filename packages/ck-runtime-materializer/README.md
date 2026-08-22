@@ -6,9 +6,10 @@ Pure Publish builder for one complete public package of a saved Widget instance.
 
 ## Contract
 
-Input:
+Input, loaded by Roma from the selected deploy-built Pages materializer asset:
 
 - compiled widget software;
+- its complete producer-owned typography role/script behavior;
 - account/instance/base-locale coordinate;
 - saved base state;
 - exact resolved typography resources.

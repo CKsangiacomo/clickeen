@@ -1,4 +1,3 @@
-import { resolveWidgetOverlayCode } from '@clickeen/ck-contracts/overlay-codebooks';
 import type { Env } from '../../types';
 import type { SubmittedInstancePublicPackage } from './package-files';
 import { accountInstanceCacheTag } from './keys';
@@ -108,7 +107,6 @@ export async function createAccountInstanceFromSubmittedSource(args: {
     env: args.env,
     accountId,
     instanceId,
-    widgetCode: resolveWidgetOverlayCode(widgetType)!,
     widgetType,
     config: args.config,
     content: args.content,
@@ -134,7 +132,6 @@ export async function saveAccountInstanceSource(args: {
     env: args.env,
     accountId,
     instanceId,
-    widgetCode: existing.value.widgetCode,
     widgetType: existing.value.widgetType,
     config: args.config,
     content: args.content,
@@ -212,7 +209,6 @@ export async function publishAccountInstanceTransition(args: {
       env: args.env,
       accountId,
       instanceId,
-      widgetCode: existing.widgetCode,
       status: 'published',
       publicPackage: args.publicPackage,
       now: nextAccountInstanceTimestamp(existing.updatedAt, existing.publishedAt),
@@ -247,7 +243,6 @@ export async function unpublishAccountInstanceTransition(args: {
       env: args.env,
       accountId,
       instanceId,
-      widgetCode: existing.value.widgetCode,
       status: 'unpublished',
     });
   }
@@ -276,7 +271,6 @@ export async function deleteAccountInstanceTransition(args: {
     args.env,
     instanceId,
     accountId,
-    existing.value.widgetCode,
   );
   return { existed: true };
 }

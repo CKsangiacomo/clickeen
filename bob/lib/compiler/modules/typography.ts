@@ -84,6 +84,11 @@ export function buildTypographyPanel(args: {
   const lineHeightOptions = encodeOptions(TYPOGRAPHY_LINE_HEIGHT_OPTIONS);
   const suppliedRoleLabels = args.roleLabels ?? {};
   for (const roleKey of Object.keys(suppliedRoleLabels)) {
+    if (Object.prototype.hasOwnProperty.call(COMMON_WIDGET_TYPOGRAPHY_ROLE_LABELS, roleKey)) {
+      throw new Error(
+        `[BobCompiler] typography role label "${roleKey}" belongs to Bob's common typography contract`,
+      );
+    }
     if (!Object.prototype.hasOwnProperty.call(args.roles, roleKey)) {
       throw new Error(`[BobCompiler] typography role label "${roleKey}" has no composed role`);
     }
@@ -108,8 +113,9 @@ export function buildTypographyPanel(args: {
       throw new Error(`[BobCompiler] typography role "${key}" must be an object`);
     }
     const label =
-      suppliedRoleLabels[key] ??
-      COMMON_WIDGET_TYPOGRAPHY_ROLE_LABELS[key as keyof typeof COMMON_WIDGET_TYPOGRAPHY_ROLE_LABELS];
+      COMMON_WIDGET_TYPOGRAPHY_ROLE_LABELS[
+        key as keyof typeof COMMON_WIDGET_TYPOGRAPHY_ROLE_LABELS
+      ] ?? suppliedRoleLabels[key];
     if (!label) {
       throw new Error(`[BobCompiler] typography role "${key}" requires a product label`);
     }

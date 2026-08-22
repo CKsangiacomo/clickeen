@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
     );
   }
   const accountId = current.value.authzPayload.accountPublicId;
-  const widgetDefinition = readWidgetMaterializerArtifact(widgetType);
+  const widgetDefinition = await readWidgetMaterializerArtifact(widgetType);
   if (!widgetDefinition) {
     return withSession(
       request,

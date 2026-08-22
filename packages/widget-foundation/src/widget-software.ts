@@ -7,8 +7,7 @@ import Mustache from 'mustache';
 export type WidgetSoftware = {
   widgetHtml: string;
   coreHtml: string;
-  coreCss: string;
-  coreJs: string;
+  typographyBehavior: WidgetTypographyBehavior;
   styles: WidgetSoftwareAsset[];
   scripts: WidgetSoftwareAsset[];
 };
@@ -17,6 +16,98 @@ export type WidgetSoftwareAsset = {
   path: string;
   source: string;
 };
+
+export const WIDGET_TYPOGRAPHY_SCRIPTS = [
+  'latin',
+  'japanese',
+  'korean',
+  'zhHans',
+  'zhHant',
+  'arabic',
+  'hebrew',
+  'thai',
+  'devanagari',
+  'bengali',
+  'cyrillic',
+] as const;
+
+export type TypographyScript = (typeof WIDGET_TYPOGRAPHY_SCRIPTS)[number];
+
+export type WidgetTypographyRoleBehavior = {
+  fluidSize: 'min-plus-growth' | 'proportional';
+  normalLineHeight: Record<TypographyScript, string>;
+};
+
+export type WidgetTypographyBehavior = {
+  roles: Record<string, WidgetTypographyRoleBehavior>;
+};
+
+export const COMMON_WIDGET_TYPOGRAPHY_BEHAVIOR_ROLES = {
+  title: {
+    fluidSize: 'min-plus-growth',
+    normalLineHeight: {
+      latin: 'var(--lh-tight)',
+      japanese: '1.28',
+      korean: '1.26',
+      zhHans: '1.24',
+      zhHant: '1.24',
+      arabic: 'var(--lh-tight)',
+      hebrew: 'var(--lh-tight)',
+      thai: 'var(--lh-tight)',
+      devanagari: 'var(--lh-tight)',
+      bengali: 'var(--lh-tight)',
+      cyrillic: 'var(--lh-tight)',
+    },
+  },
+  body: {
+    fluidSize: 'proportional',
+    normalLineHeight: {
+      latin: 'var(--lh-body)',
+      japanese: '1.58',
+      korean: '1.54',
+      zhHans: '1.52',
+      zhHant: '1.52',
+      arabic: 'var(--lh-body)',
+      hebrew: 'var(--lh-body)',
+      thai: 'var(--lh-body)',
+      devanagari: 'var(--lh-body)',
+      bengali: 'var(--lh-body)',
+      cyrillic: 'var(--lh-body)',
+    },
+  },
+  button: {
+    fluidSize: 'proportional',
+    normalLineHeight: {
+      latin: 'var(--lh-tight)',
+      japanese: '1.24',
+      korean: '1.22',
+      zhHans: '1.2',
+      zhHant: '1.2',
+      arabic: 'var(--lh-tight)',
+      hebrew: 'var(--lh-tight)',
+      thai: 'var(--lh-tight)',
+      devanagari: 'var(--lh-tight)',
+      bengali: 'var(--lh-tight)',
+      cyrillic: 'var(--lh-tight)',
+    },
+  },
+  localeSwitcher: {
+    fluidSize: 'proportional',
+    normalLineHeight: {
+      latin: 'var(--lh-tight)',
+      japanese: 'var(--lh-tight)',
+      korean: 'var(--lh-tight)',
+      zhHans: 'var(--lh-tight)',
+      zhHant: 'var(--lh-tight)',
+      arabic: 'var(--lh-tight)',
+      hebrew: 'var(--lh-tight)',
+      thai: 'var(--lh-tight)',
+      devanagari: 'var(--lh-tight)',
+      bengali: 'var(--lh-tight)',
+      cyrillic: 'var(--lh-tight)',
+    },
+  },
+} as const satisfies WidgetTypographyBehavior['roles'];
 
 export type WidgetDiscoveryContract = {
   widgetType: string;

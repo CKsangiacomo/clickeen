@@ -48,8 +48,8 @@ is proved by the Widget compiler before deployment; neither service adds a
 runtime validator or fallback. Core and the public Widget package are not part
 of this product-UI flow.
 
-All five current Widgets implement this entitlement-message contract. Their
-compiled artifacts carry exact messages and Bob sends
+Every current Widget implements this entitlement-message contract. Its
+compiled artifact carries exact messages and Bob sends
 `{ capability, messageId, required }` from the one denied edit boundary.
 
 ## Panels
@@ -72,7 +72,7 @@ fail compilation. Bob emits them in the canonical order shown above.
 | `content`    | Header content, Core text/content, Core media choices, repeatable items, content toggles.    |
 | `layout`     | Header layout, Stage/Pod layout, Core sizing, columns, gaps, arrangement, carousel behavior. |
 | `appearance` | Header/Header CTA appearance, Stage/Pod appearance, Core colors, surfaces, borders, shadows. |
-| `typography` | Shared typography roles.                                                                     |
+| `typography` | Common and Widget-specific typography roles.                                                 |
 | `settings`   | Runtime/product behavior such as branding and social share.                                  |
 
 ## Authoring Model
@@ -98,11 +98,11 @@ Compiler-enforced rules:
 - Path-bound fields must resolve against composed defaults.
 - `dropdown-upload` binds one exact JSON path whose value is
   `null | {assetRef:string,name:string}` and requires its caller-owned copy.
-- Panel ids must be one of the five current widget panels; unknown ids fail compile.
+- Panel ids must be one of the five canonical Widget panels; unknown ids fail compile.
 - Every resolved cluster must have a non-empty plain-text label; missing label
   keys and unlabeled clusters fail compile.
-- Every label file must declare the exact widget type, locale `en`, all five
-  widget panel labels, and no missing or unused label keys.
+- Every label file must declare the exact Widget type, locale `en`, all five
+  canonical Widget panel labels, and no missing or unused label keys.
 - Malformed source nodes fail compilation.
 
 Product rules:
@@ -169,9 +169,9 @@ it. These are editor-copy inputs only. They never live under `defaults`, enter
 the instance document, or become account Widget Defaults. Unused singular or
 plural nouns are not carried as speculative copy.
 
-The current boundary covers every visible ToolDrawer label already migrated in
-this staged pass, including widget-declared labels, widget panel names, and the
-static Agent Activity title. The compiler emits that title as
+The current boundary covers every visible Widget-owned ToolDrawer label,
+including widget-declared labels, Widget panel names, and the static Agent
+Activity title. The compiler emits that title as
 `compiled.toolDrawerLabels.components["agent-activity"].title`; Bob renders it
 while the Translation Agent continues to own the dynamic activity-row words.
 Choice Tiles likewise receives its group label and every option label from the
@@ -300,10 +300,18 @@ The shared typography panel uses:
 The common widget contract owns the structured role identities `title`,
 `body`, `button`, and `localeSwitcher`; Bob's Typography English source owns
 their ToolDrawer labels. Widgets declare label tokens, in visible order, for
-every widget-specific typography role and may override a common label when its
-product meaning is broader. The adjacent English file owns those resolved
-widget-role values. Missing, malformed, unknown, or unused labels fail widget
-compilation; roles are never silently omitted.
+every widget-specific typography role. They do not redeclare or override the
+four common labels. The adjacent English file owns the resolved unique-role
+values. Missing, malformed, unknown, or unused labels fail widget compilation;
+roles are never silently omitted.
+
+Role labels and rendering behavior are separate contracts. `roleLabels` owns
+Widget-authored ToolDrawer copy. A Widget's top-level
+`typographyBehavior.roles` owns only the generic fluid-size and normal-line-
+height behavior of its unique roles; Widget Foundation owns the common roles.
+The build producer requires the emitted behavior map to cover every composed
+role and supported script exactly. Bob does not reconstruct that behavior from
+labels or role names.
 
 ## Structured Field Types
 
@@ -413,8 +421,8 @@ own a locale, file policy, storage path, account-plan reason set, or
 Widget-specific rule.
 The caller-owned client consumes the exact result from the owning Roma asset
 service and presents its declared outcome; it does not revalidate the response
-or infer another account-plan reason. None of the five current
-Widget specs declares this field, so do not add unused Widget labels or a fake
+or infer another account-plan reason. No current Widget spec declares this
+field, so do not add unused Widget labels or a fake
 product example merely to exercise the component.
 
 `dropdown-shadow` binds the exact object

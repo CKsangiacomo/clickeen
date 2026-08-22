@@ -116,7 +116,9 @@ accounts/{accountPublicId}/instances/{instanceId}/
 
 `instance.source.json` is one atomic saved Widget instance. It contains exact
 identity/display/base-locale/timestamp metadata, exact shared/Core config, and
-exact base-locale content. First Save writes the initial unpublished
+exact base-locale content. Its required top-level `widgetType` is the sole
+stored Widget software identity; content contains fields and no duplicate
+Widget type. First Save writes the initial unpublished
 `serve-state.json` first and writes `instance.source.json` last. Account
 inventory recognizes only exact `instance.source.json` keys, so a failed create
 cannot expose a partial instance. Save and Rename each replace the whole source
@@ -131,6 +133,10 @@ has no package/status split commit.
 
 Account instances do not have a generic metadata field. Account active locales
 are Roma account settings, not instance config.
+
+Current writers omit the superseded Widget-code member. Existing source objects
+are not rewritten by a read or deployment; any older extra member is inert and
+disappears only when an explicit owning source operation replaces that object.
 
 `overlays/locales/{locale}.json` carries durable translated values for one
 account active locale.
@@ -162,12 +168,10 @@ never authors, compiles, renders, rebuilds, restores, fingerprints, compares,
 or semantically validates Widget HTML/CSS/JavaScript.
 A missing object is an actual storage failure; it is not repaired or replaced.
 
-Local implementation: source and package fingerprints, commit-marker
-readiness, and legacy marked/unmarked compatibility rules are removed. Tokyo
-stores one exact source document or one exact serve-state artifact. Translation
-operations likewise store/read/list the exact owner-produced overlays without
-projecting them through saved content. Publish input continues to require all
-three logical members, including mandatory `runtimeJs`.
+Tokyo stores one exact source document or one exact serve-state artifact.
+Translation operations store, read, and list exact owner-produced overlays
+without projecting them through saved content. Publish input requires all three
+logical members, including mandatory `runtimeJs`.
 
 Save changes source only and schedules no public eviction.
 Publish/Republish changes package/publication truth inside the account
@@ -196,11 +200,9 @@ does not carry a per-request request id that could be replayed from cache.
 Missing/locale-error responses are `no-store`. The tag is the exact invalidation
 identity consumed by the owning default entrypoint's `ctx.cache.purge()` call.
 
-Prior cloud-dev evidence showed zone-API invalidation does not own Workers
-Cache. The deployed source instead schedules the owning default entrypoint's
-tag eviction through `waitUntil`, but live HIT/MISS or purge success is not a
-product acceptance gate. Agent-executed base/package/selected-locale serving
-proof passes without inspecting cache outcome.
+The owning default entrypoint schedules tag eviction through `waitUntil`;
+zone-API invalidation does not own Workers Cache. Live HIT/MISS or purge
+success is not a product acceptance gate.
 
 Every existing-instance Save, Rename, Publish/Republish, Unpublish, and Delete
 routes through one Tokyo-owned Cloudflare Durable Object per account. The
@@ -321,32 +323,18 @@ operation fails explicitly rather than treating corruption as absence. Tokyo
 does not run a second saved-field-equality or overlay-shape validator on every
 visitor request.
 
-Current cloud-dev implementation: the public index route trusts every current Widget's
-exact stored logical base HTML and requested overlay. Cloudflare `HTMLRewriter`
+The public index route trusts every current Widget's exact stored logical base
+HTML and requested overlay. Cloudflare `HTMLRewriter`
 replaces exact stable-identity `data-ck-content-path` slots, respects their
 exact text/HTML mode, writes the exact authored HTML attribute when
 `data-ck-content-attribute` is present, and sets `<html lang>` before the
 response. No package fingerprint, browser locale context, client localization,
 overlay schema validator, or saved-field equality check runs in public
 serving. Missing overlay truth is `404`; an R2 or JSON read failure is `500`;
-neither falls back to base. The Worker/R2 deployment and agent-executed live
-serving checks pass in cloud-dev.
-
-Closure verification on 2026-08-20 found that Tokyo's exact lookup is correct
-but the then-published FAQ package encoded repeated identity `=` characters as
-Mustache entity text, so repeated selected-locale values did not match while
-scalar values did. The correction is in the shared materializer producer:
-emit the canonical literal coordinate. Tokyo gains no decoder, alias,
-compatibility key, fallback, or repair path. Commit `72e75000` deployed that
-producer; Roma Republished only `VUWUJ7OQ0Y`; source and 28 overlay hashes were
-unchanged; and unique base/French public requests proved literal repeated
-coordinates plus translated scalar, repeated question, and repeated answer
-content before JavaScript.
-
-The pre-GA atomic source/published-serve-state cutover is complete for all four
-legacy saved cloud-dev instances under `CLICKEEN`; the two public instances
-were Republished through Roma. No compatibility reader or migration-on-read
-exists, and retained split legacy objects are unreachable.
+neither falls back to base. Literal stable-identity coordinates are produced by
+the shared materializer; Tokyo adds no decoder, alias, compatibility key,
+fallback, or repair path. Current reads use only atomic source and serve-state
+truth.
 
 ## Private Roma Routes
 
@@ -369,7 +357,7 @@ lookup/delete helper repeats the syntax or uniqueness decision.
 
 Storage command routes cover:
 
-- widget definition reads
+- one compact Widget Catalog collection read
 - account instance list/open/create/save/rename/delete
 - publish and unpublish
 - translated locale reads and writes
@@ -382,6 +370,13 @@ Account instance inventory is split by authority:
 - its storage enumeration recognizes only exact
   `instances/{instanceId}/instance.source.json` keys; serve-state or overlay
   objects without that source commit record are not visible instances;
+- `/__internal/accounts/{accountPublicId}/instances/list-facts` performs that
+  same source-anchor enumeration, reads every exact source pointer inside
+  Tokyo-worker, and returns the complete row-facts result once in descending
+  `updatedAt` order with `instanceId` as the deterministic tie-breaker;
+- one missing, corrupt, or failed source/serve-state read fails that complete
+  account-facts operation; Tokyo-worker does not filter or return a partial
+  inventory;
 - `/__internal/instances/{instanceId}/list-facts` returns exact stored row facts
   for one instance: account id, instance id, widget type, stored display name
   string or `null`, updated timestamp, and publish status;
@@ -393,8 +388,9 @@ Current internal route families:
 
 | Route | Methods | Purpose |
 | --- | --- | --- |
-| `/__internal/widgets/definitions` | `GET` | list/read widget definition summaries |
+| `/__internal/widgets/definitions` | `GET` | read the exact compact Widget Catalog collection in producer order |
 | `/__internal/accounts/{accountPublicId}/instances` | `GET` | list account instance ids only |
+| `/__internal/accounts/{accountPublicId}/instances/list-facts` | `GET` | return the complete exact account instance row facts through one Tokyo-owned aggregation |
 | `/__internal/instances` | `POST` | create a saved instance by writing unpublished serve-state first and the atomic source/visibility record last |
 | `/__internal/instances/{instanceId}/list-facts` | `GET` | exact minimal account instance row facts |
 | `/__internal/instances/{instanceId}` | `GET`, `PUT`, `DELETE` | open one atomic source; coordinate an existing Save that replaces it once; or coordinate Delete by removing the exact source/visibility anchor, return that result, then schedule product-inert residual prefix cleanup and Cache-Tag eviction |
@@ -410,11 +406,15 @@ Current internal route families:
 | `/__internal/assets/account/{accountPublicId}/resolve` | `POST` | resolve account asset references |
 | `/__internal/assets/account/{accountPublicId}/asset/{assetRef}` | `DELETE` | delete exact account asset |
 
-The account widget-defaults document stores `common` and
-`widgets.{widgetType}.core`. Roma owns that complete document; Tokyo-worker
-trusts and stores it without a second shape validator. The removed `shell` key
-has no alias or compatibility behavior, and Tokyo-worker never repairs a
-document on read.
+The account Widget Defaults document stores exact account `fontLibrary`, exact
+account `common`, and sparse complete Core overrides at
+`widgets.{widgetType}.core`. A present entry is a complete account override; an
+absent entry means Roma composes the selected deploy-built Widget baseline.
+Tokyo-worker does not perform that composition. Roma owns the complete stored
+document, and Tokyo-worker trusts and stores it without a second shape
+validator, filling absent Widget entries, or mutating it on read. New accounts
+therefore store `widgets: {}`. The removed `shell` key has no alias or
+compatibility behavior.
 
 Health route:
 
@@ -430,16 +430,11 @@ Widget software is system software. It is authored in git under:
 tokyo/product/widgets/{widgetType}/
 ```
 
-It is deployed to R2 under:
-
-```text
-product/widgets/{widgetType}/
-```
-
-That product folder includes the widget's canonical source and its adjacent
-English `labels/en.json` build input. The file is
-git-authored product software, not account data or a visitor-time locale
-overlay. Tokyo-worker does not resolve its labels at runtime.
+The one source producer emits exact compact definition summaries for
+Tokyo-worker and deploy-built selected editor/materializer assets for Roma.
+Widget source, including adjacent English `labels/en.json`, is git-authored
+product software rather than R2 account data or a visitor-time locale overlay.
+Tokyo-worker does not serve or resolve those source labels at runtime.
 
 Canonical unique Widget software is its structured contract plus mandatory
 Core HTML/CSS/JavaScript. Shared Stage, Pod, Header, Bob,
@@ -498,7 +493,8 @@ provide a generation route.
 ## DevOps
 
 Tokyo-worker deploys through the GitHub Actions Cloudflare Workers workflow for
-cloud-dev workers. Tokyo product roots in R2 sync through the same workflow.
+cloud-dev workers. Retained Dieter, font, and Prague roots in R2 sync through
+the same workflow.
 
 Before any manual Tokyo/R2 operation, run:
 
@@ -516,7 +512,6 @@ worker: tokyo-assets-dev
 routes:
   dev.clk.live/*
   tokyo.dev.clickeen.com/healthz
-  tokyo.dev.clickeen.com/widgets/*
   tokyo.dev.clickeen.com/dieter/*
   tokyo.dev.clickeen.com/fonts/*
   tokyo.dev.clickeen.com/prague/l10n/*

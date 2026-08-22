@@ -4,9 +4,9 @@ export type RawWidget = {
   widgetname?: unknown;
   displayName?: unknown;
   defaults?: Record<string, unknown>;
+  typographyBehavior?: unknown;
   editor?: unknown;
   presets?: unknown;
-  normalization?: unknown;
 };
 
 export type TooldrawerAttrs = Record<string, string>;

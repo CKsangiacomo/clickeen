@@ -30,8 +30,9 @@ Bob owns:
 - account asset use intent while editing
 - Copilot prompt surface while editing
 
-Roma owns the current account, policy, account routes, and save/upload commands.
-Tokyo-worker owns R2 storage. Widget software lives in the system product tree.
+Roma owns the current account, policy, account routes, save/upload commands,
+and deploy-built Widget artifacts. Tokyo-worker owns R2 storage. Widget
+software is authored in the git product tree.
 
 For Widget-bound tier limits, Bob is the shared user-intent enforcement host,
 not the policy or copy owner. Roma supplies the exact account policy snapshot;
@@ -213,9 +214,12 @@ Roma opens Bob:
 ```
 
 The compiled editor artifact carries exact deploy-built `widgetSoftware`:
-`widgetHtml`, `coreHtml`, `coreCss`, `coreJs`, and the ordered shared/Core style
-and script sources. Bob uses that source only for preview. It creates no
-registry, runtime source fetch, route, or account object.
+`widgetHtml`, `coreHtml`, the complete generic typography role/script behavior,
+and the ordered shared/Core style and script sources.
+Core CSS and JavaScript each occur once in those ordered source arrays. Bob uses
+that source only for preview. It trusts the producer-owned typography behavior
+instead of re-inferring fluid sizing or line height from Widget/role names. It
+creates no registry, runtime source fetch, route, or account object.
 
 The open contract contains no publication status, timestamps, public actions,
 or stored `publicPackage`; release truth is Roma-owned and public bytes are not
@@ -333,11 +337,11 @@ actually permits the edit. Bob never sends plan names, renders the template,
 chooses a target plan, supplies CTA copy, or opens a second dialog.
 Dismissal loses no work because the denied operation never changed the draft.
 
-Local implementation: every current compiled Widget artifact carries its exact
-limit-to-message map and English templates. Bob's common operation gate applies
-the system decision before manual, Product Copilot, or undo mutation. On denial
-it sends the exact three values above and leaves the draft unchanged. The old
-Bob `UpsellPopup` and Save-time Widget limit decision are absent.
+Every compiled Widget artifact carries its exact limit-to-message map and
+English templates. Bob's common operation gate applies the system decision
+before manual, Product Copilot, or undo mutation. On denial it sends the exact
+three values above and leaves the draft unchanged. Bob has no separate
+`UpsellPopup` or Save-time Widget limit decision.
 
 ## Save Contract
 
@@ -505,17 +509,15 @@ artifact; there is no runtime language fallback.
 
 ## Widget Software
 
-Widget software is system software stored in:
+Widget software is system software authored in:
 
 ```text
 tokyo/product/widgets/{widgetType}/
 ```
 
-The deployed software authority is:
-
-```text
-product/widgets/{widgetType}/
-```
+The one producer packages that source into Roma's deploy-built per-Widget
+editor and materializer assets. Bob receives one selected editor artifact from
+Roma; it does not load Widget source from Tokyo R2.
 
 Canonical Widget software contains:
 
@@ -543,10 +545,9 @@ its unique presentation, and mandatory Core JavaScript owns its behavior. Bob
 consumes the structured contract;
 it does not absorb Core or generate a Widget-specific editor path.
 
-Local source state: Big Bang, Cards, Countdown, FAQ, and Logo Showcase use the
-canonical folder and no longer have `widget.css` or `widget.client.js`. The
-universal generator has no Widget branch, runtime source-kind discriminator,
-or compatibility path.
+Every current Widget uses the same canonical folder. The universal producer
+has no Widget branch, runtime source-kind discriminator, or compatibility
+path.
 
 `spec.json` carries defaults, editor structure, and ToolDrawer label tokens.
 `labels/en.json` carries the exact English values
@@ -582,6 +583,8 @@ once, then compiles that resolved source into:
 - `compiled.panels[]`
 - `compiled.controls[]`
 - `compiled.toolDrawerLabels`
+- the exact Widget-owned `coreDefaults` baseline used by Roma's selected
+  Widget Defaults host
 - the exact localized Widget upsell message map referenced by `limits.json`
 - editor binding metadata
 - AI context metadata
@@ -589,8 +592,10 @@ once, then compiles that resolved source into:
 Compiler source lives under `bob/lib/compiler*`.
 `scripts/widgets/generate-artifacts.ts` reads widget and Dieter source directly
 from the repo and emits ignored editor artifacts under
-`roma/public/widget-editors/` plus server-only materializer artifacts under
-`roma/generated/`.
+`roma/public/widget-editors/` plus Roma materializer artifacts under
+`roma/public/widget-materializers/`. The same producer emits Tokyo-worker's
+compact Widget definition summaries and Roma's exact generated materializer-
+asset path map.
 Normal product requests do not fetch Tokyo source, fetch Dieter stencils, or
 compile controls.
 
@@ -644,10 +649,11 @@ POST /api/ai/widget-copilot -> 409
 
 Copilot turn traffic must run through the Roma account route.
 
-Editor artifacts contain Bob controls and the deploy-built source needed for
-temporary preview. They contain neither an account public package nor the
-server-only materializer artifact. Bob does not fetch authoring source or reuse
-a stored public package as editable truth.
+Editor artifacts contain Bob controls, the exact Widget-owned Core baseline,
+and the deploy-built source needed for temporary preview. The Core baseline is
+product software, not an account override. Editor artifacts contain neither an
+account public package nor the server-only materializer artifact. Bob does not
+fetch authoring source or reuse a stored public package as editable truth.
 
 ## Controls
 
@@ -749,7 +755,7 @@ exact six component words—including the accessible passive-loading label—fro
 the declaring Widget's adjacent English label file; it does not retain the
 retired second metadata path or source marker.
 The component uses Bob's existing account-assets client and current-account
-command chain. None of the five current Widget specs declares it, so current
+command chain. No current Widget spec declares it, so current
 editor artifacts contain no Upload control and this component pass does not
 invent one.
 
@@ -965,7 +971,7 @@ endpoint, or account storage object. The source
 contract used to express state in authored HTML is the same contract used later
 by Publish; Bob contains no second FAQ renderer.
 
-Every current deployed Widget preview renders authored HTML and CSS into the
+Every current Widget preview renders authored HTML and CSS into the
 isolated iframe from `compiled.widgetSoftware` and the exact draft. It executes
 the authored preview behavior inside that temporary document. Ordinary edits
 update that same preview from Bob's draft; there is no stored-package read,
@@ -1026,8 +1032,8 @@ accounts/{accountPublicId}/assets/{filename}
 
 Dropdown Fill uses this route chain to upload and assign media. The
 consumer-agnostic Dropdown Upload component uses the same existing route chain
-when a Widget declares one single-file field; none of the five current Widget
-specs does. SVG logos are accepted vector assets when Roma/Tokyo-worker accept
+when a Widget declares one single-file field; no current Widget spec does. SVG
+logos are accepted vector assets when Roma/Tokyo-worker accept
 the upload.
 
 Bob does not expose account asset proxy routes. Account asset list, upload,
@@ -1104,6 +1110,10 @@ command: pnpm build:cf
 output: bob/.cloudflare/output/static
 ```
 
+Bob's build consumes the deploy-built editor artifacts supplied by Roma's
+Widget producer lifecycle. It does not discover, fetch, or generate Widget
+source itself.
+
 Package commands:
 
 ```bash
@@ -1124,7 +1134,7 @@ Runtime env:
 
 | Name                    | Purpose                                                                   |
 | ----------------------- | ------------------------------------------------------------------------- |
-| `NEXT_PUBLIC_TOKYO_URL` | Tokyo public static/resource origin for widget software and Dieter media. |
+| `NEXT_PUBLIC_TOKYO_URL` | Tokyo public static/resource origin for Dieter media and global fonts. |
 
 Before any Cloudflare Pages, custom-domain, DNS, or Pages config operation, run:
 

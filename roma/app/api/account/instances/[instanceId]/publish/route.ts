@@ -105,7 +105,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     );
   }
 
-  const compiled = readWidgetForInstancePackage(saved.value.row.widgetType);
+  const compiled = await readWidgetForInstancePackage(saved.value.row.widgetType);
 
   const materialized = await materializeAccountInstancePublicPackage({
     compiled,

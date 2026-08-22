@@ -190,12 +190,12 @@ navigation remains valid for inspecting the current plan. Opening or dismissing
 the Popup preserves Bob's unsaved working state and must not invoke the Builder
 discard guard. No global upsell store or parallel dialog framework is required.
 
-Local implementation: every current compiled Widget artifact supplies exact
-bindings and English templates. Bob applies one decision before draft mutation
-and sends `{ capability, messageId, required }` on denial. Roma uses the exact
-Boolean or numeric `required` demand to select the first higher system tier
-that permits the edit, resolves the exact Widget template, and opens one Popup.
-The old Bob Popup and Save-time Widget limit decision are absent.
+Every compiled Widget artifact supplies exact bindings and English templates.
+Bob applies one decision before draft mutation and sends
+`{ capability, messageId, required }` on denial. Roma uses the exact Boolean or
+numeric `required` demand to select the first higher system tier that permits
+the edit, resolves the exact Widget template, and opens one Popup. There is no
+separate Bob Popup or Save-time Widget limit decision.
 
 ## Runtime Routes
 
@@ -304,6 +304,7 @@ service:
 | `/api/builder/:instanceId/open`              | Roma Builder-open envelope backed by Tokyo-worker             |
 | `/api/builder/new/:widgetType/open`          | Roma non-persisting New-draft composition                     |
 | `/widget-editors/:widgetname.json`           | Deploy-built static Bob editor artifact                       |
+| `/widget-materializers/:widgetname.json`      | Deploy-built static Roma materializer artifact                 |
 | `/api/account/instances/:instanceId/copilot` | Product Copilot `/turn` through Roma grants (SSE relay)       |
 
 Roma attaches the account authz capsule and account public id to private
@@ -377,7 +378,9 @@ The current Widget document is one complete logical instance: its shared
 Header/Stage/Pod/Core-size/appearance/typography/chrome values and its Widget
 Core values travel together. Roma prepares exact config and content payloads;
 Tokyo stores them together with source metadata as one atomic
-`instance.source.json`.
+`instance.source.json`. Roma sends the required top-level `widgetType` as the
+sole stored Widget software identity; its content payload contains the exact
+field set without a duplicate Widget type.
 
 The Builder-open envelope includes Roma's exact current-account policy snapshot
 and the trusted compiled Widget limit/message association. Bob's shared edit
@@ -406,10 +409,12 @@ artifact. That artifact carries exact Widget HTML/CSS/JavaScript software for
 Bob preview. Roma does not read a stored package, compare a package
 fingerprint, or send `publicPackage` to Bob.
 
-Only explicit allowed Publish uses the package contract. Roma reads the
-server-only materializer artifact generated from canonical Widget source at
-deploy time and combines it with the exact saved instance through one
-Widget-neutral `@clickeen/ck-runtime-materializer` contract. The materializer
+Only explicit allowed Publish uses the package contract. The Widget producer
+emits one deploy-built materializer asset per Widget. Roma's Edge function
+reads the exact selected asset through the existing Cloudflare Pages `ASSETS`
+binding and combines it with the exact saved instance through one Widget-
+neutral `@clickeen/ck-runtime-materializer` contract. Roma does not discover,
+validate, repair, cache, or fall back to another artifact. The materializer
 emits:
 
 ```text
@@ -442,10 +447,10 @@ nothing; first Save creates editable source; later Save updates editable
 source; Duplicate creates new unpublished editable source. None generates a
 public package.
 
-Local implementation: the materializer trusts each current Widget's compiled
-software and saved source, writes complete semantic HTML and complete CSS,
-includes mandatory visitor-behavior JavaScript, and emits no package
-fingerprint. Every Publish writes that Widget's Discovery baseline
+The materializer trusts each Widget's compiled software and saved source,
+writes complete semantic HTML and complete CSS, includes mandatory
+visitor-behavior JavaScript, and emits no package fingerprint. Every Publish
+writes that Widget's Discovery baseline
 title/description. When the exact saved **Enable SEO/GEO** value and system
 entitlement are both true, the Widget's authored content-derived output is
 present; FAQ Core's current rich-result example authors
@@ -458,9 +463,11 @@ declared `/fonts/special/**` path to an absolute URL under the configured
 current account asset authority. Roma does not rewrite a global font as an
 account asset, and saved public packages do not point global fonts at
 `clk.live`. The authoritative account library and Widget contract already
-produce the exact common and Core typography data. Materialization consumes
-that system truth directly; it does not run a second account-font or complete
-typography validator before Tokyo persistence.
+produce the exact common and Core typography data, and deploy-built Widget
+software carries the complete generic behavior for every composed role and
+script. Materialization consumes that same behavior used by Bob preview
+directly; it does not infer behavior from Widget/role names or run a second
+account-font or complete typography validator before Tokyo persistence.
 
 When the source-Save command changes a saved instance, Roma saves the editable
 source only. It does not generate a base package, generate translations, regenerate
@@ -497,7 +504,7 @@ revalidate the accepted field contract. The operation does not materialize
 runtime files.
 `DELETE /api/account/instances/{instanceId}/translations/{locale}` is the
 authenticated explicit deletion boundary for that one exact account-instance-
-locale overlay, including the pre-GA positional-coordinate cutover. It delegates
+locale overlay. It delegates
 the exact delete to Tokyo-worker and does not introduce a broad storage-prefix
 operation, Serve migration, or compatibility path.
 When the command is invoked through hosted Bob, Translation Agent may stream
@@ -643,19 +650,29 @@ client code derives read-only versus mutable controls from the current account
 role and the instance publish state, while tier upgrade decisions happen only in
 command routes.
 
-Roma loads widget catalog definitions from Tokyo-worker and loads saved instance
-rows through the account instance coordinate/list-facts helpers. After current
-account resolution, those two independent reads start together and are awaited
-once. The instance-facts failure retains deterministic priority when both fail;
-otherwise the definitions failure is returned. Roma adds no cache, timeout,
-probe, retry, fallback, or alternate read to this cold path. Tokyo-worker
-returns stored `displayName` as string or `null`; Roma preserves that exact
-truth. A saved instance with no display name renders no name. A New
-browser-memory draft likewise begins with `displayName: null`; Roma does not
-substitute an `Untitled` label.
+Roma loads widget catalog definitions from Tokyo-worker and loads every saved
+instance row through one account-scoped Tokyo facts request. Tokyo lists the
+exact source visibility anchors and reads the same source pointers internally,
+then returns the complete deterministically ordered result; Roma does not fan
+that operation out into one private HTTP request per instance. After current
+account resolution, the definition and account-facts reads start together and
+are awaited once. The instance-facts failure retains deterministic priority
+when both fail; otherwise the definitions failure is returned. Roma adds no
+cache, timeout, probe, retry, fallback, or alternate read to this cold path.
+The smaller IDs-only and selected-instance facts routes remain for the current
+operations that require those exact results. Tokyo-worker returns stored
+`displayName` as string or `null`; Roma preserves that exact truth. A saved
+instance with no display name renders no name. A New browser-memory draft
+likewise begins with `displayName: null`; Roma does not substitute an
+`Untitled` label.
 
-Local implementation: New and Duplicate do not enforce
-`widgets.instances.max`. New writes nothing; Duplicate writes an immediate
+Your Widgets does not prefetch editor artifacts. Opening Builder fetches only
+the selected Widget artifact. New concurrently reads that selected Widget's
+deploy-built materializer artifact and the exact account defaults document; it
+does not list or scan the catalog and performs no storage write.
+
+New and Duplicate do not enforce `widgets.instances.max`. New writes nothing;
+Duplicate writes an immediate
 unpublished editable copy and opens it in Bob. First Save of a New draft mints
 the instance and writes its exact source. Publish enforces
 `instances.published.max` at command time. Roma first uses its computed
@@ -716,10 +733,8 @@ Publish replaces one
 `publicPackage` `{ indexHtml, stylesCss, runtimeJs }`. The public file paths
 remain logical views of those members, not separate R2 objects.
 
-The pre-GA storage cutover is complete for all four legacy saved cloud-dev
-instances under `CLICKEEN`; the two public instances were Republished through
-Roma. No compatibility reader or migration-on-read exists, and retained split
-legacy objects are unreachable.
+Current reads use only atomic source and serve-state truth. No compatibility
+reader or migration-on-read exists.
 
 ## Assets Domain
 
@@ -786,9 +801,11 @@ presented as Unlimited.
 Roma owns Settings > Widget Defaults. That surface edits only the current
 account defaults document through `/api/account/widget-defaults`; it does not
 open a Bob editing session and does not save widget instances. The UI consumes
-deploy-built Builder panel HTML, binds controls to the Roma draft defaults
-document, and saves the full document back through the same Roma route. It uses
-Bob's paired `@clickeen/bob/control-host` and
+one selected deploy-built Builder artifact at a time, binds its common and Core
+controls to one coherent Roma draft defaults document, and saves the full
+document back through the same Roma route. The compact Tokyo Widget definitions
+drive the selector in their exact order; the selected type is browser UI state
+and is never persisted. It uses Bob's paired `@clickeen/bob/control-host` and
 `@clickeen/bob/control-host.css` exports for compiled-control behavior and
 presentation; Roma owns the surrounding page and draft state, not a second copy
 of the control host. Before running Dieter hydrators, the shared host projects
@@ -822,10 +839,19 @@ accepted defaults draft is trusted at Save; the persistence route does not
 re-run the same Widget limit. This is the same generic capability contract Bob
 uses, not a second Roma Widget policy or a Widget-name branch.
 
-The persisted defaults split is `common` plus
+The persisted defaults split is exact account-owned `fontLibrary`, exact
+account-owned `common`, and sparse complete replacements under
 `widgets.{widgetType}.core`. `common` means one account default reused across
-widget types; it does not mean Shell ownership. The retired `shell` bucket is
-not part of the current contract and has no alias or compatibility path.
+Widget types; it does not mean Shell ownership. A present Widget entry is the
+complete account Core override and is not merged with deployed defaults. An
+absent entry explicitly selects the exact Core baseline in that Widget's
+deploy-built artifact. This is the account-defaults contract, not a fallback,
+repair, backfill, or read-time write. New accounts therefore store
+`widgets: {}`, and a later deployed Widget works for existing accounts without account
+repair. The first actual Core edit clones the effective Core and creates one
+complete override; selection and common edits create none. The retired `shell`
+bucket is not part of the current contract and has no alias or compatibility
+path.
 
 Widget Defaults requires its deploy-built Builder controls and Dieter source.
 An unavailable dependency is an explicit surface failure, not a reason to
@@ -839,9 +865,10 @@ Widget Defaults is the second account-bound typography editor host. It uses the
 same current account `fontLibrary` and family transition resolver as Bob for
 both common and Widget Core defaults.
 Each accepted family transition updates all three values in one draft-state
-update. GET returns Tokyo's exact current document without comparing Widget
-state to ToolDrawer controls. The account-backed controls expose only available
-choices. Because the PUT body is browser input, Roma admits its font library
+update. GET returns Tokyo's exact current document together with Tokyo's exact
+compact Widget definitions, without comparing Widget state to ToolDrawer
+controls. The account-backed controls expose only available choices. Because
+the PUT body is browser input, Roma admits its font library
 and common/Core typography selections once at `/api/account/widget-defaults`
 before they become stored Clickeen truth. Tokyo and later consumers do not
 repeat that validation.
@@ -855,14 +882,18 @@ revalidate the seven product records at Widget Defaults Save.
 New writes nothing; first/later Save and Duplicate write editable source only.
 Explicit allowed Publish is the sole package materialization path.
 
-Widget Defaults consumes exact deploy-built `CompiledWidget` artifacts. It
-selects the repeated common control surface once from one exact artifact,
-selects each Widget's own Core controls from that Widget's artifact, and
-preserves compiler order. Every non-empty projected panel is introduced by its
-exact compiler-supplied `panel.label`, assigned as DOM text and followed by the
-unchanged selected-control HTML. Empty panels remain absent. Roma does not
-infer a label from an id, keep a second panel-label map, or substitute missing
-copy. Panel filtering is a UI projection, not validation.
+Widget Defaults consumes one exact deploy-built `CompiledWidget` artifact for
+the selected Widget. That artifact supplies Bob-owned common controls, the
+selected Widget's Core controls, and the exact deployed `coreDefaults`
+baseline. Switching selection replaces that one artifact in memory while the
+whole draft remains intact; no previous artifact can render or edit under the
+new Widget coordinate. The page renders one common host and one selected Core
+host and preserves compiler order. Every non-empty projected panel is
+introduced by its exact compiler-supplied `panel.label`, assigned as DOM text
+and followed by the unchanged selected-control HTML. Empty panels remain
+absent. Roma does not infer a label from an id, keep a second panel-label map,
+or substitute missing copy. Panel filtering is a UI projection, not
+validation.
 The browser-facing save route is the single document/typography admission
 boundary. After it accepts the draft and authoritative account font library,
 Tokyo stores the exact document and later consumers trust it without a second
@@ -961,6 +992,10 @@ root: roma/
 command: pnpm build:cf
 output: roma/.vercel/output/static
 ```
+
+Roma `pretypecheck` and `prebuild` each run the one Widget producer required
+by that lifecycle. Roma lint does not generate Widget artifacts, and
+`build:cf` does not run a second producer before `prebuild`.
 
 Package commands:
 

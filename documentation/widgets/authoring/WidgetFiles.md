@@ -1,6 +1,6 @@
 # Widget Files
 
-STATUS: CANONICAL ARCHITECTURE CONTRACT WITH EXPLICIT CURRENT TRANSITION
+STATUS: CURRENT SYSTEM OPERATOR SPEC
 
 ## Product Law
 
@@ -54,7 +54,7 @@ its implementation is small.
 | `core/core.html` | Unique Widget content structure and content locations |
 | `core/core.css` | Unique Widget presentation |
 | `core/core.js` | Unique Widget behavior |
-| `spec.json` | Widget identity, exact default state, and Bob editing declarations |
+| `spec.json` | Widget identity, exact default state, Widget-unique typography behavior, and Bob editing declarations |
 | `labels/en.json` | Exact English Widget-authored ToolDrawer copy |
 | `editable-fields.json` | Exact customer-content paths, types, roles, and stable array-item identities |
 | `limits.json` | Bindings from Widget actions/state coordinates to generic system entitlement keys and exact Widget upsell message IDs |
@@ -63,6 +63,13 @@ its implementation is small.
 
 No source file owns account tiers, customer account values, materialization,
 storage, public serving, or another shared service's implementation.
+
+`spec.json` declares `typographyBehavior.roles` only for that Widget's unique
+typography roles. Widget Foundation owns the common role behavior. The artifact
+producer combines them, requires exact coverage of the composed typography
+roles and all supported scripts, and emits one complete behavior map in
+`widgetSoftware`. Bob preview and Roma Publish consume that exact map; shared
+runtime code does not infer behavior from role or Widget names.
 
 ## `widget.html` And Shared Composition
 
@@ -167,7 +174,7 @@ that source. Neither action creates the public package.
 The existing Bob compiler and Dieter control DSL remain the systemic editor
 contract. `spec.json` owns Widget identity, defaults, the canonical Content,
 Layout, Appearance, Typography, and Settings declarations, shared control
-clusters, Widget fields/conditions, presets, and normalization rules.
+clusters, Widget fields/conditions, and presets.
 
 Shared Clickeen defaults and Widget Core defaults compose into one complete
 default instance state. Bob consumes the compiled contract; it does not become
@@ -277,9 +284,13 @@ Serve
   -> return the already-stored published files
 ```
 
-New starts from complete Widget/account defaults. Duplicate starts from exact
-saved source, creates a new unpublished identity, and opens the duplicate in
-Bob. The Template catalog is not another source model: it is the list of normal
+New starts from the selected deploy-built Widget Core baseline and the current
+account's exact common defaults. A present complete account Core override
+replaces that baseline; an absent override explicitly means the deployed
+baseline and requires no account backfill. New loads only that selected Widget
+software coordinate and writes nothing. Duplicate starts from exact saved
+source, creates a new unpublished identity, and opens the duplicate in Bob. The
+Template catalog is not another source model: it is the list of normal
 saved instances selected by the CLICKEEN admin account for reuse. Creating from
 one is a cross-account Duplicate into a new unpublished customer-owned
 instance. Catalog listing and that cross-account copy are follow-on product
@@ -344,10 +355,8 @@ eviction of the instance's one Cloudflare cache tag. Eviction is not part of
 the Publish result. There is no release registry, alternate root, fingerprint
 path, package/status split commit, or compatibility package.
 
-The pre-GA storage cutover is complete for all four legacy saved cloud-dev
-instances under `CLICKEEN`; the two public instances were Republished through
-Roma. No compatibility reader or migration-on-read exists, and retained split
-legacy objects are unreachable.
+Current reads use only atomic source and serve-state truth. No compatibility
+reader or migration-on-read exists.
 
 ## Uniform Shared-Service Law
 
@@ -365,22 +374,43 @@ become runtime validators or probes.
 
 ## Current Source State
 
-Big Bang, Cards, Countdown, FAQ, and Logo Showcase all use this canonical
-source contract locally. Their retired flat `widget.css`, `widget.client.js`,
-and legacy ToolDrawer-label paths are absent. No compatibility workflow,
-old/new source discriminator, or Widget-name compiler branch reads two shapes.
+Every Widget uses this canonical source contract. No flat
+`widget.css`/`widget.client.js` source path, alternate workflow, old/new
+discriminator, or Widget-name compiler branch reads two shapes.
 
-The generator supports focused `--widget {widgetType}` work and normal
-all-Widget generation through the same universal compiler. Both modes produce
-the same Bob editor and Roma materializer artifact contracts.
+The one generator supports focused `--widget {widgetType}` work and normal
+all-Widget generation through the same universal compiler. It emits the Bob
+editor and Roma materializer artifact contracts, Roma's static per-Widget
+materializer asset-path map, and Tokyo-worker's compact sorted definition
+source. Roma materializer artifacts are separate Pages static assets so an
+Edge operation reads only the selected Widget through the existing `ASSETS`
+binding.
+Both per-Widget artifact families carry the same exact Widget-owned Core
+defaults. The editor artifact exposes that baseline to Roma's selected Widget
+Defaults host; it is not an account override or a second authored source.
+Core CSS and JavaScript each occur once in the ordered source arrays carried by
+the two per-Widget artifact families.
 
 ## Required Checks
 
-For current all-Widget proof:
+For one-Widget work, intentionally write that Widget's derived outputs once:
 
 ```bash
-node scripts/widgets/generate-artifacts.mjs
-node scripts/widgets/generate-artifacts.mjs --check
+node scripts/widgets/generate-artifacts.mjs --widget {widgetType}
+```
+
+Then verify it through the non-writing focused mode:
+
+```bash
+node scripts/widgets/generate-artifacts.mjs --widget {widgetType} --check
+```
+
+For an aggregate/shared change, intentionally write all outputs once, then run
+the non-writing aggregate check:
+
+```bash
+pnpm generate:widgets
+pnpm validate:widgets
 git diff --check -- tokyo/product/widgets documentation/widgets
 ```
 

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createInitialAccountWidgetDefaultsInTokyo } from '../../../../lib/account-widget-defaults-direct';
 import { materializeInitialAccountWidgetDefaults } from '../../../../lib/account-widget-defaults-materialization';
-import { listTokyoWidgetDefinitions } from '../../../../lib/account-instance-direct';
 import { resolveBerlinBaseUrl } from '../../../../lib/env/berlin';
 import {
   applySessionCookies,
@@ -192,20 +191,8 @@ export async function GET(request: NextRequest) {
   };
 
   if (createdAccount) {
-    const widgetDefinitions = await listTokyoWidgetDefinitions({
-      accountId: bootstrap.accountId,
-      accountCapsule,
-    });
-    if (!widgetDefinitions.ok) {
-      return applySessionWithAccount(
-        NextResponse.redirect(buildRecoveryUrl(request, widgetDefinitions.error.reasonKey), {
-          headers: CACHE_HEADERS,
-        }),
-      );
-    }
     const widgetDefaults = await materializeInitialAccountWidgetDefaults({
       accountId: bootstrap.accountId,
-      widgetTypes: widgetDefinitions.value.widgetDefinitions.map((entry) => entry.widgetType),
     });
     const initialized = await createInitialAccountWidgetDefaultsInTokyo({
       accountId: bootstrap.accountId,

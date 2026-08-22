@@ -10,7 +10,6 @@ import ROMA_DIALOGS_UI_COPY from '../l10n/dialogs/en.json';
 import { useRomaAccountApi } from './account-api';
 import { DieterDropdownActions } from './dieter-dropdown-actions';
 import { DieterTextfield } from './dieter-textfield';
-import { prefetchWidgetEditorArtifact } from './widget-editor-artifact';
 import { RomaAccountNoticeModal } from './roma-account-notice-modal';
 import { RomaCommandConfirmationDialog } from './roma-command-confirmation-dialog';
 import { useRomaAccountContext } from './roma-account-context';
@@ -164,10 +163,6 @@ export function WidgetsDomain({
     void refreshWidgets();
   }, [productAccountId, applyWidgets, refreshWidgets]);
 
-  const instanceWidgetTypes = useMemo(
-    () => Array.from(new Set(widgetInstances.map((instance) => instance.widgetType))).sort((a, b) => a.localeCompare(b)),
-    [widgetInstances],
-  );
   const canRenderWidgetData = !dataFailed || catalog.length > 0 || widgetInstances.length > 0;
   const initialDataLoading = domainLoading && catalog.length === 0 && widgetInstances.length === 0 && !dataFailed;
   const showingInitialWidgetsLoading = view === 'your-widgets' && initialDataLoading;
@@ -300,14 +295,6 @@ export function WidgetsDomain({
   useEffect(() => {
     if (openWidgetActions && !openWidgetActionsInstance) closeWidgetActions();
   }, [closeWidgetActions, openWidgetActions, openWidgetActionsInstance]);
-
-  useEffect(() => {
-    if (view !== 'your-widgets') return;
-    const candidates = instanceWidgetTypes.slice(0, 8);
-    candidates.forEach((widgetType) => {
-      void prefetchWidgetEditorArtifact(widgetType);
-    });
-  }, [instanceWidgetTypes, view]);
 
   const handleCreateInstance = useCallback(
     (widgetType: string) => {

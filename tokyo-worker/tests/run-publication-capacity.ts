@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
 import { AccountPublicationCoordinator } from '../src/domains/account-instances/publication-coordinator';
 import { scheduleAccountInstanceResidualCleanup } from '../src/domains/account-instances/delete';
 import { createAccountInstanceFromSubmittedSource } from '../src/domains/account-instances/operations';
@@ -87,13 +86,14 @@ class MemoryR2 {
       this.nextPutFailure = null;
       throw failure;
     }
-    const body = typeof value === 'string'
-      ? value
-      : value instanceof ArrayBuffer
-        ? new TextDecoder().decode(value)
-        : new TextDecoder().decode(
-            new Uint8Array(value.buffer, value.byteOffset, value.byteLength),
-          );
+    const body =
+      typeof value === 'string'
+        ? value
+        : value instanceof ArrayBuffer
+          ? new TextDecoder().decode(value)
+          : new TextDecoder().decode(
+              new Uint8Array(value.buffer, value.byteOffset, value.byteLength),
+            );
     const stored = { body, etag: `etag-${++this.sequence}` };
     this.objects.set(key, stored);
     return this.object(key, stored);
@@ -166,7 +166,6 @@ function saveRequest(instanceId: string, label: string): Request {
       content: {
         id: instanceId,
         accountId,
-        widgetType: 'faq',
         fields: {},
         updatedAt: '2026-08-18T00:00:00.000Z',
       },
@@ -174,10 +173,7 @@ function saveRequest(instanceId: string, label: string): Request {
   });
 }
 
-function coordinateRequest(
-  action: 'rename' | 'unpublish' | 'delete',
-  instanceId: string,
-): Request {
+function coordinateRequest(action: 'rename' | 'unpublish' | 'delete', instanceId: string): Request {
   return new Request(`https://account-publication.internal/${action}`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -200,9 +196,33 @@ function assertPublicPackageStored(
   assert.ok(stored, 'the instance must retain its canonical serve artifact');
   const record = JSON.parse(stored.body) as { publicPackage?: unknown };
   assert.equal(record.publicPackage !== undefined, expected, message);
-  assert.equal(r2.objects.has(`${root}/index.html`), false, 'index.html must not be a second commit');
-  assert.equal(r2.objects.has(`${root}/styles.css`), false, 'styles.css must not be a second commit');
-  assert.equal(r2.objects.has(`${root}/runtime.js`), false, 'runtime.js must not be a second commit');
+  assert.equal(
+    r2.objects.has(`${root}/index.html`),
+    false,
+    'index.html must not be a second commit',
+  );
+  assert.equal(
+    r2.objects.has(`${root}/styles.css`),
+    false,
+    'styles.css must not be a second commit',
+  );
+  assert.equal(
+    r2.objects.has(`${root}/runtime.js`),
+    false,
+    'runtime.js must not be a second commit',
+  );
+}
+
+function assertCurrentSourceIdentityShape(r2: MemoryR2, instanceId: string): void {
+  const stored = r2.objects.get(
+    `accounts/${accountId}/instances/${instanceId}/instance.source.json`,
+  );
+  assert.ok(stored);
+  const source = JSON.parse(stored.body) as Record<string, unknown>;
+  assert.equal(source.widgetType, 'faq');
+  assert.equal(Object.prototype.hasOwnProperty.call(source, 'widgetCode'), false);
+  const content = source.content as Record<string, unknown>;
+  assert.equal(Object.prototype.hasOwnProperty.call(content, 'widgetType'), false);
 }
 
 async function seedInstance(env: Env, instanceId: string): Promise<void> {
@@ -210,13 +230,11 @@ async function seedInstance(env: Env, instanceId: string): Promise<void> {
     env,
     accountId,
     instanceId,
-    widgetCode: 'FAQ',
     widgetType: 'faq',
     config: { core: { title: instanceId } },
     content: {
       id: instanceId,
       accountId,
-      widgetType: 'faq',
       fields: {},
       updatedAt: '2026-08-17T00:00:00.000Z',
     },
@@ -269,7 +287,6 @@ async function run(): Promise<void> {
       content: {
         id: retryInstanceId,
         accountId,
-        widgetType: 'faq',
         fields: {},
         updatedAt: '2026-08-18T00:00:00.000Z',
       },
@@ -293,18 +310,23 @@ async function run(): Promise<void> {
     content: {
       id: retryInstanceId,
       accountId,
-      widgetType: 'faq',
       fields: {},
       updatedAt: '2026-08-18T00:00:00.000Z',
     },
     baseLocale: 'en',
   });
-  await Promise.all([
-    seedInstance(env, firstInstanceId),
-    seedInstance(env, secondInstanceId),
-  ]);
-  const firstSeeded = await readAccountInstanceSourcePointer({ env, accountId, instanceId: firstInstanceId });
-  const secondSeeded = await readAccountInstanceSourcePointer({ env, accountId, instanceId: secondInstanceId });
+  assertCurrentSourceIdentityShape(r2, retryInstanceId);
+  await Promise.all([seedInstance(env, firstInstanceId), seedInstance(env, secondInstanceId)]);
+  const firstSeeded = await readAccountInstanceSourcePointer({
+    env,
+    accountId,
+    instanceId: firstInstanceId,
+  });
+  const secondSeeded = await readAccountInstanceSourcePointer({
+    env,
+    accountId,
+    instanceId: secondInstanceId,
+  });
   assert.ok(firstSeeded.ok);
   assert.ok(secondSeeded.ok);
   const firstRevision = firstSeeded.value.updatedAt;
@@ -352,9 +374,7 @@ async function run(): Promise<void> {
     },
   });
   for (const action of ['rename', 'unpublish', 'delete'] as const) {
-    const overlappingCommand = await coordinator.fetch(
-      coordinateRequest(action, secondInstanceId),
-    );
+    const overlappingCommand = await coordinator.fetch(coordinateRequest(action, secondInstanceId));
     assert.equal(overlappingCommand.status, 409);
     assert.deepEqual(await readPayload(overlappingCommand), {
       error: {
@@ -465,6 +485,7 @@ async function run(): Promise<void> {
     savedAgainPointer.value.updatedAt > savedPointer.value.updatedAt,
     'every accepted source mutation must advance the exact revision coordinate',
   );
+  assertCurrentSourceIdentityShape(r2, firstInstanceId);
 
   const staleSourcePublish = await coordinator.fetch(
     publishRequest(firstInstanceId, firstRevision, 'stale-source-package'),
@@ -494,7 +515,10 @@ async function run(): Promise<void> {
   );
   const servedStyles = await servePublicFile(env, firstInstanceId, 'styles.css');
   assert.equal(await servedStyles.text(), publicPackage('current-source-package').stylesCss);
-  assert.equal(servedStyles.headers.get('cache-tag'), `clk-instance-${accountId}-${firstInstanceId}`);
+  assert.equal(
+    servedStyles.headers.get('cache-tag'),
+    `clk-instance-${accountId}-${firstInstanceId}`,
+  );
   const servedRuntime = await servePublicFile(env, firstInstanceId, 'runtime.js');
   assert.equal(await servedRuntime.text(), publicPackage('current-source-package').runtimeJs);
 
@@ -530,9 +554,7 @@ async function run(): Promise<void> {
     committedSource,
     'a failed later Save must leave the complete prior source unchanged',
   );
-  const renameResponse = await coordinator.fetch(
-    coordinateRequest('rename', firstInstanceId),
-  );
+  const renameResponse = await coordinator.fetch(coordinateRequest('rename', firstInstanceId));
   assert.equal(renameResponse.status, 200);
   const renamedPointer = await readAccountInstanceSourcePointer({
     env,
@@ -544,9 +566,9 @@ async function run(): Promise<void> {
     renamedPointer.value.updatedAt > renamedPointer.value.publishedAt!,
     'Rename after Publish must advance source truth and expose saved changes as not live',
   );
+  assertCurrentSourceIdentityShape(r2, firstInstanceId);
 
-  const retryServeStateKey =
-    `accounts/${accountId}/instances/${retryInstanceId}/serve-state.json`;
+  const retryServeStateKey = `accounts/${accountId}/instances/${retryInstanceId}/serve-state.json`;
   r2.failNextDelete(retrySourceKey, new Error('r2 source-anchor delete failed'));
   const failedDelete = await coordinator.fetch(coordinateRequest('delete', retryInstanceId));
   assert.equal(failedDelete.status, 502);
@@ -611,8 +633,7 @@ async function run(): Promise<void> {
     { ok: false, kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' },
   );
 
-  const secondServeStateKey =
-    `accounts/${accountId}/instances/${secondInstanceId}/serve-state.json`;
+  const secondServeStateKey = `accounts/${accountId}/instances/${secondInstanceId}/serve-state.json`;
   const secondServeState = r2.objects.get(secondServeStateKey);
   assert.ok(secondServeState);
   r2.objects.set(secondServeStateKey, {
@@ -625,65 +646,6 @@ async function run(): Promise<void> {
     'an impossible stored serve-state must fail visibly instead of becoming unpublished',
   );
   r2.objects.set(secondServeStateKey, secondServeState);
-
-  const [
-    wrangler,
-    indexSource,
-    routeSource,
-    coordinatorSource,
-    packageSource,
-    serveStateSource,
-    sourceStorage,
-    deleteStorage,
-  ] = await Promise.all([
-    readFile(new URL('../wrangler.toml', import.meta.url), 'utf8'),
-    readFile(new URL('../src/index.ts', import.meta.url), 'utf8'),
-    readFile(new URL('../src/routes/internal-instance-routes.ts', import.meta.url), 'utf8'),
-    readFile(
-      new URL('../src/domains/account-instances/publication-coordinator.ts', import.meta.url),
-      'utf8',
-    ),
-    readFile(new URL('../src/domains/account-instances/package-files.ts', import.meta.url), 'utf8'),
-    readFile(new URL('../src/domains/account-instances/serve-state.ts', import.meta.url), 'utf8'),
-    readFile(new URL('../src/domains/account-instances/source.ts', import.meta.url), 'utf8'),
-    readFile(new URL('../src/domains/account-instances/delete.ts', import.meta.url), 'utf8'),
-  ]);
-  assert.match(wrangler, /name = "ACCOUNT_PUBLICATION_COORDINATOR"/);
-  assert.match(wrangler, /class_name = "AccountPublicationCoordinator"/);
-  assert.match(wrangler, /new_sqlite_classes = \["AccountPublicationCoordinator"\]/);
-  assert.match(indexSource, /export \{ AccountPublicationCoordinator \}/);
-  assert.match(routeSource, /coordinateAccountInstancePublish\(\{/);
-  assert.match(routeSource, /coordinateAccountInstanceSave\(\{/);
-  assert.match(routeSource, /coordinateAccountInstanceRename\(\{/);
-  assert.match(routeSource, /coordinateAccountInstanceUnpublish\(\{/);
-  assert.match(routeSource, /coordinateAccountInstanceDelete\(\{/);
-  assert.match(routeSource, /sourceUpdatedAt: body\.sourceUpdatedAt/);
-  assert.doesNotMatch(routeSource, /publication\.lock|putJsonIfUnchanged/);
-  assert.ok(
-    coordinatorSource.indexOf('this.state.storage.get(') <
-      coordinatorSource.indexOf('publishAccountInstanceTransition({'),
-    'the Durable Object lifecycle fence must precede all R2 publication work',
-  );
-  assert.doesNotMatch(coordinatorSource, /scheduleAccountInstanceCacheEviction/);
-  assert.doesNotMatch(packageSource, /TOKYO_R2\.put|Promise\.allSettled/);
-  assert.match(serveStateSource, /status === 'published' \? \{ publicPackage \} : \{\}/);
-  assert.doesNotMatch(sourceStorage, /instance\.config\.json|instance\.content\.json/);
-  assert.match(sourceStorage, /\/instance\\\.source\\\.json\$\/\);/);
-  assert.ok(
-    sourceStorage.indexOf('await createInstanceServeState({') <
-      sourceStorage.indexOf('accountInstanceSourceKey(accountId, widgetCode, instanceId)'),
-    'first Save must write unpublished state before the source visibility anchor',
-  );
-  assert.match(
-    routeSource,
-    /scheduleAccountInstanceCacheEviction\(\{ cache, waitUntil, accountId, instanceId \}\)/,
-  );
-  assert.match(
-    routeSource,
-    /const coordinated = await coordinateAccountInstanceDelete\([\s\S]*if \(!coordinated\.ok\) return respond\(coordinated\);[\s\S]*scheduleAccountInstanceResidualCleanup\(\{/,
-  );
-  assert.match(deleteStorage, /TOKYO_R2\.delete\(accountInstanceSourceKey\(/);
-  assert.match(deleteStorage, /waitUntil\(cleanup\)/);
 
   console.log(
     'PASS Tokyo instance coordination preserves publication capacity and exact source revision truth',

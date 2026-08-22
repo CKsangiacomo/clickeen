@@ -90,6 +90,7 @@ outside the product path; it is never a runtime dependency.
 | Concern | Authority |
 | --- | --- |
 | Widget software source | `tokyo/product/widgets/{widgetType}/` |
+| Canonical source deployment | Git-connected `tokyo-dev` Pages at `/product/widgets/{widgetType}/`; not a Bob/Roma runtime input or R2 mirror |
 | Common defaults and shared control contracts | `packages/widget-foundation/src/` |
 | Shared widget utilities | `tokyo/product/widgets/shared/` |
 | Bob editor panels and controls | structural declarations in `spec.json.editor.panels[]`, adjacent `labels/en.json`, and `bob/lib/compiler*` |
@@ -163,8 +164,8 @@ package contain no tier, entitlement, denial, Popup, CTA, or upsell behavior.
 enforcement occurs on edit, load, Save, publish, or serve. The shared system
 capability owns that user-intent boundary.
 
-Current deployed implementation: every built Widget has exact `limits.json`
-message identities and `upsell/en.json`. Bob applies one decision before draft
+Every built Widget has exact `limits.json` message identities and
+`upsell/en.json`. Bob applies one decision before draft
 mutation and sends Roma `{ capability, messageId, required }`; Roma selects the
 first qualifying higher tier and opens one Popup. There is no compatibility
 message, fallback copy, or second Save-time decision.
@@ -219,27 +220,17 @@ visible. Save/Rename each replace source once. Publish writes status,
 `publishedAt`, and logical `{ indexHtml, stylesCss, runtimeJs }` together in one
 atomic `serve-state.json`; the three public paths are not separate R2 objects.
 
-The pre-GA cutover is complete for all four legacy saved cloud-dev instances
-under `CLICKEEN`; the two public instances were Republished through Roma. There
-is no compatibility reader or migration-on-read, and retained split legacy
-objects are unreachable.
+Current reads use only atomic source and serve-state truth. There is no
+compatibility reader or migration-on-read.
 
 Dieter icon URLs and account asset references remain external delivery
 references owned by their own roots. Dieter CSS and JavaScript do not.
 
-Current deployed implementation: all five built Widgets use the canonical Core
-topology, compiled-source Bob preview, non-persisting New plus source-only Save,
-Publish-only
-complete materialization, and Edge locale expression. The all-Widget generator
-builds and verifies one artifact pair per Widget with no compatibility source
-kind or Widget-specific materializer path.
-
-Runtime code, generated artifacts, cloud-dev deployment, the completed legacy
-source/publication cutover, and public package responses prove the four-phase
-architecture. The generic repeated-identity renderer correction is deployed
-from `72e75000`; only affected FAQ `VUWUJ7OQ0Y` was Republished; its source and
-28 overlays remained exact; and agent-executed base/French public requests
-proved scalar and repeated localization before JavaScript.
+Every built Widget uses the canonical Core topology, compiled-source Bob
+preview, non-persisting New plus source-only Save, Publish-only complete
+materialization, and Edge locale expression. The one producer builds one
+editor/materializer pair per Widget and emits compact Catalog truth with no
+alternate source kind or Widget-specific materializer path.
 
 ## Current Widgets
 
@@ -263,7 +254,7 @@ proved scalar and repeated localization before JavaScript.
 
 | Manual | Purpose |
 | --- | --- |
-| `authoring/WidgetFiles.md` | Structured Widget contract, Core source, transition state, and generated-package boundaries. |
+| `authoring/WidgetFiles.md` | Structured Widget contract, Core source, lifecycle state, and generated-package boundaries. |
 | `authoring/ToolDrawerControls.md` | Bob panels, ToolDrawer fields, and Dieter controls. |
 | `authoring/WidgetAuthoringChecklist.md` | Current execution checklist for widget edits. |
 | `shared/ShellCore.md` | Presentation frame and Shell/Header/Core ownership, state paths, and DOM shape. |
@@ -281,12 +272,17 @@ Research and planning material belongs under `Execution_Pipeline_Docs/`.
 
 ## Baseline Verification
 
-Run after widget source or widget documentation changes:
+For non-writing aggregate verification after Widget source or documentation
+changes:
 
 ```bash
 pnpm validate:widgets
 git diff --check -- tokyo/product/widgets documentation/widgets
 ```
+
+When the intended task changes derived artifacts, run `pnpm generate:widgets`
+once as the explicit write before verification. Generation is never described
+as a check.
 
 For product behavior, verify through Roma/Bob/Tokyo-worker and the relevant
 `clk.live` or `dev.clk.live` serving surface. Do not use local-only behavior as

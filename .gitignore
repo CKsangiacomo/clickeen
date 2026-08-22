@@ -69,6 +69,7 @@ tooling/whisper/
 artifacts/
 roma/generated/
 roma/public/widget-editors/
+roma/public/widget-materializers/
 playwright-report/
 test-results/
 e2e/.auth/

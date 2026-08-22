@@ -74,13 +74,13 @@ filter, normalization, or repair pass. Authentication/authorization and
 acceptance of raw human, browser, or third-party input stay at the ingress
 boundary where that input first becomes Clickeen truth.
 
-Local implementation state: all five current Widgets use mandatory Core
+Every current Widget uses mandatory Core
 HTML/CSS/JavaScript; New composes a non-persisted browser draft, Duplicate
 creates an immediate saved unpublished copy, first Save creates editable
 source, and later Save updates it. Builder preview uses compiled Widget
 software plus Bob's draft; Publish alone materializes the public package; and
 selected-locale serving uses the trusted overlay in Edge HTML before
-JavaScript. The retired flat sources have no compatibility path. Public index
+JavaScript. No flat-source compatibility path exists. Public index
 responses author the exact base and stored-overlay locale options at the Edge.
 First Save's existing HTTP 201 result carries the minted instance ID and the
 exact current account `baseLocale` Roma persisted; Bob adopts both into its
@@ -92,20 +92,8 @@ Bob sends `widgetType` only while no saved identity exists. Existing Save sends
 the exact account-scoped saved list fact, and trusts Tokyo's stored
 `widgetType` when selecting the compiled artifact. It does not compare or
 revalidate a caller Widget type.
-The corrected New/Save/publication and background cache-eviction flow is
-deployed from commit `a6678966`. Worker health, Roma and Bob reachability,
-authenticated saved-instance Builder open, non-persisting New-open inventory
-truth, live Copilot streaming, and public `dev.clk.live` package serving passed
-technical cloud-dev verification on 2026-08-19. Agent-executed closure on
-2026-08-20 additionally proved the complete disposable lifecycle with exact
-account baseline restoration, the deployed Product Copilot continuation/Stop
-path, and Roma/Builder header geometry. Owner acceptance is not a completion
-gate.
-
-The pre-GA atomic-storage cutover is complete for all four legacy saved
-cloud-dev instances under `CLICKEEN`. Their source records were cut over, and
-the two public instances were Republished through Roma. Retained legacy split
-objects are unreachable; there is no compatibility reader or migration-on-read.
+Current instance reads use only atomic source and serve-state truth. There is
+no compatibility reader or migration-on-read.
 
 ## Operating Model
 
@@ -259,7 +247,7 @@ transition. Dieter owns Popup presentation/lifecycle only. Save,
 materialization, and Tokyo-worker consume the already-authorized result without
 repeating the entitlement decision.
 
-Local implementation: all five current Widgets have exact `limits.json`
+Every current Widget has exact `limits.json`
 message bindings and `upsell/en.json`. Bob applies one Widget-neutral decision
 before the attempted manual, Copilot, or undo mutation; denial carries
 `{ capability, messageId, required }` and leaves the draft unchanged. Roma
@@ -283,7 +271,7 @@ paths and product routes as any other account.
 | Current account session and account policy | Roma from Berlin bootstrap/authz                                |
 | Builder host and product routing           | Roma                                                            |
 | In-browser editing state                   | Bob                                                             |
-| Widget software                            | `tokyo/product/widgets/{widgetType}/` in git, including Core, structured contracts, adjacent ToolDrawer labels, and Widget-owned upsell messages, deployed to Tokyo |
+| Widget software                            | `tokyo/product/widgets/{widgetType}/` in git; the one producer emits selected Roma editor/materializer assets and compact Tokyo Catalog summaries |
 | Public package generation                  | Roma through the Widget-neutral `@clickeen/ck-runtime-materializer` |
 | Account instances                          | Tokyo-worker over `accounts/{accountPublicId}/instances/`       |
 | Account assets                             | Tokyo-worker over `accounts/{accountPublicId}/assets/`          |
@@ -314,8 +302,9 @@ pretending the change is already live.
 | ------------- | ---------------------------- | --------------------------------------------------- |
 | Roma          | Cloudflare Pages / Next.js   | Current-account app, Builder host, account routes   |
 | Bob           | Cloudflare Pages / Next.js   | Builder editor for one account instance             |
+| Tokyo source  | Cloudflare Pages             | Git-authored Tokyo source/static tree; not Bob/Roma runtime artifact authority |
 | Tokyo-worker  | Cloudflare Workers + R2      | Account R2 storage boundary and public file serving |
-| Tokyo R2      | Cloudflare R2                | Product software and account runtime storage        |
+| Tokyo R2      | Cloudflare R2                | Account runtime storage plus retained Dieter/font/Prague deploy roots |
 | Berlin        | Cloudflare Workers           | Auth, session bootstrap, account authz capsule      |
 | Prague        | Cloudflare Pages / Astro     | Marketing, gallery, demo/funnel pages               |
 | DevStudio     | Cloudflare Pages             | The one human's cockpit for governing the AI-operated company (through the normal admin account) |
@@ -376,16 +365,16 @@ The atomic source and serving artifacts have different jobs:
 - locale overlays remain exact translated-value derivatives of the content in
   `instance.source.json`.
 
-Product software and product-owned static resources live outside account runtime
-storage:
+Git-authored shared static resources live outside account runtime storage:
 
 ```text
-product/widgets/{widgetType}/
 dieter/
 fonts/special/
 prague/
 ```
 
+Widget software stays in git and is packaged into Roma's deploy-built selected
+editor/materializer assets. It is not mirrored into Tokyo R2.
 `fonts/special/` contains global Clickeen fonts available to every account.
 Fonts uploaded by an account remain account assets under that account; the two
 authorities are distinct.
@@ -487,7 +476,8 @@ Use the owning surface for evidence:
 | Account instance behavior     | Roma account instance routes and Tokyo-worker                 |
 | Widget software source        | `tokyo/product/widgets/{widgetType}/`                         |
 | Cloud-dev worker/R2 deploy    | GitHub Actions worker deploy runs and R2 evidence             |
-| Roma/Bob/Prague app runtime   | Cloudflare Pages Git build state and cloud-dev surface checks |
+| Roma/Bob/Prague/DevStudio app runtime | Cloudflare Pages Git build state and cloud-dev surface checks |
+| Tokyo Git source deployment  | `tokyo-dev` Pages Git build and exact source-path response     |
 | Account coordinate            | Berlin/Roma bootstrap plus migrations                         |
 
 ## DevOps Operating Model
@@ -498,12 +488,13 @@ Git is the normal deploy trigger for cloud-dev.
 | ------------------------- | ------------------------------------------------------------------------------ |
 | Bob                       | Cloudflare Pages Git-connected build from `main`                               |
 | Roma                      | Cloudflare Pages Git-connected build from `main`                               |
+| Tokyo git source          | Cloudflare Pages Git-connected `tokyo-dev` build from `main`                   |
 | Prague                    | Cloudflare Pages Git-connected build from `main`                               |
-| DevStudio                 | Cloudflare Pages project for `https://devstudio.clickeen.com`                  |
+| DevStudio                 | Cloudflare Pages Git-connected build from `main`                               |
 | Berlin                    | GitHub Actions `cloud-dev workers deploy` on matching `main` changes           |
 | San Francisco             | GitHub Actions `cloud-dev workers deploy` on matching `main` changes           |
 | Tokyo-worker              | GitHub Actions `cloud-dev workers deploy` on matching `main` changes           |
-| Tokyo product roots in R2 | GitHub Actions `cloud-dev workers deploy` sync step on matching `main` changes |
+| Tokyo retained roots in R2 | GitHub Actions `cloud-dev workers deploy` full or Dieter/font delta sync on matching `main` changes |
 | Supabase migrations       | GitHub Actions `supabase migrations deploy` manual dispatch                    |
 
 Pages applications use Cloudflare Pages project configuration for build and
@@ -511,9 +502,10 @@ runtime deployment. GitHub Actions verify Pages build contracts and surface
 reachability. The Pages deploy plane is the Cloudflare Git-connected Pages
 project.
 
-Worker and Tokyo R2 product deploys use the GitHub Actions workflow
+Worker and Tokyo R2 retained-root deploys use the GitHub Actions workflow
 `.github/workflows/cloud-dev-workers.yml`. That workflow deploys changed Worker
-surfaces and syncs Tokyo product roots to the configured cloud-dev R2 bucket.
+surfaces and syncs the selected Dieter/font/Prague roots to the configured
+cloud-dev R2 bucket.
 
 Supabase schema deployment uses `.github/workflows/supabase-migrations.yml`.
 The workflow target is `cloud-dev`, and execution requires the
@@ -531,7 +523,8 @@ Supabase migration workflow for cloud-dev deployment.
 
 Pages deploy rule:
 
-- Bob, Roma, and Prague deploy through Cloudflare Pages Git builds.
+- Bob, Roma, Tokyo source, Prague, and DevStudio deploy through Cloudflare
+  Pages Git builds.
 - GitHub Actions verify build contracts and surface reachability.
 - Pages project/env/host setup is documented in
   `documentation/engineering/CloudflarePagesCloudDevChecklist.md`.

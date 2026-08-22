@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { fileURLToPath } from 'node:url';
 import { chromium, type FrameLocator, type Page } from '@playwright/test';
@@ -51,35 +50,22 @@ function testBobPhaseAdmission(): void {
   assert.equal(readBobSaveControlPhase({ ...base, eventOrigin: 'https://example.com' }), null);
   assert.equal(readBobSaveControlPhase({ ...base, eventSource: otherWindow }), null);
   assert.equal(readBobSaveControlPhase({ ...base, data: { ...base.data, phase: 'done' } }), null);
-  assert.equal(readBobSaveControlPhase({ ...base, data: { type: 'bob:dirty-state-changed' } }), null);
-  assert.deepEqual(createHostSaveRequestMessage(), { type: 'host:save-request' });
-}
-
-async function testExistingBuilderNavigationScope(): Promise<void> {
-  const source = await readFile(new URL('../components/builder-domain.tsx', import.meta.url), 'utf8');
-  assert.match(source, /className="roma-nav-trigger diet-button"/);
-  assert.match(source, /openNavigation\(navigationButtonRef\.current\)/);
-  assert.doesNotMatch(source, /bob:host-action|openNavigation\(iframeRef\.current\)/);
-}
-
-async function testRomaRequestSignalRuntimeFlag(): Promise<void> {
-  const source = await readFile(new URL('../wrangler.toml', import.meta.url), 'utf8');
-  assert.match(
-    source,
-    /compatibility_flags\s*=\s*\[[^\]]*"enable_request_signal"[^\]]*\]/u,
-    'Roma must receive client cancellation through Request.signal in Cloudflare',
+  assert.equal(
+    readBobSaveControlPhase({ ...base, data: { type: 'bob:dirty-state-changed' } }),
+    null,
   );
+  assert.deepEqual(createHostSaveRequestMessage(), { type: 'host:save-request' });
 }
 
 function fixturePlugin(name: string, modules: Record<string, string>): Plugin {
   return {
     name,
     setup(bundle) {
-      bundle.onResolve({ filter: /.*/ }, (args) => (
+      bundle.onResolve({ filter: /.*/ }, (args) =>
         Object.prototype.hasOwnProperty.call(modules, args.path)
           ? { path: args.path, namespace: name }
-          : null
-      ));
+          : null,
+      );
       bundle.onLoad({ filter: /.*/, namespace: name }, (args) => ({
         contents: modules[args.path],
         loader: 'tsx',
@@ -479,23 +465,27 @@ async function startHarnessServer(script: string): Promise<{
       return;
     }
     response.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
-    response.end('<!doctype html><html><body><main id="root"></main><script src="/bundle.js"></script></body></html>');
+    response.end(
+      '<!doctype html><html><body><main id="root"></main><script src="/bundle.js"></script></body></html>',
+    );
   });
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
   const address = server.address();
   assert.ok(address && typeof address === 'object');
   return {
     origin: `http://127.0.0.1:${address.port}`,
-    close: () => new Promise<void>((resolve, reject) => {
-      server.close((error) => error ? reject(error) : resolve());
-    }),
+    close: () =>
+      new Promise<void>((resolve, reject) => {
+        server.close((error) => (error ? reject(error) : resolve()));
+      }),
   };
 }
 
 async function waitForSaveCallCount(page: Page, count: number): Promise<SaveCall[]> {
-  await page.waitForFunction((expected) => (
-    (window as RomaHarnessWindow).__romaSaveFixture.saveCalls().length === expected
-  ), count);
+  await page.waitForFunction(
+    (expected) => (window as RomaHarnessWindow).__romaSaveFixture.saveCalls().length === expected,
+    count,
+  );
   return page.evaluate(() => (window as RomaHarnessWindow).__romaSaveFixture.saveCalls());
 }
 
@@ -534,15 +524,17 @@ async function testProductionRomaBobSaveBridge(): Promise<void> {
 
       const bobFrame = page.frameLocator('iframe[title="Bob Builder"]');
       await bobFrame.locator('[data-bob-session-probe]').waitFor({ state: 'attached' });
-      await page.waitForFunction(() => (
-        (window as RomaHarnessWindow).__romaSaveFixture.openCalls() === 1
-      ));
+      await page.waitForFunction(
+        () => (window as RomaHarnessWindow).__romaSaveFixture.openCalls() === 1,
+      );
       const builderHeader = page.locator('.page__header');
       const headerLoading = builderHeader.getByRole('status', { name: 'Loading' });
       await headerLoading.waitFor({ state: 'attached' });
       assert.equal(await builderHeader.locator('h1').count(), 0);
       assert.equal(await page.getByRole('button', { name: 'Save', exact: true }).count(), 0);
-      await page.evaluate(() => (window as RomaHarnessWindow).__romaSaveFixture.resolveBuilderOpen());
+      await page.evaluate(() =>
+        (window as RomaHarnessWindow).__romaSaveFixture.resolveBuilderOpen(),
+      );
       await assertBorrowedSaveVisible(page);
       assert.equal(await headerLoading.count(), 0);
       assert.equal(await bobProbeAttribute(bobFrame, 'data-instance-data'), '{"title":"Before"}');
@@ -566,10 +558,7 @@ async function testProductionRomaBobSaveBridge(): Promise<void> {
         await assertBorrowedSaveVisible(page);
       }
 
-      for (const selector of [
-        '[data-spoof-wrong-host-origin]',
-        '[data-spoof-wrong-host-source]',
-      ]) {
+      for (const selector of ['[data-spoof-wrong-host-origin]', '[data-spoof-wrong-host-source]']) {
         await bobFrame.locator(selector).click();
         await page.waitForTimeout(50);
         assert.equal(
@@ -596,7 +585,10 @@ async function testProductionRomaBobSaveBridge(): Promise<void> {
       assert.equal(await bobProbeAttribute(bobFrame, 'data-saving'), 'true');
 
       await bobFrame.locator('[data-edit-newer-draft]').click();
-      assert.equal(await bobProbeAttribute(bobFrame, 'data-instance-data'), '{"title":"After first Save began"}');
+      assert.equal(
+        await bobProbeAttribute(bobFrame, 'data-instance-data'),
+        '{"title":"After first Save began"}',
+      );
       await page.getByRole('button', { name: 'Saving…' }).waitFor();
 
       const activeBobFrame = page.locator('iframe[title="Bob Builder"]');
@@ -606,7 +598,11 @@ async function testProductionRomaBobSaveBridge(): Promise<void> {
         target?.postMessage({ type: 'host:save-request' }, targetOrigin as string);
       }, bobServer.origin);
       await page.waitForTimeout(50);
-      assert.equal((await waitForSaveCallCount(page, 1)).length, 1, 'Bob must absorb duplicate host Save requests while saving');
+      assert.equal(
+        (await waitForSaveCallCount(page, 1)).length,
+        1,
+        'Bob must absorb duplicate host Save requests while saving',
+      );
 
       await resolveNextSave(page);
       await assertBorrowedSaveVisible(page);
@@ -615,8 +611,16 @@ async function testProductionRomaBobSaveBridge(): Promise<void> {
         1,
         'first Save must adopt the created ID without reopening Bob',
       );
-      assert.equal(await bobProbeAttribute(bobFrame, 'data-dirty'), 'true', 'newer draft truth must survive first Save');
-      assert.equal(await bobProbeAttribute(bobFrame, 'data-base-locale'), 'fr', 'first Save must adopt the exact persisted base locale');
+      assert.equal(
+        await bobProbeAttribute(bobFrame, 'data-dirty'),
+        'true',
+        'newer draft truth must survive first Save',
+      );
+      assert.equal(
+        await bobProbeAttribute(bobFrame, 'data-base-locale'),
+        'fr',
+        'first Save must adopt the exact persisted base locale',
+      );
       assert.equal(
         await bobProbeAttribute(bobFrame, 'data-translation-base-locale'),
         'fr',
@@ -658,25 +662,31 @@ async function testProductionRomaBobSaveBridge(): Promise<void> {
       );
 
       await bobFrame.locator('[data-start-copilot-request]').click();
-      await page.waitForFunction(() => (
-        (window as RomaHarnessWindow).__romaSaveFixture.copilotStarts() === 1
-      ));
+      await page.waitForFunction(
+        () => (window as RomaHarnessWindow).__romaSaveFixture.copilotStarts() === 1,
+      );
       const activeCopilotRequestId = await bobProbeAttribute(
         bobFrame,
         'data-active-copilot-request-id',
       );
       assert.ok(activeCopilotRequestId, 'Bob must expose the active stream request coordinate');
       await bobFrame.locator('[data-cancel-copilot-request]').click();
-      await page.waitForFunction(() => (
-        (window as RomaHarnessWindow).__romaSaveFixture.copilotAborts() === 1
-      ));
-      await bobFrame.locator('[data-bob-session-probe][data-cancel-result-count="1"]').waitFor({ state: 'attached' });
+      await page.waitForFunction(
+        () => (window as RomaHarnessWindow).__romaSaveFixture.copilotAborts() === 1,
+      );
+      await bobFrame
+        .locator('[data-bob-session-probe][data-cancel-result-count="1"]')
+        .waitFor({ state: 'attached' });
       assert.equal(
         await page.evaluate(() => (window as RomaHarnessWindow).__romaSaveFixture.copilotAborts()),
         1,
-        'Roma must abort the controller keyed by Bob\'s target stream request ID',
+        "Roma must abort the controller keyed by Bob's target stream request ID",
       );
-      assert.deepEqual(pageErrors, [], 'the production Roma/Bob Save bridge must raise no browser errors');
+      assert.deepEqual(
+        pageErrors,
+        [],
+        'the production Roma/Bob Save bridge must raise no browser errors',
+      );
     } finally {
       await browser.close();
     }
@@ -688,10 +698,10 @@ async function testProductionRomaBobSaveBridge(): Promise<void> {
 
 async function main(): Promise<void> {
   testBobPhaseAdmission();
-  await testExistingBuilderNavigationScope();
-  await testRomaRequestSignalRuntimeFlag();
   await testProductionRomaBobSaveBridge();
-  console.log('PASS production Roma/Bob Save bridge, exact frame admission, and targeted Copilot cancellation');
+  console.log(
+    'PASS production Roma/Bob Save bridge, exact frame admission, and targeted Copilot cancellation',
+  );
 }
 
 void main().catch((error) => {

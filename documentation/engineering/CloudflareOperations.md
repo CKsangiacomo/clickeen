@@ -75,11 +75,12 @@ object keys, zones, project names, or bindings.
 | Repair an R2 object | `pnpm cf:preflight`, then `pnpm cf:r2:put <key> <file>` | read-back of the exact key |
 | Delete an R2 object | owning-bucket preflight, then `pnpm cf:r2:delete <key> [--bucket <bucket>]` | missing-key or list evidence |
 | Inspect Pages project config | `pnpm cf:api:preflight`, then `pnpm cf:pages:project <project-name>` | returned project JSON |
+| Reconcile Bob/Roma Pages build-watch inputs | `pnpm cf:api:preflight`, dry-run `pnpm cf:pages:sync-bob-roma-build-watch`, separately approved `--apply` | exact Bob/Roma project read-back |
 | Inspect DevStudio Pages env/secrets | `pnpm cf:api:preflight`, then `pnpm cf:pages:devstudio-env` | env comparison output |
 | Sync DevStudio Pages env/project | dry-run command, then same command with `--apply` | read-back command output |
 | Write a Pages secret | `pnpm cf:api:preflight`, then `pnpm cf:pages:put-secret ... --apply` | Pages env verification shows secret present |
 | Delete a Pages variable or secret | `pnpm cf:api:preflight`, dry-run `pnpm cf:pages:delete-var ...`, then `--apply` | Pages project read-back shows it absent |
-| Inspect/upsert DNS | `pnpm cf:api:preflight`, then `pnpm cf:dns:*` | read-back of the DNS record |
+| Inspect/upsert DNS | `pnpm cf:api:preflight`, then `pnpm cf:dns:records ...` or `pnpm cf:dns:upsert-cname ...` | read-back of the DNS record |
 | Prove Pages deploy | Cloudflare Pages Git build state plus runtime response | owning app URL responds |
 | Prove Worker deploy | GitHub Actions `cloud-dev workers deploy` plus runtime response | owning Worker URL/route responds |
 
@@ -107,8 +108,8 @@ Never do these to "make Cloudflare work":
 | --- | --- | --- |
 | R2 object operations | Direct Tokyo/R2 reads and exceptional object writes/deletes | `pnpm cf:preflight` |
 | Cloudflare REST Pages/DNS operations | Pages projects, Pages env/secrets, Pages domains, DNS records | `pnpm cf:api:preflight` |
-| Cloudflare Pages Git deploys | Bob, Roma, Prague, DevStudio runtime deploy evidence | Cloudflare Pages build state |
-| GitHub Actions Worker/R2 deploys | Berlin, San Francisco, Tokyo-worker, Product Copilot, Translation Agent, Tokyo product-root sync | GitHub Actions workflow run |
+| Cloudflare Pages Git deploys | Bob, Roma, Tokyo canonical source, Prague, and DevStudio deploy evidence | Cloudflare Pages build state |
+| GitHub Actions Worker/R2 deploys | Berlin, San Francisco, Tokyo-worker, Product Copilot, Translation Agent, Tokyo retained-root sync | GitHub Actions workflow run |
 
 Passing one preflight proves only that plane. R2 preflight does not prove
 Pages/DNS access. REST preflight does not prove R2 object access.
@@ -161,8 +162,7 @@ pnpm cf:r2:delete <key> [--bucket <bucket>]
 
 - loads root `.env.local`;
 - verifies access to the configured Tokyo R2 bucket;
-- lists a sample from `accounts/`;
-- reads `product/widgets/faq/spec.json` from R2.
+- lists a sample from `accounts/`.
 
 R2 preflight proves read/list access. Object write/delete still needs explicit
 mutation evidence and follow-up read/list verification. The helper uses signed
@@ -171,18 +171,17 @@ the requested put/delete through the repo's Tokyo-worker Wrangler command path.
 Report that path in the execution evidence when it happens.
 
 Direct R2 mutation is not normal product operation. Use it only for explicit
-product-data repair or git-authored product-root sync. For account assets,
+product-data repair or git-authored retained-root sync. For account assets,
 instances and translation overlays, prefer the product route or owning
 agent path unless the task explicitly names remote data repair.
 
-## Tokyo Product-Root R2 Sync
+## Tokyo Retained-Root R2 Sync
 
-Git-authored Tokyo product roots sync to canonical R2 roots:
+Git-authored retained sources sync to canonical R2 roots:
 
 | Repo input | Canonical R2 root |
 | --- | --- |
-| `tokyo/product/widgets/**` | `product/widgets/**` |
-| `tokyo/product/fonts/special/**` | `fonts/special/**` |
+| `tokyo/product/fonts/**` | `fonts/**` |
 | `dieter/icons/svg/**` | `dieter/icons/svg/**` |
 | `tokyo/prague/**` | `prague/**` |
 
@@ -192,26 +191,28 @@ Local inspection command:
 pnpm tokyo:r2:sync:check
 ```
 
-The sync reads these inputs directly and rejects account runtime keys. It is
-upload-only: it writes current entries and does not perform remote
-reconciliation, orphan cleanup, or rollback.
+The full sync reads these inputs directly, rejects account runtime keys, and
+writes all current retained entries. On ordinary pushes, exact Dieter-icon and
+font changes use the same script with `--before` and `--after`: additions and
+modifications PUT the exact key, deletions DELETE the exact key, and renames
+apply both sides. Prague remains full-sync and upload-only; it never enters the
+delta/delete path.
 
-Remote product-root deployment runs only through GitHub Actions
+Remote retained-root deployment runs only through GitHub Actions
 `cloud-dev workers deploy` after a push to `main`. That workflow runs the repo
-checks, which regenerate widget product packages from current source, then
-syncs all four git-authored R2 roots. The workflow run is the deployment
-evidence.
+checks, selects the exact affected Workers, then runs either retained-root full
+sync or Dieter/font delta sync. The workflow run is the deployment evidence.
 
 Auth boundary: the GitHub Actions sync path may use the workflow
 `CLOUDFLARE_API_TOKEN` because it is a CI/Wrangler deploy workflow. Local repo
 helper commands must not use that ambiguous token name; local R2 commands use
 the typed env names above.
 
-Changes to Dieter source, widget product source, Prague product media, or the
-sync workflow trigger that product-root path. Dieter
-source is watched because widget product packages consume its token/component
-CSS; only SVG icon bytes are written under the R2 `dieter/` root. Use the repo
-R2 read commands after deployment when an exact remote key must be verified.
+Changes to Dieter SVG icons or fonts select delta sync. Prague, the sync script,
+workflow dispatch, and the Worker workflow select full sync. Widget source is
+packaged into Roma's deploy-built artifacts and does not trigger R2 sync. Use
+the repo R2 read commands after deployment when an exact remote key must be
+verified.
 
 ## Pages/DNS REST Commands
 
@@ -222,6 +223,7 @@ pnpm cf:pages:project <project-name>
 pnpm cf:pages:devstudio-env
 pnpm cf:pages:sync-devstudio-env [--apply]
 pnpm cf:pages:sync-devstudio-project [--apply]
+pnpm cf:pages:sync-bob-roma-build-watch [--apply]
 pnpm cf:pages:put-secret <project-name> <secret-name> [--env production|preview] [--apply]
 pnpm cf:pages:delete-var <project-name> <variable-name> [--env production|preview|both] [--apply]
 pnpm cf:pages:domains <project-name>
@@ -248,10 +250,25 @@ Token permissions:
 Pages Edit is required for Pages project config, env var sync, secret writes,
 and custom-domain mutations. DNS Edit is required for DNS upsert.
 
-The Cloudflare API helper currently owns generic Pages inspection and
-DevStudio Pages sync. It does not sync Bob/Roma/Prague runtime env generally.
-For Bob/Roma/Prague, inspect state with this document and compare it to the
-expected live contract in `CloudflarePagesCloudDevChecklist.md`.
+The Cloudflare API helper owns generic Pages inspection, DevStudio Pages sync,
+and the exact Bob/Roma Git build-watch include operator. It does not sync
+Bob/Roma/Prague runtime env generally. Inspect state against
+`CloudflarePagesCloudDevChecklist.md`.
+
+For Bob/Roma build-watch truth:
+
+```bash
+pnpm cf:api:preflight
+pnpm cf:pages:sync-bob-roma-build-watch
+# Separate managed-configuration approval required:
+pnpm cf:pages:sync-bob-roma-build-watch --apply
+```
+
+Dry-run reads only `bob-dev` and `roma-dev`. Apply patches only their exact
+`path_includes`, preserves all other project/source/deployment configuration,
+then reads both projects back and fails on any drift or partial result. The
+repository operator is ready, but cloud-dev still reports `path_includes:
+["*"]` on both projects until that separate apply is authorized.
 
 ## Current Pages Projects
 
@@ -259,6 +276,7 @@ expected live contract in `CloudflarePagesCloudDevChecklist.md`.
 | --- | --- | --- |
 | `bob-dev` | `bob` | `https://bob.dev.clickeen.com` |
 | `roma-dev` | `roma` | `https://roma.dev.clickeen.com` |
+| `tokyo-dev` | `tokyo` | `https://tokyo.dev.clickeen.com` |
 | `prague-dev` | `prague` | `https://prague.dev.clickeen.com` |
 | `devstudio` | `admin` | `https://devstudio.clickeen.com` |
 
@@ -269,13 +287,19 @@ Prague's Git build watch include is repository-wide `*`. Prague consumes
 shared packages and deploy-time product content outside `prague/`; a partial
 service-local watch list can skip a required production build.
 
+All five current Git-connected Pages projects report repository-wide
+`path_includes: ["*"]`. The Bob/Roma operator above remains intentionally
+limited to those two application projects; Tokyo source, Prague, and DevStudio
+retain their current repository-wide watch behavior.
+
 ## Mutation Evidence
 
 | Mutation | Required evidence |
 | --- | --- |
 | R2 put | `pnpm cf:preflight`, put command output, then `pnpm cf:r2:get <key>` or list evidence |
 | R2 delete | `pnpm cf:preflight`, delete command output, then missing-key/list evidence |
-| Tokyo product-root sync | sync command or GitHub Actions evidence, then exact R2 key evidence |
+| Tokyo retained-root sync | sync command or GitHub Actions evidence, then exact R2 key evidence |
+| Bob/Roma Pages build watch | `pnpm cf:pages:sync-bob-roma-build-watch`, separately approved `--apply`, then exact project read-back |
 | Pages env/project sync | `pnpm cf:api:preflight`, dry run, `--apply`, then read-back command |
 | Pages secret write | `pnpm cf:api:preflight`, `pnpm cf:pages:put-secret ... --apply`, then Pages env verification |
 | DNS CNAME upsert | `pnpm cf:api:preflight`, DNS upsert command, then `pnpm cf:dns:records <zone> <name>` |
@@ -290,6 +314,8 @@ service-local watch list can skip a required production build.
 | Bob runtime | `https://bob.dev.clickeen.com/bob` |
 | Roma Pages project | `pnpm cf:pages:project roma-dev` |
 | Roma runtime | `https://roma.dev.clickeen.com/home` |
+| Tokyo source Pages project | `pnpm cf:pages:project tokyo-dev` |
+| Tokyo source path | `https://tokyo.dev.clickeen.com/product/widgets/{widgetType}/spec.json` |
 | Prague Pages project | `pnpm cf:pages:project prague-dev` |
 | Prague runtime | `https://prague.dev.clickeen.com/us/en/` |
 | DevStudio Pages project | `pnpm cf:pages:project devstudio` |
@@ -312,7 +338,7 @@ Translation Agent for their e2e smoke commands.
 | --- | --- |
 | R2 helper | `scripts/cloudflare/r2.mjs` |
 | Cloudflare REST helper | `scripts/cloudflare/api.mjs` |
-| Tokyo product-root sync | `scripts/tokyo-r2-deploy-sync.mjs` |
+| Tokyo retained-root sync | `scripts/tokyo-r2-deploy-sync.mjs` |
 | Cloudflare scripts registry | root `package.json` |
 | Worker deploy workflow | `.github/workflows/cloud-dev-workers.yml` |
 | Pages cloud-dev contract | `documentation/engineering/CloudflarePagesCloudDevChecklist.md` |

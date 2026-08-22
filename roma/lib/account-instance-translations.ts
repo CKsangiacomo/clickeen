@@ -105,11 +105,11 @@ export type InstanceTranslationsGeneratePayload = {
   };
 };
 
-function buildTranslationAgentItems(args: {
+async function buildTranslationAgentItems(args: {
   widgetType: string;
   content: SavedInstanceSourcePayload['source']['content'];
-}): TranslationAgentItem[] {
-  const editableFields = readWidgetMaterializerArtifact(args.widgetType)!.editableFields.fields;
+}): Promise<TranslationAgentItem[]> {
+  const editableFields = (await readWidgetMaterializerArtifact(args.widgetType))!.editableFields.fields;
   const editableFieldsByPattern = new Map(editableFields.map((field) => [field.path, field]));
   return Object.values(args.content.fields).map((field) => {
     const editableField = editableFieldsByPattern.get(field.fieldPattern)!;
@@ -333,7 +333,7 @@ export async function generateAccountInstanceTranslations(args: {
     requestId: args.requestId,
   });
   if (!saved.ok) return saved;
-  const items = buildTranslationAgentItems({
+  const items = await buildTranslationAgentItems({
     widgetType: saved.value.widgetType,
     content: saved.value.source.content,
   });

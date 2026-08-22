@@ -8,7 +8,9 @@
     "test:auth-config": "tsx tests/run-auth-config.ts",
     "test:cache-eviction": "tsx tests/run-cache-eviction.ts",
     "test:content-slots": "tsx tests/run-content-slot-overlays.ts",
+    "test:instance-facts": "tsx tests/run-account-instance-facts.ts",
     "test:publication-capacity": "tsx tests/run-publication-capacity.ts",
+    "test:widget-definitions": "tsx tests/run-widget-definitions.ts",
     "test:widget-defaults": "tsx tests/run-account-widget-defaults.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },

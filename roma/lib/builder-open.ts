@@ -1,7 +1,5 @@
-import {
-  listTokyoWidgetDefinitions,
-  loadTokyoAccountInstanceDocument,
-} from './account-instance-direct';
+import { readWidgetMaterializerArtifact } from '@roma/generated/widget-materializer-artifacts';
+import { loadTokyoAccountInstanceDocument } from './account-instance-direct';
 import {
   loadAccountWidgetDefaultsInTokyo,
   type AccountWidgetDefaultsDocument,
@@ -79,26 +77,17 @@ export async function loadNewBuilderOpenEnvelope(args: {
       };
     }
 > {
-  const [definitions, widgetDefaults] = await Promise.all([
-    listTokyoWidgetDefinitions({
-      accountId: args.accountId,
-      accountCapsule: args.accountCapsule,
-      requestId: args.requestId,
-    }),
+  const [materializer, widgetDefaults] = await Promise.all([
+    readWidgetMaterializerArtifact(args.widgetType),
     loadAccountWidgetDefaultsInTokyo({
       accountId: args.accountId,
       accountCapsule: args.accountCapsule,
       requestId: args.requestId,
     }),
   ]);
-  if (!definitions.ok) return definitions;
   if (!widgetDefaults.ok) return widgetDefaults;
 
-  const definition = definitions.value.widgetDefinitions.find(
-    (entry) => entry.widgetType === args.widgetType,
-  );
-  const defaults = widgetDefaults.value.widgetDefaults.widgets[args.widgetType];
-  if (!definition || !defaults) {
+  if (!materializer) {
     return {
       ok: false,
       status: 404,
@@ -114,11 +103,16 @@ export async function loadNewBuilderOpenEnvelope(args: {
     value: {
       instanceId: null,
       displayName: null,
-      widgetType: definition.widgetType,
+      widgetType: materializer.widgetname,
       baseLocale: args.baseLocale,
       config: composeNewInstanceConfig({
         common: widgetDefaults.value.widgetDefaults.common,
-        core: defaults.core,
+        core: Object.prototype.hasOwnProperty.call(
+          widgetDefaults.value.widgetDefaults.widgets,
+          args.widgetType,
+        )
+          ? widgetDefaults.value.widgetDefaults.widgets[args.widgetType]!.core
+          : materializer.coreDefaults,
       }),
       fontLibrary: widgetDefaults.value.widgetDefaults.fontLibrary,
       publishStatus: null,

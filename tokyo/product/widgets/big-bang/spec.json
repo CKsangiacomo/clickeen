@@ -2,6 +2,26 @@
   "widgetname": "big-bang",
   "displayName": "Big Bang",
   "description": "",
+  "typographyBehavior": {
+    "roles": {
+      "bigBang": {
+        "fluidSize": "min-plus-growth",
+        "normalLineHeight": {
+          "latin": "normal",
+          "japanese": "normal",
+          "korean": "normal",
+          "zhHans": "normal",
+          "zhHant": "normal",
+          "arabic": "normal",
+          "hebrew": "normal",
+          "thai": "normal",
+          "devanagari": "normal",
+          "bengali": "normal",
+          "cyrillic": "normal"
+        }
+      }
+    }
+  },
   "defaults": {
     "typography": {
       "roles": {
@@ -280,8 +300,7 @@
         "shared": {
           "id": "typography",
           "roleLabels": {
-            "bigBang": "$label:typography.role.big-bang.label",
-            "body": "$label:typography.role.body.label"
+            "bigBang": "$label:typography.role.big-bang.label"
           }
         }
       },

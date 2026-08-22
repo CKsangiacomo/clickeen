@@ -15,12 +15,6 @@ type WidgetInstance = {
   publishedAt: string | null;
 };
 
-type WidgetCatalogOption = {
-  widgetType: string;
-  displayName: string;
-  description: string;
-};
-
 function routeKind(status: number): 'AUTH' | 'DENY' | 'VALIDATION' | 'UPSTREAM_UNAVAILABLE' {
   if (status === 401) return 'AUTH';
   if (status === 403) return 'DENY';
@@ -77,14 +71,7 @@ export async function GET(request: NextRequest) {
       current.value.setCookies,
     );
   }
-  const catalog: WidgetCatalogOption[] = widgetDefinitions.value.widgetDefinitions
-    .map((entry) => {
-      return {
-        widgetType: entry.widgetType,
-        displayName: entry.displayName,
-        description: entry.description,
-      };
-    });
+  const catalog = widgetDefinitions.value.widgetDefinitions;
   const accountInstances: WidgetInstance[] = widgetInstances.value.instances.map((instance) => {
     return {
       instanceId: instance.instanceId,
